@@ -159,6 +159,9 @@ nav button{padding:11px 0;font-size:11px;font-weight:700;letter-spacing:.1em;col
     <h2>Style</h2><div class="lt" id="lt-style"></div>
     <h2>Post</h2><div class="lt" id="lt-post"></div>
     <h2>Model</h2><div class="models" id="models"></div>
+    <h2>Model change <em>how models swap</em></h2>
+    <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
+    <div id="g-model" style="margin-top:7px"></div>
   </section>
 
   <section class="view" id="v-cam">
@@ -177,6 +180,7 @@ nav button{padding:11px 0;font-size:11px;font-weight:700;letter-spacing:.1em;col
       <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div><div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
       <div class="bar" style="--c:var(--cyan)"><div id="bH"></div><span>HIGH</span></div><div class="bar" style="--c:var(--lime)"><div id="bK"></div><span>KICK</span></div>
     </div>
+    <h2>Beat <em>smooth, safe reactions</em></h2><div id="g-beat"></div>
     <h2>Input</h2><div id="g-audio"></div>
   </section>
 
@@ -262,8 +266,8 @@ function build(){
   ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
   buildCam();
-  ['master','audio','kick','camera','move','motion','grid'].forEach(g => $('#g-' + g).innerHTML = '');
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -298,6 +302,7 @@ function applyPars(p){
   EL.scene.forEach(b => b.classList.toggle('on', b.dataset.scene === p.Scene));
   $('#gridbox').classList.toggle('on', p.Scene === 'grid');
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
+  $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
   ['Autospin','Showlabel'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
@@ -408,6 +413,7 @@ document.addEventListener('click', e => {
   else if (d.mode) { send({t:'layer', k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
   else if (d.scene) { send({t:'scene', v:d.scene}); buzz(); }
   else if (d.model) { send({t:'model', v:d.model}); buzz(); }
+  else if (d.mstyle) { send({t:'set', p:'Modelstyle', v:d.mstyle}); S.pars.Modelstyle = d.mstyle; applyPars({}); buzz(); }
   else if (d.tog) { send({t:'set', p:d.tog, v:!S.pars[d.tog]}); buzz(); }
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); applyLayers(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
