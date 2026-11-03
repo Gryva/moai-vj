@@ -11,450 +11,442 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#09080d; --panel:#13111a; --panel2:#1b1824; --line:#2a2635; --ink:#f3efe7; --mute:#8b8597;
-  --hot:#ff4d2e; --cyan:#3ef0ff; --vio:#b06bff; --lime:#c6ff3d;
-  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
-  --sans:'Space Grotesk',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
-}
+:root{--bg:#09080d;--panel:#13111a;--panel2:#1b1824;--line:#2a2635;--ink:#f3efe7;--mute:#8b8597;--hot:#ff4d2e;--cyan:#3ef0ff;--vio:#b06bff;--lime:#c6ff3d;
+  --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
+  --sans:'Space Grotesk',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overscroll-behavior:none}
 body{display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+input[type=text]{font:inherit}
 
-/* ---------- top bar ---------- */
-header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--safe-t)) 16px 10px;background:linear-gradient(var(--bg) 70%,transparent)}
-.row1{display:flex;align-items:center;gap:10px}
-.logo{font-weight:700;letter-spacing:.08em;font-size:15px}
-.logo i{font-style:normal;color:var(--hot)}
-.dot{width:9px;height:9px;border-radius:50%;background:#555;box-shadow:0 0 0 3px #ffffff10;transition:.3s}
-.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
-.fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute);margin-right:4px}
-.now{margin-top:8px;display:flex;gap:8px;align-items:baseline;white-space:nowrap;overflow:hidden}
-.now b{font-size:22px;letter-spacing:-.01em}
-.now span{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis}
-.meters{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-.m{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;position:relative}
-.m i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);transition:transform 60ms linear}
-.m.l i{background:var(--hot)} .m.md i{background:var(--vio)} .m.h i{background:var(--cyan)} .m.k i{background:var(--lime)}
+header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;background:linear-gradient(var(--bg) 78%,transparent)}
+.r1{display:flex;align-items:center;gap:10px}
+.logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
+.dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
+.fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute)}
+.bo{height:36px;padding:0 16px;border-radius:18px;background:var(--ink);color:var(--bg);font-weight:700;letter-spacing:.12em;font-size:11px}
+.bo.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}@keyframes pulse{50%{box-shadow:0 0 0 8px #ff4d2e33}}
+.now{margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now b{font-size:20px;letter-spacing:-.01em}.now span{color:var(--mute);font-size:13px;margin-left:8px}
+.meters{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.m{height:5px;border-radius:3px;background:var(--panel2);overflow:hidden;position:relative}
+.m i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0)}
+.m.l i{background:var(--hot)}.m.md i{background:var(--vio)}.m.h i{background:var(--cyan)}.m.k i{background:var(--lime)}
 
-/* ---------- views ---------- */
-main{flex:1;overflow-y:auto;padding:4px 16px calc(96px + var(--safe-b));-webkit-overflow-scrolling:touch}
-.view{display:none;animation:in .22s ease}
-.view.on{display:block}
+main{flex:1;overflow-y:auto;padding:2px 16px calc(96px + var(--sb));-webkit-overflow-scrolling:touch}
+.view{display:none}.view.on{display:block;animation:in .2s ease}
 @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin:22px 2px 10px;font-weight:600;display:flex;justify-content:space-between}
+h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin:20px 2px 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
 h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 
-/* effect tiles */
-.fx{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tile{position:relative;aspect-ratio:1/0.82;border-radius:16px;background:var(--panel);border:1px solid var(--line);padding:10px;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .08s}
-.tile:active{transform:scale(.96)}
-.tile .n{font:700 12px var(--mono);color:var(--mute)}
-.tile .t{font-weight:700;font-size:13px;line-height:1.05;letter-spacing:.01em;position:relative;overflow-wrap:anywhere;hyphens:auto}
-.tile::before{content:"";position:absolute;inset:0;background:var(--g);opacity:.22;transition:.2s}
-.tile.on{border-color:transparent;box-shadow:0 0 0 2px var(--ink) inset}
-.tile.on::before{opacity:.95}
-.tile.on .n,.tile.on .t{color:#fff;text-shadow:0 1px 8px #0008}
-
-/* scene segmented control */
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:5px}
-.seg button{padding:14px 4px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--mute)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px}
+.seg button{padding:12px 2px;border-radius:10px;font-weight:700;font-size:12px;letter-spacing:.06em;color:var(--mute)}
 .seg button.on{background:var(--ink);color:var(--bg)}
-.seg.small button{padding:9px 2px;font-size:11px}
-.gridbox{display:none;margin-top:8px}.gridbox.on{display:block}
-.gridbox summary{list-style:none;cursor:pointer;padding:12px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--lime)}
-.gridbox summary::after{content:' ▾';color:var(--mute)}.gridbox[open] summary{margin-bottom:8px}
-.gridbox summary::-webkit-details-marker{display:none}
-.looks{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px}
-.look{flex:0 0 auto;min-width:96px;border-radius:14px;padding:12px 12px 10px;text-align:left;background:linear-gradient(135deg,#2a1640,#13111a);border:1px solid var(--line);position:relative;overflow:hidden}
-.look .n{font:700 10px var(--mono);color:var(--vio)}
-.look .t{font-weight:700;font-size:13px;margin-top:4px;white-space:nowrap}
-.look .fill{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--hot)}
-.look.hold .fill{width:100%;transition:width .55s linear}
-.onair{background:linear-gradient(180deg,#1d1424,#13111a);border:1px solid #3a2a48;border-radius:18px;padding:12px;min-height:56px}
+.seg.sm button{padding:8px 2px;font-size:11px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+.chipt{border-radius:12px;border:1px solid var(--line);background:var(--panel);padding:10px 4px;font-size:12px;font-weight:700;color:var(--mute);text-align:center}
+.chipt.on{color:var(--bg);background:var(--cyan);border-color:transparent}
+
+/* LIVE pads */
+.pads{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.pad{position:relative;aspect-ratio:1;border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:7px;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .07s}
+.pad:active{transform:scale(.95)}
+.pad .n{font:700 10px var(--mono);color:var(--mute)}
+.pad .t{font-weight:700;font-size:11.5px;line-height:1.1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pad .d{display:flex;gap:3px;flex-wrap:wrap;min-height:6px}.pad .d i{width:6px;height:6px;border-radius:50%}
+.pad.empty{border-style:dashed;background:transparent}.pad.empty .t{color:#4d4858;font-weight:600}
+.pad.full{background:linear-gradient(160deg,#241b30,#13111a)}
+.pad.on{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot),0 0 24px -6px var(--hot)}
+.pad .fx{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--hot)}
+.pad.fading .fx{animation:fill var(--dur) linear forwards}@keyframes fill{to{width:100%}}
+.pad.hold::after{content:"";position:absolute;inset:0;background:#ffffff18;animation:holdf .5s linear}@keyframes holdf{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.nav2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.big{border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:14px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.big:active{background:var(--panel2)}
+
+/* layers */
+.onair{background:linear-gradient(180deg,#1d1424,#13111a);border:1px solid #3a2a48;border-radius:18px;padding:10px 12px;min-height:52px}
 .onair .empty{color:var(--mute);font-size:13px;text-align:center;padding:10px 0}
-.lay{border-bottom:1px solid #2c2236;padding:6px 2px 4px}.lay:last-child{border-bottom:0}
+.lay{border-bottom:1px solid #2c2236;padding:6px 0 4px}.lay:last-child{border-bottom:0}
 .lay .hd{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
 .lay .hd i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
-.lay .hd .x{margin-left:auto;width:30px;height:30px;border-radius:50%;background:var(--panel2);color:var(--mute);font-size:16px;line-height:30px;text-align:center}
-.lay .sub{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute)}
-.lay .sub span{width:62px;flex:0 0 62px}
-.lay input[type=range]{height:30px}
-.lt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.lt button{border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:14px 8px;font-weight:700;font-size:13px;text-align:left;position:relative;overflow:hidden;min-height:58px}
-.lt button::after{content:"";position:absolute;left:10px;bottom:9px;width:18px;height:3px;border-radius:2px;background:var(--c);opacity:.35}
-.lt button.on{background:var(--c);color:#0b0a0f;border-color:transparent;box-shadow:0 0 22px -6px var(--c)}
-.lt button.on::after{background:#0b0a0f;opacity:.5}
-.ghd{display:flex;justify-content:space-between;align-items:center}
+.lay .hd .x{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--panel2);color:var(--mute);font-size:17px}
+.lay .sub{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute)}.lay .sub span{flex:0 0 62px}
+.lt{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.lt button{border-radius:13px;background:var(--panel);border:1px solid var(--line);padding:13px 8px;font-weight:700;font-size:13px;text-align:left;position:relative;min-height:54px}
+.lt button::after{content:"";position:absolute;left:9px;bottom:8px;width:16px;height:3px;border-radius:2px;background:var(--c);opacity:.4}
+.lt button.on{background:var(--c);color:#0b0a0f;border-color:transparent;box-shadow:0 0 22px -8px var(--c)}
 .clr{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--hot);padding:6px 10px;border:1px solid #ff4d2e55;border-radius:10px}
-/* models */
-.models{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;margin:0 -16px;padding-left:16px;padding-right:16px}
-.model{flex:0 0 112px;scroll-snap-align:start;border-radius:16px;overflow:hidden;background:#000;border:1px solid var(--line);position:relative}
-.model img{display:block;width:100%;aspect-ratio:1;object-fit:cover;opacity:.75;transition:.2s}
-.model span{position:absolute;left:8px;right:8px;bottom:7px;font-size:12px;font-weight:600;line-height:1.1}
-.model.on{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}
-.model.on img{opacity:1}
-
-/* presets */
-.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.chip{border-radius:12px;background:var(--panel);border:1px solid var(--line);padding:10px 8px;text-align:left;min-height:58px;position:relative;overflow:hidden}
-.chip .n{font:700 11px var(--mono);color:var(--cyan)}
-.chip .t{font-size:12px;font-weight:600;margin-top:3px;line-height:1.1}
-.chip.on{background:#0f2a2e;border-color:var(--cyan)}
-.chip .fill{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--hot)}
-.chip.hold .fill{width:100%;transition:width .55s linear}
+details.box summary{list-style:none;padding:12px 14px;border-radius:13px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--lime)}
+details.box summary::-webkit-details-marker{display:none}details.box summary::after{content:' ▾';color:var(--mute)}details.box[open] summary{margin-bottom:8px}
+#gridbox{display:none;margin-top:8px}#gridbox.on{display:block}
+.models{display:flex;gap:9px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px}
+.model{flex:0 0 104px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line);position:relative}
+.model img{display:block;width:100%;aspect-ratio:1;object-fit:cover;opacity:.75}
+.model span{position:absolute;left:7px;right:7px;bottom:6px;font-size:11.5px;font-weight:600;line-height:1.1}
+.model.on{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}.model.on img{opacity:1}
 
 /* sliders */
-.ctl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px 8px;margin-bottom:8px}
-.ctl .top{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
-.ctl .top output{font:500 12px var(--mono);color:var(--mute)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:2px 0 0}
+.ctl{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 14px 6px;margin-bottom:7px}
+.ctl .top{display:flex;justify-content:space-between;font-size:13px;font-weight:600}.ctl .top output{font:500 12px var(--mono);color:var(--mute)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:32px;background:transparent;margin:0}
 input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--acc,var(--hot)) var(--p,50%),var(--panel2) var(--p,50%))}
-input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--panel2)}
-input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--acc,var(--hot))}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--panel2)}input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--acc,var(--hot))}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--ink);margin-top:-10px;box-shadow:0 2px 10px #000a}
 input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:var(--ink)}
 
-/* toggles / buttons */
-.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+/* cam */
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.chip{border-radius:12px;background:var(--panel);border:1px solid var(--line);padding:9px 8px;text-align:left;min-height:54px;position:relative;overflow:hidden}
+.chip .n{font:700 11px var(--mono);color:var(--cyan)}.chip .t{font-size:12px;font-weight:600;margin-top:3px;line-height:1.1}
+.chip.on{background:#0f2a2e;border-color:var(--cyan)}
+.tpad{position:relative;aspect-ratio:1;border-radius:22px;background:radial-gradient(circle at 50% 50%,#3ef0ff14,transparent 55%),repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 40px),var(--panel);border:1px solid var(--line);touch-action:none;overflow:hidden}
+.tpad .hint{position:absolute;inset:auto 0 14px;text-align:center;font-size:11px;color:var(--mute);letter-spacing:.06em;line-height:1.6;pointer-events:none}
+.tpad .ring{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:2px solid var(--cyan);opacity:0;pointer-events:none}.tpad .ring.b{border-color:var(--hot)}
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}
 .btn{border-radius:12px;background:var(--panel);border:1px solid var(--line);padding:13px 6px;font-weight:600;font-size:13px;text-align:center}
-.btn:active{background:var(--panel2)}
 .btn.on{background:var(--ink);color:var(--bg)}
 
-/* touch pad */
-.pad{position:relative;aspect-ratio:1/1;border-radius:22px;background:
-   radial-gradient(circle at 50% 50%,#3ef0ff14,transparent 55%),
-   repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 40px),
-   repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 40px),var(--panel);
-   border:1px solid var(--line);touch-action:none;overflow:hidden}
-.pad .hint{position:absolute;inset:auto 0 14px;text-align:center;font-size:11px;color:var(--mute);letter-spacing:.06em;line-height:1.6;pointer-events:none}
-.pad .ring{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:2px solid var(--cyan);opacity:0;pointer-events:none;transition:opacity .2s}
-.pad .ring.b{border-color:var(--hot)}
-.pad .cross{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border:1px solid #ffffff30;border-radius:50%}
-
 /* audio */
-.big{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end;height:170px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end;height:160px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
-.bar div{width:100%;border-radius:8px;background:var(--c);height:2%;transition:height 60ms linear;box-shadow:0 0 18px -4px var(--c)}
-.bar span{font:700 11px var(--mono);color:var(--mute)}
+.bar div{width:100%;border-radius:8px;background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-/* blackout + nav */
-.bo{height:36px;padding:0 16px;border-radius:18px;background:var(--ink);color:var(--bg);font-weight:700;letter-spacing:.12em;font-size:11px}
-.bo.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 10px #ff4d2e33,0 10px 30px #000c}}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px calc(8px + var(--safe-b));background:#0d0b12f0;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
-nav button{padding:10px 0;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--mute);border-radius:12px}
-nav button.on{color:var(--ink);background:var(--panel2)}
-.toast{position:fixed;left:50%;top:calc(14px + var(--safe-t));transform:translate(-50%,-80px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:20px;z-index:9;transition:transform .25s}
-.toast.on{transform:translate(-50%,0)}
-.off{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:#09080de8;text-align:center;padding:30px}
-.off.on{display:grid}
-.off b{display:block;font-size:20px;margin-bottom:8px}
-.off span{color:var(--mute);font-size:14px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);padding:7px 8px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav button{padding:11px 0;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--mute);border-radius:12px}nav button.on{color:var(--ink);background:var(--panel2)}
+
+/* sheet + toast + offline */
+.scrim{position:fixed;inset:0;background:#000a;z-index:30;display:none}.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;background:#16131d;border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + var(--sb));transform:translateY(105%);transition:transform .22s ease}
+.sheet.on{transform:none}
+.sheet h3{margin:0 0 4px;font-size:18px}.sheet p{margin:0 0 12px;color:var(--mute);font-size:13px}
+.sheet input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px;margin-bottom:10px;outline:none}
+.sheet .acts{display:grid;gap:8px}
+.sheet .acts button{padding:15px;border-radius:13px;font-weight:700;background:var(--panel2)}
+.sheet .acts .pri{background:var(--ink);color:var(--bg)}.sheet .acts .dan{color:var(--hot)}
+.toast{position:fixed;left:50%;top:calc(12px + var(--st));transform:translate(-50%,-90px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:20px;z-index:40;transition:transform .25s}.toast.on{transform:translate(-50%,0)}
+.off{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:#09080de8;text-align:center;padding:30px}.off.on{display:grid}
+.off b{display:block;font-size:20px;margin-bottom:8px}.off span{color:var(--mute);font-size:14px;line-height:1.5}
 </style>
 </head>
 <body>
 <header>
-  <div class="row1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="bo" id="bo">BLACKOUT</button></div>
-  <div class="now"><b id="nowFx">—</b><span id="nowSub"></span></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="now"><b id="nowA">—</b><span id="nowB"></span></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
 
 <main>
-  <section class="view on" id="v-play">
+  <section class="view" id="v-live">
+    <h2>Bank</h2>
+    <div class="seg" id="banks"></div>
+    <h2>Switch <em>how presets change</em></h2>
+    <div class="seg sm" id="fades"></div>
+    <div class="row" style="margin-top:7px"><button class="chipt" id="rCam">+ CAMERA</button><button class="chipt" id="rModel">+ MODEL</button></div>
+    <h2><span>Presets</span><em>tap = go · hold = edit</em></h2>
+    <div class="pads" id="pads"></div>
+    <div class="nav2"><button class="big" data-step="-1">◀ PREV</button><button class="big" data-step="1">NEXT ▶</button></div>
+  </section>
+
+  <section class="view" id="v-layers">
     <h2>3D scene</h2>
     <div class="seg" id="scene"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
-    <details class="gridbox" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
-    <h2>Looks <em>tap load · hold save</em></h2>
-    <div class="looks" id="looks"></div>
-    <h2 class="ghd"><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
+    <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
+    <h2><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
     <div class="onair" id="onair"></div>
     <h2>Warp <em>tap to stack</em></h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
     <h2>Post</h2><div class="lt" id="lt-post"></div>
-    <h2>Models</h2>
-    <div class="models" id="models"></div>
+    <h2>Model</h2><div class="models" id="models"></div>
   </section>
 
   <section class="view" id="v-cam">
-    <h2>Camera moves <em>tap load · hold save</em></h2>
-    <div class="presets" id="presets"></div>
+    <h2>Camera moves <em>tap · hold save</em></h2><div class="presets" id="presets"></div>
     <h2>Touch camera <em>double-tap = centre</em></h2>
-    <div class="pad" id="pad"><div class="cross"></div><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
+    <div class="tpad" id="tpad"><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
       <div class="hint">1 FINGER ORBIT · FLICK TO SPIN<br>2 FINGERS PINCH ZOOM · DRAG PAN</div></div>
-    <div class="btns">
-      <button class="btn" data-act="center">Centre</button>
-      <button class="btn" data-act="reset">Reset cam</button>
-      <button class="btn" id="t-Autospin" data-tog="Autospin">Auto spin</button>
-    </div>
+    <div class="btns"><button class="btn" data-act="center">Centre</button><button class="btn" data-act="reset">Reset cam</button><button class="btn" id="t-Autospin" data-tog="Autospin">Auto spin</button></div>
     <h2>Camera</h2><div id="g-camera"></div>
-    <h2>Movement</h2><div id="g-move"></div>
+    <details class="box"><summary>Movement + kick</summary><div id="g-move"></div><div id="g-kick"></div></details>
   </section>
 
   <section class="view" id="v-audio">
     <h2>Live audio</h2>
-    <div class="big">
-      <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div>
-      <div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
-      <div class="bar" style="--c:var(--cyan)"><div id="bH"></div><span>HIGH</span></div>
-      <div class="bar" style="--c:var(--lime)"><div id="bK"></div><span>KICK</span></div>
+    <div class="bars">
+      <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div><div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
+      <div class="bar" style="--c:var(--cyan)"><div id="bH"></div><span>HIGH</span></div><div class="bar" style="--c:var(--lime)"><div id="bK"></div><span>KICK</span></div>
     </div>
     <h2>Input</h2><div id="g-audio"></div>
-    <h2>Kick → camera</h2><div id="g-kick"></div>
   </section>
 
   <section class="view" id="v-tune">
     <h2>Master</h2><div id="g-master"></div>
     <h2>Model motion</h2><div id="g-motion"></div>
-    <h2>Screen</h2>
-    <div class="btns"><button class="btn" id="t-Showlabel" data-tog="Showlabel">Info label</button></div>
+    <h2>Screen</h2><div class="btns"><button class="btn" id="t-Showlabel" data-tog="Showlabel">Info label</button></div>
   </section>
 </main>
 
-<nav>
-  <button class="on" data-v="play">PLAY</button><button data-v="cam">CAM</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button>
-</nav>
+<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">LAYERS</button><button data-v="cam">CAM</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button></nav>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
 <div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span></div></div>
 
 <script>
-const $ = s => document.querySelector(s);
-const GRAD = ['#4a4a55,#1d1c22','#ff2e88,#ffb300','#3ef0ff,#b06bff','#ff9d00,#6b3cff','#00e5ff,#003cff','#ff3b1f,#ffd9c7',
-              '#ff2ec4,#2effc0','#2b00ff,#ff6a00','#ff00a8,#00ffe1','#16ff6e,#003b1a','#ff2ef0,#00d4ff'];
-let ws, S = {pars:{}}, touching = {}, backoff = 500, T = {send(){}}, lastM = 0, linkUp = false;
+const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
+const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+                set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
+const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
+const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK']};
+const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
-const BROKERS = [  // port 443 first: passes networks that block everything but normal web traffic
-  {url: 'wss://public.cloud.shiftr.io', user: 'public', pass: 'public'},
-  {url: 'wss://broker.hivemq.com:8884/mqtt'},
-  {url: 'wss://broker.emqx.io:8084/mqtt'}];
-let bi = 0, lastErr = '';
+const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
+let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
+let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam', false), model: store.get('model', true)};
+const touching = {};
 const send = o => T.send(o);
-const buzz = () => navigator.vibrate && navigator.vibrate(8);
-function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),1400)}
+const buzz = (n = 8) => navigator.vibrate && navigator.vibrate(n);
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 1400); }
 
 /* ---------------- connection ---------------- */
 function onMsg(m){
-  if (m.t === 'state') { S = m; airSig = ''; build(); liveLayers(); sync(m.pars); }
-  else if (m.t === 'm') { lastM = performance.now(); if (S.layers) { liveLayers(m.L); meters(m); sync(m.pars); } $('#fps').textContent = m.fps + ' fps'; }
-  else if (m.t === 'looks') { S.looks = m.looks; buildLooks(); }
-  else if (m.t === 'presets') { S.presets = m.presets; buildPresets(); }
+  if (m.t === 'state') { S = m; build(); applyPars(m.pars); applyLayers(); renderPads(); }
+  else if (!S) return;
+  else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
+    if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
+  else if (m.t === 'bank') { S.bank = m.bank; renderPads(); }
+  else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
 }
 function status(){
   if (!KEY && location.protocol === 'https:') return;
-  const tdAlive = performance.now() - lastM < 3000, ok = linkUp && tdAlive;
+  const ok = linkUp && performance.now() - lastM < 3000;
   $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', !ok);
   $('#offT').textContent = !linkUp ? 'Connecting…' : 'Waiting for TouchDesigner…';
-  $('#offS').innerHTML = KEY ? 'Relay ' + (BROKERS[bi % BROKERS.length].url.split('/')[2]) + ' · key ' + KEY.slice(0,4) + '…' + (lastErr ? '<br><small>' + lastErr + '</small>' : '') + '<br>TouchDesigner must be open and online.'
-                             : 'Phone and computer must be on the same Wi-Fi,<br>and TouchDesigner must be running.';
+  $('#offS').innerHTML = KEY ? 'Relay ' + BROKERS[bi].url.split('/')[2] + (lastErr ? '<br><small>' + lastErr + '</small>' : '') + '<br>TouchDesigner must be open and online.'
+                             : 'Phone and computer must be on the same Wi-Fi.';
 }
 setInterval(status, 500);
+setInterval(() => linkUp && send({t:'ping'}), 10000);               // lets TD know a phone is listening
 function connectWS(){
-  ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://') + location.host + '/ws');
-  ws.onopen = () => { backoff = 500; linkUp = true; };
-  ws.onclose = () => { linkUp = false; setTimeout(connectWS, backoff = Math.min(backoff*1.6, 4000)); };
+  const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'); let b = 500;
+  ws.onopen = () => { linkUp = true; }; ws.onclose = () => { linkUp = false; setTimeout(connectWS, b = Math.min(b * 1.6, 4000)); };
   ws.onmessage = e => onMsg(JSON.parse(e.data));
   T.send = o => ws.readyState === 1 && ws.send(JSON.stringify(o));
 }
 function connectRelay(){
-  const base = 'moaivj/' + KEY, B = BROKERS[bi % BROKERS.length], url = B.url;
-  const c = mqtt.connect(url, {username: B.user, password: B.pass, clientId: 'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive: 20, reconnectPeriod: 1500, connectTimeout: 6000, clean: true});
+  const base = 'moaivj/' + KEY, B = BROKERS[bi];
+  const c = mqtt.connect(B.url, {username:B.user, password:B.pass, clientId:'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive:20, reconnectPeriod:1500, connectTimeout:6000, clean:true});
   let ever = false;
-  const fail = setTimeout(() => { if (!ever) { lastErr = 'no answer from ' + url.split('/')[2] + ', trying next'; c.end(true); bi++; connectRelay(); } }, 7000);
-  c.on('connect', () => { ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; c.subscribe(base + '/+'); c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
-  c.on('error', e => { lastErr = (e && e.message) || String(e); });
-  c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
+  const fail = setTimeout(() => { if (!ever) { lastErr = 'no answer from ' + B.url.split('/')[2] + ', trying next'; c.end(true); bi = (bi + 1) % BROKERS.length; connectRelay(); } }, 7000);
+  c.on('connect', () => { ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; store.set('broker', bi);
+    c.subscribe(base + '/+'); c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+  c.on('error', e => lastErr = (e && e.message) || String(e)); c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
   c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
   T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
 }
 function connect(){
-  if (KEY) { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js';
-    sc.onload = connectRelay; sc.onerror = () => { $('#offT').textContent = 'Could not load relay library'; }; document.head.appendChild(sc); }
-  else if (location.protocol === 'https:') { $('#offT').textContent = 'Pairing key missing'; $('#offS').textContent = 'Open the link (or QR) shown in TouchDesigner: CONTROLS → Master → Phone link.'; }
+  if (KEY) { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js'; sc.onload = connectRelay;
+    sc.onerror = () => { $('#offT').textContent = 'Could not load relay library'; }; document.head.appendChild(sc); }
+  else if (location.protocol === 'https:') { $('#offT').textContent = 'Pairing key missing'; $('#offS').textContent = 'Open the link or QR from TouchDesigner: CONTROLS → Master → Phone link.'; }
   else connectWS();
 }
 
-/* ---------------- build UI from TD state ---------------- */
-const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
-const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK']};
+/* ---------------- build ---------------- */
+const EL = {};
 function build(){
-  ['warp','style','post'].forEach(g => $('#lt-'+g).innerHTML = S.layers.filter(l => l.g === g)
-     .map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
-  buildLooks();
-  $('#models').innerHTML = S.models.map(m=>`<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
-  buildPresets();
-  ['master','audio','kick','camera','move','motion','grid'].forEach(g => $('#g-'+g).innerHTML = '');
-  S.sliders.forEach(s => {
-    const host = $('#g-'+s.group); if (!host) return;
-    const acc = {audio:'var(--vio)',kick:'var(--lime)',camera:'var(--cyan)',move:'var(--cyan)',motion:'var(--hot)',master:'var(--ink)',grid:'var(--lime)'}[s.group];
-    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div>
-      <input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${acc}"></div>`);
-  });
-  document.querySelectorAll('input[type=range][data-p]').forEach(el => {
-    const p = el.dataset.p; let raf = 0;
-    const show = () => { const k=(el.value-el.min)/(el.max-el.min)*100; el.style.setProperty('--p', k+'%'); $('#o-'+p).textContent = fmt(+el.value, +el.step); };
-    el._show = show;
-    el.addEventListener('pointerdown', () => touching[p] = Infinity);
-    const end = () => touching[p] = performance.now() + 600;
-    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
-    el.addEventListener('input', () => { show(); touching[p] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => send({t:'set', p, v:+el.value})); });
-  });
+  $('#banks').innerHTML = ['A','B','C','D'].map((b, i) => `<button data-bank="${i}">BANK ${b}</button>`).join('');
+  $('#fades').innerHTML = FADES.map(([n, v]) => `<button data-fade="${v}">${n}</button>`).join('');
+  ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
+  $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
+  buildCam();
+  ['master','audio','kick','camera','move','motion','grid'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)'};
+  S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
+    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
+  EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
+  EL.layerBtns = [...$$('[data-layer]')]; EL.models = [...$$('[data-model]')]; EL.scene = [...$$('[data-scene]')];
+  airSig = null; uiPrefs();
 }
-function buildLooks(){
-  $('#looks').innerHTML = (S.looks||[]).map((n,i)=>`<button class="look" data-look="${i+1}"><div class="n">LOOK ${i+1}</div><div class="t">${n}</div><div class="fill"></div></button>`).join('')
-    + `<button class="look" data-look="${(S.looks||[]).length+1}"><div class="n">EMPTY</div><div class="t">+ hold to save</div><div class="fill"></div></button>`;
+function buildCam(){ $('#presets').innerHTML = S.presets.slice(0, 8).map((n, i) => `<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}</div><div class="t">${n}</div></button>`).join(''); }
+const paint = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
+const fmt = (v, step) => step >= 1 ? Math.round(v) : v.toFixed(2);
+function bindSlider(el, id, onv){
+  let raf = 0; const out = document.getElementById('o-' + id);
+  const show = () => { paint(el); if (out) out.textContent = fmt(+el.value, +el.step); };
+  el._show = show; show();
+  el.addEventListener('pointerdown', () => touching[id] = Infinity);
+  const end = () => touching[id] = performance.now() + 600;
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
+  el.addEventListener('input', () => { show(); touching[id] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => onv(+el.value)); });
 }
-let airSig = '';
+function uiPrefs(){
+  $$('#banks button').forEach(b => b.classList.toggle('on', +b.dataset.bank === ui.bank));
+  $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade));
+  $('#rCam').classList.toggle('on', ui.cam); $('#rModel').classList.toggle('on', ui.model);
+  $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
+  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab));
+  ['tab','bank','fade','cam','model'].forEach(k => store.set(k, ui[k]));
+}
+
+/* ---------------- render ---------------- */
+function applyPars(p){
+  Object.assign(S.pars, p); p = S.pars; const now = performance.now();
+  for (const k in EL.sl) { const el = EL.sl[k]; if (p[k] !== undefined && !(touching[k] > now) && +el.value !== p[k]) { el.value = p[k]; el._show(); } }
+  EL.scene.forEach(b => b.classList.toggle('on', b.dataset.scene === p.Scene));
+  $('#gridbox').classList.toggle('on', p.Scene === 'grid');
+  EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
+  $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
+  ['Autospin','Showlabel'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
+  header();
+}
+function header(){
+  const slot = S.b, pr = slot ? S.bank[slot - 1] : null;
+  const act = S.layers.filter(l => l.on).map(l => l.label);
+  $('#nowA').textContent = pr ? pr.name : (act.length ? act.join(' + ') : 'CLEAN');
+  const model = S.models.find(m => m.name === S.pars.Model);
+  $('#nowB').textContent = (pr ? act.length + ' layers · ' : '') + (model ? model.label : '') + ' · ' + S.pars.Scene;
+}
+function applyLayers(L){
+  if (L) L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } });
+  EL.layerBtns.forEach(b => b.classList.toggle('on', !!S.layers.find(x => x.k === b.dataset.layer && x.on)));
+  onAir(); header();
+}
+let airSig = null;
 function onAir(){
   const act = S.layers.filter(l => l.on), sig = act.map(l => l.k).join(',');
-  if (sig === airSig) { act.forEach(l => { setLaySlider(l.k, 'amt', l.amt); setLaySlider(l.k, 'p1', l.p1); }); return; }
+  if (sig === airSig) { act.forEach(l => { setLay(l.k, 'amt', l.amt); setLay(l.k, 'p1', l.p1); }); return; }
   airSig = sig;
-  $('#onair').innerHTML = act.length ? act.map(l => {
-    const modes = MODES[l.k];
-    const p1 = !l.p1label ? '' : modes
-      ? `<div class="seg small" style="grid-template-columns:repeat(${modes.length},1fr);margin:4px 0 6px">${modes.map((m,i)=>`<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1)===i?'on':''}">${m}</button>`).join('')}</div>`
+  $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
+    const p1 = !l.p1label ? '' : md ? `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span>${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}</div>`;
   }).join('') : '<div class="empty">Nothing stacked — tap layers below</div>';
-  document.querySelectorAll('#onair input[type=range]').forEach(el => {
-    const id = el.dataset.lk + ':' + el.dataset.f; let raf = 0;
-    paint(el);
-    el.addEventListener('pointerdown', () => touching[id] = Infinity);
-    const end = () => touching[id] = performance.now() + 600;
-    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
-    el.addEventListener('input', () => { paint(el); touching[id] = Infinity; cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: +el.value})); });
-  });
+  $$('#onair input[type=range]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: v})));
 }
-const paint = el => el.style.setProperty('--p', ((el.value-el.min)/(el.max-el.min)*100) + '%');
-function setLaySlider(k, f, v){
-  const el = document.querySelector(`#onair input[data-lk="${k}"][data-f="${f}"]`);
-  if (el && !(touching[k+':'+f] > performance.now())) { el.value = v; paint(el); }
-  if (f === 'p1') document.querySelectorAll(`[data-mode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === Math.round(v)));
+function setLay(k, f, v){
+  const el = $(`#onair input[data-lk="${k}"][data-f="${f}"]`);
+  if (el && !(touching[k + ':' + f] > performance.now()) && +el.value !== v) { el.value = v; el._show(); }
+  if (f === 'p1') $$(`[data-mode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === Math.round(v)));
 }
-function buildPresets(){
-  $('#presets').innerHTML = S.presets.slice(0,8).map((n,i)=>`<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}</div><div class="t">${n}</div><div class="fill"></div></button>`).join('');
-}
-const fmt = (v, step) => step >= 1 ? Math.round(v) : v.toFixed(step >= 0.05 ? 2 : 2);
-
-/* ---------------- sync from TD ---------------- */
-function sync(p){
-  if (!p) return; S.pars = p;
-  const now = performance.now();
-  for (const k in p) {
-    const el = document.getElementById('s-'+k);
-    if (el && !(touching[k] > now)) { el.value = p[k]; el._show && el._show(); }
-  }
-  document.querySelectorAll('[data-scene]').forEach(b => b.classList.toggle('on', b.dataset.scene === p.Scene));
-  $('#gridbox').classList.toggle('on', p.Scene === 'grid');
-  document.querySelectorAll('[data-model]').forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
-  document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Showlabel'].forEach(t => { const b = $('#t-'+t); b && b.classList.toggle('on', !!p[t]); });
-  $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
-  const model = (S.models||[]).find(m => m.name === p.Model);
-  const act = (S.layers||[]).filter(l => l.on).map(l => l.label);
-  $('#nowFx').textContent = act.length ? act.join(' + ') : 'CLEAN';
-  $('#nowSub').textContent = (model ? model.label : '') + '  ·  cam ' + p.Presetslot + ' ' + (p.Presetname||'');
-}
-function liveLayers(L){
-  if (L) L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } });
-  document.querySelectorAll('[data-layer]').forEach(b => { const l = S.layers.find(x => x.k === b.dataset.layer); b.classList.toggle('on', !!(l && l.on)); });
-  onAir();
+const GROUP = {};
+function renderPads(){
+  if (!S) return; S.layers.forEach(l => GROUP[l.k] = l.g);
+  const base = ui.bank * 16, ic = {solid:'●', particles:'⁘', grid:'▦'};
+  $('#pads').innerHTML = Array.from({length:16}, (_, i) => { const slot = base + i + 1, p = S.bank[slot - 1];
+    if (!p) return `<button class="pad empty" data-pad="${slot}"><span class="n">${slot}</span><span class="t">+ save here</span><span></span></button>`;
+    const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
+    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}"><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="t">${p.name}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
+  }).join('');
+  header();
 }
 function meters(m){
-  const set = (id, v) => $(id).style.transform = 'scaleX(' + Math.min(1, v) + ')';
-  set('#mL', m.l); set('#mM', m.m); set('#mH', m.h); set('#mK', m.k);
-  const h = (id, v) => $(id).style.height = Math.max(2, Math.min(100, v*100)) + '%';
-  h('#bL', m.l); h('#bM', m.m); h('#bH', m.h); h('#bK', m.k);
+  const s = (id, v) => $(id).style.transform = 'scaleX(' + Math.min(1, v) + ')';
+  s('#mL', m.l); s('#mM', m.m); s('#mH', m.h); s('#mK', m.k);
+  if (ui.tab === 'audio') { const h = (id, v) => $(id).style.height = Math.max(2, Math.min(100, v * 100)) + '%'; h('#bL', m.l); h('#bM', m.m); h('#bH', m.h); h('#bK', m.k); }
 }
+
+/* ---------------- preset pads ---------------- */
+function go(slot){
+  const p = S.bank[slot - 1]; if (!p) return;
+  send({t:'bank', v:slot, fade:ui.fade, cam:ui.cam, model:ui.model}); S.b = slot; renderPads(); buzz(12);
+  const el = $(`[data-pad="${slot}"]`); if (el && ui.fade > 0) { el.style.setProperty('--dur', ui.fade + 's'); el.classList.add('fading'); }
+}
+function step(d){
+  const filled = S.bank.map((p, i) => p ? i + 1 : 0).filter(Boolean); if (!filled.length) return;
+  const i = filled.indexOf(S.b); const next = filled[((i < 0 ? (d > 0 ? -1 : 0) : i) + d + filled.length) % filled.length];
+  ui.bank = Math.floor((next - 1) / 16); uiPrefs(); go(next);
+}
+function sheet(slot){
+  const p = S.bank[slot - 1];
+  $('#shT').textContent = p ? 'Preset ' + slot + ' · ' + p.name : 'Empty pad ' + slot;
+  $('#shP').textContent = p ? 'Save overwrites it with what is on screen now (layers, scene, model and camera).' : 'Save what is on screen now — layers, scene, model and camera.';
+  $('#shI').value = p ? p.name : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Preset ' + slot);
+  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Save current here' : 'Save current'}</button>` + (p ? `<button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Clear pad</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
+const closeSheet = () => { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+$('#scrim').addEventListener('click', closeSheet);
+$('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
+  if (b.dataset.sh === 'save') { send({t:'banksave', v:slot, name}); toast('Saved ' + slot + ' · ' + name); S.b = slot; }
+  else if (b.dataset.sh === 'rename') { send({t:'bankrename', v:slot, name}); toast('Renamed'); }
+  else if (b.dataset.sh === 'clear') { send({t:'bankclear', v:slot}); toast('Cleared ' + slot); }
+  closeSheet(); buzz(); });
+
+/* tap / hold on pads + camera chips */
+let holdT = null, held = false;
+document.addEventListener('pointerdown', e => {
+  const c = e.target.closest('[data-pad],[data-preset]'); if (!c) return;
+  held = false; c.classList.add('hold');
+  holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
+    if (c.dataset.pad) return sheet(+c.dataset.pad);
+    const n = +c.dataset.preset, name = prompt('Save current camera to F' + n + ' as:', S.presets[n - 1] || ('Preset ' + n));
+    if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n); } }, 500);
+});
+const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset]'); clearTimeout(holdT);
+  $$('.hold').forEach(x => x.classList.remove('hold'));
+  if (c && !held && e.type === 'pointerup') {
+    if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
+    else { send({t:'preset', v:+c.dataset.preset}); buzz(); } } };
+document.addEventListener('pointerup', endHold); document.addEventListener('pointercancel', endHold);
 
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('button'); if (!t) return;
-  if (t.dataset.v) { document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
-    document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-'+t.dataset.v)); $('main').scrollTop = 0; buzz(); }
-  else if (t.dataset.layer) { const l = S.layers.find(x => x.k === t.dataset.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); liveLayers(); buzz(); }
-  else if (t.dataset.off) { const l = S.layers.find(x => x.k === t.dataset.off); l.on = false; send({t:'layer', k:l.k, on:false}); liveLayers(); buzz(); }
-  else if (t.dataset.mode) { send({t:'layer', k:t.dataset.mode, p1:+t.dataset.v}); setLaySlider(t.dataset.mode, 'p1', +t.dataset.v); buzz(); }
-  else if (t.dataset.scene) { send({t:'scene', v:t.dataset.scene}); buzz(); }
-  else if (t.dataset.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); liveLayers(); buzz(); }
-  else if (t.dataset.model) { send({t:'model', v:t.dataset.model}); buzz(); }
-  else if (t.dataset.tog) { send({t:'set', p:t.dataset.tog, v:!S.pars[t.dataset.tog]}); buzz(); }
-  else if (t.dataset.act === 'center') { send({t:'center'}); buzz(); }
-  else if (t.dataset.act === 'reset') { send({t:'preset', v:1}); buzz(); }
+  const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
+  if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
+  else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
+  else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); buzz(); }
+  else if (t.id === 'rCam') { ui.cam = !ui.cam; uiPrefs(); buzz(); }
+  else if (t.id === 'rModel') { ui.model = !ui.model; uiPrefs(); buzz(); }
+  else if (d.step) step(+d.step);
+  else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); applyLayers(); buzz(); }
+  else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', k:l.k, on:false}); applyLayers(); buzz(); }
+  else if (d.mode) { send({t:'layer', k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
+  else if (d.scene) { send({t:'scene', v:d.scene}); buzz(); }
+  else if (d.model) { send({t:'model', v:d.model}); buzz(); }
+  else if (d.tog) { send({t:'set', p:d.tog, v:!S.pars[d.tog]}); buzz(); }
+  else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); applyLayers(); buzz(); }
+  else if (d.act === 'center') { send({t:'center'}); buzz(); }
+  else if (d.act === 'reset') { send({t:'preset', v:1}); buzz(); }
+  else if (t.id === 'bo') { send({t:'set', p:'Blackout', v:!S.pars.Blackout}); buzz(25); }
 });
-$('#bo').addEventListener('click', () => { send({t:'set', p:'Blackout', v:!S.pars.Blackout}); navigator.vibrate && navigator.vibrate(25); });
 
-/* presets: tap = load, hold = save */
-let holdT = null, held = false;
-document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-preset],[data-look]'); if (!c) return;
-  held = false; c.classList.add('hold');
-  holdT = setTimeout(() => { held = true; c.classList.remove('hold');
-    if (c.dataset.look) { const n = +c.dataset.look, name = prompt('Save the current layers + scene as Look ' + n + ':', (S.looks||[])[n-1] || ('Look ' + n));
-      if (name !== null) { send({t:'savelook', v:n, name}); toast('Saved look ' + n + ' · ' + name); } return; }
-    const n = +c.dataset.preset, name = prompt('Save current camera to slot ' + n + ' as:', S.presets[n-1] || ('Preset ' + n));
-    if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n + ' · ' + name); } }, 550);
-});
-const clearHold = e => { const c = e.target.closest && e.target.closest('[data-preset],[data-look]'); clearTimeout(holdT);
-  document.querySelectorAll('.chip.hold,.look.hold').forEach(x => x.classList.remove('hold'));
-  if (c && !held && e.type === 'pointerup') {
-    if (c.dataset.look) { if (+c.dataset.look <= (S.looks||[]).length) { send({t:'look', v:+c.dataset.look}); toast((S.looks||[])[+c.dataset.look-1]); } }
-    else send({t:'preset', v:+c.dataset.preset});
-    buzz(); } };
-document.addEventListener('pointerup', clearHold); document.addEventListener('pointercancel', clearHold);
-
-/* ---------------- touch camera pad ---------------- */
-const pad = $('#pad'), P = new Map();
+/* ---------------- touch camera ---------------- */
+const tp = $('#tpad'), P = new Map();
 let acc = {dx:0, dy:0, du:0, dv:0, f:1}, vel = {y:0, p:0, t:0}, lastTap = 0, pinch0 = 0, cen0 = null;
 function flush(){
   if (acc.dx || acc.dy) send({t:'orbit', dx:acc.dx, dy:acc.dy});
   if (acc.du || acc.dv) send({t:'pan', du:acc.du, dv:acc.dv});
   if (acc.f !== 1) send({t:'zoom', f:acc.f});
-  acc = {dx:0, dy:0, du:0, dv:0, f:1};
-  if (P.size) requestAnimationFrame(flush);
+  acc = {dx:0, dy:0, du:0, dv:0, f:1}; if (P.size) requestAnimationFrame(flush);
 }
-function ring(id, x, y, on){ const r = $(id), b = pad.getBoundingClientRect(); r.style.left = (x-b.left)+'px'; r.style.top = (y-b.top)+'px'; r.style.opacity = on ? 1 : 0; }
-const two = () => { const [a, b] = [...P.values()]; return {d: Math.hypot(a.x-b.x, a.y-b.y), cx:(a.x+b.x)/2, cy:(a.y+b.y)/2}; };
-pad.addEventListener('pointerdown', e => {
-  pad.setPointerCapture(e.pointerId); P.set(e.pointerId, {x:e.clientX, y:e.clientY});
+function ring(id, x, y, on){ const r = $(id), b = tp.getBoundingClientRect(); r.style.left = (x - b.left) + 'px'; r.style.top = (y - b.top) + 'px'; r.style.opacity = on ? 1 : 0; }
+const two = () => { const [a, b] = [...P.values()]; return {d:Math.hypot(a.x - b.x, a.y - b.y), cx:(a.x + b.x) / 2, cy:(a.y + b.y) / 2}; };
+tp.addEventListener('pointerdown', e => { tp.setPointerCapture(e.pointerId); P.set(e.pointerId, {x:e.clientX, y:e.clientY});
   if (P.size === 1) { send({t:'fling', vy:0, vp:0}); vel = {y:0, p:0, t:performance.now()}; requestAnimationFrame(flush);
     const now = performance.now(); if (now - lastTap < 280) { send({t:'center'}); toast('Centred'); buzz(); } lastTap = now; }
   if (P.size === 2) { const t = two(); pinch0 = t.d; cen0 = t; }
-  ring('#r1', e.clientX, e.clientY, true);
-});
-pad.addEventListener('pointermove', e => {
-  if (!P.has(e.pointerId)) return;
-  const prev = P.get(e.pointerId), cur = {x:e.clientX, y:e.clientY}, w = pad.clientWidth, h = pad.clientHeight;
-  if (P.size === 1) {
-    const dx = -(cur.x - prev.x) / w * 300, dy = (cur.y - prev.y) / h * 150;
-    acc.dx += dx; acc.dy += dy;
-    const now = performance.now(), dt = Math.max(1, now - vel.t) / 1000;
-    vel.y = vel.y*0.5 + (dx/dt)*0.5; vel.p = vel.p*0.5 + (dy/dt)*0.5; vel.t = now;
-    P.set(e.pointerId, cur); ring('#r1', cur.x, cur.y, true);
-  } else if (P.size === 2) {
-    P.set(e.pointerId, cur); const t = two();
-    if (pinch0 > 0) acc.f *= pinch0 / Math.max(1, t.d); pinch0 = t.d;
-    acc.du += (t.cx - cen0.cx) / w; acc.dv += -(t.cy - cen0.cy) / h; cen0 = t;
-    ring('#r1', t.cx, t.cy, true); ring('#r2', t.cx, t.cy, true);
-  }
-});
-const up = e => {
-  if (!P.has(e.pointerId)) return; P.delete(e.pointerId);
-  if (P.size === 0) { ring('#r1',0,0,false); ring('#r2',0,0,false);
+  ring('#r1', e.clientX, e.clientY, true); });
+tp.addEventListener('pointermove', e => { if (!P.has(e.pointerId)) return;
+  const prev = P.get(e.pointerId), cur = {x:e.clientX, y:e.clientY}, w = tp.clientWidth, h = tp.clientHeight;
+  if (P.size === 1) { const dx = -(cur.x - prev.x) / w * 300, dy = (cur.y - prev.y) / h * 150; acc.dx += dx; acc.dy += dy;
+    const now = performance.now(), dt = Math.max(1, now - vel.t) / 1000; vel.y = vel.y * 0.5 + (dx / dt) * 0.5; vel.p = vel.p * 0.5 + (dy / dt) * 0.5; vel.t = now;
+    P.set(e.pointerId, cur); ring('#r1', cur.x, cur.y, true); }
+  else if (P.size === 2) { P.set(e.pointerId, cur); const t = two(); if (pinch0 > 0) acc.f *= pinch0 / Math.max(1, t.d); pinch0 = t.d;
+    acc.du += (t.cx - cen0.cx) / w; acc.dv += -(t.cy - cen0.cy) / h; cen0 = t; ring('#r1', t.cx, t.cy, true); ring('#r2', t.cx, t.cy, true); } });
+const up = e => { if (!P.has(e.pointerId)) return; P.delete(e.pointerId);
+  if (P.size === 0) { ring('#r1', 0, 0, false); ring('#r2', 0, 0, false);
     if (performance.now() - vel.t < 80 && (Math.abs(vel.y) > 40 || Math.abs(vel.p) > 40)) send({t:'fling', vy:vel.y, vp:vel.p}); }
-  if (P.size === 1) { pinch0 = 0; ring('#r2',0,0,false); const [k, v] = [...P.entries()][0]; P.set(k, v); vel.t = performance.now(); }
-};
-pad.addEventListener('pointerup', up); pad.addEventListener('pointercancel', up);
+  if (P.size === 1) { pinch0 = 0; ring('#r2', 0, 0, false); vel.t = performance.now(); } };
+tp.addEventListener('pointerup', up); tp.addEventListener('pointercancel', up);
 
-/* keep screen awake while controlling */
 async function wake(){ try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){} }
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && wake());
-wake(); connect();
+uiPrefs(); wake(); connect();
 </script>
 </body>
 </html>
