@@ -58,6 +58,37 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .tile.on::before{opacity:.95}
 .tile.on .n,.tile.on .t{color:#fff;text-shadow:0 1px 8px #0008}
 
+/* scene segmented control */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:5px}
+.seg button{padding:14px 4px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--mute)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.seg.small button{padding:9px 2px;font-size:11px}
+.gridbox{display:none;margin-top:8px}.gridbox.on{display:block}
+.gridbox summary{list-style:none;cursor:pointer;padding:12px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--lime)}
+.gridbox summary::after{content:' ▾';color:var(--mute)}.gridbox[open] summary{margin-bottom:8px}
+.gridbox summary::-webkit-details-marker{display:none}
+.looks{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px}
+.look{flex:0 0 auto;min-width:96px;border-radius:14px;padding:12px 12px 10px;text-align:left;background:linear-gradient(135deg,#2a1640,#13111a);border:1px solid var(--line);position:relative;overflow:hidden}
+.look .n{font:700 10px var(--mono);color:var(--vio)}
+.look .t{font-weight:700;font-size:13px;margin-top:4px;white-space:nowrap}
+.look .fill{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--hot)}
+.look.hold .fill{width:100%;transition:width .55s linear}
+.onair{background:linear-gradient(180deg,#1d1424,#13111a);border:1px solid #3a2a48;border-radius:18px;padding:12px;min-height:56px}
+.onair .empty{color:var(--mute);font-size:13px;text-align:center;padding:10px 0}
+.lay{border-bottom:1px solid #2c2236;padding:6px 2px 4px}.lay:last-child{border-bottom:0}
+.lay .hd{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.lay .hd i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+.lay .hd .x{margin-left:auto;width:30px;height:30px;border-radius:50%;background:var(--panel2);color:var(--mute);font-size:16px;line-height:30px;text-align:center}
+.lay .sub{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute)}
+.lay .sub span{width:62px;flex:0 0 62px}
+.lay input[type=range]{height:30px}
+.lt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lt button{border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:14px 8px;font-weight:700;font-size:13px;text-align:left;position:relative;overflow:hidden;min-height:58px}
+.lt button::after{content:"";position:absolute;left:10px;bottom:9px;width:18px;height:3px;border-radius:2px;background:var(--c);opacity:.35}
+.lt button.on{background:var(--c);color:#0b0a0f;border-color:transparent;box-shadow:0 0 22px -6px var(--c)}
+.lt button.on::after{background:#0b0a0f;opacity:.5}
+.ghd{display:flex;justify-content:space-between;align-items:center}
+.clr{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--hot);padding:6px 10px;border:1px solid #ff4d2e55;border-radius:10px}
 /* models */
 .models{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;margin:0 -16px;padding-left:16px;padding-right:16px}
 .model{flex:0 0 112px;scroll-snap-align:start;border-radius:16px;overflow:hidden;background:#000;border:1px solid var(--line);position:relative}
@@ -133,17 +164,23 @@ nav button.on{color:var(--ink);background:var(--panel2)}
 
 <main>
   <section class="view on" id="v-play">
-    <h2>Effects <em>tap to switch</em></h2>
-    <div class="fx" id="fx"></div>
+    <h2>3D scene</h2>
+    <div class="seg" id="scene"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
+    <details class="gridbox" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
+    <h2>Looks <em>tap load · hold save</em></h2>
+    <div class="looks" id="looks"></div>
+    <h2 class="ghd"><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
+    <div class="onair" id="onair"></div>
+    <h2>Warp <em>tap to stack</em></h2><div class="lt" id="lt-warp"></div>
+    <h2>Style</h2><div class="lt" id="lt-style"></div>
+    <h2>Post</h2><div class="lt" id="lt-post"></div>
     <h2>Models</h2>
     <div class="models" id="models"></div>
-    <h2>Camera <em>tap load · hold save</em></h2>
-    <div class="presets" id="presets"></div>
-    <h2>Master</h2>
-    <div id="g-master"></div>
   </section>
 
   <section class="view" id="v-cam">
+    <h2>Camera moves <em>tap load · hold save</em></h2>
+    <div class="presets" id="presets"></div>
     <h2>Touch camera <em>double-tap = centre</em></h2>
     <div class="pad" id="pad"><div class="cross"></div><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
       <div class="hint">1 FINGER ORBIT · FLICK TO SPIN<br>2 FINGERS PINCH ZOOM · DRAG PAN</div></div>
@@ -169,6 +206,7 @@ nav button.on{color:var(--ink);background:var(--panel2)}
   </section>
 
   <section class="view" id="v-tune">
+    <h2>Master</h2><div id="g-master"></div>
     <h2>Model motion</h2><div id="g-motion"></div>
     <h2>Screen</h2>
     <div class="btns"><button class="btn" id="t-Showlabel" data-tog="Showlabel">Info label</button></div>
@@ -198,8 +236,9 @@ function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');c
 
 /* ---------------- connection ---------------- */
 function onMsg(m){
-  if (m.t === 'state') { const first = !S.styles; S = m; build(); sync(m.pars); }
-  else if (m.t === 'm') { lastM = performance.now(); if (S.styles) { meters(m); sync(m.pars); } $('#fps').textContent = m.fps + ' fps'; }
+  if (m.t === 'state') { S = m; airSig = ''; build(); liveLayers(); sync(m.pars); }
+  else if (m.t === 'm') { lastM = performance.now(); if (S.layers) { liveLayers(m.L); meters(m); sync(m.pars); } $('#fps').textContent = m.fps + ' fps'; }
+  else if (m.t === 'looks') { S.looks = m.looks; buildLooks(); }
   else if (m.t === 'presets') { S.presets = m.presets; buildPresets(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
 }
@@ -239,18 +278,22 @@ function connect(){
 }
 
 /* ---------------- build UI from TD state ---------------- */
+const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
+const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK']};
 function build(){
-  $('#fx').innerHTML = S.styles.map((n,i)=>`<button class="tile" data-fx="${i}" style="--g:linear-gradient(135deg,${GRAD[i]})"><span class="n">${i===0?'C':(i===10?'0':i)}</span><span class="t">${n.replace('KALEIDOSCOPE','KALEIDO&shy;SCOPE')}</span></button>`).join('');
+  ['warp','style','post'].forEach(g => $('#lt-'+g).innerHTML = S.layers.filter(l => l.g === g)
+     .map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
+  buildLooks();
   $('#models').innerHTML = S.models.map(m=>`<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
   buildPresets();
-  ['master','audio','kick','camera','move','motion'].forEach(g => $('#g-'+g).innerHTML = '');
+  ['master','audio','kick','camera','move','motion','grid'].forEach(g => $('#g-'+g).innerHTML = '');
   S.sliders.forEach(s => {
     const host = $('#g-'+s.group); if (!host) return;
-    const acc = {audio:'var(--vio)',kick:'var(--lime)',camera:'var(--cyan)',move:'var(--cyan)',motion:'var(--hot)',master:'var(--ink)'}[s.group];
+    const acc = {audio:'var(--vio)',kick:'var(--lime)',camera:'var(--cyan)',move:'var(--cyan)',motion:'var(--hot)',master:'var(--ink)',grid:'var(--lime)'}[s.group];
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div>
       <input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${acc}"></div>`);
   });
-  document.querySelectorAll('input[type=range]').forEach(el => {
+  document.querySelectorAll('input[type=range][data-p]').forEach(el => {
     const p = el.dataset.p; let raf = 0;
     const show = () => { const k=(el.value-el.min)/(el.max-el.min)*100; el.style.setProperty('--p', k+'%'); $('#o-'+p).textContent = fmt(+el.value, +el.step); };
     el._show = show;
@@ -259,6 +302,39 @@ function build(){
     el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
     el.addEventListener('input', () => { show(); touching[p] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => send({t:'set', p, v:+el.value})); });
   });
+}
+function buildLooks(){
+  $('#looks').innerHTML = (S.looks||[]).map((n,i)=>`<button class="look" data-look="${i+1}"><div class="n">LOOK ${i+1}</div><div class="t">${n}</div><div class="fill"></div></button>`).join('')
+    + `<button class="look" data-look="${(S.looks||[]).length+1}"><div class="n">EMPTY</div><div class="t">+ hold to save</div><div class="fill"></div></button>`;
+}
+let airSig = '';
+function onAir(){
+  const act = S.layers.filter(l => l.on), sig = act.map(l => l.k).join(',');
+  if (sig === airSig) { act.forEach(l => { setLaySlider(l.k, 'amt', l.amt); setLaySlider(l.k, 'p1', l.p1); }); return; }
+  airSig = sig;
+  $('#onair').innerHTML = act.length ? act.map(l => {
+    const modes = MODES[l.k];
+    const p1 = !l.p1label ? '' : modes
+      ? `<div class="seg small" style="grid-template-columns:repeat(${modes.length},1fr);margin:4px 0 6px">${modes.map((m,i)=>`<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1)===i?'on':''}">${m}</button>`).join('')}</div>`
+      : `<div class="sub"><span>${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
+    return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
+      <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}</div>`;
+  }).join('') : '<div class="empty">Nothing stacked — tap layers below</div>';
+  document.querySelectorAll('#onair input[type=range]').forEach(el => {
+    const id = el.dataset.lk + ':' + el.dataset.f; let raf = 0;
+    paint(el);
+    el.addEventListener('pointerdown', () => touching[id] = Infinity);
+    const end = () => touching[id] = performance.now() + 600;
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
+    el.addEventListener('input', () => { paint(el); touching[id] = Infinity; cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: +el.value})); });
+  });
+}
+const paint = el => el.style.setProperty('--p', ((el.value-el.min)/(el.max-el.min)*100) + '%');
+function setLaySlider(k, f, v){
+  const el = document.querySelector(`#onair input[data-lk="${k}"][data-f="${f}"]`);
+  if (el && !(touching[k+':'+f] > performance.now())) { el.value = v; paint(el); }
+  if (f === 'p1') document.querySelectorAll(`[data-mode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === Math.round(v)));
 }
 function buildPresets(){
   $('#presets').innerHTML = S.presets.slice(0,8).map((n,i)=>`<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}</div><div class="t">${n}</div><div class="fill"></div></button>`).join('');
@@ -273,14 +349,21 @@ function sync(p){
     const el = document.getElementById('s-'+k);
     if (el && !(touching[k] > now)) { el.value = p[k]; el._show && el._show(); }
   }
-  document.querySelectorAll('[data-fx]').forEach(b => b.classList.toggle('on', +b.dataset.fx === p.Style));
+  document.querySelectorAll('[data-scene]').forEach(b => b.classList.toggle('on', b.dataset.scene === p.Scene));
+  $('#gridbox').classList.toggle('on', p.Scene === 'grid');
   document.querySelectorAll('[data-model]').forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
   ['Autospin','Showlabel'].forEach(t => { const b = $('#t-'+t); b && b.classList.toggle('on', !!p[t]); });
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
   const model = (S.models||[]).find(m => m.name === p.Model);
-  $('#nowFx').textContent = (S.styles||[])[p.Style] || '—';
+  const act = (S.layers||[]).filter(l => l.on).map(l => l.label);
+  $('#nowFx').textContent = act.length ? act.join(' + ') : 'CLEAN';
   $('#nowSub').textContent = (model ? model.label : '') + '  ·  cam ' + p.Presetslot + ' ' + (p.Presetname||'');
+}
+function liveLayers(L){
+  if (L) L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } });
+  document.querySelectorAll('[data-layer]').forEach(b => { const l = S.layers.find(x => x.k === b.dataset.layer); b.classList.toggle('on', !!(l && l.on)); });
+  onAir();
 }
 function meters(m){
   const set = (id, v) => $(id).style.transform = 'scaleX(' + Math.min(1, v) + ')';
@@ -294,7 +377,11 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.v) { document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
     document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-'+t.dataset.v)); $('main').scrollTop = 0; buzz(); }
-  else if (t.dataset.fx) { send({t:'style', v:+t.dataset.fx}); buzz(); }
+  else if (t.dataset.layer) { const l = S.layers.find(x => x.k === t.dataset.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); liveLayers(); buzz(); }
+  else if (t.dataset.off) { const l = S.layers.find(x => x.k === t.dataset.off); l.on = false; send({t:'layer', k:l.k, on:false}); liveLayers(); buzz(); }
+  else if (t.dataset.mode) { send({t:'layer', k:t.dataset.mode, p1:+t.dataset.v}); setLaySlider(t.dataset.mode, 'p1', +t.dataset.v); buzz(); }
+  else if (t.dataset.scene) { send({t:'scene', v:t.dataset.scene}); buzz(); }
+  else if (t.dataset.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); liveLayers(); buzz(); }
   else if (t.dataset.model) { send({t:'model', v:t.dataset.model}); buzz(); }
   else if (t.dataset.tog) { send({t:'set', p:t.dataset.tog, v:!S.pars[t.dataset.tog]}); buzz(); }
   else if (t.dataset.act === 'center') { send({t:'center'}); buzz(); }
@@ -305,15 +392,20 @@ $('#bo').addEventListener('click', () => { send({t:'set', p:'Blackout', v:!S.par
 /* presets: tap = load, hold = save */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-preset]'); if (!c) return;
+  const c = e.target.closest('[data-preset],[data-look]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold');
+    if (c.dataset.look) { const n = +c.dataset.look, name = prompt('Save the current layers + scene as Look ' + n + ':', (S.looks||[])[n-1] || ('Look ' + n));
+      if (name !== null) { send({t:'savelook', v:n, name}); toast('Saved look ' + n + ' · ' + name); } return; }
     const n = +c.dataset.preset, name = prompt('Save current camera to slot ' + n + ' as:', S.presets[n-1] || ('Preset ' + n));
     if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n + ' · ' + name); } }, 550);
 });
-const clearHold = e => { const c = e.target.closest && e.target.closest('[data-preset]'); clearTimeout(holdT);
-  document.querySelectorAll('.chip.hold').forEach(x => x.classList.remove('hold'));
-  if (c && !held && e.type === 'pointerup') { send({t:'preset', v:+c.dataset.preset}); buzz(); } };
+const clearHold = e => { const c = e.target.closest && e.target.closest('[data-preset],[data-look]'); clearTimeout(holdT);
+  document.querySelectorAll('.chip.hold,.look.hold').forEach(x => x.classList.remove('hold'));
+  if (c && !held && e.type === 'pointerup') {
+    if (c.dataset.look) { if (+c.dataset.look <= (S.looks||[]).length) { send({t:'look', v:+c.dataset.look}); toast((S.looks||[])[+c.dataset.look-1]); } }
+    else send({t:'preset', v:+c.dataset.preset});
+    buzz(); } };
 document.addEventListener('pointerup', clearHold); document.addEventListener('pointercancel', clearHold);
 
 /* ---------------- touch camera pad ---------------- */
