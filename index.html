@@ -187,7 +187,8 @@ const GRAD = ['#4a4a55,#1d1c22','#ff2e88,#ffb300','#3ef0ff,#b06bff','#ff9d00,#6b
               '#ff2ec4,#2effc0','#2b00ff,#ff6a00','#ff00a8,#00ffe1','#16ff6e,#003b1a','#ff2ef0,#00d4ff'];
 let ws, S = {pars:{}}, touching = {}, backoff = 500, T = {send(){}}, lastM = 0, linkUp = false;
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
-const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+const BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt'];
+let bi = 0, lastErr = '';
 const send = o => T.send(o);
 const buzz = () => navigator.vibrate && navigator.vibrate(8);
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),1400)}
@@ -204,7 +205,7 @@ function status(){
   const tdAlive = performance.now() - lastM < 3000, ok = linkUp && tdAlive;
   $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', !ok);
   $('#offT').textContent = !linkUp ? 'Connecting…' : 'Waiting for TouchDesigner…';
-  $('#offS').innerHTML = KEY ? 'Remote link via relay · pairing key ' + KEY.slice(0,4) + '…<br>Make sure TouchDesigner is open and online.'
+  $('#offS').innerHTML = KEY ? 'Relay ' + (BROKERS[bi % BROKERS.length].split('/')[2]) + ' · key ' + KEY.slice(0,4) + '…' + (lastErr ? '<br><small>' + lastErr + '</small>' : '') + '<br>TouchDesigner must be open and online.'
                              : 'Phone and computer must be on the same Wi-Fi,<br>and TouchDesigner must be running.';
 }
 setInterval(status, 500);
@@ -216,9 +217,12 @@ function connectWS(){
   T.send = o => ws.readyState === 1 && ws.send(JSON.stringify(o));
 }
 function connectRelay(){
-  const base = 'moaivj/' + KEY;
-  const c = mqtt.connect(BROKER, {clientId: 'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive: 20, reconnectPeriod: 1500, clean: true});
-  c.on('connect', () => { linkUp = true; c.subscribe(base + '/+'); c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+  const base = 'moaivj/' + KEY, url = BROKERS[bi % BROKERS.length];
+  const c = mqtt.connect(url, {clientId: 'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive: 20, reconnectPeriod: 1500, connectTimeout: 6000, clean: true});
+  let ever = false;
+  const fail = setTimeout(() => { if (!ever) { lastErr = 'no answer from ' + url.split('/')[2]; c.end(true); bi++; connectRelay(); } }, 7000);
+  c.on('connect', () => { ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; c.subscribe(base + '/+'); c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+  c.on('error', e => { lastErr = (e && e.message) || String(e); });
   c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
   c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
   T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
