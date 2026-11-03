@@ -113,9 +113,32 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radiu
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
 .bar div{width:100%;border-radius:8px;background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);padding:7px 8px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
-nav button{padding:11px 0;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--mute);border-radius:12px}nav button.on{color:var(--ink);background:var(--panel2)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,1fr);padding:7px 8px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:12px}nav button.on{color:var(--ink);background:var(--panel2)}
 
+/* text tab */
+.tin{width:100%;min-height:84px;resize:vertical;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 22px var(--sans);letter-spacing:.02em;outline:none}
+.tin:focus{border-color:var(--hot)}
+.trow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.go{border-radius:13px;padding:15px;font-weight:700;letter-spacing:.1em;background:var(--hot);color:#fff}
+.tog{border-radius:13px;padding:15px;font-weight:700;letter-spacing:.1em;background:var(--panel);border:1px solid var(--line);color:var(--mute)}
+.tog.on{background:var(--lime);color:#0b0a0f;border-color:transparent}
+.recent{display:flex;gap:6px;overflow-x:auto;margin:8px -16px 0;padding:0 16px 2px}
+.recent button{flex:0 0 auto;padding:8px 12px;border-radius:20px;background:var(--panel2);font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.opts button{border-radius:11px;background:var(--panel);border:1px solid var(--line);padding:11px 4px;font-size:11.5px;font-weight:700;color:var(--mute)}
+.opts button.on{background:var(--ink);color:var(--bg);border-color:transparent}
+.sw{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.sw button{aspect-ratio:1;border-radius:50%;border:2px solid transparent}
+.sw button.on{border-color:var(--ink);box-shadow:0 0 0 3px var(--bg) inset}
+/* lock */
+.lock{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:var(--bg);padding:28px}
+.lock.on{display:grid}
+.lock .box{width:100%;max-width:340px;text-align:center}
+.lock h3{font-size:24px;margin:10px 0 6px}.lock p{color:var(--mute);font-size:13px;margin:0 0 16px}
+.lock input{width:100%;padding:15px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:18px;text-align:center;outline:none;margin-bottom:10px}
+.lock button{width:100%;padding:15px;border-radius:14px;background:var(--ink);color:var(--bg);font-weight:700;letter-spacing:.1em}
+.lock .err{color:var(--hot);font-size:13px;min-height:18px;margin-top:8px}
 /* sheet + toast + offline */
 .scrim{position:fixed;inset:0;background:#000a;z-index:30;display:none}.scrim.on{display:block}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;background:#16131d;border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + var(--sb));transform:translateY(105%);transition:transform .22s ease}
@@ -164,6 +187,19 @@ nav button{padding:11px 0;font-size:11px;font-weight:700;letter-spacing:.1em;col
     <div id="g-model" style="margin-top:7px"></div>
   </section>
 
+  <section class="view" id="v-text">
+    <h2>Text <em>type anything</em></h2>
+    <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
+    <div class="trow"><button class="go" id="tsend">SHOW TEXT</button><button class="tog" id="t-Texton" data-tog="Texton">TEXT OFF</button></div>
+    <div class="recent" id="recent"></div>
+    <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
+    <h2>Layout</h2><div class="opts" id="o-Textlayout"></div>
+    <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
+    <h2>Font</h2><div class="opts" id="o-Textfont"></div>
+    <h2>Colour</h2><div class="sw" id="o-Textcolor"></div>
+    <h2>Adjust</h2><div id="g-text"></div>
+  </section>
+
   <section class="view" id="v-cam">
     <h2>Camera moves <em>tap · hold save</em></h2><div class="presets" id="presets"></div>
     <h2>Touch camera <em>double-tap = centre</em></h2>
@@ -188,17 +224,47 @@ nav button{padding:11px 0;font-size:11px;font-weight:700;letter-spacing:.1em;col
     <h2>Master</h2><div id="g-master"></div>
     <h2>Model motion</h2><div id="g-motion"></div>
     <h2>Screen</h2><div class="btns"><button class="btn" id="t-Showlabel" data-tog="Showlabel">Info label</button></div>
+    <h2>Security</h2><div class="btns"><button class="btn" id="chpass">Change password</button><button class="btn" id="logout">Lock this phone</button></div>
   </section>
 </main>
 
-<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">LAYERS</button><button data-v="cam">CAM</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button></nav>
+<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">LAYERS</button><button data-v="text">TEXT</button><button data-v="cam">CAM</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
+<div class="lock" id="lock"><div class="box"><div class="logo" style="font-size:20px">MOAI<i>//</i>VJ</div>
+  <h3>Locked</h3><p>Enter the remote password set in TouchDesigner<br>(CONTROLS → Master → Remote password).</p>
+  <input type="password" id="lockpw" placeholder="Password" autocomplete="current-password"><button id="lockgo">UNLOCK</button><div class="err" id="lockerr"></div></div></div>
 <div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span></div></div>
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
+function sha256(ascii){
+  ascii = unescape(encodeURIComponent(ascii));
+  const rr = (v, a) => (v >>> a) | (v << (32 - a)); const maxWord = Math.pow(2, 32);
+  let i, j, result = ''; const words = [], bitLen = ascii.length * 8;
+  let hash = [], k = [], pc = 0; const comp = {};
+  for (let cand = 2; pc < 64; cand++) { if (!comp[cand]) { for (i = 0; i < 313; i += cand) comp[i] = cand;
+      hash[pc] = (Math.pow(cand, .5) * maxWord) | 0; k[pc++] = (Math.pow(cand, 1 / 3) * maxWord) | 0; } }
+  hash = hash.slice(0, 8);
+  ascii += '\x80'; while (ascii.length % 64 - 56) ascii += '\x00';
+  for (i = 0; i < ascii.length; i++) { j = ascii.charCodeAt(i); words[i >> 2] |= j << ((3 - i) % 4) * 8; }
+  words[words.length] = (bitLen / maxWord) | 0; words[words.length] = bitLen;
+  for (j = 0; j < words.length;) {
+    const w = words.slice(j, j += 16), old = hash; hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      const w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
+      const t1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ (~e & hash[6])) + k[i]
+        + (w[i] = i < 16 ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+      const t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(t1 + t2) | 0].concat(hash); hash[4] = (hash[4] + t1) | 0;
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) for (j = 3; j + 1; j--) { const b = (hash[i] >> (j * 8)) & 255; result += (b < 16 ? '0' : '') + b.toString(16); }
+  return result;
+}
+
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
@@ -209,12 +275,22 @@ const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'publi
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
 let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam', false), model: store.get('model', true)};
 const touching = {};
-const send = o => T.send(o);
+let TOKEN = store.get('tok_' + (KEY || 'local'), '');
+const send = o => { if (TOKEN) o.a = TOKEN; T.send(o); };
+const makeToken = pw => pw ? sha256((KEY || '') + ':' + pw) : '';
+function lock(msg){ $('#lock').classList.add('on'); $('#lockerr').textContent = msg || ''; setTimeout(() => $('#lockpw').focus(), 50); }
+function unlockTry(){ const pw = $('#lockpw').value; TOKEN = makeToken(pw); store.set('tok_' + (KEY || 'local'), TOKEN); $('#lockerr').textContent = 'Checking…'; send({t:'hello'}); }
 const buzz = (n = 8) => navigator.vibrate && navigator.vibrate(n);
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 1400); }
 
 /* ---------------- connection ---------------- */
 function onMsg(m){
+  if (m.t === 'auth') {
+    if (m.ok) { $('#lock').classList.remove('on'); }
+    else if (m.locked) { if (m.changed) { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); }
+      lock(TOKEN ? 'Wrong password' : (m.changed ? 'Password changed — enter the new one' : '')); }
+    return;
+  }
   if (m.t === 'state') { S = m; build(); applyPars(m.pars); applyLayers(); renderPads(); }
   else if (!S) return;
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
@@ -235,7 +311,7 @@ setInterval(status, 500);
 setInterval(() => linkUp && send({t:'ping'}), 10000);               // lets TD know a phone is listening
 function connectWS(){
   const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'); let b = 500;
-  ws.onopen = () => { linkUp = true; }; ws.onclose = () => { linkUp = false; setTimeout(connectWS, b = Math.min(b * 1.6, 4000)); };
+  ws.onopen = () => { linkUp = true; send({t:'hello'}); }; ws.onclose = () => { linkUp = false; setTimeout(connectWS, b = Math.min(b * 1.6, 4000)); };
   ws.onmessage = e => onMsg(JSON.parse(e.data));
   T.send = o => ws.readyState === 1 && ws.send(JSON.stringify(o));
 }
@@ -245,13 +321,14 @@ function connectRelay(){
   let ever = false;
   const fail = setTimeout(() => { if (!ever) { lastErr = 'no answer from ' + B.url.split('/')[2] + ', trying next'; c.end(true); bi = (bi + 1) % BROKERS.length; connectRelay(); } }, 7000);
   c.on('connect', () => { ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; store.set('broker', bi);
-    c.subscribe(base + '/+'); c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+    c.subscribe(base + '/+'); send({t:'hello'}); });
   c.on('error', e => lastErr = (e && e.message) || String(e)); c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
   c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
   T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) send({t:'hello'}); });
 }
 function connect(){
+  if (location.protocol === 'http:') { connectWS(); return; }
   if (KEY) { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js'; sc.onload = connectRelay;
     sc.onerror = () => { $('#offT').textContent = 'Could not load relay library'; }; document.head.appendChild(sc); }
   else if (location.protocol === 'https:') { $('#offT').textContent = 'Pairing key missing'; $('#offS').textContent = 'Open the link or QR from TouchDesigner: CONTROLS → Master → Phone link.'; }
@@ -265,14 +342,36 @@ function build(){
   $('#fades').innerHTML = FADES.map(([n, v]) => `<button data-fade="${v}">${n}</button>`).join('');
   ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
-  buildCam();
-  ['master','audio','kick','camera','move','motion','grid','beat','model'].forEach(g => $('#g-' + g).innerHTML = '');
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)'};
+  buildCam(); buildText();
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
   EL.layerBtns = [...$$('[data-layer]')]; EL.models = [...$$('[data-model]')]; EL.scene = [...$$('[data-scene]')];
   airSig = null; uiPrefs();
+}
+const TOPTS = {
+  Textmode: [['overlay','OVERLAY'],['mask','MASK'],['cutout','CUT-OUT'],['invert','INVERT'],['outline','OUTLINE'],['glitch','GLITCH'],['refract','REFRACT']],
+  Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
+  Textanim: [['static','STATIC'],['pulse','BEAT'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['type','TYPE'],['beat','WORD/BEAT']],
+  Textfont: [['Bebas Neue','BEBAS'],['Impact','IMPACT'],['Bahnschrift','BAHN'],['Agency FB','AGENCY'],['Cascadia Mono','MONO'],['Georgia','SERIF'],['Algerian','DECO'],['Blackadder ITC','GOTHIC']]};
+const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
+function buildText(){
+  for (const p in TOPTS) $('#o-' + p).innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}">${l}</button>`).join('');
+  $('#o-Textcolor').innerHTML = Object.entries(TCOL).map(([v, c]) => `<button data-tp="Textcolor" data-tv="${v}" style="background:${c}"></button>`).join('');
+  renderRecent();
+}
+function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${t.replace(/</g,'&lt;')}</button>`).join(''); }
+function syncText(p){
+  $$('[data-tp]').forEach(b => b.classList.toggle('on', p[b.dataset.tp] === b.dataset.tv));
+  const t = $('#t-Texton'); t.textContent = p.Texton ? 'TEXT ON' : 'TEXT OFF';
+  if (document.activeElement !== $('#tin') && !$('#tin')._dirty) $('#tin').value = p.Textstr || '';
+}
+function showText(){
+  const v = $('#tin').value.trim(); if (!v) return;
+  send({t:'set', p:'Textstr', v}); send({t:'set', p:'Texton', v:true}); $('#tin')._dirty = false;
+  const r = [v].concat(store.get('recent', []).filter(x => x !== v)).slice(0, 8); store.set('recent', r); renderRecent(); toast('Text on screen'); buzz(12);
 }
 function buildCam(){ $('#presets').innerHTML = S.presets.slice(0, 8).map((n, i) => `<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}</div><div class="t">${n}</div></button>`).join(''); }
 const paint = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
@@ -304,7 +403,8 @@ function applyPars(p){
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Showlabel'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  ['Autospin','Showlabel','Texton'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  syncText(p);
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
   header();
 }
@@ -418,6 +518,12 @@ document.addEventListener('click', e => {
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); applyLayers(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
   else if (d.act === 'reset') { send({t:'preset', v:1}); buzz(); }
+  else if (d.tp) { send({t:'set', p:d.tp, v:d.tv}); S.pars[d.tp] = d.tv; syncText(S.pars); buzz(); }
+  else if (d.recent) { $('#tin').value = decodeURIComponent(d.recent); showText(); }
+  else if (t.id === 'tsend') showText();
+  else if (t.id === 'chpass') { const np = prompt('New remote password (leave empty to remove the lock):'); if (np !== null) {
+      send({t:'setpass', v:np}); TOKEN = makeToken(np); store.set('tok_' + (KEY || 'local'), TOKEN); setTimeout(() => send({t:'hello'}), 600); toast(np ? 'Password changed' : 'Lock removed'); } }
+  else if (t.id === 'logout') { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); lock('Locked on this phone'); }
   else if (t.id === 'bo') { send({t:'set', p:'Blackout', v:!S.pars.Blackout}); buzz(25); }
 });
 
@@ -452,6 +558,10 @@ tp.addEventListener('pointerup', up); tp.addEventListener('pointercancel', up);
 
 async function wake(){ try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){} }
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && wake());
+$('#lockgo').addEventListener('click', unlockTry);
+$('#lockpw').addEventListener('keydown', e => { if (e.key === 'Enter') unlockTry(); });
+$('#tin').addEventListener('input', () => $('#tin')._dirty = true);
+$('#tin').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); showText(); } });
 uiPrefs(); wake(); connect();
 </script>
 </body>
