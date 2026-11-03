@@ -276,7 +276,8 @@ let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = stor
 let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam', false), model: store.get('model', true)};
 const touching = {};
 let TOKEN = store.get('tok_' + (KEY || 'local'), '');
-const send = o => { if (TOKEN) o.a = TOKEN; T.send(o); };
+const CID = Math.random().toString(36).slice(2, 10);       // this phone's id: auth replies are addressed to it
+const send = o => { if (TOKEN) o.a = TOKEN; o.c = CID; T.send(o); };
 const makeToken = pw => pw ? sha256((KEY || '') + ':' + pw) : '';
 function lock(msg){ $('#lock').classList.add('on'); $('#lockerr').textContent = msg || ''; setTimeout(() => $('#lockpw').focus(), 50); }
 function unlockTry(){ const pw = $('#lockpw').value; TOKEN = makeToken(pw); store.set('tok_' + (KEY || 'local'), TOKEN); $('#lockerr').textContent = 'Checking…'; send({t:'hello'}); }
@@ -286,9 +287,10 @@ function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add(
 /* ---------------- connection ---------------- */
 function onMsg(m){
   if (m.t === 'auth') {
-    if (m.ok) { $('#lock').classList.remove('on'); }
-    else if (m.locked) { if (m.changed) { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); }
-      lock(TOKEN ? 'Wrong password' : (m.changed ? 'Password changed — enter the new one' : '')); }
+    if (m.changed) { send({t:'hello'}); return; }          // password changed somewhere: re-check this phone's token
+    if (m.to !== CID) return;                               // someone else's login result - ignore it
+    if (m.ok) $('#lock').classList.remove('on');
+    else lock(TOKEN ? 'Wrong password' : '');
     return;
   }
   if (m.t === 'state') { S = m; build(); applyPars(m.pars); applyLayers(); renderPads(); }
