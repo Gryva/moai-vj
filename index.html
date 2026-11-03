@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#09080d">
+<title>MOAI // VJ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09080d; --panel:#13111a; --panel2:#1b1824; --line:#2a2635; --ink:#f3efe7; --mute:#8b8597;
+  --hot:#ff4d2e; --cyan:#3ef0ff; --vio:#b06bff; --lime:#c6ff3d;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+  --sans:'Space Grotesk',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overscroll-behavior:none}
+body{display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+
+/* ---------- top bar ---------- */
+header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--safe-t)) 16px 10px;background:linear-gradient(var(--bg) 70%,transparent)}
+.row1{display:flex;align-items:center;gap:10px}
+.logo{font-weight:700;letter-spacing:.08em;font-size:15px}
+.logo i{font-style:normal;color:var(--hot)}
+.dot{width:9px;height:9px;border-radius:50%;background:#555;box-shadow:0 0 0 3px #ffffff10;transition:.3s}
+.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
+.fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute);margin-right:4px}
+.now{margin-top:8px;display:flex;gap:8px;align-items:baseline;white-space:nowrap;overflow:hidden}
+.now b{font-size:22px;letter-spacing:-.01em}
+.now span{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.meters{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.m{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;position:relative}
+.m i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);transition:transform 60ms linear}
+.m.l i{background:var(--hot)} .m.md i{background:var(--vio)} .m.h i{background:var(--cyan)} .m.k i{background:var(--lime)}
+
+/* ---------- views ---------- */
+main{flex:1;overflow-y:auto;padding:4px 16px calc(96px + var(--safe-b));-webkit-overflow-scrolling:touch}
+.view{display:none;animation:in .22s ease}
+.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin:22px 2px 10px;font-weight:600;display:flex;justify-content:space-between}
+h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
+
+/* effect tiles */
+.fx{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{position:relative;aspect-ratio:1/0.82;border-radius:16px;background:var(--panel);border:1px solid var(--line);padding:10px;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .08s}
+.tile:active{transform:scale(.96)}
+.tile .n{font:700 12px var(--mono);color:var(--mute)}
+.tile .t{font-weight:700;font-size:13px;line-height:1.05;letter-spacing:.01em;position:relative;overflow-wrap:anywhere;hyphens:auto}
+.tile::before{content:"";position:absolute;inset:0;background:var(--g);opacity:.22;transition:.2s}
+.tile.on{border-color:transparent;box-shadow:0 0 0 2px var(--ink) inset}
+.tile.on::before{opacity:.95}
+.tile.on .n,.tile.on .t{color:#fff;text-shadow:0 1px 8px #0008}
+
+/* models */
+.models{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;margin:0 -16px;padding-left:16px;padding-right:16px}
+.model{flex:0 0 112px;scroll-snap-align:start;border-radius:16px;overflow:hidden;background:#000;border:1px solid var(--line);position:relative}
+.model img{display:block;width:100%;aspect-ratio:1;object-fit:cover;opacity:.75;transition:.2s}
+.model span{position:absolute;left:8px;right:8px;bottom:7px;font-size:12px;font-weight:600;line-height:1.1}
+.model.on{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}
+.model.on img{opacity:1}
+
+/* presets */
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{border-radius:12px;background:var(--panel);border:1px solid var(--line);padding:10px 8px;text-align:left;min-height:58px;position:relative;overflow:hidden}
+.chip .n{font:700 11px var(--mono);color:var(--cyan)}
+.chip .t{font-size:12px;font-weight:600;margin-top:3px;line-height:1.1}
+.chip.on{background:#0f2a2e;border-color:var(--cyan)}
+.chip .fill{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--hot)}
+.chip.hold .fill{width:100%;transition:width .55s linear}
+
+/* sliders */
+.ctl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px 8px;margin-bottom:8px}
+.ctl .top{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.ctl .top output{font:500 12px var(--mono);color:var(--mute)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:2px 0 0}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--acc,var(--hot)) var(--p,50%),var(--panel2) var(--p,50%))}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--panel2)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--acc,var(--hot))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--ink);margin-top:-10px;box-shadow:0 2px 10px #000a}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:var(--ink)}
+
+/* toggles / buttons */
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.btn{border-radius:12px;background:var(--panel);border:1px solid var(--line);padding:13px 6px;font-weight:600;font-size:13px;text-align:center}
+.btn:active{background:var(--panel2)}
+.btn.on{background:var(--ink);color:var(--bg)}
+
+/* touch pad */
+.pad{position:relative;aspect-ratio:1/1;border-radius:22px;background:
+   radial-gradient(circle at 50% 50%,#3ef0ff14,transparent 55%),
+   repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 40px),
+   repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 40px),var(--panel);
+   border:1px solid var(--line);touch-action:none;overflow:hidden}
+.pad .hint{position:absolute;inset:auto 0 14px;text-align:center;font-size:11px;color:var(--mute);letter-spacing:.06em;line-height:1.6;pointer-events:none}
+.pad .ring{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:2px solid var(--cyan);opacity:0;pointer-events:none;transition:opacity .2s}
+.pad .ring.b{border-color:var(--hot)}
+.pad .cross{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border:1px solid #ffffff30;border-radius:50%}
+
+/* audio */
+.big{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end;height:170px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
+.bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+.bar div{width:100%;border-radius:8px;background:var(--c);height:2%;transition:height 60ms linear;box-shadow:0 0 18px -4px var(--c)}
+.bar span{font:700 11px var(--mono);color:var(--mute)}
+
+/* blackout + nav */
+.bo{height:36px;padding:0 16px;border-radius:18px;background:var(--ink);color:var(--bg);font-weight:700;letter-spacing:.12em;font-size:11px}
+.bo.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 10px #ff4d2e33,0 10px 30px #000c}}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px calc(8px + var(--safe-b));background:#0d0b12f0;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav button{padding:10px 0;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--mute);border-radius:12px}
+nav button.on{color:var(--ink);background:var(--panel2)}
+.toast{position:fixed;left:50%;top:calc(14px + var(--safe-t));transform:translate(-50%,-80px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:20px;z-index:9;transition:transform .25s}
+.toast.on{transform:translate(-50%,0)}
+.off{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:#09080de8;text-align:center;padding:30px}
+.off.on{display:grid}
+.off b{display:block;font-size:20px;margin-bottom:8px}
+.off span{color:var(--mute);font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="row1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="now"><b id="nowFx">—</b><span id="nowSub"></span></div>
+  <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
+</header>
+
+<main>
+  <section class="view on" id="v-play">
+    <h2>Effects <em>tap to switch</em></h2>
+    <div class="fx" id="fx"></div>
+    <h2>Models</h2>
+    <div class="models" id="models"></div>
+    <h2>Camera <em>tap load · hold save</em></h2>
+    <div class="presets" id="presets"></div>
+    <h2>Master</h2>
+    <div id="g-master"></div>
+  </section>
+
+  <section class="view" id="v-cam">
+    <h2>Touch camera <em>double-tap = centre</em></h2>
+    <div class="pad" id="pad"><div class="cross"></div><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
+      <div class="hint">1 FINGER ORBIT · FLICK TO SPIN<br>2 FINGERS PINCH ZOOM · DRAG PAN</div></div>
+    <div class="btns">
+      <button class="btn" data-act="center">Centre</button>
+      <button class="btn" data-act="reset">Reset cam</button>
+      <button class="btn" id="t-Autospin" data-tog="Autospin">Auto spin</button>
+    </div>
+    <h2>Camera</h2><div id="g-camera"></div>
+    <h2>Movement</h2><div id="g-move"></div>
+  </section>
+
+  <section class="view" id="v-audio">
+    <h2>Live audio</h2>
+    <div class="big">
+      <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div>
+      <div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
+      <div class="bar" style="--c:var(--cyan)"><div id="bH"></div><span>HIGH</span></div>
+      <div class="bar" style="--c:var(--lime)"><div id="bK"></div><span>KICK</span></div>
+    </div>
+    <h2>Input</h2><div id="g-audio"></div>
+    <h2>Kick → camera</h2><div id="g-kick"></div>
+  </section>
+
+  <section class="view" id="v-tune">
+    <h2>Model motion</h2><div id="g-motion"></div>
+    <h2>Screen</h2>
+    <div class="btns"><button class="btn" id="t-Showlabel" data-tog="Showlabel">Info label</button></div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-v="play">PLAY</button><button data-v="cam">CAM</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button>
+</nav>
+<div class="toast" id="toast"></div>
+<div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const GRAD = ['#4a4a55,#1d1c22','#ff2e88,#ffb300','#3ef0ff,#b06bff','#ff9d00,#6b3cff','#00e5ff,#003cff','#ff3b1f,#ffd9c7',
+              '#ff2ec4,#2effc0','#2b00ff,#ff6a00','#ff00a8,#00ffe1','#16ff6e,#003b1a','#ff2ef0,#00d4ff'];
+let ws, S = {pars:{}}, touching = {}, backoff = 500, T = {send(){}}, lastM = 0, linkUp = false;
+const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
+const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+const send = o => T.send(o);
+const buzz = () => navigator.vibrate && navigator.vibrate(8);
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),1400)}
+
+/* ---------------- connection ---------------- */
+function onMsg(m){
+  if (m.t === 'state') { const first = !S.styles; S = m; build(); sync(m.pars); }
+  else if (m.t === 'm') { lastM = performance.now(); if (S.styles) { meters(m); sync(m.pars); } $('#fps').textContent = m.fps + ' fps'; }
+  else if (m.t === 'presets') { S.presets = m.presets; buildPresets(); }
+  else if (m.t === 'err') toast('TD: ' + m.msg);
+}
+function status(){
+  if (!KEY && location.protocol === 'https:') return;
+  const tdAlive = performance.now() - lastM < 3000, ok = linkUp && tdAlive;
+  $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', !ok);
+  $('#offT').textContent = !linkUp ? 'Connecting…' : 'Waiting for TouchDesigner…';
+  $('#offS').innerHTML = KEY ? 'Remote link via relay · pairing key ' + KEY.slice(0,4) + '…<br>Make sure TouchDesigner is open and online.'
+                             : 'Phone and computer must be on the same Wi-Fi,<br>and TouchDesigner must be running.';
+}
+setInterval(status, 500);
+function connectWS(){
+  ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://') + location.host + '/ws');
+  ws.onopen = () => { backoff = 500; linkUp = true; };
+  ws.onclose = () => { linkUp = false; setTimeout(connectWS, backoff = Math.min(backoff*1.6, 4000)); };
+  ws.onmessage = e => onMsg(JSON.parse(e.data));
+  T.send = o => ws.readyState === 1 && ws.send(JSON.stringify(o));
+}
+function connectRelay(){
+  const base = 'moaivj/' + KEY;
+  const c = mqtt.connect(BROKER, {clientId: 'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive: 20, reconnectPeriod: 1500, clean: true});
+  c.on('connect', () => { linkUp = true; c.subscribe(base + '/+'); c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+  c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
+  c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
+  T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) c.publish(base + '/cmd', JSON.stringify({t:'hello'})); });
+}
+function connect(){
+  if (KEY) { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js';
+    sc.onload = connectRelay; sc.onerror = () => { $('#offT').textContent = 'Could not load relay library'; }; document.head.appendChild(sc); }
+  else if (location.protocol === 'https:') { $('#offT').textContent = 'Pairing key missing'; $('#offS').textContent = 'Open the link (or QR) shown in TouchDesigner: CONTROLS → Master → Phone link.'; }
+  else connectWS();
+}
+
+/* ---------------- build UI from TD state ---------------- */
+function build(){
+  $('#fx').innerHTML = S.styles.map((n,i)=>`<button class="tile" data-fx="${i}" style="--g:linear-gradient(135deg,${GRAD[i]})"><span class="n">${i===0?'C':(i===10?'0':i)}</span><span class="t">${n.replace('KALEIDOSCOPE','KALEIDO&shy;SCOPE')}</span></button>`).join('');
+  $('#models').innerHTML = S.models.map(m=>`<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
+  buildPresets();
+  ['master','audio','kick','camera','move','motion'].forEach(g => $('#g-'+g).innerHTML = '');
+  S.sliders.forEach(s => {
+    const host = $('#g-'+s.group); if (!host) return;
+    const acc = {audio:'var(--vio)',kick:'var(--lime)',camera:'var(--cyan)',move:'var(--cyan)',motion:'var(--hot)',master:'var(--ink)'}[s.group];
+    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div>
+      <input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${acc}"></div>`);
+  });
+  document.querySelectorAll('input[type=range]').forEach(el => {
+    const p = el.dataset.p; let raf = 0;
+    const show = () => { const k=(el.value-el.min)/(el.max-el.min)*100; el.style.setProperty('--p', k+'%'); $('#o-'+p).textContent = fmt(+el.value, +el.step); };
+    el._show = show;
+    el.addEventListener('pointerdown', () => touching[p] = Infinity);
+    const end = () => touching[p] = performance.now() + 600;
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
+    el.addEventListener('input', () => { show(); touching[p] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => send({t:'set', p, v:+el.value})); });
+  });
+}
+function buildPresets(){
+  $('#presets').innerHTML = S.presets.slice(0,8).map((n,i)=>`<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}</div><div class="t">${n}</div><div class="fill"></div></button>`).join('');
+}
+const fmt = (v, step) => step >= 1 ? Math.round(v) : v.toFixed(step >= 0.05 ? 2 : 2);
+
+/* ---------------- sync from TD ---------------- */
+function sync(p){
+  if (!p) return; S.pars = p;
+  const now = performance.now();
+  for (const k in p) {
+    const el = document.getElementById('s-'+k);
+    if (el && !(touching[k] > now)) { el.value = p[k]; el._show && el._show(); }
+  }
+  document.querySelectorAll('[data-fx]').forEach(b => b.classList.toggle('on', +b.dataset.fx === p.Style));
+  document.querySelectorAll('[data-model]').forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
+  ['Autospin','Showlabel'].forEach(t => { const b = $('#t-'+t); b && b.classList.toggle('on', !!p[t]); });
+  $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
+  const model = (S.models||[]).find(m => m.name === p.Model);
+  $('#nowFx').textContent = (S.styles||[])[p.Style] || '—';
+  $('#nowSub').textContent = (model ? model.label : '') + '  ·  cam ' + p.Presetslot + ' ' + (p.Presetname||'');
+}
+function meters(m){
+  const set = (id, v) => $(id).style.transform = 'scaleX(' + Math.min(1, v) + ')';
+  set('#mL', m.l); set('#mM', m.m); set('#mH', m.h); set('#mK', m.k);
+  const h = (id, v) => $(id).style.height = Math.max(2, Math.min(100, v*100)) + '%';
+  h('#bL', m.l); h('#bM', m.m); h('#bH', m.h); h('#bK', m.k);
+}
+
+/* ---------------- taps ---------------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.v) { document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === t));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-'+t.dataset.v)); $('main').scrollTop = 0; buzz(); }
+  else if (t.dataset.fx) { send({t:'style', v:+t.dataset.fx}); buzz(); }
+  else if (t.dataset.model) { send({t:'model', v:t.dataset.model}); buzz(); }
+  else if (t.dataset.tog) { send({t:'set', p:t.dataset.tog, v:!S.pars[t.dataset.tog]}); buzz(); }
+  else if (t.dataset.act === 'center') { send({t:'center'}); buzz(); }
+  else if (t.dataset.act === 'reset') { send({t:'preset', v:1}); buzz(); }
+});
+$('#bo').addEventListener('click', () => { send({t:'set', p:'Blackout', v:!S.pars.Blackout}); navigator.vibrate && navigator.vibrate(25); });
+
+/* presets: tap = load, hold = save */
+let holdT = null, held = false;
+document.addEventListener('pointerdown', e => {
+  const c = e.target.closest('[data-preset]'); if (!c) return;
+  held = false; c.classList.add('hold');
+  holdT = setTimeout(() => { held = true; c.classList.remove('hold');
+    const n = +c.dataset.preset, name = prompt('Save current camera to slot ' + n + ' as:', S.presets[n-1] || ('Preset ' + n));
+    if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n + ' · ' + name); } }, 550);
+});
+const clearHold = e => { const c = e.target.closest && e.target.closest('[data-preset]'); clearTimeout(holdT);
+  document.querySelectorAll('.chip.hold').forEach(x => x.classList.remove('hold'));
+  if (c && !held && e.type === 'pointerup') { send({t:'preset', v:+c.dataset.preset}); buzz(); } };
+document.addEventListener('pointerup', clearHold); document.addEventListener('pointercancel', clearHold);
+
+/* ---------------- touch camera pad ---------------- */
+const pad = $('#pad'), P = new Map();
+let acc = {dx:0, dy:0, du:0, dv:0, f:1}, vel = {y:0, p:0, t:0}, lastTap = 0, pinch0 = 0, cen0 = null;
+function flush(){
+  if (acc.dx || acc.dy) send({t:'orbit', dx:acc.dx, dy:acc.dy});
+  if (acc.du || acc.dv) send({t:'pan', du:acc.du, dv:acc.dv});
+  if (acc.f !== 1) send({t:'zoom', f:acc.f});
+  acc = {dx:0, dy:0, du:0, dv:0, f:1};
+  if (P.size) requestAnimationFrame(flush);
+}
+function ring(id, x, y, on){ const r = $(id), b = pad.getBoundingClientRect(); r.style.left = (x-b.left)+'px'; r.style.top = (y-b.top)+'px'; r.style.opacity = on ? 1 : 0; }
+const two = () => { const [a, b] = [...P.values()]; return {d: Math.hypot(a.x-b.x, a.y-b.y), cx:(a.x+b.x)/2, cy:(a.y+b.y)/2}; };
+pad.addEventListener('pointerdown', e => {
+  pad.setPointerCapture(e.pointerId); P.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (P.size === 1) { send({t:'fling', vy:0, vp:0}); vel = {y:0, p:0, t:performance.now()}; requestAnimationFrame(flush);
+    const now = performance.now(); if (now - lastTap < 280) { send({t:'center'}); toast('Centred'); buzz(); } lastTap = now; }
+  if (P.size === 2) { const t = two(); pinch0 = t.d; cen0 = t; }
+  ring('#r1', e.clientX, e.clientY, true);
+});
+pad.addEventListener('pointermove', e => {
+  if (!P.has(e.pointerId)) return;
+  const prev = P.get(e.pointerId), cur = {x:e.clientX, y:e.clientY}, w = pad.clientWidth, h = pad.clientHeight;
+  if (P.size === 1) {
+    const dx = -(cur.x - prev.x) / w * 300, dy = (cur.y - prev.y) / h * 150;
+    acc.dx += dx; acc.dy += dy;
+    const now = performance.now(), dt = Math.max(1, now - vel.t) / 1000;
+    vel.y = vel.y*0.5 + (dx/dt)*0.5; vel.p = vel.p*0.5 + (dy/dt)*0.5; vel.t = now;
+    P.set(e.pointerId, cur); ring('#r1', cur.x, cur.y, true);
+  } else if (P.size === 2) {
+    P.set(e.pointerId, cur); const t = two();
+    if (pinch0 > 0) acc.f *= pinch0 / Math.max(1, t.d); pinch0 = t.d;
+    acc.du += (t.cx - cen0.cx) / w; acc.dv += -(t.cy - cen0.cy) / h; cen0 = t;
+    ring('#r1', t.cx, t.cy, true); ring('#r2', t.cx, t.cy, true);
+  }
+});
+const up = e => {
+  if (!P.has(e.pointerId)) return; P.delete(e.pointerId);
+  if (P.size === 0) { ring('#r1',0,0,false); ring('#r2',0,0,false);
+    if (performance.now() - vel.t < 80 && (Math.abs(vel.y) > 40 || Math.abs(vel.p) > 40)) send({t:'fling', vy:vel.y, vp:vel.p}); }
+  if (P.size === 1) { pinch0 = 0; ring('#r2',0,0,false); const [k, v] = [...P.entries()][0]; P.set(k, v); vel.t = performance.now(); }
+};
+pad.addEventListener('pointerup', up); pad.addEventListener('pointercancel', up);
+
+/* keep screen awake while controlling */
+async function wake(){ try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){} }
+document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && wake());
+wake(); connect();
+</script>
+</body>
+</html>
