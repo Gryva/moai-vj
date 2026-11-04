@@ -49,7 +49,13 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .chipt.on{color:var(--bg);background:var(--cyan);border-color:transparent}
 
 /* LIVE pads */
-.pads{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.camwrap{display:grid;grid-template-columns:132px 1fr;gap:8px;align-items:stretch}
+.camv{width:132px;aspect-ratio:16/9;border-radius:12px;background:#000 center/cover;border:1px solid var(--line);object-fit:cover;overflow:hidden}
+.camv.mir{transform:scaleX(-1)}
+.camb{display:grid;gap:6px}.camb .big{padding:10px;font-size:12px}.camb .big.on{background:var(--hot);color:#000;border-color:var(--hot)}
+.camst{font-size:11px;color:var(--mute);margin:6px 2px 0}
+.pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px}
+.pad.add .t{font-size:26px;line-height:1;text-align:center;opacity:.8}.pad.add small{font-size:9px;letter-spacing:.08em;opacity:.7}.pad.add{border-style:dashed}
 .pad{position:relative;aspect-ratio:1;border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:7px;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .07s}
 .pad:active{transform:scale(.95)}
 .pad .n{font:700 10px var(--mono);color:var(--mute)}
@@ -162,12 +168,10 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
 
 <main>
   <section class="view" id="v-live">
-    <h2>Bank</h2>
-    <div class="seg" id="banks"></div>
     <h2>Switch <em>how presets change</em></h2>
     <div class="seg sm" id="fades"></div>
     <div class="row" style="margin-top:7px"><button class="chipt" id="rCam">+ CAMERA</button><button class="chipt" id="rModel">+ MODEL</button></div>
-    <h2><span>Presets</span><em>tap = go · hold = edit</em></h2>
+    <h2><span>Presets</span><em>tap = go · hold = edit · hold + = save new</em></h2>
     <div class="pads" id="pads"></div>
     <div class="nav2"><button class="big" data-step="-1">◀ PREV</button><button class="big" data-step="1">NEXT ▶</button></div>
   </section>
@@ -176,6 +180,12 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
     <h2>3D scene</h2>
     <div class="seg" id="scene"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
     <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
+    <h2>Phone camera <em>stream this phone into the visuals</em></h2>
+    <div class="camwrap"><video class="camv" id="camv" playsinline muted autoplay></video>
+      <div class="camb"><button class="big" id="camgo">START CAMERA</button><button class="big" id="camflip">FLIP ⟲</button></div></div>
+    <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
+    <div id="g-camfeed" style="margin-top:7px"></div>
+    <div class="camst" id="camst">Camera off · effects below apply to the camera too</div>
     <h2><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
     <div class="onair" id="onair"></div>
     <h2>Warp <em>tap to stack</em></h2><div class="lt" id="lt-warp"></div>
@@ -328,6 +338,7 @@ function connectRelay(){
   c.on('error', e => lastErr = (e && e.message) || String(e)); c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
   c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
   T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
+  T.cam = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/cam', buf, {qos:0}, () => done()); } catch(e){ done(); } };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) send({t:'hello'}); });
 }
 function connect(){
@@ -338,16 +349,55 @@ function connect(){
   else connectWS();
 }
 
+/* ---------------- phone camera -> TouchDesigner ---------------- */
+const CAMF = {on:false, stream:null, facing:'environment', busy:false, timer:null, sent:0, t0:0, fps:12};
+const camCv = document.createElement('canvas'); camCv.width = 384; camCv.height = 216;
+const camCx = camCv.getContext('2d');
+async function camStart(){
+  if (!T.cam) { toast('Camera works on the GitHub (https) link'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('This browser cannot share the camera'); return; }
+  try { CAMF.stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:CAMF.facing, width:{ideal:640}, height:{ideal:360}, frameRate:{ideal:24}}}); }
+  catch(e){ toast('Camera blocked (' + e.name + ') · allow it in browser settings'); return; }
+  const v = $('#camv'); v.srcObject = CAMF.stream; v.classList.toggle('mir', CAMF.facing === 'user');
+  try { await v.play(); } catch(e){}
+  CAMF.on = true; CAMF.sent = 0; CAMF.t0 = performance.now();
+  $('#camgo').textContent = 'STOP CAMERA'; $('#camgo').classList.add('on');
+  send({t:'set', p:'Cammirror', v: CAMF.facing === 'user'});
+  if (!S.pars.Camsrc || S.pars.Camsrc === 'off') { send({t:'set', p:'Camsrc', v:'behind'}); S.pars.Camsrc = 'behind'; syncText(S.pars); }
+  camLoop(); buzz(15);
+}
+function camStop(off){
+  CAMF.on = false; clearTimeout(CAMF.timer); CAMF.busy = false;
+  if (CAMF.stream) CAMF.stream.getTracks().forEach(t => t.stop()); CAMF.stream = null; $('#camv').srcObject = null;
+  $('#camgo').textContent = 'START CAMERA'; $('#camgo').classList.remove('on'); $('#camst').textContent = 'Camera off';
+  if (off !== false) { send({t:'set', p:'Camsrc', v:'off'}); if (S) { S.pars.Camsrc = 'off'; syncText(S.pars); } }
+}
+function camLoop(){
+  if (!CAMF.on) return;
+  const t0 = performance.now(), v = $('#camv');
+  if (!CAMF.busy && v.videoWidth && document.visibilityState === 'visible') {
+    const vw = v.videoWidth, vh = v.videoHeight, r = 16 / 9; let sw = vw, sh = vw / r; if (sh > vh) { sh = vh; sw = vh * r; }
+    camCx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, 384, 216);
+    CAMF.busy = true;
+    camCv.toBlob(b => { if (!b) { CAMF.busy = false; return; }
+      b.arrayBuffer().then(ab => T.cam(new Uint8Array(ab), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.6);
+  }
+  const el = (performance.now() - CAMF.t0) / 1000;
+  if (el > 1) $('#camst').textContent = 'LIVE · ' + (CAMF.sent / el).toFixed(0) + ' fps to TouchDesigner' + (S.pars.Camsrc === 'off' ? ' · pick a mode above' : '');
+  if (el > 10) { CAMF.sent = 0; CAMF.t0 = performance.now(); }
+  CAMF.timer = setTimeout(camLoop, Math.max(5, 1000 / CAMF.fps - (performance.now() - t0)));
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && CAMF.on) $('#camv').play().catch(() => {}); });
+
 /* ---------------- build ---------------- */
 const EL = {};
 function build(){
-  $('#banks').innerHTML = ['A','B','C','D'].map((b, i) => `<button data-bank="${i}">BANK ${b}</button>`).join('');
   $('#fades').innerHTML = FADES.map(([n, v]) => `<button data-fade="${v}">${n}</button>`).join('');
   ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
   buildCam(); buildText();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text'].forEach(g => $('#g-' + g).innerHTML = '');
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -355,6 +405,7 @@ function build(){
   airSig = null; uiPrefs();
 }
 const TOPTS = {
+  Camsrc: [['off','OFF'],['cam','CAM'],['behind','BEHIND'],['screen','BLEND'],['mask','MASK']],
   Textmode: [['overlay','OVERLAY'],['mask','MASK'],['cutout','CUT-OUT'],['invert','INVERT'],['outline','OUTLINE'],['glitch','GLITCH'],['refract','REFRACT']],
   Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
   Textanim: [['static','STATIC'],['pulse','BEAT'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['type','TYPE'],['beat','WORD/BEAT']],
@@ -389,7 +440,6 @@ function bindSlider(el, id, onv){
   el.addEventListener('input', () => { show(); touching[id] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => onv(+el.value)); });
 }
 function uiPrefs(){
-  $$('#banks button').forEach(b => b.classList.toggle('on', +b.dataset.bank === ui.bank));
   $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade));
   $('#rCam').classList.toggle('on', ui.cam); $('#rModel').classList.toggle('on', ui.model);
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
@@ -444,12 +494,14 @@ function setLay(k, f, v){
 const GROUP = {};
 function renderPads(){
   if (!S) return; S.layers.forEach(l => GROUP[l.k] = l.g);
-  const base = ui.bank * 16, ic = {solid:'●', particles:'⁘', grid:'▦'};
-  $('#pads').innerHTML = Array.from({length:16}, (_, i) => { const slot = base + i + 1, p = S.bank[slot - 1];
-    if (!p) return `<button class="pad empty" data-pad="${slot}"><span class="n">${slot}</span><span class="t">+ save here</span><span></span></button>`;
+  const ic = {solid:'●', particles:'⁘', grid:'▦'};
+  let n = 0;
+  const pads = S.bank.map((p, i) => { if (!p) return ''; const slot = i + 1; n++;
     const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
-    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}"><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="t">${p.name}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
+    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}"><span class="n">${n} ${ic[p.scene] || ''}</span><span class="t">${p.name}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
   }).join('');
+  const free = S.bank.indexOf(null) + 1;
+  $('#pads').innerHTML = pads + (free ? `<button class="pad empty add" data-pad="new"><span class="n"></span><span class="t">＋<br><small>hold to save</small></span><span></span></button>` : '');
   header();
 }
 function meters(m){
@@ -467,7 +519,14 @@ function go(slot){
 function step(d){
   const filled = S.bank.map((p, i) => p ? i + 1 : 0).filter(Boolean); if (!filled.length) return;
   const i = filled.indexOf(S.b); const next = filled[((i < 0 ? (d > 0 ? -1 : 0) : i) + d + filled.length) % filled.length];
-  ui.bank = Math.floor((next - 1) / 16); uiPrefs(); go(next);
+  go(next);
+}
+function saveNew(){
+  const slot = S.bank.indexOf(null) + 1; if (!slot) { toast('All preset slots are full'); return; }
+  const name = S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Clean';
+  send({t:'banksave', v:slot, name}); S.b = slot;
+  S.bank[slot - 1] = {name, on: S.layers.filter(l => l.on).map(l => l.k), scene: S.pars.Scene, model: S.pars.Model};
+  renderPads(); toast('Saved · ' + name + ' (hold it to rename)');
 }
 function sheet(slot){
   const p = S.bank[slot - 1];
@@ -491,6 +550,7 @@ document.addEventListener('pointerdown', e => {
   const c = e.target.closest('[data-pad],[data-preset]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
+    if (c.dataset.pad === 'new') return saveNew();
     if (c.dataset.pad) return sheet(+c.dataset.pad);
     const n = +c.dataset.preset, name = prompt('Save current camera to F' + n + ' as:', S.presets[n - 1] || ('Preset ' + n));
     if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n); } }, 500);
@@ -498,7 +558,8 @@ document.addEventListener('pointerdown', e => {
 const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset]'); clearTimeout(holdT);
   $$('.hold').forEach(x => x.classList.remove('hold'));
   if (c && !held && e.type === 'pointerup') {
-    if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
+    if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
+    else if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
     else { send({t:'preset', v:+c.dataset.preset}); buzz(); } } };
 document.addEventListener('pointerup', endHold); document.addEventListener('pointercancel', endHold);
 
@@ -511,6 +572,8 @@ document.addEventListener('click', e => {
   else if (t.id === 'rCam') { ui.cam = !ui.cam; uiPrefs(); buzz(); }
   else if (t.id === 'rModel') { ui.model = !ui.model; uiPrefs(); buzz(); }
   else if (d.step) step(+d.step);
+  else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }
+  else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
   else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); applyLayers(); buzz(); }
   else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', k:l.k, on:false}); applyLayers(); buzz(); }
   else if (d.mode) { send({t:'layer', k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
