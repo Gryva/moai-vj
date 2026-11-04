@@ -218,6 +218,7 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
     </div>
     <h2>Beat <em>smooth, safe reactions</em></h2><div id="g-beat"></div>
     <h2>Input</h2><div id="g-audio"></div>
+    <h2>Headphones <em>turn off if you hear crackles</em></h2><div class="btns"><button class="btn" id="t-Monitor" data-tog="Monitor">Headphone monitor</button></div>
   </section>
 
   <section class="view" id="v-tune">
@@ -268,7 +269,7 @@ function sha256(ascii){
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
-const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK']};
+const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], palette:['ACID','INFERNO','ICE','BLOOD','TOXIC','BONE']};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
@@ -405,7 +406,7 @@ function applyPars(p){
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Showlabel','Texton'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  ['Autospin','Showlabel','Texton','Monitor'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
   syncText(p);
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
   header();
