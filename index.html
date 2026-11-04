@@ -54,15 +54,19 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .camv.mir{transform:scaleX(-1)}
 .camb{display:grid;gap:6px}.camb .big{padding:10px;font-size:12px}.camb .big.on{background:var(--hot);color:#000;border-color:var(--hot)}
 .camst{font-size:11px;color:var(--mute);margin:6px 2px 0}
-.pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px}
-.pad.add .t{font-size:26px;line-height:1;text-align:center;opacity:.8}.pad.add small{font-size:9px;letter-spacing:.08em;opacity:.7}.pad.add{border-style:dashed}
-.pad{position:relative;aspect-ratio:1;border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:7px;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .07s}
-.pad:active{transform:scale(.95)}
-.pad .n{font:700 10px var(--mono);color:var(--mute)}
-.pad .t{font-weight:700;font-size:11.5px;line-height:1.1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.pad .d{display:flex;gap:3px;flex-wrap:wrap;min-height:6px}.pad .d i{width:6px;height:6px;border-radius:50%}
-.pad.empty{border-style:dashed;background:transparent}.pad.empty .t{color:#4d4858;font-weight:600}
-.pad.full{background:linear-gradient(160deg,#241b30,#13111a)}
+.intro{margin:14px 2px 2px;font-size:13px;line-height:1.45;color:var(--mute)}.intro b{color:var(--ink);font-weight:600}
+.pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pad{position:relative;aspect-ratio:16/9;border-radius:14px;background:linear-gradient(160deg,#241b30,#13111a);border:1px solid var(--line);overflow:hidden;text-align:left;transition:transform .07s}
+.pad:active{transform:scale(.96)}
+.pad img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85}
+.pad.on img{opacity:1}
+.pad .ov{position:absolute;inset:0;background:linear-gradient(180deg,#0000 35%,#000d)}
+.pad .n{position:absolute;left:7px;top:6px;font:700 10px var(--mono);color:#fff;background:#0008;padding:2px 6px;border-radius:8px}
+.pad .live{position:absolute;right:7px;top:6px;font:700 9px var(--mono);letter-spacing:.1em;color:#fff;background:var(--hot);padding:3px 6px;border-radius:8px;display:none}.pad.on .live{display:block}
+.pad .t{position:absolute;left:8px;right:8px;bottom:12px;font-weight:700;font-size:13px;line-height:1.15;text-shadow:0 1px 8px #000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pad .d{position:absolute;left:8px;bottom:5px;display:flex;gap:3px}.pad .d i{width:5px;height:5px;border-radius:50%}
+.pad.add{background:transparent;border:1.5px dashed #3a3448;display:grid;place-items:center;text-align:center}
+.pad.add .plus{font-size:30px;line-height:1;color:var(--ink);opacity:.8}.pad.add small{display:block;margin-top:4px;font-size:10px;letter-spacing:.1em;color:var(--mute)}
 .pad.on{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot),0 0 24px -6px var(--hot)}
 .pad .fx{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--hot)}
 .pad.fading .fx{animation:fill var(--dur) linear forwards}@keyframes fill{to{width:100%}}
@@ -79,10 +83,14 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .lay .hd i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
 .lay .hd .x{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--panel2);color:var(--mute);font-size:17px}
 .lay .sub{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute)}.lay .sub span{flex:0 0 62px}
-.lt{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.lt button{border-radius:13px;background:var(--panel);border:1px solid var(--line);padding:13px 8px;font-weight:700;font-size:13px;text-align:left;position:relative;min-height:54px}
-.lt button::after{content:"";position:absolute;left:9px;bottom:8px;width:16px;height:3px;border-radius:2px;background:var(--c);opacity:.4}
-.lt button.on{background:var(--c);color:#0b0a0f;border-color:transparent;box-shadow:0 0 22px -8px var(--c)}
+.lt{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
+.lt button{position:relative;aspect-ratio:16/11;border-radius:13px;background:linear-gradient(160deg,#211b2b,#121018);border:1px solid var(--line);overflow:hidden;text-align:left}
+.lt button img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .15s}
+.lt button::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0000 40%,#000c);z-index:1}
+.lt button b{position:absolute;left:8px;right:8px;bottom:7px;font-size:12.5px;line-height:1.1;z-index:2;text-shadow:0 1px 6px #000}
+.lt button::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c);opacity:.6;z-index:2}
+.lt .ck{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--c);color:#0b0a0f;font:700 12px var(--sans);display:none;place-items:center;z-index:2}
+.lt button.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.lt button.on img{opacity:1}.lt button.on .ck{display:grid}
 .clr{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--hot);padding:6px 10px;border:1px solid #ff4d2e55;border-radius:10px}
 details.box summary{list-style:none;padding:12px 14px;border-radius:13px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--lime)}
 details.box summary::-webkit-details-marker{display:none}details.box summary::after{content:' ▾';color:var(--mute)}details.box[open] summary{margin-bottom:8px}
@@ -119,8 +127,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radiu
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
 .bar div{width:100%;border-radius:8px;background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,1fr);padding:7px 8px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
-nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:12px}nav button.on{color:var(--ink);background:var(--panel2)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(7,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:12px}nav button.on{color:var(--ink);background:var(--panel2)}
 
 /* text tab */
 .tin{width:100%;min-height:84px;resize:vertical;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 22px var(--sans);letter-spacing:.02em;outline:none}
@@ -168,36 +176,43 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
 
 <main>
   <section class="view" id="v-live">
+    <p class="intro"><b>Tap a picture to switch looks.</b> Build a look in FX + SOURCE, then hold the <b>＋</b> tile to save it.</p>
     <h2>Switch <em>how presets change</em></h2>
     <div class="seg sm" id="fades"></div>
     <div class="row" style="margin-top:7px"><button class="chipt" id="rCam">+ CAMERA</button><button class="chipt" id="rModel">+ MODEL</button></div>
-    <h2><span>Presets</span><em>tap = go · hold = edit · hold + = save new</em></h2>
+    <h2><span>Presets</span><em>tap = go · hold = rename / update / delete</em></h2>
     <div class="pads" id="pads"></div>
     <div class="nav2"><button class="big" data-step="-1">◀ PREV</button><button class="big" data-step="1">NEXT ▶</button></div>
   </section>
 
   <section class="view" id="v-layers">
-    <h2>3D scene</h2>
+    <p class="intro"><b>Effects stack on top of each other.</b> Tap tiles to add or remove them, then fine-tune what is on air.</p>
+    <h2><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
+    <div class="onair" id="onair"></div>
+    <h2>Warp <em>bends the shape</em></h2><div class="lt" id="lt-warp"></div>
+    <h2>Style <em>changes the look</em></h2><div class="lt" id="lt-style"></div>
+    <h2>Post <em>finishing touches</em></h2><div class="lt" id="lt-post"></div>
+  </section>
+
+  <section class="view" id="v-source">
+    <p class="intro"><b>What goes into the effects</b>: a 3D statue, your phone camera, or both together.</p>
+    <h2>Statue</h2><div class="models" id="models"></div>
+    <h2>Statue style</h2>
     <div class="seg" id="scene"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
     <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
+    <h2>Statue change <em>how statues swap</em></h2>
+    <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
+    <div id="g-model" style="margin-top:7px"></div>
     <h2>Phone camera <em>stream this phone into the visuals</em></h2>
     <div class="camwrap"><video class="camv" id="camv" playsinline muted autoplay></video>
       <div class="camb"><button class="big" id="camgo">START CAMERA</button><button class="big" id="camflip">FLIP ⟲</button></div></div>
     <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
     <div id="g-camfeed" style="margin-top:7px"></div>
-    <div class="camst" id="camst">Camera off · effects below apply to the camera too</div>
-    <h2><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
-    <div class="onair" id="onair"></div>
-    <h2>Warp <em>tap to stack</em></h2><div class="lt" id="lt-warp"></div>
-    <h2>Style</h2><div class="lt" id="lt-style"></div>
-    <h2>Post</h2><div class="lt" id="lt-post"></div>
-    <h2>Model</h2><div class="models" id="models"></div>
-    <h2>Model change <em>how models swap</em></h2>
-    <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
-    <div id="g-model" style="margin-top:7px"></div>
+    <div class="camst" id="camst">CAM = camera only · BEHIND = statue in front · BLEND = mixed · MASK = statue shows through bright parts</div>
   </section>
 
   <section class="view" id="v-text">
+    <p class="intro"><b>Put words on screen.</b> Type, press SHOW TEXT, then pick how it looks. Text is saved with presets.</p>
     <h2>Text <em>type anything</em></h2>
     <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
     <div class="trow"><button class="go" id="tsend">SHOW TEXT</button><button class="tog" id="t-Texton" data-tog="Texton">TEXT OFF</button></div>
@@ -211,6 +226,7 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
   </section>
 
   <section class="view" id="v-cam">
+    <p class="intro"><b>Move the virtual camera around the statue.</b> Drag the pad, or tap a saved move. Hold a move to save the current view into it.</p>
     <h2>Camera moves <em>tap · hold save</em></h2><div class="presets" id="presets"></div>
     <h2>Touch camera <em>double-tap = centre</em></h2>
     <div class="tpad" id="tpad"><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
@@ -221,6 +237,7 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
   </section>
 
   <section class="view" id="v-audio">
+    <p class="intro"><b>How the visuals listen.</b> If nothing reacts, raise Gain; if it is too twitchy, raise Smoothing.</p>
     <h2>Live audio</h2>
     <div class="bars">
       <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div><div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
@@ -232,6 +249,7 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
   </section>
 
   <section class="view" id="v-tune">
+    <p class="intro"><b>Global settings</b> you rarely touch during a set.</p>
     <h2>Master</h2><div id="g-master"></div>
     <h2>Model motion</h2><div id="g-motion"></div>
     <h2>Screen</h2><div class="btns"><button class="btn" id="t-Showlabel" data-tog="Showlabel">Info label</button></div>
@@ -239,7 +257,7 @@ nav button{padding:11px 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
   </section>
 </main>
 
-<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">LAYERS</button><button data-v="text">TEXT</button><button data-v="cam">CAM</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button></nav>
+<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="text">TEXT</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
@@ -279,10 +297,11 @@ function sha256(ascii){
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
-const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], palette:['ACID','INFERNO','ICE','BLOOD','TOXIC','BONE']};
+const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:['ACID','INFERNO','ICE','BLOOD','TOXIC','BONE']};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
+const THUMBS = {}; const FXV = 'v1';
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
 let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam', false), model: store.get('model', true)};
 const touching = {};
@@ -309,6 +328,7 @@ function onMsg(m){
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); }
+  else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
 }
@@ -393,7 +413,8 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 const EL = {};
 function build(){
   $('#fades').innerHTML = FADES.map(([n, v]) => `<button data-fade="${v}">${n}</button>`).join('');
-  ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l => `<button data-layer="${l.k}" style="--c:${GC[g]}">${l.label}</button>`).join(''));
+  ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
+    `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
   buildCam(); buildText();
   ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed'].forEach(g => $('#g-' + g).innerHTML = '');
@@ -483,7 +504,7 @@ function onAir(){
       : `<div class="sub"><span>${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}</div>`;
-  }).join('') : '<div class="empty">Nothing stacked — tap layers below</div>';
+  }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[type=range]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: v})));
 }
 function setLay(k, f, v){
@@ -498,10 +519,11 @@ function renderPads(){
   let n = 0;
   const pads = S.bank.map((p, i) => { if (!p) return ''; const slot = i + 1; n++;
     const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
-    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}"><span class="n">${n} ${ic[p.scene] || ''}</span><span class="t">${p.name}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
+    const img = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : '';
+    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${n} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${p.name}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
   }).join('');
   const free = S.bank.indexOf(null) + 1;
-  $('#pads').innerHTML = pads + (free ? `<button class="pad empty add" data-pad="new"><span class="n"></span><span class="t">＋<br><small>hold to save</small></span><span></span></button>` : '');
+  $('#pads').innerHTML = pads + (free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD TO SAVE<br>WHAT IS ON SCREEN</small></span></button>` : '');
   header();
 }
 function meters(m){
@@ -531,9 +553,9 @@ function saveNew(){
 function sheet(slot){
   const p = S.bank[slot - 1];
   $('#shT').textContent = p ? 'Preset ' + slot + ' · ' + p.name : 'Empty pad ' + slot;
-  $('#shP').textContent = p ? 'Save overwrites it with what is on screen now (layers, scene, model and camera).' : 'Save what is on screen now — layers, scene, model and camera.';
+  $('#shP').textContent = p ? 'Update replaces it (and its picture) with what is on screen now: effects, statue, text and camera.' : 'Save what is on screen now — layers, scene, model and camera.';
   $('#shI').value = p ? p.name : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Preset ' + slot);
-  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Save current here' : 'Save current'}</button>` + (p ? `<button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Clear pad</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Clear pad</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 const closeSheet = () => { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
