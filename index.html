@@ -14,7 +14,8 @@
 :root{--bg:#09080d;--panel:#13111a;--panel2:#1b1824;--line:#2a2635;--ink:#f3efe7;--mute:#8b8597;--hot:#ff4d2e;--cyan:#3ef0ff;--vio:#b06bff;--lime:#c6ff3d;
   --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
   --sans:'Space Grotesk',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overscroll-behavior:none}
 body{display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
@@ -25,10 +26,15 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
 .fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute)}
+.edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
+body.editing .edit{background:var(--lime);color:#0b0a0f;border-color:transparent}
+body:not(.editing) nav{display:none}
+body:not(.editing) main{padding-bottom:calc(24px + var(--sb))}
+body:not(.editing) .pad.add,body:not(.editing) .edonly{display:none}
 .bo{height:36px;padding:0 16px;border-radius:8px;background:var(--ink);color:var(--bg);font-weight:700;letter-spacing:.12em;font-size:11px}
 .bo.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}@keyframes pulse{50%{box-shadow:0 0 0 8px #ff4d2e33}}
 .now{margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.now b{font-size:20px;letter-spacing:-.01em}.now span{color:var(--mute);font-size:13px;margin-left:8px}
+.now b{font-size:17px;letter-spacing:-.01em}.now span{color:var(--mute);font-size:13px;margin-left:8px}
 .meters{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
 .m{height:5px;border-radius:3px;background:var(--panel2);overflow:hidden;position:relative}
 .m i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0)}
@@ -74,6 +80,9 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .clip b{position:absolute;left:6px;bottom:5px;font:700 11px var(--mono);text-shadow:0 1px 4px #000}
 .clip.live{background:var(--panel);display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.12em;color:var(--mute)}
 .clip.on{border-color:var(--lime);box-shadow:0 0 0 2px var(--lime)}.clip.on img{opacity:1}.clip.live.on{color:var(--lime)}
+.hint2{font-size:11px;color:var(--mute);margin:8px 2px 0;line-height:1.4}.hint2 b{color:var(--ink)}
+.clip .vid{position:absolute;right:5px;top:4px;font-size:11px;text-shadow:0 1px 4px #000}
+label.tg{cursor:pointer}
 .clip.hold::after{content:"";position:absolute;inset:0;background:#ff4d2e55;animation:holdf .5s linear}
 .btn.rec{color:var(--hot);border-color:#ff4d2e66;font-weight:700}.btn.rec.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}
 .btn:disabled{opacity:.35}
@@ -108,13 +117,13 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .lay .hd i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
 .lay .hd .x{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--panel2);color:var(--mute);font-size:17px}
 .lay .sub{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute)}.lay .sub span{flex:0 0 62px}
-.lt{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
-.lt button{position:relative;aspect-ratio:16/11;border-radius:8px;background:linear-gradient(160deg,#211b2b,#121018);border:1px solid var(--line);overflow:hidden;text-align:left}
+.lt{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px}
+.lt button{position:relative;aspect-ratio:1;border-radius:8px;background:linear-gradient(160deg,#211b2b,#121018);border:1px solid var(--line);overflow:hidden;text-align:left}
 .lt button img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .15s}
 .lt button::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0000 40%,#000c);z-index:1}
-.lt button b{position:absolute;left:8px;right:8px;bottom:7px;font-size:12.5px;line-height:1.1;z-index:2;text-shadow:0 1px 6px #000}
+.lt button b{position:absolute;left:6px;right:4px;bottom:5px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;z-index:2;text-shadow:0 1px 6px #000}
 .lt button::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c);opacity:.6;z-index:2}
-.lt .ck{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--c);color:#0b0a0f;font:700 12px var(--sans);display:none;place-items:center;z-index:2}
+.lt .ck{position:absolute;top:4px;right:4px;width:16px;height:16px;font-size:10px!important;border-radius:50%;background:var(--c);color:#0b0a0f;font:700 12px var(--sans);display:none;place-items:center;z-index:2}
 .lt button.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.lt button.on img{opacity:1}.lt button.on .ck{display:grid}
 .clr{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--hot);padding:6px 10px;border:1px solid #ff4d2e55;border-radius:6px}
 details.box summary{list-style:none;padding:12px 14px;border-radius:8px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--lime)}
@@ -194,16 +203,15 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="bo" id="bo">BLACKOUT</button></div>
-  <div class="now"><b id="nowA">—</b><span id="nowB"></span></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
 
 <main>
   <section class="view" id="v-live">
-    <h2>Switch</h2>
-    <div class="seg sm" id="fades"></div>
-    <h2><span>Presets</span><em>tap = go · hold = edit</em></h2>
+    <div class="seg sm" id="fades" style="margin-top:12px"></div>
+    <h2><span>Presets</span><em class="edonly">hold = edit</em></h2>
     <div class="pads" id="pads"></div>
   </section>
 
@@ -241,6 +249,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <div id="g-clip" style="margin-top:7px"></div>
         <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
       </div></div>
+
+    <div class="card open" id="cardMedia"><div class="ch"><b>Images + videos</b><label class="tg" for="mediapick">＋ PHOTO</label><input type="file" id="mediapick" accept="image/*" hidden></div>
+      <div class="cb"><div class="clips" id="medialist"></div>
+        <div class="hint2">Tap to show · tap again to stop · on the laptop, drop images or videos into the <b>media</b> folder</div></div></div>
 
     <div class="card" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
       <div class="cb">
@@ -301,8 +313,16 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
-function sha256(ascii){
-  ascii = unescape(encodeURIComponent(ascii));
+document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function sha256(s){ return sha256raw(unescape(encodeURIComponent(s))); }
+const hex2bin = h => h.replace(/../g, x => String.fromCharCode(parseInt(x, 16)));
+function hmac(key, msg){                                      // HMAC-SHA256, hex - same as Python hmac.new(key, msg, sha256)
+  let k = key.length > 64 ? hex2bin(sha256raw(key)) : key; while (k.length < 64) k += '\x00';
+  let ip = '', op = ''; for (let i = 0; i < 64; i++) { const c = k.charCodeAt(i); ip += String.fromCharCode(c ^ 0x36); op += String.fromCharCode(c ^ 0x5c); }
+  return sha256raw(op + hex2bin(sha256raw(ip + unescape(encodeURIComponent(msg)))));
+}
+function sha256raw(ascii){
   const rr = (v, a) => (v >>> a) | (v << (32 - a)); const maxWord = Math.pow(2, 32);
   let i, j, result = ''; const words = [], bitLen = ascii.length * 8;
   let hash = [], k = [], pc = 0; const comp = {};
@@ -341,10 +361,18 @@ let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store
 const touching = {};
 let TOKEN = store.get('tok_' + (KEY || 'local'), '');
 const CID = Math.random().toString(36).slice(2, 10);       // this phone's id: auth replies are addressed to it
-const send = o => { if (TOKEN) o.a = TOKEN; o.c = CID; T.send(o); };
+// every command is signed: the token itself never leaves this phone; each signature works once, for 2 minutes
+const send = o => { o.c = CID; o.ts = Date.now(); o.r = Math.random().toString(36).slice(2, 10);
+  const p = JSON.stringify(o); T.send(TOKEN ? {p, s: hmac(TOKEN, p)} : {p}); };
+const SK = {m: -1, b: new Uint8Array(0)};
+function withKey(u8){                                       // camera / drawing frames carry a key that changes every minute
+  const m = Math.floor(Date.now() / 60000);
+  if (SK.m !== m) { SK.m = m; const h = TOKEN ? hmac(TOKEN, 'stream:' + m).slice(0, 32) : ''; SK.b = new Uint8Array(h.length / 2).map((_, i) => parseInt(h.substr(i * 2, 2), 16)); }
+  const o = new Uint8Array(SK.b.length + u8.length); o.set(SK.b); o.set(u8, SK.b.length); return o;
+}
 const makeToken = pw => pw ? sha256((KEY || '') + ':' + pw) : '';
 function lock(msg){ $('#lock').classList.add('on'); $('#lockerr').textContent = msg || ''; setTimeout(() => $('#lockpw').focus(), 50); }
-function unlockTry(){ const pw = $('#lockpw').value; TOKEN = makeToken(pw); store.set('tok_' + (KEY || 'local'), TOKEN); $('#lockerr').textContent = 'Checking…'; send({t:'hello'}); }
+function unlockTry(){ const pw = $('#lockpw').value; TOKEN = makeToken(pw); SK.m = -1; store.set('tok_' + (KEY || 'local'), TOKEN); $('#lockerr').textContent = 'Checking…'; send({t:'hello'}); }
 const buzz = (n = 8) => navigator.vibrate && navigator.vibrate(n);
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 1400); }
 
@@ -367,6 +395,7 @@ function onMsg(m){
       if (nw) { LOCALCLIP[nw] = Object.assign(pendingClip, {start: performance.now(), i: -1}); pendingClip = null; } }
     if (m.cur && LOCALCLIP[m.cur] && m.cur !== S.clipcur) LOCALCLIP[m.cur].start = performance.now();
     S.clips = m.v; S.clipcur = m.cur; renderClips(); cards(); }
+  else if (m.t === 'media') { S.media = m.v; S.mediacur = m.cur; renderMedia(); cards(); }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
@@ -445,7 +474,7 @@ function camLoop(){
     CAMF.busy = true;
     camCv.toBlob(b => { if (!b) { CAMF.busy = false; return; }
       if (recBuf) { recBuf.u.push(URL.createObjectURL(b)); recBuf.t.push((performance.now() - recBuf.t0) / 1000); }
-      b.arrayBuffer().then(ab => T.cam(new Uint8Array(ab), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.65);
+      b.arrayBuffer().then(ab => T.cam(withKey(new Uint8Array(ab)), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.65);
   }
   const el = (performance.now() - CAMF.t0) / 1000;
   if (el > 1) $('#camst').textContent = '● ' + (CAMF.sent / el).toFixed(0) + ' fps' + (S.pars.Camsrc === 'off' ? ' · pick a mode' : '');
@@ -465,7 +494,7 @@ function clipUI(p){
 function cards(){
   if (!S) return; const p = S.pars, loop = p.Clipstate === 'loop';
   $('#cardStatue').classList.toggle('open', p.Statue !== false);
-  $('#cardCam').classList.toggle('open', CAMF.on || loop);
+  $('#cardCam').classList.toggle('open', CAMF.on || loop || !!S.mediacur);
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
   $('#cardDraw').classList.toggle('open', !!p.Drawon);
@@ -484,6 +513,22 @@ function clipView(){
   if (fr.i !== i) { fr.i = i; $('#clipview').src = fr.u[i]; }
 }
 setInterval(() => S && ui.tab === 'source' && clipView(), 50);
+function renderMedia(){
+  if (!S) return;
+  $('#medialist').innerHTML = (S.media || []).slice().reverse().map(x =>
+    `<button class="clip ${x.id === S.mediacur ? 'on' : ''}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}</button>`).join('');
+}
+async function uploadPhoto(file){
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { toast('Pick an image'); return; }
+  let bmp; try { bmp = await createImageBitmap(file); } catch(e) { toast('Could not read that image'); return; }
+  const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  const b64 = c.toDataURL('image/jpeg', 0.85).split(',')[1], N = Math.ceil(b64.length / 24000), u = Math.random().toString(36).slice(2, 10);
+  if (N > 200) { toast('Image too large'); return; }
+  for (let i = 0; i < N; i++) { send({t:'up', u, i, n:N, d:b64.slice(i * 24000, (i + 1) * 24000)}); toast('Sending photo ' + Math.round((i + 1) / N * 100) + '%'); await new Promise(r => setTimeout(r, 60)); }
+}
+document.getElementById('mediapick').addEventListener('change', e => { uploadPhoto(e.target.files[0]); e.target.value = ''; });
 function renderClips(){
   if (!S) return; const st = S.pars.Clipstate, cur = st === 'loop' ? S.clipcur : null;
   $('#clips').innerHTML = `<button class="clip live ${cur ? '' : 'on'}" data-clip="live">LIVE</button>` + (S.clips || []).slice().reverse().map(c =>
@@ -517,7 +562,7 @@ function drawSend(){
   if (!T.draw || !(S && S.pars.Drawon)) return;
   if (DR.busy) { DR.again = true; return; }
   DR.busy = true;
-  dcv.toBlob(b => { if (!b) { DR.busy = false; return; } b.arrayBuffer().then(ab => T.draw(new Uint8Array(ab), () => { DR.busy = false; if (DR.again) { DR.again = false; setTimeout(drawSend, 60); } })); }, 'image/png');
+  dcv.toBlob(b => { if (!b) { DR.busy = false; return; } b.arrayBuffer().then(ab => T.draw(withKey(new Uint8Array(ab)), () => { DR.busy = false; if (DR.again) { DR.again = false; setTimeout(drawSend, 60); } })); }, 'image/png');
 }
 function drawSave(){ store.set('draw', DR.ops.slice(-200)); }
 const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
@@ -563,7 +608,7 @@ function buildText(){
   $('#o-Textcolor').innerHTML = Object.entries(TCOL).map(([v, c]) => `<button data-tp="Textcolor" data-tv="${v}" style="background:${c}"></button>`).join('');
   renderRecent();
 }
-function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${t.replace(/</g,'&lt;')}</button>`).join(''); }
+function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); }
 function syncText(p){
   $$('[data-tp]').forEach(b => b.classList.toggle('on', p[b.dataset.tp] === b.dataset.tv));
   const t = $('#t-Texton'); t.textContent = p.Texton ? 'TEXT ON' : 'TEXT OFF';
@@ -585,6 +630,13 @@ function bindSlider(el, id, onv){
   const end = () => touching[id] = performance.now() + 600;
   el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('change', end);
   el.addEventListener('input', () => { show(); touching[id] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => onv(+el.value)); });
+}
+let EDIT = false;                                            // friends get the simple preset view; EDIT unlocks the rest
+function setEdit(on){
+  EDIT = on; document.body.classList.toggle('editing', on);
+  $('#editbtn').textContent = on ? '✓ DONE' : '✎ EDIT';
+  if (!on) ui.tab = 'live';
+  uiPrefs(); $('main').scrollTop = 0;
 }
 function uiPrefs(){
   $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade));
@@ -612,10 +664,7 @@ function applyPars(p){
 }
 function header(){
   const slot = S.b, pr = slot ? S.bank[slot - 1] : null;
-  const act = S.layers.filter(l => l.on).map(l => l.label);
-  $('#nowA').textContent = pr ? pr.name : (act.length ? act.join(' + ') : 'CLEAN');
-  const model = S.models.find(m => m.name === S.pars.Model);
-  $('#nowB').textContent = (pr ? act.length + ' layers · ' : '') + (model ? model.label : '') + ' · ' + S.pars.Scene;
+  $('#nowA').textContent = pr ? pr.name : 'Custom look';
 }
 function applyLayers(L){
   if (L) L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } });
@@ -650,7 +699,7 @@ function renderPads(){
   const pads = S.bank.map((p, i) => { if (!p) return ''; const slot = i + 1; n++;
     const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
     const img = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : '';
-    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${n} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${p.name}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
+    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${n} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
   }).join('');
   const free = S.bank.indexOf(null) + 1;
   $('#pads').innerHTML = pads + (free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE<br>WHAT IS ON SCREEN</small></span></button>`
@@ -700,20 +749,22 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
+    if (c.dataset.media) { if (c.dataset.up === '1' && confirm('Delete this photo?')) send({t:'media', do:'del', id:c.dataset.media}); return; }
     if (c.dataset.clip) { if (c.dataset.clip !== 'live' && confirm('Delete this clip?')) { send({t:'clip', do:'del', id:c.dataset.clip}); toast('Clip deleted'); } return; }
     if (c.dataset.pad === 'clean') return;
     if (c.dataset.pad === 'new') return saveNew();
-    if (c.dataset.pad) return sheet(+c.dataset.pad);
+    if (c.dataset.pad) return EDIT ? sheet(+c.dataset.pad) : null;
     const n = +c.dataset.preset, name = prompt('Save current camera to F' + n + ' as:', S.presets[n - 1] || ('Preset ' + n));
     if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n); } }, 500);
 });
-const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip]'); clearTimeout(holdT);
+const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media]'); clearTimeout(holdT);
   $$('.hold').forEach(x => x.classList.remove('hold'));
   if (c && !held && e.type === 'pointerup') {
-    if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
+    if (c.dataset.media) { send(c.dataset.media === S.mediacur ? {t:'media', do:'stop'} : {t:'media', do:'play', id:c.dataset.media}); buzz(); }
+    else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
     else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added · build it, then hold it → Update'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
     else if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
@@ -729,6 +780,7 @@ document.addEventListener('click', e => {
   else if (d.step) step(+d.step);
   else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }
   else if (t.id === 'cliprec') clipRecTap();
+  else if (t.id === 'editbtn') { setEdit(!EDIT); buzz(15); }
   else if (d.dt) { DR.tool = d.dt; $$('[data-dt]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.ds) { DR.size = +d.ds; $$('[data-ds]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.dcol) { DR.color = d.dcol; $$('[data-dcol]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
