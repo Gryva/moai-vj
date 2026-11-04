@@ -50,13 +50,23 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 
 /* LIVE pads */
 .camwrap{display:grid;grid-template-columns:132px 1fr;gap:8px;align-items:stretch}
-.camv{width:132px;aspect-ratio:16/9;border-radius:6px;background:#000 center/cover;border:1px solid var(--line);object-fit:cover;overflow:hidden}
+.camv{position:relative;width:132px;aspect-ratio:16/9;border-radius:6px;background:#000;border:1px solid var(--line);overflow:hidden}
+#camv.mir{transform:scaleX(-1)}
+.camv video,.camv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.camv img{display:none}.camv.clip img{display:block}
+.card{border:1px solid var(--line);border-radius:6px;background:#100e16;margin-top:12px;overflow:hidden}
+.card .ch{display:flex;align-items:center;gap:10px;padding:12px 14px}.card .ch b{font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+.card .ch em{margin-left:auto;font-style:normal;font-size:11px;color:#5f596c}.card .ch .tg{margin-left:auto}.card .ch .camst+.tg{margin-left:8px}.card .ch .camst{margin-left:auto}
+.card .cb{display:none;padding:0 12px 12px}.card.open .cb{display:block}.card.hide{display:none}
+.swr{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin:6px 0}.swr button{aspect-ratio:1;border-radius:50%;border:2px solid transparent}.swr button.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg) inset}
+.drawpad{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;touch-action:none}
+.tools{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;margin-top:7px}.tools button{padding:10px 0;border-radius:4px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:14px;color:var(--mute)}.tools button.on{background:var(--ink);color:var(--bg)}
+.tools button[data-du],.tools button[data-dc]{font-size:11px;letter-spacing:.06em}
 .camv.mir{transform:scaleX(-1)}
-.camb{display:grid;gap:6px}.camb .big{padding:10px;font-size:12px}.camb .big.on{background:var(--hot);color:#000;border-color:var(--hot)}
+.camb{display:grid;gap:6px;align-content:stretch}.camb .big{padding:10px;font-size:12px}.camb .big.on{background:var(--hot);color:#000;border-color:var(--hot)}
 .camst{font:500 11px var(--mono);letter-spacing:0;text-transform:none;color:var(--lime)}
 .also{margin-top:7px}.also span{flex:0 0 auto;font-size:11px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase}
 .tg{font:700 11px var(--sans);letter-spacing:.12em;padding:7px 14px;border-radius:4px;border:1px solid var(--line);color:var(--mute)}.tg.on{background:var(--lime);color:#0b0a0f;border-color:transparent}
-.recbtn{width:100%;padding:16px;border-radius:6px;border:1.5px solid var(--hot);color:var(--hot);font-weight:700;letter-spacing:.14em;font-size:14px;background:transparent}
+.recbtn{width:100%;padding:12px;border-radius:6px;border:1.5px solid var(--hot);color:var(--hot);font-weight:700;letter-spacing:.14em;font-size:14px;background:transparent}
 .recbtn.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}
 .clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px;margin-top:8px}
 .clip{position:relative;aspect-ratio:16/10;border-radius:6px;border:1px solid var(--line);background:#000;overflow:hidden}
@@ -193,7 +203,6 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   <section class="view" id="v-live">
     <h2>Switch</h2>
     <div class="seg sm" id="fades"></div>
-    <div class="row also"><span>also</span><button class="chipt" id="rCam">CAMERA</button><button class="chipt" id="rModel">STATUE</button><button class="chipt" id="rText">TEXT</button></div>
     <h2><span>Presets</span><em>tap = go · hold = edit</em></h2>
     <div class="pads" id="pads"></div>
   </section>
@@ -207,30 +216,45 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-source">
-    <h2><span>Statue</span><button class="tg" id="t-Statue" data-tog="Statue">ON</button></h2>
-    <div class="models" id="models"></div>
-    <div class="seg" id="scene" style="margin-top:8px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
-    <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
-    <details class="box"><summary>Swap animation</summary>
-      <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
-      <div id="g-model" style="margin-top:7px"></div></details>
-    <h2><span>Phone camera</span><span class="camst" id="camst"></span></h2>
-    <div class="camwrap"><video class="camv" id="camv" playsinline muted autoplay></video>
-      <div class="camb"><button class="big" id="camgo">START CAMERA</button><button class="big" id="camflip">FLIP ⟲</button></div></div>
-    <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
-    <div class="seg sm" id="o-Camfit" style="margin-top:7px"></div>
-    <div id="g-camfeed" style="margin-top:7px"></div>
-    <h2><span>Clips</span><em>hold a clip = delete</em></h2>
-    <button class="recbtn" id="cliprec">● RECORD</button>
-    <div class="clips" id="clips"></div>
-    <div id="g-clip" style="margin-top:7px"></div>
-    <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
+    <div class="card" id="cardStatue"><div class="ch"><b>Statue</b><button class="tg" id="t-Statue" data-tog="Statue">ON</button></div>
+      <div class="cb">
+        <div class="models" id="models"></div>
+        <div class="seg" id="scene" style="margin-top:8px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
+        <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
+        <details class="box"><summary>Swap animation</summary>
+          <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
+          <div id="g-model" style="margin-top:7px"></div></details>
+      </div></div>
+
+    <div class="card" id="cardCam"><div class="ch"><b>Phone camera</b><span class="camst" id="camst"></span><button class="tg" id="camgo">OFF</button></div>
+      <div class="cb">
+        <div class="camwrap"><div class="camv" id="camvw"><video id="camv" playsinline muted autoplay></video><img id="clipview" alt=""></div>
+          <div class="camb"><button class="big" id="camflip">FLIP ⟲</button><button class="recbtn" id="cliprec">● RECORD</button></div></div>
+        <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
+        <div class="seg sm" id="o-Camfit" style="margin-top:7px"></div>
+        <div id="g-camfeed" style="margin-top:7px"></div>
+      </div></div>
+
+    <div class="card" id="cardClips"><div class="ch"><b>Clips</b><em>hold = delete</em></div>
+      <div class="cb">
+        <div class="clips" id="clips"></div>
+        <div id="g-clip" style="margin-top:7px"></div>
+        <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
+      </div></div>
+
+    <div class="card" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
+      <div class="cb">
+        <canvas class="drawpad" id="drawpad" width="640" height="360"></canvas>
+        <div class="tools" id="dtools"><button data-dt="pen" class="on">✎</button><button data-dt="line">／</button><button data-dt="circle">○</button><button data-dt="square">□</button><button data-dt="triangle">△</button><button data-dt="star">☆</button></div>
+        <div class="swr" id="dcols"></div>
+        <div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR</button></div>
+        <div id="g-draw" style="margin-top:7px"></div>
+      </div></div>
   </section>
 
   <section class="view" id="v-text">
     <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…" style="margin-top:14px"></textarea>
     <div class="trow"><button class="go" id="tsend">SHOW TEXT</button><button class="tog" id="t-Texton" data-tog="Texton">TEXT OFF</button></div>
-    <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="t-Textpin" data-tog="Textpin">📌 KEEP THROUGH PRESET CHANGES</button></div>
     <div class="recent" id="recent"></div>
     <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
     <h2>Layout</h2><div class="opts" id="o-Textlayout"></div>
@@ -306,7 +330,8 @@ function sha256(ascii){
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
-const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:['ACID','INFERNO','ICE','BLOOD','TOXIC','BONE']};
+const SWATCH = {palette:['#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3']};
+const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
@@ -337,7 +362,11 @@ function onMsg(m){
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); }
-  else if (m.t === 'clips') { S.clips = m.v; S.clipcur = m.cur; renderClips(); }
+  else if (m.t === 'clips') {
+    if (pendingClip && m.v.length) { const known = new Set(Object.keys(LOCALCLIP)), nw = m.v.map(c => c.id).filter(id => !known.has(id)).sort().pop();
+      if (nw) { LOCALCLIP[nw] = Object.assign(pendingClip, {start: performance.now(), i: -1}); pendingClip = null; } }
+    if (m.cur && LOCALCLIP[m.cur] && m.cur !== S.clipcur) LOCALCLIP[m.cur].start = performance.now();
+    S.clips = m.v; S.clipcur = m.cur; renderClips(); cards(); }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
@@ -357,6 +386,7 @@ function connectWS(){
   ws.onopen = () => { linkUp = true; send({t:'hello'}); }; ws.onclose = () => { linkUp = false; setTimeout(connectWS, b = Math.min(b * 1.6, 4000)); };
   ws.onmessage = e => onMsg(JSON.parse(e.data));
   T.send = o => ws.readyState === 1 && ws.send(JSON.stringify(o));
+  T.draw = (buf, done) => { if (ws.readyState === 1) ws.send(buf); done(); };
 }
 function connectRelay(){
   const base = 'moaivj/' + KEY, B = BROKERS[bi];
@@ -369,6 +399,7 @@ function connectRelay(){
   c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
   T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
   T.cam = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/cam', buf, {qos:0}, () => done()); } catch(e){ done(); } };
+  T.draw = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/draw', buf, {qos:0}, () => done()); } catch(e){ done(); } };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) send({t:'hello'}); });
 }
 function connect(){
@@ -391,7 +422,7 @@ async function camStart(){
   const v = $('#camv'); v.srcObject = CAMF.stream; v.classList.toggle('mir', CAMF.facing === 'user');
   try { await v.play(); } catch(e){}
   CAMF.on = true; CAMF.sent = 0; CAMF.t0 = performance.now();
-  $('#camgo').textContent = 'STOP CAMERA'; $('#camgo').classList.add('on');
+  $('#camgo').textContent = 'ON'; $('#camgo').classList.add('on'); cards();
   send({t:'set', p:'Cammirror', v: CAMF.facing === 'user'});
   if (!S.pars.Camsrc || S.pars.Camsrc === 'off') { send({t:'set', p:'Camsrc', v:'behind'}); S.pars.Camsrc = 'behind'; syncText(S.pars); }
   camLoop(); clipUI(S.pars); buzz(15);
@@ -399,7 +430,7 @@ async function camStart(){
 function camStop(off){
   CAMF.on = false; clearTimeout(CAMF.timer); CAMF.busy = false;
   if (CAMF.stream) CAMF.stream.getTracks().forEach(t => t.stop()); CAMF.stream = null; $('#camv').srcObject = null;
-  $('#camgo').textContent = 'START CAMERA'; $('#camgo').classList.remove('on'); $('#camst').textContent = '';
+  $('#camgo').textContent = 'OFF'; $('#camgo').classList.remove('on'); $('#camst').textContent = ''; cards();
   if (off !== false && !(S && S.pars.Clipstate === 'loop')) { send({t:'set', p:'Camsrc', v:'off'}); if (S) { S.pars.Camsrc = 'off'; syncText(S.pars); } }
   if (S) clipUI(S.pars);
 }
@@ -413,6 +444,7 @@ function camLoop(){
     camCx.drawImage(v, 0, 0, vw, vh, 0, 0, w, h);
     CAMF.busy = true;
     camCv.toBlob(b => { if (!b) { CAMF.busy = false; return; }
+      if (recBuf) { recBuf.u.push(URL.createObjectURL(b)); recBuf.t.push((performance.now() - recBuf.t0) / 1000); }
       b.arrayBuffer().then(ab => T.cam(new Uint8Array(ab), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.65);
   }
   const el = (performance.now() - CAMF.t0) / 1000;
@@ -423,11 +455,35 @@ function camLoop(){
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && CAMF.on) $('#camv').play().catch(() => {}); });
 function clipUI(p){
   const st = p.Clipstate || 'off', r = $('#cliprec');
+  if (st === 'rec' && !recBuf) recBuf = {u: [], t: [], t0: performance.now()};
+  if (st !== 'rec' && recBuf) { if (recBuf.u.length > 2) pendingClip = recBuf; recBuf = null; }
   CAMF.fps = st === 'rec' ? 15 : 12;
   r.classList.toggle('on', st === 'rec');
   r.textContent = st === 'rec' ? '■ STOP  ' + (+p.Cliplen || 0).toFixed(1) + ' s' : '● RECORD';
   renderClips();
 }
+function cards(){
+  if (!S) return; const p = S.pars, loop = p.Clipstate === 'loop';
+  $('#cardStatue').classList.toggle('open', p.Statue !== false);
+  $('#cardCam').classList.toggle('open', CAMF.on || loop);
+  $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
+  $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
+  $('#cardDraw').classList.toggle('open', !!p.Drawon);
+  $('#cliprec').disabled = !CAMF.on && p.Clipstate !== 'rec';
+}
+/* local copies of the frames this phone recorded, so the preview can play the clip */
+const LOCALCLIP = {}; let recBuf = null, pendingClip = null;
+function clipView(){
+  const box = $('#camvw'), st = S && S.pars.Clipstate, fr = st === 'loop' && S.clipcur && LOCALCLIP[S.clipcur];
+  const thumb = st === 'loop' && S.clipcur && (S.clips || []).find(c => c.id === S.clipcur);
+  box.classList.toggle('clip', !!(fr || (thumb && thumb.thumb)));
+  if (!fr) { if (thumb && thumb.thumb) $('#clipview').src = 'data:image/jpeg;base64,' + thumb.thumb; return; }
+  const sp = +S.pars.Clipspeed || 1, dur = fr.t[fr.t.length - 1] || 1, b = S.pars.Clipbounce;
+  let pos = ((performance.now() - fr.start) / 1000 * sp) % (b ? 2 * dur : dur); if (b && pos > dur) pos = 2 * dur - pos;
+  let i = 0; while (i < fr.t.length - 1 && fr.t[i + 1] <= pos) i++;
+  if (fr.i !== i) { fr.i = i; $('#clipview').src = fr.u[i]; }
+}
+setInterval(() => S && ui.tab === 'source' && clipView(), 50);
 function renderClips(){
   if (!S) return; const st = S.pars.Clipstate, cur = st === 'loop' ? S.clipcur : null;
   $('#clips').innerHTML = `<button class="clip live ${cur ? '' : 'on'}" data-clip="live">LIVE</button>` + (S.clips || []).slice().reverse().map(c =>
@@ -440,6 +496,44 @@ function clipRecTap(){
   send({t:'clip', do:'rec'}); buzz(30);
 }
 
+/* ---------------- draw pad -> TouchDesigner ---------------- */
+const DCOLS = ['#ffffff','#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3'];
+const DR = {ops: store.get('draw', []), tool: 'pen', color: '#ffffff', size: 7, cur: null, busy: false, again: false};
+const dcv = document.getElementById('drawpad'), dcx = dcv.getContext('2d');
+function drawShape(o){
+  dcx.strokeStyle = o.c; dcx.lineWidth = o.w; dcx.lineCap = dcx.lineJoin = 'round'; dcx.beginPath();
+  if (o.t === 'pen') { o.p.forEach(([x, y], i) => i ? dcx.lineTo(x, y) : dcx.moveTo(x, y)); if (o.p.length === 1) dcx.lineTo(o.p[0][0] + 0.1, o.p[0][1]); }
+  else { const x0 = Math.min(o.x0, o.x1), y0 = Math.min(o.y0, o.y1), w = Math.abs(o.x1 - o.x0), h = Math.abs(o.y1 - o.y0), cx = x0 + w / 2, cy = y0 + h / 2;
+    if (o.t === 'line') { dcx.moveTo(o.x0, o.y0); dcx.lineTo(o.x1, o.y1); }
+    else if (o.t === 'circle') dcx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+    else if (o.t === 'square') dcx.rect(x0, y0, w, h);
+    else if (o.t === 'triangle') { dcx.moveTo(cx, y0); dcx.lineTo(x0 + w, y0 + h); dcx.lineTo(x0, y0 + h); dcx.closePath(); }
+    else if (o.t === 'star') { for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.42 : 1, a = -Math.PI / 2 + i * Math.PI / 5;
+      const x = cx + Math.cos(a) * w / 2 * r, y = cy + Math.sin(a) * h / 2 * r; i ? dcx.lineTo(x, y) : dcx.moveTo(x, y); } dcx.closePath(); } }
+  dcx.stroke();
+}
+function drawRender(){ dcx.fillStyle = '#000'; dcx.fillRect(0, 0, 640, 360); DR.ops.forEach(drawShape); if (DR.cur) drawShape(DR.cur); }
+function drawSend(){
+  if (!T.draw || !(S && S.pars.Drawon)) return;
+  if (DR.busy) { DR.again = true; return; }
+  DR.busy = true;
+  dcv.toBlob(b => { if (!b) { DR.busy = false; return; } b.arrayBuffer().then(ab => T.draw(new Uint8Array(ab), () => { DR.busy = false; if (DR.again) { DR.again = false; setTimeout(drawSend, 60); } })); }, 'image/png');
+}
+function drawSave(){ store.set('draw', DR.ops.slice(-200)); }
+const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
+dcv.addEventListener('pointerdown', e => { dcv.setPointerCapture(e.pointerId); const [x, y] = dpos(e);
+  DR.cur = DR.tool === 'pen' ? {t:'pen', p:[[x, y]], c:DR.color, w:DR.size} : {t:DR.tool, x0:x, y0:y, x1:x, y1:y, c:DR.color, w:DR.size};
+  if (S && !S.pars.Drawon) { send({t:'set', p:'Drawon', v:true}); S.pars.Drawon = true; applyPars({}); }
+  drawRender(); drawSend(); });
+dcv.addEventListener('pointermove', e => { if (!DR.cur) return; const [x, y] = dpos(e);
+  if (DR.cur.t === 'pen') DR.cur.p.push([x, y]); else { DR.cur.x1 = x; DR.cur.y1 = y; } drawRender(); drawSend(); });
+const dEnd = () => { if (!DR.cur) return; DR.ops.push(DR.cur); DR.cur = null; drawRender(); drawSend(); drawSave(); };
+dcv.addEventListener('pointerup', dEnd); dcv.addEventListener('pointercancel', dEnd);
+function buildDraw(){
+  $('#dcols').innerHTML = DCOLS.map(c => `<button data-dcol="${c}" style="background:${c}" class="${c === DR.color ? 'on' : ''}"></button>`).join('');
+  drawRender();
+}
+
 /* ---------------- build ---------------- */
 const EL = {};
 function build(){
@@ -447,9 +541,9 @@ function build(){
   ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
     `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
-  buildCam(); buildText();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip'].forEach(g => $('#g-' + g).innerHTML = '');
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)'};
+  buildCam(); buildText(); buildDraw();
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -494,7 +588,6 @@ function bindSlider(el, id, onv){
 }
 function uiPrefs(){
   $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade));
-  $('#rCam').classList.toggle('on', ui.cam); $('#rModel').classList.toggle('on', ui.model); $('#rText').classList.toggle('on', ui.text);
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab));
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
@@ -509,9 +602,11 @@ function applyPars(p){
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Showlabel','Texton','Monitor','Textpin','Clipbounce','Statue'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  ['Autospin','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
   syncText(p); clipUI(p);
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';
+  $('#t-Drawon').textContent = p.Drawon ? 'ON' : 'OFF';
+  cards();
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
   header();
 }
@@ -533,7 +628,9 @@ function onAir(){
   if (sig === airSig) { act.forEach(l => { setLay(l.k, 'amt', l.amt); setLay(l.k, 'p1', l.p1); }); return; }
   airSig = sig;
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
-    const p1 = !l.p1label ? '' : md ? `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
+    const sw = SWATCH[l.k];
+    const p1 = !l.p1label ? '' : sw ? `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+      : md ? `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span>${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}</div>`;
@@ -569,7 +666,7 @@ function meters(m){
 /* ---------------- preset pads ---------------- */
 function go(slot){
   const p = S.bank[slot - 1]; if (!p) return;
-  send({t:'bank', v:slot, fade:ui.fade, cam:ui.cam, model:ui.model, text:ui.text}); S.b = slot; renderPads(); buzz(12);
+  send({t:'bank', v:slot, fade:ui.fade}); S.b = slot; renderPads(); buzz(12);
   const el = $(`[data-pad="${slot}"]`); if (el && ui.fade > 0) { el.style.setProperty('--dur', ui.fade + 's'); el.classList.add('fading'); }
 }
 function step(d){
@@ -629,12 +726,14 @@ document.addEventListener('click', e => {
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); buzz(); }
-  else if (t.id === 'rCam') { ui.cam = !ui.cam; uiPrefs(); buzz(); }
-  else if (t.id === 'rModel') { ui.model = !ui.model; uiPrefs(); buzz(); }
-  else if (t.id === 'rText') { ui.text = !ui.text; uiPrefs(); toast(ui.text ? 'Presets bring their own text' : 'Text stays out of preset switches'); buzz(); }
   else if (d.step) step(+d.step);
   else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }
   else if (t.id === 'cliprec') clipRecTap();
+  else if (d.dt) { DR.tool = d.dt; $$('[data-dt]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
+  else if (d.ds) { DR.size = +d.ds; $$('[data-ds]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
+  else if (d.dcol) { DR.color = d.dcol; $$('[data-dcol]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
+  else if (d.du) { DR.ops.pop(); drawRender(); drawSend(); drawSave(); buzz(); }
+  else if (d.dc) { DR.ops = []; drawRender(); drawSend(); drawSave(); buzz(15); }
 
   else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
   else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); applyLayers(); buzz(); }
@@ -643,7 +742,7 @@ document.addEventListener('click', e => {
   else if (d.scene) { send({t:'scene', v:d.scene}); buzz(); }
   else if (d.model) { send({t:'model', v:d.model}); buzz(); }
   else if (d.mstyle) { send({t:'set', p:'Modelstyle', v:d.mstyle}); S.pars.Modelstyle = d.mstyle; applyPars({}); buzz(); }
-  else if (d.tog) { send({t:'set', p:d.tog, v:!S.pars[d.tog]}); buzz(); }
+  else if (d.tog) { const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); applyLayers(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
   else if (d.act === 'reset') { send({t:'preset', v:1}); buzz(); }
