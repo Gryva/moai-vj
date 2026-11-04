@@ -179,7 +179,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 <main>
   <section class="view" id="v-live">
-    <p class="intro"><b>Tap a picture to switch looks.</b> Build a look in FX + SOURCE, then hold the <b>＋</b> tile to save it. Text only changes with presets if TEXT is on below.</p>
+    <p class="intro"><b>Tap a picture to switch looks.</b> Build a look in FX + SOURCE, then hold the <b>＋</b> tile to save it. A preset saves everything: effects, statue, its position and the camera.</p>
     <h2>Switch speed <em>how fast presets blend</em></h2>
     <div class="seg sm" id="fades"></div>
     <h2>When switching, also change</h2>
@@ -213,12 +213,14 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="camwrap"><video class="camv" id="camv" playsinline muted autoplay></video>
       <div class="camb"><button class="big" id="camgo">START CAMERA</button><button class="big" id="camflip">FLIP ⟲</button></div></div>
     <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
+    <div class="seg sm" id="o-Camfit" style="margin-top:7px"></div>
     <div id="g-camfeed" style="margin-top:7px"></div>
     <div class="camst" id="camst">CAM = camera only · BEHIND = statue in front · BLEND = mixed · MASK = statue shows through bright parts</div>
     <h2>Clip <em>record up to 60 s · it loops with all effects</em></h2>
     <div class="btns" style="grid-template-columns:1fr 1fr"><button class="btn rec" id="cliprec">● RECORD CLIP</button><button class="btn" id="cliplive">BACK TO LIVE</button></div>
     <div class="clipst" id="clipst">No clip · start the camera, then record</div>
     <div id="g-clip" style="margin-top:7px"></div>
+    <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ Bounce (play forward, then backward)</button></div>
   </section>
 
   <section class="view" id="v-text">
@@ -314,7 +316,7 @@ const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
 const THUMBS = {}; const FXV = 'v1';
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
-let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam', false), model: store.get('model', true), text: store.get('text', false)};
+let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam2', true), model: store.get('model', true), text: store.get('text', false)};
 const touching = {};
 let TOKEN = store.get('tok_' + (KEY || 'local'), '');
 const CID = Math.random().toString(36).slice(2, 10);       // this phone's id: auth replies are addressed to it
@@ -382,7 +384,7 @@ function connect(){
 
 /* ---------------- phone camera -> TouchDesigner ---------------- */
 const CAMF = {on:false, stream:null, facing:'environment', busy:false, timer:null, sent:0, t0:0, fps:12};
-const camCv = document.createElement('canvas'); camCv.width = 384; camCv.height = 216;
+const camCv = document.createElement('canvas'); camCv.width = 480; camCv.height = 270;
 const camCx = camCv.getContext('2d');
 async function camStart(){
   if (!T.cam) { toast('Camera works on the GitHub (https) link'); return; }
@@ -408,11 +410,13 @@ function camLoop(){
   if (!CAMF.on) return;
   const t0 = performance.now(), v = $('#camv');
   if (!CAMF.busy && v.videoWidth && document.visibilityState === 'visible') {
-    const vw = v.videoWidth, vh = v.videoHeight, r = 16 / 9; let sw = vw, sh = vw / r; if (sh > vh) { sh = vh; sw = vh * r; }
-    camCx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, 384, 216);
+    const vw = v.videoWidth, vh = v.videoHeight, k = 480 / Math.max(vw, vh);      // whole image, long side 480 px
+    const w = Math.round(vw * k), h = Math.round(vh * k);
+    if (camCv.width !== w || camCv.height !== h) { camCv.width = w; camCv.height = h; }
+    camCx.drawImage(v, 0, 0, vw, vh, 0, 0, w, h);
     CAMF.busy = true;
     camCv.toBlob(b => { if (!b) { CAMF.busy = false; return; }
-      b.arrayBuffer().then(ab => T.cam(new Uint8Array(ab), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.6);
+      b.arrayBuffer().then(ab => T.cam(new Uint8Array(ab), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.65);
   }
   const el = (performance.now() - CAMF.t0) / 1000;
   if (el > 1) $('#camst').textContent = 'LIVE · ' + (CAMF.sent / el).toFixed(0) + ' fps to TouchDesigner' + (S.pars.Camsrc === 'off' ? ' · pick a mode above' : '');
@@ -455,6 +459,7 @@ function build(){
 }
 const TOPTS = {
   Camsrc: [['off','OFF'],['cam','CAM'],['behind','BEHIND'],['screen','BLEND'],['mask','MASK']],
+  Camfit: [['fill','FILL SCREEN'],['fit','WHOLE IMAGE']],
   Textmode: [['overlay','OVERLAY'],['mask','MASK'],['cutout','CUT-OUT'],['invert','INVERT'],['outline','OUTLINE'],['glitch','GLITCH'],['refract','REFRACT']],
   Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
   Textanim: [['static','STATIC'],['pulse','BEAT'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['type','TYPE'],['beat','WORD/BEAT']],
@@ -493,7 +498,7 @@ function uiPrefs(){
   $('#rCam').classList.toggle('on', ui.cam); $('#rModel').classList.toggle('on', ui.model); $('#rText').classList.toggle('on', ui.text);
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab));
-  ['tab','bank','fade','cam','model','text'].forEach(k => store.set(k, ui[k]));
+  ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
 }
 
 /* ---------------- render ---------------- */
@@ -505,7 +510,7 @@ function applyPars(p){
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Showlabel','Texton','Monitor','Textpin'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  ['Autospin','Showlabel','Texton','Monitor','Textpin','Clipbounce'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
   syncText(p); clipUI(p);
   $$('[data-statue]').forEach(b => b.classList.toggle('on', (b.dataset.statue === '1') === (p.Statue !== false)));
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
