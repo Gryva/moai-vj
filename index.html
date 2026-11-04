@@ -54,6 +54,9 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .camv.mir{transform:scaleX(-1)}
 .camb{display:grid;gap:6px}.camb .big{padding:10px;font-size:12px}.camb .big.on{background:var(--hot);color:#000;border-color:var(--hot)}
 .camst{font-size:11px;color:var(--mute);margin:6px 2px 0}
+.btn.rec{color:var(--hot);border-color:#ff4d2e66;font-weight:700}.btn.rec.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}
+.btn:disabled{opacity:.35}
+.clipst{font:600 12px var(--mono);color:var(--mute);margin:7px 2px 0}.clipst.rec{color:var(--hot)}.clipst.loop{color:var(--lime)}
 .intro{margin:14px 2px 2px;font-size:13px;line-height:1.45;color:var(--mute)}.intro b{color:var(--ink);font-weight:600}
 .pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .pad{position:relative;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(160deg,#241b30,#13111a);border:1px solid var(--line);overflow:hidden;text-align:left;transition:transform .07s}
@@ -196,8 +199,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-source">
-    <p class="intro"><b>What goes into the effects</b>: a 3D statue, your phone camera, or both together.</p>
-    <h2>Statue</h2><div class="models" id="models"></div>
+    <p class="intro"><b>What goes into the effects</b>: a 3D statue, your phone camera, a looped clip, or a mix.</p>
+    <h2>3D statue</h2>
+    <div class="seg" id="statueSeg"><button data-statue="1">SHOW STATUE</button><button data-statue="0">NO STATUE</button></div>
+    <div class="models" id="models" style="margin-top:8px"></div>
     <h2>Statue style</h2>
     <div class="seg" id="scene"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
     <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
@@ -210,6 +215,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
     <div id="g-camfeed" style="margin-top:7px"></div>
     <div class="camst" id="camst">CAM = camera only · BEHIND = statue in front · BLEND = mixed · MASK = statue shows through bright parts</div>
+    <h2>Clip <em>record up to 60 s · it loops with all effects</em></h2>
+    <div class="btns" style="grid-template-columns:1fr 1fr"><button class="btn rec" id="cliprec">● RECORD CLIP</button><button class="btn" id="cliplive">BACK TO LIVE</button></div>
+    <div class="clipst" id="clipst">No clip · start the camera, then record</div>
+    <div id="g-clip" style="margin-top:7px"></div>
   </section>
 
   <section class="view" id="v-text">
@@ -386,13 +395,14 @@ async function camStart(){
   $('#camgo').textContent = 'STOP CAMERA'; $('#camgo').classList.add('on');
   send({t:'set', p:'Cammirror', v: CAMF.facing === 'user'});
   if (!S.pars.Camsrc || S.pars.Camsrc === 'off') { send({t:'set', p:'Camsrc', v:'behind'}); S.pars.Camsrc = 'behind'; syncText(S.pars); }
-  camLoop(); buzz(15);
+  camLoop(); clipUI(S.pars); buzz(15);
 }
 function camStop(off){
   CAMF.on = false; clearTimeout(CAMF.timer); CAMF.busy = false;
   if (CAMF.stream) CAMF.stream.getTracks().forEach(t => t.stop()); CAMF.stream = null; $('#camv').srcObject = null;
   $('#camgo').textContent = 'START CAMERA'; $('#camgo').classList.remove('on'); $('#camst').textContent = 'Camera off';
-  if (off !== false) { send({t:'set', p:'Camsrc', v:'off'}); if (S) { S.pars.Camsrc = 'off'; syncText(S.pars); } }
+  if (off !== false && !(S && S.pars.Clipstate === 'loop')) { send({t:'set', p:'Camsrc', v:'off'}); if (S) { S.pars.Camsrc = 'off'; syncText(S.pars); } }
+  if (S) clipUI(S.pars);
 }
 function camLoop(){
   if (!CAMF.on) return;
@@ -410,6 +420,22 @@ function camLoop(){
   CAMF.timer = setTimeout(camLoop, Math.max(5, 1000 / CAMF.fps - (performance.now() - t0)));
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && CAMF.on) $('#camv').play().catch(() => {}); });
+function clipUI(p){
+  const st = p.Clipstate || 'off', len = (+p.Cliplen || 0).toFixed(1), r = $('#cliprec'), s = $('#clipst');
+  CAMF.fps = st === 'rec' ? 15 : 12;
+  r.classList.toggle('on', st === 'rec');
+  r.textContent = st === 'rec' ? '■ STOP + LOOP' : st === 'loop' ? '● RECORD NEW' : '● RECORD CLIP';
+  $('#cliplive').disabled = st !== 'loop';
+  s.className = 'clipst ' + st;
+  s.textContent = st === 'rec' ? '● REC ' + len + ' / 60 s' : st === 'loop' ? '⟲ Looping ' + len + ' s clip · effects apply to it'
+                : (CAMF.on ? 'Ready · tap RECORD CLIP' : 'No clip · start the camera, then record');
+}
+function clipRecTap(){
+  const st = S.pars.Clipstate || 'off';
+  if (st === 'rec') { send({t:'clip', a:'loop'}); buzz(30); return; }
+  if (!CAMF.on) { toast('Start the camera first'); return; }
+  send({t:'clip', a:'rec'}); buzz(30);
+}
 
 /* ---------------- build ---------------- */
 const EL = {};
@@ -419,8 +445,8 @@ function build(){
     `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
   buildCam(); buildText();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed'].forEach(g => $('#g-' + g).innerHTML = '');
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -480,7 +506,8 @@ function applyPars(p){
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
   ['Autospin','Showlabel','Texton','Monitor','Textpin'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
-  syncText(p);
+  syncText(p); clipUI(p);
+  $$('[data-statue]').forEach(b => b.classList.toggle('on', (b.dataset.statue === '1') === (p.Statue !== false)));
   $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
   header();
 }
@@ -598,6 +625,9 @@ document.addEventListener('click', e => {
   else if (t.id === 'rText') { ui.text = !ui.text; uiPrefs(); toast(ui.text ? 'Presets bring their own text' : 'Text stays out of preset switches'); buzz(); }
   else if (d.step) step(+d.step);
   else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }
+  else if (t.id === 'cliprec') clipRecTap();
+  else if (t.id === 'cliplive') { send({t:'clip', a:'live'}); toast(CAMF.on ? 'Back to the live camera' : 'Clip stopped'); buzz(); }
+  else if (d.statue !== undefined) { const v = d.statue === '1'; send({t:'set', p:'Statue', v}); S.pars.Statue = v; applyPars({}); buzz(); }
   else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
   else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); applyLayers(); buzz(); }
   else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', k:l.k, on:false}); applyLayers(); buzz(); }
