@@ -83,6 +83,10 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .hint2{font-size:11px;color:var(--mute);margin:8px 2px 0;line-height:1.4}.hint2 b{color:var(--ink)}
 .clip .vid{position:absolute;right:5px;top:4px;font-size:11px;text-shadow:0 1px 4px #000}
 label.tg{cursor:pointer}
+.fxps{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px}
+.fxp{flex:0 0 auto;max-width:150px;padding:9px 12px 8px;border-radius:4px;border:1px solid var(--line);background:var(--panel);text-align:left}
+.fxp b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fxp .d{display:flex;gap:3px;margin-top:5px;min-height:5px}.fxp .d i{width:5px;height:5px;border-radius:50%}
+.fxp.add{border-style:dashed;color:var(--mute);font-weight:700;font-size:12px;letter-spacing:.08em}
 .clip.hold::after{content:"";position:absolute;inset:0;background:#ff4d2e55;animation:holdf .5s linear}
 .btn.rec{color:var(--hot);border-color:#ff4d2e66;font-weight:700}.btn.rec.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}
 .btn:disabled{opacity:.35}
@@ -216,6 +220,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-layers">
+    <h2><span>FX presets</span><em>tap = use on what's on screen · hold = edit</em></h2>
+    <div class="fxps" id="fxps"></div>
     <h2><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
     <div class="onair" id="onair"></div>
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
@@ -227,6 +233,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="card" id="cardStatue"><div class="ch"><b>Statue</b><button class="tg" id="t-Statue" data-tog="Statue">ON</button></div>
       <div class="cb">
         <div class="models" id="models"></div>
+        <div class="seg sm" id="o-Motion" style="margin-top:8px"></div>
+        <div id="g-motion2" style="margin-top:7px"></div>
         <div class="seg" id="scene" style="margin-top:8px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
         <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
         <details class="box"><summary>Swap animation</summary>
@@ -251,8 +259,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       </div></div>
 
     <div class="card open" id="cardMedia"><div class="ch"><b>Images + videos</b><label class="tg" for="mediapick">＋ PHOTO</label><input type="file" id="mediapick" accept="image/*" hidden></div>
-      <div class="cb"><div class="clips" id="medialist"></div>
-        <div class="hint2">Tap to show · tap again to stop · on the laptop, drop images or videos into the <b>media</b> folder</div></div></div>
+      <div class="cb"><div class="seg sm" id="o-Mediamode" style="margin-bottom:8px"></div><div class="clips" id="medialist"></div>
+        <div class="hint2">Tap to show · tap again to stop · 3D OBJECT puts it in the scene like a statue (PNGs keep their see-through parts) · laptop: drop files into the <b>media</b> folder</div></div></div>
 
     <div class="card" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
       <div class="cb">
@@ -385,7 +393,9 @@ function onMsg(m){
     else lock(TOKEN ? 'Wrong password' : '');
     return;
   }
-  if (m.t === 'state') { S = m; build(); applyPars(m.pars); applyLayers(); renderPads(); }
+  if (m.t === 'state') {
+    const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, mediacur: S.mediacur, fxps: S.fxps} : {};
+    S = Object.assign(m, keep); build(); applyPars(m.pars); applyLayers(); renderPads(); renderFxps(); renderMedia(); renderClips(); }
   else if (!S) return;
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
@@ -395,6 +405,7 @@ function onMsg(m){
       if (nw) { LOCALCLIP[nw] = Object.assign(pendingClip, {start: performance.now(), i: -1}); pendingClip = null; } }
     if (m.cur && LOCALCLIP[m.cur] && m.cur !== S.clipcur) LOCALCLIP[m.cur].start = performance.now();
     S.clips = m.v; S.clipcur = m.cur; renderClips(); cards(); }
+  else if (m.t === 'fxps') { S.fxps = m.v; renderFxps(); }
   else if (m.t === 'media') { S.media = m.v; S.mediacur = m.cur; renderMedia(); cards(); }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
@@ -513,6 +524,11 @@ function clipView(){
   if (fr.i !== i) { fr.i = i; $('#clipview').src = fr.u[i]; }
 }
 setInterval(() => S && ui.tab === 'source' && clipView(), 50);
+function renderFxps(){
+  if (!S) return;
+  $('#fxps').innerHTML = (S.fxps || []).map((x, i) => `<button class="fxp" data-fxp="${i}"><b>${esc(x.name)}</b><span class="d">${x.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('')}</span></button>`).join('')
+    + `<button class="fxp add" data-fxp="new">＋ SAVE FX</button>`;
+}
 function renderMedia(){
   if (!S) return;
   $('#medialist').innerHTML = (S.media || []).slice().reverse().map(x =>
@@ -587,8 +603,8 @@ function build(){
     `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
   $('#models').innerHTML = S.models.map(m => `<button class="model" data-model="${m.name}"><img src="thumbs/${m.name}.jpg" alt=""><span>${m.label}</span></button>`).join('');
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw'].forEach(g => $('#g-' + g).innerHTML = '');
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2'].forEach(g => $('#g-' + g).innerHTML = '');
+  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -598,6 +614,8 @@ function build(){
 const TOPTS = {
   Camsrc: [['off','OFF'],['cam','CAM'],['behind','BEHIND'],['screen','BLEND'],['mask','MASK']],
   Camfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
+  Motion: [['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']],
+  Mediamode: [['flat','FLAT'],['object','3D OBJECT']],
   Textmode: [['overlay','OVERLAY'],['mask','MASK'],['cutout','CUT-OUT'],['invert','INVERT'],['outline','OUTLINE'],['glitch','GLITCH'],['refract','REFRACT']],
   Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
   Textanim: [['static','STATIC'],['pulse','BEAT'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['type','TYPE'],['beat','WORD/BEAT']],
@@ -735,7 +753,7 @@ function sheet(slot){
   $('#shT').textContent = p ? 'Preset ' + slot + ' · ' + p.name : 'Empty pad ' + slot;
   $('#shP').textContent = p ? 'Update replaces it (and its picture) with what is on screen now: effects, statue, text and camera.' : 'Save what is on screen now — layers, scene, model and camera.';
   $('#shI').value = p ? p.name : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Preset ' + slot);
-  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Clear pad</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 const closeSheet = () => { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
@@ -743,15 +761,19 @@ $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   if (b.dataset.sh === 'save') { send({t:'banksave', v:slot, name}); toast('Saved ' + slot + ' · ' + name); S.b = slot; }
   else if (b.dataset.sh === 'rename') { send({t:'bankrename', v:slot, name}); toast('Renamed'); }
+  else if (b.dataset.sh === 'fxfrom') { send({t:'fxp', do:'from', slot, fade:ui.fade}); toast('Effects copied onto what is on screen'); }
   else if (b.dataset.sh === 'clear') { send({t:'bankclear', v:slot}); toast('Cleared ' + slot); }
   closeSheet(); buzz(); });
 
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
+    if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
+      const nn = prompt('Rename this FX preset (leave empty to delete it):', cur.name);
+      if (nn === null) return; if (nn.trim()) send({t:'fxp', do:'rename', i, name:nn.trim()}); else if (confirm('Delete "' + cur.name + '"?')) send({t:'fxp', do:'del', i}); return; }
     if (c.dataset.media) { if (c.dataset.up === '1' && confirm('Delete this photo?')) send({t:'media', do:'del', id:c.dataset.media}); return; }
     if (c.dataset.clip) { if (c.dataset.clip !== 'live' && confirm('Delete this clip?')) { send({t:'clip', do:'del', id:c.dataset.clip}); toast('Clip deleted'); } return; }
     if (c.dataset.pad === 'clean') return;
@@ -760,10 +782,13 @@ document.addEventListener('pointerdown', e => {
     const n = +c.dataset.preset, name = prompt('Save current camera to F' + n + ' as:', S.presets[n - 1] || ('Preset ' + n));
     if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n); } }, 500);
 });
-const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media]'); clearTimeout(holdT);
+const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); clearTimeout(holdT);
   $$('.hold').forEach(x => x.classList.remove('hold'));
   if (c && !held && e.type === 'pointerup') {
-    if (c.dataset.media) { send(c.dataset.media === S.mediacur ? {t:'media', do:'stop'} : {t:'media', do:'play', id:c.dataset.media}); buzz(); }
+    if (c.dataset.fxp) { if (c.dataset.fxp === 'new') { const nm = prompt('Name this FX preset:', S.layers.filter(l => l.on).map(l => l.label).slice(0, 3).join(' + ') || 'Clean');
+        if (nm !== null) { send({t:'fxp', do:'save', name:nm.trim()}); toast('FX preset saved'); } }
+      else { send({t:'fxp', do:'apply', i:+c.dataset.fxp, fade:ui.fade}); buzz(); } }
+    else if (c.dataset.media) { send(c.dataset.media === S.mediacur ? {t:'media', do:'stop'} : {t:'media', do:'play', id:c.dataset.media}); buzz(); }
     else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
     else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added · build it, then hold it → Update'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
