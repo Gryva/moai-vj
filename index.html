@@ -82,6 +82,7 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .clip.on{border-color:var(--lime);box-shadow:0 0 0 2px var(--lime)}.clip.on img{opacity:1}.clip.live.on{color:var(--lime)}
 .upbar{display:none;position:relative;height:26px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-bottom:8px}.upbar.on{display:block}
 .upbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--lime);opacity:.35;transition:width .2s}.upbar span{position:relative;display:block;text-align:center;font:600 11px/26px var(--mono);color:var(--ink)}
+.upd{position:fixed;left:50%;bottom:calc(16px + var(--sb));transform:translateX(-50%);z-index:50;background:var(--lime);color:#0b0a0f;font-weight:700;font-size:13px;padding:12px 16px;border-radius:10px;box-shadow:0 8px 30px #000c}
 .hint2{font-size:11px;color:var(--mute);margin:8px 2px 0;line-height:1.4}.hint2 b{color:var(--ink)}
 .clip .vid{position:absolute;right:5px;top:4px;font-size:11px;text-shadow:0 1px 4px #000}
 label.tg{cursor:pointer}
@@ -94,22 +95,22 @@ label.tg{cursor:pointer}
 .btn:disabled{opacity:.35}
 .clipst{font:600 12px var(--mono);color:var(--mute);margin:7px 2px 0}.clipst.rec{color:var(--hot)}.clipst.loop{color:var(--lime)}
 .intro{margin:14px 2px 2px;font-size:13px;line-height:1.45;color:var(--mute)}.intro b{color:var(--ink);font-weight:600}
-.setlist{margin-top:12px;background:linear-gradient(180deg,#1a1422,#121019);border:1px solid #33283f;border-radius:8px;padding:9px 9px 10px}
+.setlist{position:sticky;bottom:6px;z-index:6;margin-top:14px;background:#14101bf2;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #3a2d48;border-radius:10px;padding:8px 8px 9px;box-shadow:0 -8px 24px #000a}
 .sl-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.sl-hd b{font-size:12px;letter-spacing:.14em;text-transform:uppercase}
 .sl-next{flex:1;min-width:0;font:600 11px var(--mono);color:var(--lime);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
 .setlist.arr .sl-arrange{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 .sl-row{display:flex;align-items:stretch;gap:6px}
 .sl-arr{flex:0 0 46px;border-radius:8px;background:var(--panel2);font-size:18px;color:var(--ink);border:1px solid var(--line)}.sl-arr:active{background:var(--ink);color:var(--bg)}
-.sl-track{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;padding:2px;min-height:58px;align-items:center;border-radius:6px}
+.sl-track{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:2px;min-height:54px;align-items:center;border-radius:6px;touch-action:pan-x;scrollbar-width:none}.sl-track::-webkit-scrollbar{display:none}
 .setlist.arr .sl-track{outline:1.5px dashed #c6ff3d55;outline-offset:1px}.sl-track.over{background:#c6ff3d14}
-.sl-it{position:relative;flex:0 0 88px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#1d1826;text-align:left}
+.sl-it{position:relative;flex:0 0 84px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#1d1826;text-align:left}
 .sl-it img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.8}
 .sl-it span{position:absolute;left:4px;right:3px;bottom:3px;font-size:9.5px;font-weight:700;line-height:1.1;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-it i{position:absolute;left:4px;top:3px;font:700 9px var(--mono);background:#000a;padding:1px 4px;border-radius:4px;font-style:normal}
 .sl-it.cur{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}.sl-it.cur img{opacity:1}
 .sl-it.nx{border-color:var(--lime)}.sl-it.nx i{background:var(--lime);color:#0b0a0f}
-.sl-it.drag{opacity:.25}.sl-mark{flex:0 0 3px;align-self:stretch;background:var(--lime);border-radius:2px}
+.sl-it.drag{opacity:.25}.sl-it.hold{outline:2px solid var(--lime)}.sl-mark{flex:0 0 3px;align-self:stretch;background:var(--lime);border-radius:2px}
 .sl-empty{color:var(--mute);font-size:12px;padding:0 6px}
 .sl-help{display:none;font-size:11px;color:var(--mute);margin:8px 2px 0;line-height:1.4}.setlist.arr .sl-help{display:block}
 body.arranging .pad.full{touch-action:none}
@@ -250,14 +251,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 <main>
   <section class="view" id="v-live">
-    <div class="setlist" id="setlist">
-      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span><button class="sl-arrange" id="slArr">ARRANGE</button></div>
-      <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous">◀</button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next">▶</button></div>
-      <div class="sl-help" id="slHelp">Drag presets from below onto the track · drag along the track to reorder · drag off the track to remove · tap a preset to add it to the end</div>
-    </div>
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
     <h2><span>Presets</span><em class="edonly">hold = edit</em></h2>
     <div class="pads" id="pads"></div>
+    <div class="setlist" id="setlist">
+      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
+      <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous">◀</button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next">▶</button></div>
+    </div>
   </section>
 
   <section class="view" id="v-layers">
@@ -315,7 +315,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <div class="cb">
         <canvas class="drawpad" id="drawpad" width="640" height="360"></canvas>
         <div class="tools" id="dtools"><button data-dt="pen" class="on">✎</button><button data-dt="line">／</button><button data-dt="circle">○</button><button data-dt="square">□</button><button data-dt="triangle">△</button><button data-dt="star">☆</button></div>
-        <div class="swr" id="dcols"></div>
+        <div id="dcolbox"></div>
         <div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR</button></div>
         <div id="g-draw" style="margin-top:7px"></div>
       </div></div>
@@ -329,7 +329,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Layout</h2><div class="opts" id="o-Textlayout"></div>
     <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
-    <h2>Colour</h2><div class="sw" id="o-Textcolor"></div>
+    <h2>Colour</h2><div id="tcolbox"></div>
     <h2>Adjust</h2><div id="g-text"></div>
   </section>
 
@@ -411,6 +411,14 @@ const SWATCH = {palette:['#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e5
 const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
+/* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
+const BUILD = '2026-11-06c';
+setTimeout(async () => {
+  if (location.protocol === 'file:') return;
+  try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
+    if (m && m[1] !== BUILD) { const b = document.createElement('button'); b.className = 'upd'; b.textContent = 'New version ready · tap to update';
+      b.onclick = () => location.replace(location.pathname + '?v=' + encodeURIComponent(m[1]) + location.hash); document.body.appendChild(b); } } catch (e) {}
+}, 1500);
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
 const THUMBS = {}; const FXV = 'v1';
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
@@ -662,10 +670,19 @@ function clipRecTap(){
 
 /* ---------------- draw pad -> TouchDesigner ---------------- */
 const DCOLS = ['#ffffff','#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3'];
-const DR = {ops: store.get('draw', []), tool: 'pen', color: '#ffffff', size: 7, cur: null, busy: false, again: false};
+const DR = {ops: store.get('draw', []), tool: 'pen', color: '#ffffff', cc: store.get('dcc', {m:1, a:'#ffffff', b:'#ff3da8', ang:0}), size: 7, cur: null, busy: false, again: false};
+function drawStyle(c){                                        // a stroke colour can be a solid colour or a ramp / radial gradient
+  if (typeof c === 'string') return c;
+  if (!c || c.m <= 1) return (c && c.a) || '#ffffff';
+  let g;
+  if (c.m === 2) { const r = (c.ang || 0) * Math.PI / 180, dx = Math.cos(r) * 320, dy = Math.sin(r) * 180;
+    g = dcx.createLinearGradient(320 - dx, 180 - dy, 320 + dx, 180 + dy); }
+  else g = dcx.createRadialGradient(320, 180, 0, 320, 180, 360);
+  g.addColorStop(0, c.a); g.addColorStop(1, c.b); return g;
+}
 const dcv = document.getElementById('drawpad'), dcx = dcv.getContext('2d');
 function drawShape(o){
-  dcx.strokeStyle = o.c; dcx.lineWidth = o.w; dcx.lineCap = dcx.lineJoin = 'round'; dcx.beginPath();
+  dcx.strokeStyle = drawStyle(o.c); dcx.lineWidth = o.w; dcx.lineCap = dcx.lineJoin = 'round'; dcx.beginPath();
   if (o.t === 'pen') { o.p.forEach(([x, y], i) => i ? dcx.lineTo(x, y) : dcx.moveTo(x, y)); if (o.p.length === 1) dcx.lineTo(o.p[0][0] + 0.1, o.p[0][1]); }
   else { const x0 = Math.min(o.x0, o.x1), y0 = Math.min(o.y0, o.y1), w = Math.abs(o.x1 - o.x0), h = Math.abs(o.y1 - o.y0), cx = x0 + w / 2, cy = y0 + h / 2;
     if (o.t === 'line') { dcx.moveTo(o.x0, o.y0); dcx.lineTo(o.x1, o.y1); }
@@ -686,7 +703,8 @@ function drawSend(){
 function drawSave(){ store.set('draw', DR.ops.slice(-200)); }
 const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
 dcv.addEventListener('pointerdown', e => { dcv.setPointerCapture(e.pointerId); const [x, y] = dpos(e);
-  DR.cur = DR.tool === 'pen' ? {t:'pen', p:[[x, y]], c:DR.color, w:DR.size} : {t:DR.tool, x0:x, y0:y, x1:x, y1:y, c:DR.color, w:DR.size};
+  const cc = Object.assign({}, DR.cc);
+  DR.cur = DR.tool === 'pen' ? {t:'pen', p:[[x, y]], c:cc, w:DR.size} : {t:DR.tool, x0:x, y0:y, x1:x, y1:y, c:cc, w:DR.size};
   if (S && !S.pars.Drawon) { send({t:'set', p:'Drawon', v:true}); S.pars.Drawon = true; applyPars({}); }
   drawRender(); drawSend(); });
 dcv.addEventListener('pointermove', e => { if (!DR.cur) return; const [x, y] = dpos(e);
@@ -694,7 +712,8 @@ dcv.addEventListener('pointermove', e => { if (!DR.cur) return; const [x, y] = d
 const dEnd = () => { if (!DR.cur) return; DR.ops.push(DR.cur); DR.cur = null; drawRender(); drawSend(); drawSave(); };
 dcv.addEventListener('pointerup', dEnd); dcv.addEventListener('pointercancel', dEnd);
 function buildDraw(){
-  $('#dcols').innerHTML = DCOLS.map(c => `<button data-dcol="${c}" style="background:${c}" class="${c === DR.color ? 'on' : ''}"></button>`).join('');
+  ccDef('draw', () => Object.assign({}, DR.cc), c => { DR.cc = c; store.set('dcc', c); }, GMODES);
+  $('#dcolbox').innerHTML = ccBox('draw', 'Pen colour', true); ccBind($('#dcolbox')); ccUI('draw');
   drawRender();
 }
 
@@ -732,7 +751,11 @@ const TOPTS = {
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
   for (const p in TOPTS) $('#o-' + p).innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}">${l}</button>`).join('');
-  $('#o-Textcolor').innerHTML = Object.entries(TCOL).map(([v, c]) => `<button data-tp="Textcolor" data-tv="${v}" style="background:${c}"></button>`).join('');
+  ccDef('text', () => { const p = S.pars; return +p.Textcm > 0 ? {m:+p.Textcm, a:p.Textca || '#ffffff', b:p.Textcb || '#ff3da8', ang:+p.Textcang || 0}
+                                                   : {m:1, a:TCOL[p.Textcolor] || '#ffffff', b:p.Textcb || '#ff3da8', ang:+p.Textcang || 0}; },
+    c => { Object.assign(S.pars, {Textcm:c.m, Textca:c.a, Textcb:c.b, Textcang:c.ang}); clearTimeout(ccDef._t);
+           ccDef._t = setTimeout(() => send({t:'tcol', m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, GMODES);
+  $('#tcolbox').innerHTML = ccBox('text', 'Text colour', true); ccBind($('#tcolbox')); ccUI('text');
   renderRecent();
 }
 function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); }
@@ -787,7 +810,7 @@ function applyPars(p){
   $('#t-Keyon').textContent = p.Keyon ? '✓ SCREEN REMOVED' : 'REMOVE SCREEN';
   $('#sum-key').textContent = p.Keyon ? 'on' : '';
   $('#box-obj').hidden = p.Mediamode !== 'object';
-  syncText(p); clipUI(p);
+  syncText(p); clipUI(p); ccUI('text');
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';
   $('#t-Drawon').textContent = p.Drawon ? 'ON' : 'OFF';
   cards();
@@ -817,40 +840,47 @@ function onAir(){
       <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: v})));
-  $$('#onair input[data-cang]').forEach(el => bindSlider(el, el.dataset.cang + ':ang', v => colSet(el.dataset.cang, {ang: v})));
+  ccBind($('#onair'));
   act.forEach(l => l.col && colUI(l.k));
 }
-/* ---------------- effect colours: default / solid / linear / radial, 10 swatches + any colour */
+/* ---------------- colour picker (used by effects, text and drawing): solid / linear ramp / radial, 10 swatches + any colour */
 const SWC = ['#ffffff','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
-const CMODES = ['DEFAULT','SOLID','LINEAR','RADIAL'], CED = {}, COPEN = {};
+const CC = {}, CED = {}, COPEN = {};                             // id -> {get, set, modes};  which colour (a/b) is being edited
+function ccDef(id, get, set, modes){ CC[id] = {get, set, modes}; }
+function ccBox(id, title, open){
+  const d = CC[id];
+  return `<details class="colbox" data-cbox="${id}" ${open || COPEN[id] ? 'open' : ''}><summary>${title} <i data-cprev="${id}"></i></summary>
+    <div class="seg sm" style="margin:2px 0 6px">${d.modes.map(([m, l]) => `<button data-cmode="${id}" data-v="${m}">${l}</button>`).join('')}</div>
+    <div class="cab" data-cab="${id}"><button data-cwhich="${id}" data-v="a"><i></i>COLOUR A</button><button data-cwhich="${id}" data-v="b"><i></i>COLOUR B</button></div>
+    <div class="cstrip">${SWC.map(c => `<button data-csw="${id}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-cpick="${id}"></button></div>
+    <div class="sub" data-cangrow="${id}"><span>Angle</span><input type="range" data-cang="${id}" min="0" max="360" step="1" value="0" style="--acc:var(--ink)"></div></details>`;
+}
+function ccBind(root){ (root || document).querySelectorAll('input[data-cang]').forEach(el => { if (el._b) return; el._b = 1; bindSlider(el, el.dataset.cang + ':ang', v => ccSet(el.dataset.cang, {ang: v})); }); }
+function colCss(c){ return c.m === 2 ? `linear-gradient(${90 + c.ang}deg,${c.a},${c.b})` : c.m === 3 ? `radial-gradient(${c.a},${c.b})` : c.m === 1 ? c.a : 'repeating-linear-gradient(45deg,#555 0 4px,#333 4px 8px)'; }
+function ccUI(id){
+  const d = CC[id]; if (!d) return; const c = d.get(), w = CED[id] || 'a', grad = c.m >= 2;
+  const pv = document.querySelector(`[data-cprev="${id}"]`); if (!pv) return; pv.style.background = colCss(c);
+  $$(`[data-cmode="${id}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === c.m));
+  const cab = document.querySelector(`[data-cab="${id}"]`); cab.style.display = grad ? '' : 'none';
+  $$(`[data-cwhich="${id}"]`).forEach(b => { b.classList.toggle('on', b.dataset.v === w); b.querySelector('i').style.background = c[b.dataset.v]; });
+  const cur = grad ? c[w] : c.a;
+  $$(`[data-csw="${id}"]`).forEach(b => b.classList.toggle('on', c.m > 0 && b.dataset.v.toLowerCase() === String(cur).toLowerCase()));
+  const pk = document.querySelector(`[data-cpick="${id}"]`); if (pk) pk.value = cur;
+  document.querySelector(`[data-cangrow="${id}"]`).style.display = c.m === 2 ? '' : 'none';
+  const an = document.querySelector(`[data-cang="${id}"]`); if (an && !(touching[id + ':ang'] > performance.now()) && +an.value !== c.ang) { an.value = c.ang; an._show && an._show(); }
+}
+function ccSet(id, ch){ const d = CC[id]; if (!d) return; const c = Object.assign(d.get(), ch); d.set(c); ccUI(id); }
+function ccPick(id, v){ const c = CC[id].get(); const w = c.m >= 2 ? (CED[id] || 'a') : 'a'; ccSet(id, Object.assign({[w]: v}, c.m === 0 ? {m:1} : {})); buzz(); }
+document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cpick; if (k) ccPick(k, e.target.value); });
+document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.cbox; if (k) COPEN[k] = e.target.open; }, true);
+/* effects */
+const FXMODES = [[0,'OWN'],[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']], GMODES = [[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']];
 const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, (S.lcols || {})[k]);
 function colBox(k){
-  return `<details class="colbox" data-cbox="${k}" ${COPEN[k] ? 'open' : ''}><summary>Colour <i data-cprev="${k}"></i></summary>
-    <div class="seg sm" style="margin:2px 0 6px">${CMODES.map((m, i) => `<button data-cmode="${k}" data-v="${i}">${m}</button>`).join('')}</div>
-    <div class="cab" data-cab="${k}"><button data-cwhich="${k}" data-v="a"><i></i>COLOUR A</button><button data-cwhich="${k}" data-v="b"><i></i>COLOUR B</button></div>
-    <div class="cstrip">${SWC.map(c => `<button data-csw="${k}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-cpick="${k}"></button></div>
-    <div class="sub" data-cangrow="${k}"><span>Angle</span><input type="range" data-cang="${k}" min="0" max="360" step="1" value="0" style="--acc:var(--ink)"></div></details>`;
+  ccDef('fx:' + k, () => colOf(k), c => { S.lcols[k] = c; clearTimeout(colBox[k]); colBox[k] = setTimeout(() => send({t:'lcol', k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, FXMODES);
+  return ccBox('fx:' + k, '🎨 Colour');
 }
-function colCss(c){ return c.m === 2 ? `linear-gradient(${90 + c.ang}deg,${c.a},${c.b})` : c.m === 3 ? `radial-gradient(${c.a},${c.b})` : c.m === 1 ? c.a : 'repeating-linear-gradient(45deg,#555 0 4px,#333 4px 8px)'; }
-function colUI(k){
-  const c = colOf(k), w = CED[k] || 'a', grad = c.m >= 2;
-  const pv = $(`[data-cprev="${k}"]`); if (!pv) return; pv.style.background = colCss(c);
-  $$(`[data-cmode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === c.m));
-  const cab = $(`[data-cab="${k}"]`); cab.style.display = grad ? '' : 'none';
-  $$(`[data-cwhich="${k}"]`).forEach(b => { b.classList.toggle('on', b.dataset.v === w); b.querySelector('i').style.background = c[b.dataset.v]; });
-  const cur = grad ? c[w] : c.a;
-  $$(`[data-csw="${k}"]`).forEach(b => b.classList.toggle('on', c.m > 0 && b.dataset.v.toLowerCase() === cur.toLowerCase()));
-  const pk = $(`[data-cpick="${k}"]`); if (pk) pk.value = cur;
-  $(`[data-cangrow="${k}"]`).style.display = c.m === 2 ? '' : 'none';
-  const an = $(`[data-cang="${k}"]`); if (an && !(touching[k + ':ang'] > performance.now())) { an.value = c.ang; an._show && an._show(); }
-}
-function colSet(k, ch){
-  const c = Object.assign(colOf(k), ch); S.lcols[k] = c; colUI(k);
-  clearTimeout(colSet[k]); colSet[k] = setTimeout(() => send({t:'lcol', k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60);
-}
-function pickCol(k, v){ const c = colOf(k); const w = c.m >= 2 ? (CED[k] || 'a') : 'a'; colSet(k, Object.assign({[w]: v}, c.m === 0 ? {m:1} : {})); buzz(); }
-document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cpick; if (k) pickCol(k, e.target.value); });
-document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.cbox; if (k) COPEN[k] = e.target.open; }, true);
+const colUI = k => ccUI('fx:' + k);
 function setLay(k, f, v){
   const el = $(`#onair input[data-lk="${k}"][data-f="${f}"]`);
   if (el && !(touching[k + ':' + f] > performance.now()) && +el.value !== v) { el.value = v; el._show(); }
@@ -877,22 +907,22 @@ function meters(m){
   if (ui.tab === 'audio') { const h = (id, v) => $(id).style.height = Math.max(2, Math.min(100, v * 100)) + '%'; h('#bL', m.l); h('#bM', m.m); h('#bH', m.h); h('#bK', m.k); }
 }
 
-/* ---------------- set list: presets in the order you'll play them, ◀ ▶ steps through ---------------- */
-const QD = {on:false};                                         // drag in progress
-let ARR = false;
-function qList(){ return ((S.queue && S.queue.v) || []).filter(sl => S.bank[sl - 1]); }
+/* ---------------- set list: presets in the order you'll play them, ◀ ▶ steps through ----------------
+   add: hold a preset → "Add to set list" · in the track: tap = play, hold + drag = move (drag up = remove), hold = menu */
+const QD = {on:false};
 function renderQueue(){
   if (!S || !S.bank) return;
   const q = S.queue || {v:[], pos:-1}, list = q.v || [], pos = q.pos;
   const nx = list.length ? (pos + 1) % list.length : -1;
   const html = list.map((sl, i) => { const p = S.bank[sl - 1]; if (!p) return '';
     const img = THUMBS[sl] ? `<img src="${THUMBS[sl]}" alt="">` : '';
-    return `<button class="sl-it ${i === pos ? 'cur' : ''} ${i === nx && i !== pos ? 'nx' : ''}" data-sl="${i}">${img}<i>${i === nx && i !== pos ? 'NEXT' : i + 1}</i><span>${esc(p.name)}</span></button>`; }).join('');
-  $('#slTrack').innerHTML = html || `<div class="sl-empty">${ARR ? 'Drag presets here' : 'Tap ARRANGE to build a set list'}</div>`;
+    const isNx = i === nx && i !== pos;
+    return `<button class="sl-it ${i === pos ? 'cur' : ''} ${isNx ? 'nx' : ''}" data-sl="${i}">${img}<i>${isNx ? 'NEXT' : i + 1}</i><span>${esc(p.name)}</span></button>`; }).join('');
+  $('#slTrack').innerHTML = html || `<div class="sl-empty">Hold a preset above → <b>Add to set list</b></div>`;
   const np = list.length ? S.bank[list[nx] - 1] : null;
   $('#slNext').textContent = np ? 'NEXT › ' + np.name : '';
   $('#slPrev').disabled = $('#slNx').disabled = !list.length;
-  const cur = $('#slTrack .cur'); if (cur && !QD.on) cur.scrollIntoView({block:'nearest', inline:'center'});
+  const cur = $('#slTrack .cur'); if (cur && !QD.on) cur.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
 }
 function qSend(){ send({t:'queue', do:'set', v:S.queue.v}); renderQueue(); }
 function qGo(i){
@@ -900,13 +930,15 @@ function qGo(i){
   i = (i + list.length) % list.length; S.queue.pos = i;
   send({t:'queue', do:'go', i, fade:ui.fade}); S.b = list[i]; renderPads(); renderQueue(); buzz(14);
 }
+function qAdd(slot){ const v = (S.queue.v || []).slice(); if (v.length >= 64) { toast('Set list is full'); return; } v.push(slot); S.queue.v = v; qSend(); toast('Added to the set list (#' + v.length + ')'); }
+function qMove(i, d){ const v = S.queue.v.slice(), j = i + d; if (j < 0 || j >= v.length) return; const cur = v[S.queue.pos];
+  [v[i], v[j]] = [v[j], v[i]]; S.queue.v = v; S.queue.pos = S.queue.pos === i ? j : S.queue.pos === j ? i : S.queue.pos; qSend(); }
+function qDel(i){ const v = S.queue.v.slice(); v.splice(i, 1); const p = S.queue.pos; S.queue.v = v; S.queue.pos = p === i ? -1 : p > i ? p - 1 : p; qSend(); toast('Removed from the set list'); }
 $('#slPrev').addEventListener('click', () => qGo((S.queue.pos < 0 ? 0 : S.queue.pos) - 1));
 $('#slNx').addEventListener('click', () => qGo(S.queue.pos + 1));
-$('#slArr').addEventListener('click', () => { ARR = !ARR; $('#setlist').classList.toggle('arr', ARR); document.body.classList.toggle('arranging', ARR); renderQueue(); buzz(); });
-/* drag: presets -> track (insert), track -> track (reorder), track -> away (remove); a tap on a preset adds it */
 function qIndexAt(x){
   const its = [...$$('#slTrack .sl-it')].filter(e => !e.classList.contains('drag'));
-  for (let i = 0; i < its.length; i++) { const r = its[i].getBoundingClientRect(); if (x < r.left + r.width / 2) return +its[i].dataset.sl; }
+  for (const it of its) { const r = it.getBoundingClientRect(); if (x < r.left + r.width / 2) return +it.dataset.sl; }
   return (S.queue.v || []).length;
 }
 function qMark(x){
@@ -914,47 +946,52 @@ function qMark(x){
   const i = qIndexAt(x), it = $(`#slTrack .sl-it[data-sl="${i}"]`), m = document.createElement('div'); m.className = 'sl-mark';
   it ? it.before(m) : $('#slTrack').appendChild(m);
 }
+const qOver = y => { const r = $('#setlist').getBoundingClientRect(); return y > r.top - 20; };
 document.addEventListener('pointerdown', e => {
-  if (!ARR || !S) return;
-  const pad = e.target.closest('.pad.full[data-pad]'), it = e.target.closest('.sl-it');
-  if (!pad && !it) return;
-  const slot = pad ? +pad.dataset.pad : S.queue.v[+it.dataset.sl];
-  Object.assign(QD, {on:false, from: it ? +it.dataset.sl : -1, slot, x0:e.clientX, y0:e.clientY, el: it, ghost:null, id:e.pointerId});
-  e.preventDefault();
-}, {capture:true});
+  const it = e.target.closest('.sl-it'); if (!it || !S) return;
+  QD.i = +it.dataset.sl; QD.el = it; QD.x0 = e.clientX; QD.y0 = e.clientY; QD.id = e.pointerId; QD.on = false; QD.moved = false;
+  QD.t = setTimeout(() => { QD.on = true; it.classList.add('hold'); buzz(18); }, 380);
+});
+document.addEventListener('touchmove', e => { if (QD.on) e.preventDefault(); }, {passive:false});
 document.addEventListener('pointermove', e => {
-  if (QD.slot === undefined || QD.id !== e.pointerId) return;
-  if (!QD.on && Math.hypot(e.clientX - QD.x0, e.clientY - QD.y0) < 10) return;
-  if (!QD.on) { QD.on = true; buzz(12);
-    const g = document.createElement('div'); g.className = 'sl-ghost'; g.innerHTML = THUMBS[QD.slot] ? `<img src="${THUMBS[QD.slot]}" alt="">` : ''; document.body.appendChild(g); QD.ghost = g;
-    if (QD.el) QD.el.classList.add('drag'); }
+  if (QD.el === undefined || QD.id !== e.pointerId) return;
+  const d = Math.hypot(e.clientX - QD.x0, e.clientY - QD.y0);
+  if (!QD.on) { if (d > 8) { clearTimeout(QD.t); QD.el = undefined; } return; }   // a swipe scrolls the track
+  if (!QD.moved && d < 8) return;
+  if (!QD.moved) { QD.moved = true; const sl = S.queue.v[QD.i];
+    const g = document.createElement('div'); g.className = 'sl-ghost'; g.innerHTML = THUMBS[sl] ? `<img src="${THUMBS[sl]}" alt="">` : ''; document.body.appendChild(g); QD.ghost = g;
+    QD.el.classList.add('drag'); }
   QD.ghost.style.left = e.clientX + 'px'; QD.ghost.style.top = e.clientY + 'px';
-  const r = $('#slTrack').getBoundingClientRect(), over = e.clientY > r.top - 30 && e.clientY < r.bottom + 30;
-  $('#slTrack').classList.toggle('over', over); QD.ghost.classList.toggle('del', !over && QD.from >= 0);
-  qMark(over ? e.clientX : null);
+  const over = qOver(e.clientY); QD.ghost.classList.toggle('del', !over); qMark(over ? e.clientX : null);
+  const r = $('#slTrack').getBoundingClientRect();
   if (over) { if (e.clientX < r.left + 30) $('#slTrack').scrollLeft -= 8; else if (e.clientX > r.right - 30) $('#slTrack').scrollLeft += 8; }
-  e.preventDefault();
-}, {passive:false});
+});
 const qEnd = e => {
-  if (QD.slot === undefined || (e.pointerId !== undefined && QD.id !== e.pointerId)) return;
-  const list = (S.queue.v || []).slice();
-  if (!QD.on) {                                                // a tap
-    if (QD.from < 0 && e.type === 'pointerup') { if (list.length < 64) { list.push(QD.slot); S.queue.v = list; qSend(); toast('Added to the set list'); buzz(); } }
-    else if (QD.from >= 0 && e.type === 'pointerup') qGo(QD.from);
-  } else {
-    const r = $('#slTrack').getBoundingClientRect(), over = e.clientY > r.top - 30 && e.clientY < r.bottom + 30;
-    let i = qIndexAt(e.clientX);
-    if (QD.from >= 0) { list.splice(QD.from, 1); if (i > QD.from) i--; }
-    if (over && list.length < 64) list.splice(i, 0, QD.slot);
-    const curSlot = (S.queue.v || [])[S.queue.pos];
-    S.queue.v = list; S.queue.pos = list.indexOf(curSlot);
-    if (!over && QD.from >= 0) toast('Removed from the set list');
-    qSend(); buzz(10);
+  if (QD.el === undefined || (e.pointerId !== undefined && QD.id !== e.pointerId)) return;
+  clearTimeout(QD.t);
+  if (QD.on) {
+    QD.block = performance.now();                              // swallow the click that follows
+    if (QD.moved && e.type === 'pointerup') {
+      const list = S.queue.v.slice(), from = QD.i, curSlot = list[S.queue.pos], curIdx = S.queue.pos;
+      const sl = list.splice(from, 1)[0];
+      if (qOver(e.clientY)) { let i = qIndexAt(e.clientX); if (i > from) i--; list.splice(i, 0, sl);
+        S.queue.pos = curIdx === from ? i : list.indexOf(curSlot); }
+      else { S.queue.pos = curIdx === from ? -1 : list.indexOf(curSlot); toast('Removed from the set list'); }
+      S.queue.v = list; qSend(); buzz(10);
+    } else if (!QD.moved && e.type === 'pointerup') sheetQ(QD.i);
   }
-  if (QD.ghost) QD.ghost.remove(); qMark(null); $('#slTrack').classList.remove('over');
-  for (const k in QD) delete QD[k]; QD.on = false; renderQueue();
+  if (QD.ghost) QD.ghost.remove(); qMark(null); $$('.sl-it.hold').forEach(x => x.classList.remove('hold'));
+  for (const k in QD) if (k !== 'block') delete QD[k]; QD.on = false; renderQueue();
 };
 document.addEventListener('pointerup', qEnd); document.addEventListener('pointercancel', qEnd);
+function sheetQ(i){
+  const sl = S.queue.v[i], p = S.bank[sl - 1]; if (!p) return;
+  $('#shT').textContent = 'Set list #' + (i + 1) + ' · ' + p.name; $('#shP').textContent = 'Or hold it and drag along the track to move it, drag it up to remove it.';
+  $('#shI').style.display = 'none';
+  $('#shA').innerHTML = `<button class="pri" data-sh="qplay">Play it now</button>` + (i > 0 ? `<button data-sh="qleft">◀ Move earlier</button>` : '') + (i < S.queue.v.length - 1 ? `<button data-sh="qright">Move later ▶</button>` : '')
+    + `<button class="dan" data-sh="qdel">Remove from set list</button><button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.qi = i; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
 
 /* ---------------- preset pads ---------------- */
 function go(slot){
@@ -974,18 +1011,31 @@ function saveNew(){
   S.bank[slot - 1] = {name, on: S.layers.filter(l => l.on).map(l => l.k), scene: S.pars.Scene, model: S.pars.Model};
   renderPads(); toast('Saved · ' + name + ' (hold it to rename)');
 }
-function sheet(slot){
+function sheet(slot, simple){
   const p = S.bank[slot - 1];
+  $('#shI').style.display = simple ? 'none' : '';
+  if (simple && p) {
+    $('#shT').textContent = p.name; $('#shP').textContent = 'Set list: add it, then step through with ◀ ▶ at the bottom.';
+    $('#shA').innerHTML = `<button class="pri" data-sh="qadd">＋ Add to set list</button><button data-sh="play">Play it now</button><button data-sh="cancel">Cancel</button>`;
+    $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); return;
+  }
   $('#shT').textContent = p ? 'Preset ' + slot + ' · ' + p.name : 'Empty pad ' + slot;
   $('#shP').textContent = p ? 'Update replaces it (and its picture) with what is on screen now: effects, statue, text and camera.' : 'Save what is on screen now — layers, scene, model and camera.';
   $('#shI').value = p ? p.name : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Preset ' + slot);
-  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const closeSheet = () => { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+const closeSheet = () => { delete $('#sheet').dataset.qi; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
-  if (b.dataset.sh === 'save') { send({t:'banksave', v:slot, name}); toast('Saved ' + slot + ' · ' + name); S.b = slot; }
+  const qi = +$('#sheet').dataset.qi;
+  if (b.dataset.sh === 'qadd') qAdd(slot);
+  else if (b.dataset.sh === 'play') go(slot);
+  else if (b.dataset.sh === 'qplay') qGo(qi);
+  else if (b.dataset.sh === 'qleft') qMove(qi, -1);
+  else if (b.dataset.sh === 'qright') qMove(qi, 1);
+  else if (b.dataset.sh === 'qdel') qDel(qi);
+  else if (b.dataset.sh === 'save') { send({t:'banksave', v:slot, name}); toast('Saved ' + slot + ' · ' + name); S.b = slot; }
   else if (b.dataset.sh === 'rename') { send({t:'bankrename', v:slot, name}); toast('Renamed'); }
   else if (b.dataset.sh === 'fxfrom') { send({t:'fxp', do:'from', slot, fade:ui.fade}); toast('Effects copied onto what is on screen'); }
   else if (b.dataset.sh === 'clear') { send({t:'bankclear', v:slot}); toast('Cleared ' + slot); }
@@ -995,7 +1045,6 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
   const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); if (!c) return;
-  if (ARR && c.matches('.pad.full')) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
@@ -1005,12 +1054,11 @@ document.addEventListener('pointerdown', e => {
     if (c.dataset.clip) { if (c.dataset.clip !== 'live' && confirm('Delete this clip?')) { send({t:'clip', do:'del', id:c.dataset.clip}); toast('Clip deleted'); } return; }
     if (c.dataset.pad === 'clean') return;
     if (c.dataset.pad === 'new') return saveNew();
-    if (c.dataset.pad) return EDIT ? sheet(+c.dataset.pad) : null;
+    if (c.dataset.pad) return sheet(+c.dataset.pad, !EDIT);
     const n = +c.dataset.preset, name = prompt('Save current camera to F' + n + ' as:', S.presets[n - 1] || ('Preset ' + n));
     if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n); } }, 500);
 });
-const endHold = e => { let c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); clearTimeout(holdT);
-  if (ARR && c && c.matches('.pad.full')) c = null;
+const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); clearTimeout(holdT);
   $$('.hold').forEach(x => x.classList.remove('hold'));
   if (c && !held && e.type === 'pointerup') {
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') { const nm = prompt('Name this FX preset:', S.layers.filter(l => l.on).map(l => l.label).slice(0, 3).join(' + ') || 'Clean');
@@ -1027,10 +1075,10 @@ document.addEventListener('pointerup', endHold); document.addEventListener('poin
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
-  if (d.sl !== undefined) { if (!ARR) qGo(+d.sl); return; }
-  if (d.cmode) { colSet(d.cmode, {m:+d.v}); buzz(); return; }
-  if (d.cwhich) { CED[d.cwhich] = d.v; colUI(d.cwhich); return; }
-  if (d.csw) { pickCol(d.csw, d.v); return; }
+  if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }
+  if (d.cmode) { ccSet(d.cmode, {m:+d.v}); buzz(); return; }
+  if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); return; }
+  if (d.csw) { ccPick(d.csw, d.v); return; }
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); buzz(); }
