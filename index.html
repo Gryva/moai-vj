@@ -94,6 +94,37 @@ label.tg{cursor:pointer}
 .btn:disabled{opacity:.35}
 .clipst{font:600 12px var(--mono);color:var(--mute);margin:7px 2px 0}.clipst.rec{color:var(--hot)}.clipst.loop{color:var(--lime)}
 .intro{margin:14px 2px 2px;font-size:13px;line-height:1.45;color:var(--mute)}.intro b{color:var(--ink);font-weight:600}
+.setlist{margin-top:12px;background:linear-gradient(180deg,#1a1422,#121019);border:1px solid #33283f;border-radius:8px;padding:9px 9px 10px}
+.sl-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.sl-hd b{font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.sl-next{flex:1;min-width:0;font:600 11px var(--mono);color:var(--lime);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
+.setlist.arr .sl-arrange{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.sl-row{display:flex;align-items:stretch;gap:6px}
+.sl-arr{flex:0 0 46px;border-radius:8px;background:var(--panel2);font-size:18px;color:var(--ink);border:1px solid var(--line)}.sl-arr:active{background:var(--ink);color:var(--bg)}
+.sl-track{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;padding:2px;min-height:58px;align-items:center;border-radius:6px}
+.setlist.arr .sl-track{outline:1.5px dashed #c6ff3d55;outline-offset:1px}.sl-track.over{background:#c6ff3d14}
+.sl-it{position:relative;flex:0 0 88px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#1d1826;text-align:left}
+.sl-it img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.8}
+.sl-it span{position:absolute;left:4px;right:3px;bottom:3px;font-size:9.5px;font-weight:700;line-height:1.1;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-it i{position:absolute;left:4px;top:3px;font:700 9px var(--mono);background:#000a;padding:1px 4px;border-radius:4px;font-style:normal}
+.sl-it.cur{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}.sl-it.cur img{opacity:1}
+.sl-it.nx{border-color:var(--lime)}.sl-it.nx i{background:var(--lime);color:#0b0a0f}
+.sl-it.drag{opacity:.25}.sl-mark{flex:0 0 3px;align-self:stretch;background:var(--lime);border-radius:2px}
+.sl-empty{color:var(--mute);font-size:12px;padding:0 6px}
+.sl-help{display:none;font-size:11px;color:var(--mute);margin:8px 2px 0;line-height:1.4}.setlist.arr .sl-help{display:block}
+body.arranging .pad.full{touch-action:none}
+.sl-ghost{position:fixed;z-index:60;width:96px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;pointer-events:none;box-shadow:0 10px 30px #000c;border:2px solid var(--lime);transform:translate(-50%,-60%) rotate(-3deg);background:#1d1826}
+.sl-ghost img{width:100%;height:100%;object-fit:cover}.sl-ghost.del{border-color:var(--hot);opacity:.6}
+.colbox{margin:4px 0 6px}.colbox summary{list-style:none;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);padding:4px 0}
+.colbox summary::-webkit-details-marker{display:none}.colbox summary::after{content:'▾';margin-left:auto}
+.colbox summary i{width:34px;height:12px;border-radius:3px;border:1px solid #fff3}
+.cstrip{display:flex;gap:7px;overflow-x:auto;padding:6px 1px 8px;scrollbar-width:none}.cstrip::-webkit-scrollbar{display:none}
+.cstrip button{flex:0 0 34px;height:34px;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 1px #fff2}
+.cstrip button.on{border-color:var(--ink)}
+.cstrip .cpick{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative}
+.cstrip .cpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.cab{display:flex;gap:6px;margin-bottom:2px}.cab button{flex:1;display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;border:1px solid var(--line);font:600 11px var(--mono);color:var(--mute)}
+.cab button i{width:18px;height:18px;border-radius:50%;border:1px solid #fff4}.cab button.on{border-color:var(--ink);color:var(--ink)}
 .pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .pad{position:relative;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(160deg,#241b30,#13111a);border:1px solid var(--line);overflow:hidden;text-align:left;transition:transform .07s}
 .pad:active{transform:scale(.96)}
@@ -219,6 +250,11 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 <main>
   <section class="view" id="v-live">
+    <div class="setlist" id="setlist">
+      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span><button class="sl-arrange" id="slArr">ARRANGE</button></div>
+      <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous">◀</button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next">▶</button></div>
+      <div class="sl-help" id="slHelp">Drag presets from below onto the track · drag along the track to reorder · drag off the track to remove · tap a preset to add it to the end</div>
+    </div>
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
     <h2><span>Presets</span><em class="edonly">hold = edit</em></h2>
     <div class="pads" id="pads"></div>
@@ -408,19 +444,22 @@ function onMsg(m){
   }
   if (m.t === 'state') {
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, mediacur: S.mediacur, fxps: S.fxps} : {};
-    S = Object.assign(m, keep); build(); applyPars(m.pars); applyLayers(); renderPads(); renderFxps(); renderMedia(); renderClips(); }
+    S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
+    build(); applyPars(m.pars); applyLayers(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
   else if (!S) return;
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
-  else if (m.t === 'bank') { S.bank = m.bank; renderPads(); }
+  else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
   else if (m.t === 'clips') {
     if (pendingClip && m.v.length) { const known = new Set(Object.keys(LOCALCLIP)), nw = m.v.map(c => c.id).filter(id => !known.has(id)).sort().pop();
       if (nw) { LOCALCLIP[nw] = Object.assign(pendingClip, {start: performance.now(), i: -1}); pendingClip = null; } }
     if (m.cur && LOCALCLIP[m.cur] && m.cur !== S.clipcur) LOCALCLIP[m.cur].start = performance.now();
     S.clips = m.v; S.clipcur = m.cur; renderClips(); cards(); }
   else if (m.t === 'fxps') { S.fxps = m.v; renderFxps(); }
+  else if (m.t === 'queue') { if (!(QD.on)) { S.queue = {v:m.v, pos:m.pos}; renderQueue(); } }
+  else if (m.t === 'lcols') { Object.assign(S.lcols, m.v); for (const k in m.v) colUI(k); }
   else if (m.t === 'media') { S.media = m.v; S.mediacur = m.cur; renderMedia(); cards(); }
-  else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); }
+  else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
   else if ((m.t === 'vmiss' || m.t === 'vbusy' || m.t === 'vdone') && VW[m.u]) { const r = VW[m.u]; delete VW[m.u]; r(m); }
@@ -775,10 +814,43 @@ function onAir(){
       : md ? `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span>${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
-      <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}</div>`;
+      <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
-  $$('#onair input[type=range]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: v})));
+  $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: v})));
+  $$('#onair input[data-cang]').forEach(el => bindSlider(el, el.dataset.cang + ':ang', v => colSet(el.dataset.cang, {ang: v})));
+  act.forEach(l => l.col && colUI(l.k));
 }
+/* ---------------- effect colours: default / solid / linear / radial, 10 swatches + any colour */
+const SWC = ['#ffffff','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
+const CMODES = ['DEFAULT','SOLID','LINEAR','RADIAL'], CED = {}, COPEN = {};
+const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, (S.lcols || {})[k]);
+function colBox(k){
+  return `<details class="colbox" data-cbox="${k}" ${COPEN[k] ? 'open' : ''}><summary>Colour <i data-cprev="${k}"></i></summary>
+    <div class="seg sm" style="margin:2px 0 6px">${CMODES.map((m, i) => `<button data-cmode="${k}" data-v="${i}">${m}</button>`).join('')}</div>
+    <div class="cab" data-cab="${k}"><button data-cwhich="${k}" data-v="a"><i></i>COLOUR A</button><button data-cwhich="${k}" data-v="b"><i></i>COLOUR B</button></div>
+    <div class="cstrip">${SWC.map(c => `<button data-csw="${k}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-cpick="${k}"></button></div>
+    <div class="sub" data-cangrow="${k}"><span>Angle</span><input type="range" data-cang="${k}" min="0" max="360" step="1" value="0" style="--acc:var(--ink)"></div></details>`;
+}
+function colCss(c){ return c.m === 2 ? `linear-gradient(${90 + c.ang}deg,${c.a},${c.b})` : c.m === 3 ? `radial-gradient(${c.a},${c.b})` : c.m === 1 ? c.a : 'repeating-linear-gradient(45deg,#555 0 4px,#333 4px 8px)'; }
+function colUI(k){
+  const c = colOf(k), w = CED[k] || 'a', grad = c.m >= 2;
+  const pv = $(`[data-cprev="${k}"]`); if (!pv) return; pv.style.background = colCss(c);
+  $$(`[data-cmode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === c.m));
+  const cab = $(`[data-cab="${k}"]`); cab.style.display = grad ? '' : 'none';
+  $$(`[data-cwhich="${k}"]`).forEach(b => { b.classList.toggle('on', b.dataset.v === w); b.querySelector('i').style.background = c[b.dataset.v]; });
+  const cur = grad ? c[w] : c.a;
+  $$(`[data-csw="${k}"]`).forEach(b => b.classList.toggle('on', c.m > 0 && b.dataset.v.toLowerCase() === cur.toLowerCase()));
+  const pk = $(`[data-cpick="${k}"]`); if (pk) pk.value = cur;
+  $(`[data-cangrow="${k}"]`).style.display = c.m === 2 ? '' : 'none';
+  const an = $(`[data-cang="${k}"]`); if (an && !(touching[k + ':ang'] > performance.now())) { an.value = c.ang; an._show && an._show(); }
+}
+function colSet(k, ch){
+  const c = Object.assign(colOf(k), ch); S.lcols[k] = c; colUI(k);
+  clearTimeout(colSet[k]); colSet[k] = setTimeout(() => send({t:'lcol', k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60);
+}
+function pickCol(k, v){ const c = colOf(k); const w = c.m >= 2 ? (CED[k] || 'a') : 'a'; colSet(k, Object.assign({[w]: v}, c.m === 0 ? {m:1} : {})); buzz(); }
+document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cpick; if (k) pickCol(k, e.target.value); });
+document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.cbox; if (k) COPEN[k] = e.target.open; }, true);
 function setLay(k, f, v){
   const el = $(`#onair input[data-lk="${k}"][data-f="${f}"]`);
   if (el && !(touching[k + ':' + f] > performance.now()) && +el.value !== v) { el.value = v; el._show(); }
@@ -804,6 +876,85 @@ function meters(m){
   s('#mL', m.l); s('#mM', m.m); s('#mH', m.h); s('#mK', m.k);
   if (ui.tab === 'audio') { const h = (id, v) => $(id).style.height = Math.max(2, Math.min(100, v * 100)) + '%'; h('#bL', m.l); h('#bM', m.m); h('#bH', m.h); h('#bK', m.k); }
 }
+
+/* ---------------- set list: presets in the order you'll play them, ◀ ▶ steps through ---------------- */
+const QD = {on:false};                                         // drag in progress
+let ARR = false;
+function qList(){ return ((S.queue && S.queue.v) || []).filter(sl => S.bank[sl - 1]); }
+function renderQueue(){
+  if (!S || !S.bank) return;
+  const q = S.queue || {v:[], pos:-1}, list = q.v || [], pos = q.pos;
+  const nx = list.length ? (pos + 1) % list.length : -1;
+  const html = list.map((sl, i) => { const p = S.bank[sl - 1]; if (!p) return '';
+    const img = THUMBS[sl] ? `<img src="${THUMBS[sl]}" alt="">` : '';
+    return `<button class="sl-it ${i === pos ? 'cur' : ''} ${i === nx && i !== pos ? 'nx' : ''}" data-sl="${i}">${img}<i>${i === nx && i !== pos ? 'NEXT' : i + 1}</i><span>${esc(p.name)}</span></button>`; }).join('');
+  $('#slTrack').innerHTML = html || `<div class="sl-empty">${ARR ? 'Drag presets here' : 'Tap ARRANGE to build a set list'}</div>`;
+  const np = list.length ? S.bank[list[nx] - 1] : null;
+  $('#slNext').textContent = np ? 'NEXT › ' + np.name : '';
+  $('#slPrev').disabled = $('#slNx').disabled = !list.length;
+  const cur = $('#slTrack .cur'); if (cur && !QD.on) cur.scrollIntoView({block:'nearest', inline:'center'});
+}
+function qSend(){ send({t:'queue', do:'set', v:S.queue.v}); renderQueue(); }
+function qGo(i){
+  const list = S.queue.v || []; if (!list.length) return;
+  i = (i + list.length) % list.length; S.queue.pos = i;
+  send({t:'queue', do:'go', i, fade:ui.fade}); S.b = list[i]; renderPads(); renderQueue(); buzz(14);
+}
+$('#slPrev').addEventListener('click', () => qGo((S.queue.pos < 0 ? 0 : S.queue.pos) - 1));
+$('#slNx').addEventListener('click', () => qGo(S.queue.pos + 1));
+$('#slArr').addEventListener('click', () => { ARR = !ARR; $('#setlist').classList.toggle('arr', ARR); document.body.classList.toggle('arranging', ARR); renderQueue(); buzz(); });
+/* drag: presets -> track (insert), track -> track (reorder), track -> away (remove); a tap on a preset adds it */
+function qIndexAt(x){
+  const its = [...$$('#slTrack .sl-it')].filter(e => !e.classList.contains('drag'));
+  for (let i = 0; i < its.length; i++) { const r = its[i].getBoundingClientRect(); if (x < r.left + r.width / 2) return +its[i].dataset.sl; }
+  return (S.queue.v || []).length;
+}
+function qMark(x){
+  $$('.sl-mark').forEach(m => m.remove()); if (x === null) return;
+  const i = qIndexAt(x), it = $(`#slTrack .sl-it[data-sl="${i}"]`), m = document.createElement('div'); m.className = 'sl-mark';
+  it ? it.before(m) : $('#slTrack').appendChild(m);
+}
+document.addEventListener('pointerdown', e => {
+  if (!ARR || !S) return;
+  const pad = e.target.closest('.pad.full[data-pad]'), it = e.target.closest('.sl-it');
+  if (!pad && !it) return;
+  const slot = pad ? +pad.dataset.pad : S.queue.v[+it.dataset.sl];
+  Object.assign(QD, {on:false, from: it ? +it.dataset.sl : -1, slot, x0:e.clientX, y0:e.clientY, el: it, ghost:null, id:e.pointerId});
+  e.preventDefault();
+}, {capture:true});
+document.addEventListener('pointermove', e => {
+  if (QD.slot === undefined || QD.id !== e.pointerId) return;
+  if (!QD.on && Math.hypot(e.clientX - QD.x0, e.clientY - QD.y0) < 10) return;
+  if (!QD.on) { QD.on = true; buzz(12);
+    const g = document.createElement('div'); g.className = 'sl-ghost'; g.innerHTML = THUMBS[QD.slot] ? `<img src="${THUMBS[QD.slot]}" alt="">` : ''; document.body.appendChild(g); QD.ghost = g;
+    if (QD.el) QD.el.classList.add('drag'); }
+  QD.ghost.style.left = e.clientX + 'px'; QD.ghost.style.top = e.clientY + 'px';
+  const r = $('#slTrack').getBoundingClientRect(), over = e.clientY > r.top - 30 && e.clientY < r.bottom + 30;
+  $('#slTrack').classList.toggle('over', over); QD.ghost.classList.toggle('del', !over && QD.from >= 0);
+  qMark(over ? e.clientX : null);
+  if (over) { if (e.clientX < r.left + 30) $('#slTrack').scrollLeft -= 8; else if (e.clientX > r.right - 30) $('#slTrack').scrollLeft += 8; }
+  e.preventDefault();
+}, {passive:false});
+const qEnd = e => {
+  if (QD.slot === undefined || (e.pointerId !== undefined && QD.id !== e.pointerId)) return;
+  const list = (S.queue.v || []).slice();
+  if (!QD.on) {                                                // a tap
+    if (QD.from < 0 && e.type === 'pointerup') { if (list.length < 64) { list.push(QD.slot); S.queue.v = list; qSend(); toast('Added to the set list'); buzz(); } }
+    else if (QD.from >= 0 && e.type === 'pointerup') qGo(QD.from);
+  } else {
+    const r = $('#slTrack').getBoundingClientRect(), over = e.clientY > r.top - 30 && e.clientY < r.bottom + 30;
+    let i = qIndexAt(e.clientX);
+    if (QD.from >= 0) { list.splice(QD.from, 1); if (i > QD.from) i--; }
+    if (over && list.length < 64) list.splice(i, 0, QD.slot);
+    const curSlot = (S.queue.v || [])[S.queue.pos];
+    S.queue.v = list; S.queue.pos = list.indexOf(curSlot);
+    if (!over && QD.from >= 0) toast('Removed from the set list');
+    qSend(); buzz(10);
+  }
+  if (QD.ghost) QD.ghost.remove(); qMark(null); $('#slTrack').classList.remove('over');
+  for (const k in QD) delete QD[k]; QD.on = false; renderQueue();
+};
+document.addEventListener('pointerup', qEnd); document.addEventListener('pointercancel', qEnd);
 
 /* ---------------- preset pads ---------------- */
 function go(slot){
@@ -844,6 +995,7 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
   const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); if (!c) return;
+  if (ARR && c.matches('.pad.full')) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
@@ -857,7 +1009,8 @@ document.addEventListener('pointerdown', e => {
     const n = +c.dataset.preset, name = prompt('Save current camera to F' + n + ' as:', S.presets[n - 1] || ('Preset ' + n));
     if (name !== null) { send({t:'save', v:n, name}); toast('Saved F' + n); } }, 500);
 });
-const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); clearTimeout(holdT);
+const endHold = e => { let c = e.target.closest && e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); clearTimeout(holdT);
+  if (ARR && c && c.matches('.pad.full')) c = null;
   $$('.hold').forEach(x => x.classList.remove('hold'));
   if (c && !held && e.type === 'pointerup') {
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') { const nm = prompt('Name this FX preset:', S.layers.filter(l => l.on).map(l => l.label).slice(0, 3).join(' + ') || 'Clean');
@@ -874,6 +1027,10 @@ document.addEventListener('pointerup', endHold); document.addEventListener('poin
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
+  if (d.sl !== undefined) { if (!ARR) qGo(+d.sl); return; }
+  if (d.cmode) { colSet(d.cmode, {m:+d.v}); buzz(); return; }
+  if (d.cwhich) { CED[d.cwhich] = d.v; colUI(d.cwhich); return; }
+  if (d.csw) { pickCol(d.csw, d.v); return; }
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); buzz(); }
