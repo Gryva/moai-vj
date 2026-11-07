@@ -7,7 +7,8 @@ uniform vec4 uO;   // layer order, back to front: ids 1 3D models, 2 phone camer
 uniform vec4 uO2;  // order slots 5..8
 uniform vec4 uA;   // amounts: x 3D models, y camera, z images, w videos
 uniform vec4 uS;   // effect slot (1-4, 0 = none) of: x 3D models, y camera, z images, w videos
-uniform vec4 uS2;  // x effect slot of the drawing, y = isolate this layer id (the per-layer effect chains)
+uniform vec4 uS2;  // x effect slot of the drawing, y = isolate this layer id (the per-layer effect chains), z drawing brightness
+uniform vec4 uOp;  // brightness / see-through of 3D models, camera, images, videos (1 = as is, <1 fades, >1 brighter)
 uniform vec4 uF2; uniform vec4 uF3; uniform vec4 uF4; uniform vec4 uF5;   // 2D framing of camera / images / videos / drawing: zoom, x, y, rotate deg
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -62,6 +63,8 @@ vec3 layer(int id, vec2 uv, vec3 o){
   int s = slotOf(id);
   vec4 L = s > 0 ? slotTex(s, uv) : layerPM(id, uv);
   if (L.a < 0.0005 && max(L.r, max(L.g, L.b)) < 0.0005) return o;
+  float op = id == 1 ? uOp.x : id == 2 ? uOp.y : id == 3 ? uOp.z : id == 4 ? uOp.w : uS2.z;
+  L *= clamp(op, 0.0, 1.0); L.rgb *= max(op, 1.0);
   if (id == 5) return 1.0 - (1.0 - o) * (1.0 - clamp(L.rgb, 0.0, 1.0));               // drawing: screen
   if (id == 2) {
     int m = int(floor(uP.x + 0.5));

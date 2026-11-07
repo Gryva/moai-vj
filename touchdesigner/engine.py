@@ -1048,11 +1048,13 @@ def srcData():
             'vkey': _keyDict(C, True),
             'layers': layerOrder(C),
             'frame': {n: round(float(C.par[n].eval()), 4) for n in FRAMEPARS},
+            'opacity': {n: round(float(C.par[n].eval()), 4) for n in OPPARS},
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
             'draw': bool(C.par.Drawon.eval()), 'drawmix': round(float(C.par.Drawmix.eval()), 3),
             'key': _keyDict(C)}
 
 FRAMEPARS = ['F%s%s' % (l, n) for l in ('cam', 'img', 'vid', 'draw') for n in ('zoom', 'x', 'y', 'rot')]
+OPPARS = ['Op' + t for t in ('model', 'camera', 'images', 'videos', 'draw')]      # per-layer brightness / see-through
 KEYPARS = ['Keyon', 'Keycolor', 'Keytol', 'Keysoft', 'Keyspill', 'Keyshrink', 'Objx', 'Objy', 'Objscale']
 
 def drawPath(slot): return '%s/td/drawings/p%d.png' % (project.folder, int(slot))
@@ -1095,6 +1097,8 @@ def applySrc(d, slot=None):
     C.par.Layerorder = ','.join(order)
     fr = s.get('frame') or {}
     for n in FRAMEPARS: C.par[n] = fr.get(n, C.par[n].default)
+    opd = s.get('opacity') or {}
+    for n in OPPARS: C.par[n] = opd.get(n, 1.0)
     if s.get('clip') and R.clipPlay(s['clip']): pass
     elif C.par.Clipstate.eval() == 'loop': R.clipLive()
     C.par.Camsrc = 'cam' if s.get('camsrc') == 'behind' else s.get('camsrc', 'off')   # BEHIND is now just the layer order
@@ -1394,8 +1398,15 @@ def cleanSlate():
     """Empty look (no effects, no text, statue centred) saved straight into a new preset, ready to build."""
     C = op('/project1/CONTROLS'); t = _bankTable()
     slot = next((i for i in range(1, BANK_SLOTS + 1) if not t[i, 1].val), None)
-    clearLayers(); S['fades'].clear()
-    C.par.Texton = False; C.par.Statue = True; C.par.Scene = 'solid'
+    clearLayers(); S['fades'].clear(); tClear()
+    R = op('/project1/remote_cb').module                         # a clean preset is EMPTY: every source off
+    C.par.Texton = False; C.par.Statue = False; C.par.Scene = 'solid'
+    C.par.Mediaon = False; C.par.Vmediaon = False; C.par.Drawon = False; C.par.Camsrc = 'off'
+    try: R.mediaStop('images'); R.mediaStop('videos')
+    except Exception: pass
+    if C.par.Clipstate.eval() == 'loop': C.par.Clipstate = 'off'
+    C.par.Layerorder = ','.join(LAYER_DEFAULT)
+    for n in FRAMEPARS + OPPARS: C.par[n] = C.par[n].default
     for k in CAMKEYS + ['Pan']:
         try: C.par[k] = C.par[k].default
         except Exception: pass

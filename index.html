@@ -105,6 +105,7 @@ label.tg{cursor:pointer}
 .lrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 10px;background:#0c0b11}
 .lrow.on{border-color:#3d4a1c}.lrow .lname{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
 .lrow .lname b{font-size:12px;letter-spacing:.12em;text-transform:uppercase}.lrow .lname span{font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card:not(.open) .ch label.tg{display:none}.card .ch b+.chev{margin-left:auto}.larr.lx{color:var(--hot);font-size:12px}
 .lrow.sel{background:#1d2a0c;border-color:var(--lime);box-shadow:inset 3px 0 0 var(--lime)}.lrow.sel .lname b{color:var(--lime)}.lrow.dim .lname{opacity:.45}
 .card .ch .chev{font-size:12px;color:var(--mute);transition:transform .2s;margin-left:2px}.card.open .ch .chev{transform:rotate(180deg)}.card.shut .ch .chev{transform:none}
 .lrow .tg.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
@@ -280,9 +281,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-layers">
-    <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b><em>tap = edit its effects</em></div>
-      <div class="cb"><div class="lstack" id="fxtg"></div><p class="srcnote" id="fxtgnote" style="margin:8px 2px 0"></p></div></div>
+    <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
+      <div class="cb"><div class="lstack" id="fxtg"></div></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
+    <div id="g-opmodel" data-op="model"></div><div id="g-opcamera" data-op="camera"></div><div id="g-opimages" data-op="images"></div><div id="g-opvideos" data-op="videos"></div><div id="g-opdraw" data-op="draw"></div>
     <div class="onair" id="onair"></div>
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
@@ -290,9 +292,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-source">
-    <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b><em>top = in front</em></div>
-      <div class="cb"><div class="lstack" id="lstack"></div>
-        <p class="srcnote" style="margin:8px 2px 0" id="lnote">Switch a source ON below and it appears here. ▲ ▼ change what is in front. Tap a name to jump to its settings.</p></div></div>
+    <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b></div>
+      <div class="cb"><div class="lstack" id="lstack"></div></div></div>
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
 
     <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
@@ -381,10 +382,9 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 
   <section class="view" id="v-cam">
-    <h2><span>Layer</span><em>what you are framing</em></h2>
-    <div class="tgts" id="vwtg"></div>
+    <div class="card open" id="cardVwLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
+      <div class="cb"><div class="lstack" id="vwtg"></div></div></div>
     <div id="view2d" hidden>
-      <p class="srcnote" style="margin-top:8px">Flat layer: zoom, move and rotate it on screen. The 3D camera doesn't touch it.</p>
       <div id="g-frcam" data-fr="camera"></div><div id="g-frimg" data-fr="images"></div><div id="g-frvid" data-fr="videos"></div><div id="g-frdraw" data-fr="draw"></div>
       <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="frreset">RESET FRAMING</button></div>
     </div>
@@ -470,7 +470,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07n';
+const BUILD = '2026-11-07o';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -675,36 +675,38 @@ function fxTargets(){
   if (!S) return; const av = fxAvail();
   if (FXT_SEL !== 'all' && !av.includes(FXT_SEL) && !((S.tfx || {})[FXT_SEL] || []).some(x => x[1])) { FXT_SEL = 'all'; applyTarget(); return; }
   const n = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
-  $('#fxtg').innerHTML = layerRows(true);
+  $('#fxtg').innerHTML = layerRows('fx');
   $('#fxtgname').textContent = TGTNAME[FXT_SEL];
-  const withFx = av.filter(k => n(k)).length;
-  $('#fxtgnote').textContent = FXT_SEL === 'all' ? 'ALL = effects over the whole picture. Pick a layer to give only that layer its own effects.'
-    : (withFx > 4 ? 'Only 4 layers can have their own effects at once - the 4 front ones get them.' : 'These effects only touch ' + TGTNAME[FXT_SEL] + '.');
+  $$('[data-op]').forEach(e => e.hidden = e.dataset.op !== FXT_SEL);
   viewTargets();
 }
 function viewTargets(){
   if (!S || !$('#vwtg')) return;
   const flat = layerOrder().filter(k => k !== 'model' && k !== 'draw' && layerInfo(k).on && !layerInfo(k).in3d);
   if (VW_SEL !== '3d' && !flat.includes(VW_SEL)) VW_SEL = '3d';
-  $('#vwtg').innerHTML = ['3d'].concat(flat).map(k => `<button class="tgt ${k === VW_SEL ? 'on' : ''}" data-vwt="${k}">${k === '3d' ? '3D camera' : TGTNAME[k]}</button>`).join('');
+  $('#vwtg').innerHTML = layerRows('view');
   $('#view2d').hidden = VW_SEL === '3d'; $('#view3d').hidden = VW_SEL !== '3d';
   $$('#view2d [data-fr]').forEach(e => e.hidden = e.dataset.fr !== VW_SEL);
 }
-function layerRows(fx){
+function layerRows(mode){                 // one look for SOURCE ('src'), FX ('fx') and VIEW ('view')
+  const fx = mode === 'fx', vw = mode === 'view', src = !fx && !vw;
   const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on);
   const cnt = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
   const tag = k => fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '';
-  const pick = (k, card) => fx ? `data-fxt="${k}"` : `data-jump="${card}"`;
-  const sel = k => fx && FXT_SEL === k ? ' sel' : '';
+  const flat = k => (k === 'camera' || k === 'images' || k === 'videos') && !layerInfo(k).in3d;
+  const vkey = k => flat(k) ? k : '3d';                                   // VIEW: 3D models, 3D objects and the drawing card use the 3D camera
+  const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? `data-vwt="${vkey(k)}"` : `data-jump="${layerInfo(k).card}"`;
+  const sel = k => (fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '';
+  const x = k => src ? `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
-  h += p.Texton ? `<div class="lrow on pin"><button class="lname" ${fx ? '' : 'data-jump="cardText"'}><b>Text</b><span>always on top${fx ? ' · no layer effects' : ''}</span></button></div>` : '';
-  h += vis.map((k, i) => { const L = layerInfo(k), ok = !fx || fxAvail().includes(k);
-    const sub = esc(L.sub) + (fx && !ok ? ' · uses the 3D models effects' : tag(k));
-    return `<div class="lrow on${sel(k)}${ok ? '' : ' dim'}"><button class="lname" ${ok ? pick(k, L.card) : ''}><b>${L.name}</b><span>${sub}</span></button>`
-      + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button></div>`; }).join('');
-  return h || '<p class="hint2" style="margin:2px">Nothing on yet. Switch on 3D models, Phone camera, Images, Videos, Draw or Text in SOURCE.</p>';
+  h += p.Texton ? `<div class="lrow on pin${src ? '' : ' dim'}"><button class="lname" ${src ? 'data-jump="cardText"' : ''}><b>Text</b><span>always on top</span></button>${x('text')}</div>` : '';
+  h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
+    const sub = esc(L.sub) + (vw && !flat(k) ? ' · 3D camera' : '') + tag(k);
+    return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}"><button class="lname" ${a || ''}><b>${L.name}</b><span>${sub}</span></button>`
+      + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button>${x(k)}</div>`; }).join('');
+  return h || '<p class="hint2" style="margin:2px">No layers yet.</p>';
 }
-function layerStack(){ $('#lstack').innerHTML = layerRows(false); }
+function layerStack(){ $('#lstack').innerHTML = layerRows('src'); }
 const SHUT = (() => { try { return JSON.parse(localStorage.getItem('shut') || '{}'); } catch (e) { return {}; } })();
 function shutSave(){ try { localStorage.setItem('shut', JSON.stringify(SHUT)); } catch (e) {} }
 function cardOpen(id, on){                // ON opens the card; tapping its header can fold it away again
@@ -720,7 +722,7 @@ function cards(){
   cardOpen('cardMedia', !!p.Mediaon);
   cardOpen('cardVid', !!p.Vmediaon);
   cardOpen('cardText', !!p.Texton);
-  cardOpen('cardLayers', true); cardOpen('cardFxLayers', true);
+  cardOpen('cardLayers', true); cardOpen('cardFxLayers', true); cardOpen('cardVwLayers', true);
   layerStack(); fxTargets();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
@@ -890,7 +892,7 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','key','obj','crop','vcrop','vkey','vobj','frcam','frimg','frvid','frdraw'].forEach(g => $('#g-' + g).innerHTML = '');
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','key','obj','crop','vcrop','vkey','vobj','frcam','frimg','frvid','frdraw','opmodel','opcamera','opimages','opvideos','opdraw'].forEach(g => $('#g-' + g).innerHTML = '');
   const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
@@ -1324,6 +1326,10 @@ document.addEventListener('click', e => {
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear', tgt:FXT_SEL}); applyLayers(); fxTargets(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
   else if (d.vmedia) { send(d.vmedia === S.vidcur ? {t:'media', do:'stop', layer:'videos'} : {t:'media', do:'play', layer:'videos', id:d.vmedia}); buzz(); }
+  else if (d.loff) { const k = d.loff, off = {model:['Statue', false], images:['Mediaon', false], videos:['Vmediaon', false], draw:['Drawon', false], text:['Texton', false]}[k];
+    if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
+    else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }
+    applyPars({}); buzz(); }
   else if (d.fxt) { FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.act === 'frreset') { const pre = {camera:'Fcam', images:'Fimg', videos:'Fvid', draw:'Fdraw'}[VW_SEL]; if (pre) { [['zoom',1],['x',0],['y',0],['rot',0]].forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
