@@ -81,8 +81,8 @@ Six sources, each a card with its own **ON/OFF**. A card opens when its source i
 others, **✕** removes it, tap a name to jump to its card. **＋ ADD LAYER** adds Text, 3D models, an Image, a Video,
 Draw or the Phone camera. Images and videos can be added again and again: up to **6 picture / video layers** at once
 (e.g. three videos stacked, a background picture under a green-screen clip). Example: Text on top, a 3D model in the
-middle, a picture at the back. The order is saved in presets. Pictures / videos in **3D OBJECT** mode live inside the
-3D scene, so they move with the 3D models layer. **Text** is always on top (drawn after the effects).
+middle, a picture at the back. The order is saved in presets. Pictures / videos in **3D OBJECT** mode are drawn by their
+own 3D pass with the shared 3D camera, so they stay separate layers too (own order, effects and brightness). **Text** is always on top (drawn after the effects).
 
 - **3D models:** shows or hides the statues and animations.
   - Static models / 3D animations: tap to switch. **Scene** (Solid, Particles, Grid) sits under Static models;

@@ -231,6 +231,8 @@ def objUpdate(C):
         if g is None: continue
         if g.render != on: g.render = on
         if on: objs.append(i); _cardShape(g, op('/project1/mk%d' % i))
+        sw = op('/project1/mfeed%d' % i)                             # a 3D object is drawn by its own render pass (mr<n>),
+        if sw is not None and int(sw.par.index.eval()) != (1 if on else 0): sw.par.index = 1 if on else 0   # so it stays its own layer
     S['objs'] = objs
     drawing = bool(C.par.Drawon.eval())
     S['drawobj'] = drawing
@@ -248,7 +250,6 @@ def renderGeo(C):
         g = animComp(a) if a else None
         if g is not None: parts.append(g.path)
         else: parts.append('/project1/moai_particles' if C.par.Scene.eval() == 'particles' else '/project1/moai_geo')
-    parts += ['/project1/mg%d' % i for i in S.get('objs', [])]
     if S.get('drawobj'): parts.append('/project1/draw_geo')
     geo = ' '.join(parts)
     r = op('/project1/render1')
@@ -690,7 +691,7 @@ def _layerShown(C, t):
     if t == 'model': return bool(C.par.Statue.eval())
     if t == 'camera': return C.par.Camsrc.eval() in CAMMODES
     if t == 'draw': return bool(C.par.Drawon.eval()) and not S.get('drawobj')
-    if t[:1] == 'm' and t[1:].isdigit(): return mediaActive(C, int(t[1:]), 'flat')
+    if t[:1] == 'm' and t[1:].isdigit(): return mediaActive(C, int(t[1:]))
     return False
 
 def fxTargets(C):
@@ -1490,7 +1491,7 @@ def camfeedUpdate(C, dt, T):
     ma = []
     for i in MSLOTS:
         k = 'm%d' % i
-        CAMS[k] = _ease(CAMS.get(k, 0.0), 1.0 if mediaActive(C, i, 'flat') else 0.0, 0.2, dt)
+        CAMS[k] = _ease(CAMS.get(k, 0.0), 1.0 if mediaActive(C, i) else 0.0, 0.2, dt)
         ma.append(CAMS[k])
         mf = op('/project1/mf%d' % i)
         if mf is not None:
@@ -1512,6 +1513,9 @@ def camfeedUpdate(C, dt, T):
     p.vec8valuex, p.vec8valuey = CAMS['stat'], cam
     p.vec13valuex, p.vec13valuey, p.vec13valuez, p.vec13valuew = ma[0:4]
     p.vec14valuex, p.vec14valuey = ma[4:6]
+    mm = [1.0 if i in S.get('objs', []) else 0.0 for i in MSLOTS]
+    p.vec25valuex, p.vec25valuey, p.vec25valuez, p.vec25valuew = mm[0:4]
+    p.vec26valuex, p.vec26valuey = mm[4:6]
 
 # ------------------------------------------------------------------ thumbnails (preset pictures + effect tiles)
 THUMB_DIR = project.folder + '/td/thumbs'

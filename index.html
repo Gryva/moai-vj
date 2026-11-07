@@ -452,7 +452,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07p';
+const BUILD = '2026-11-07q';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -673,7 +673,7 @@ function layerInfo(k){
   if (k === 'model') return {on: p.Statue !== false, name: '3D models', sub: (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', card: 'cardStatue'};
   if (k === 'camera') return {on: !!p.Camsrc && p.Camsrc !== 'off', name: 'Phone camera', sub: (p.Clipstate === 'loop' ? 'clip · ' : '') + ({cam:'normal', behind:'normal', screen:'blend', mask:'mask'}[p.Camsrc] || ''), card: 'cardCam'};
   if (/^m\d$/.test(k)) { const m = 'M' + k.slice(1), obj = p[m + 'mode'] === 'object';
-    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · moves with the 3D scene' : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
+    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + file(p[m + 'file']) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
   if (k === 'draw') return {on: !!p.Drawon, name: 'Drawing', sub: 'drawn on the phone', card: 'cardDraw'};
 }
 function layerMove(k, dir){                  // dir -1 = towards the front (up), +1 = towards the back
@@ -694,7 +694,7 @@ function applyTarget(){
   airSig = null; applyLayers(); fxTargets();
 }
 function fxAvail(){                       // layers that can carry their own effects: ON and flat (3D objects ride with 3D models)
-  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.hid && !L.in3d && k !== 'draw'; });
+  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.hid && (k === 'model' || k === 'camera' || /^m\d$/.test(k)); });
 }
 function fxTargets(){
   if (!S) return; const av = fxAvail();

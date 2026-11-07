@@ -11,6 +11,7 @@ uniform vec4 uF2; uniform vec4 uF5;                     // 2D framing of camera 
 uniform vec4 uMA1; uniform vec4 uMA2;                   // media layers 1-6: amount (0 = off or in 3D)
 uniform vec4 uMS1; uniform vec4 uMS2;                   // media layers 1-6: effect chain
 uniform vec4 uMO1; uniform vec4 uMO2;                   // media layers 1-6: brightness
+uniform vec4 uMM1; uniform vec4 uMM2;                   // media layers 1-6: 1 = 3D object (input is its own render, premultiplied)
 uniform vec4 uMF1; uniform vec4 uMF2; uniform vec4 uMF3; uniform vec4 uMF4; uniform vec4 uMF5; uniform vec4 uMF6;   // media framing
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -62,6 +63,7 @@ vec4 layerPM(int id, vec2 uv){                 // one layer on its own, premulti
   if (id == 5) { vec2 p = frame(uv, uF5); float ins = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
                  vec3 d = clamp(texture(sTD2DInputs[2], clamp(p, 0.0, 1.0)).rgb * uQ.x, 0.0, 1.0) * ins; return vec4(d, max(d.r, max(d.g, d.b))); }
   if (id >= 11 && id <= 16) { int j = id - 11; float k = clamp(pick4(uMA1, uMA2, j), 0.0, 1.0); if (k < 0.002) return vec4(0.0);
+                 if (pick4(uMM1, uMM2, j) > 0.5) return tin(3 + j, uv) * k;
                  vec4 c = fitTex(3 + j, frame(uv, mframe(j)), false); float a = c.a * k; return vec4(c.rgb * a, a); }
   return vec4(0.0);
 }
