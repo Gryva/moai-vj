@@ -23,7 +23,9 @@ for _i in range(1, 7):
                       (_m + 'objscale', 'Size', 0.2, 3, 0.01, 'm%dobj' % _i),
                       (_m + 'fzoom', 'Zoom', 0.2, 4, 0.01, 'm%dfr' % _i), (_m + 'fx', 'Left / right', -1, 1, 0.005, 'm%dfr' % _i),
                       (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
-                      (_m + 'op', 'Brightness', 0, 1.5, 0.01, 'm%dop' % _i)]
+                      (_m + 'op', 'Brightness', 0, 1.5, 0.01, 'm%dop' % _i),
+                      (_m + 'speed', 'Speed', 0.1, 4, 0.05, 'm%dplay' % _i), (_m + 'trimin', 'Start', 0, 1, 0.005, 'm%dplay' % _i),
+                      (_m + 'trimout', 'End', 0, 1, 0.005, 'm%dplay' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),

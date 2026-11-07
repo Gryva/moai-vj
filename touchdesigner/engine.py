@@ -1062,7 +1062,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keytol', 'keysoft', 'keyspill',
-         'keyshrink', 'objx', 'objy', 'objscale', 'fzoom', 'fx', 'fy', 'frot', 'op']
+         'keyshrink', 'objx', 'objy', 'objscale', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
 
 def _mval(par):
     v = par.eval()
@@ -1131,8 +1131,8 @@ def applySrc(d, slot=None):
             if mp(C, i, 'on').eval() or mp(C, i, 'file').eval(): mediaSlotClear(C, i)
             continue
         for n in MPARS:
-            if n in ('file',) or n not in m: continue
-            try: mp(C, i, n).val = m[n]
+            if n == 'file': continue
+            try: mp(C, i, n).val = m[n] if n in m else mp(C, i, n).default      # older presets: defaults, not leftovers
             except Exception: pass
         f = m.get('file') or ''
         if f and mp(C, i, 'file').eval() != f and not R.mediaPlay(f, slot=i, keep=True):

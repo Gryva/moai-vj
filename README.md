@@ -96,7 +96,8 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
 - **Phone camera:** NORMAL, BLEND or MASK, Fill / Whole image, mirror. **Clips:** record a short loop; play, bounce,
   speed, delete (a playing clip is the camera layer).
 - **Image / Video layers** (one card each, named Image 1, Video 2…): ON/OFF, ＋ ADD (upload to this layer), the
-  library (pictures or videos, tap to play on this layer), **FLAT** or **3D OBJECT**, **Crop**, **Green / blue screen**
+  current file (tap **CHANGE** to open the library and pick another), **Playback** for videos (speed 0.1–4×, trim
+  start / end, reset), **FLAT** or **3D OBJECT**, **Crop**, **Green / blue screen**
   and **Move it in 3D**. Each layer also has its own effects and brightness (FX tab) and framing (VIEW tab). All saved
   in presets; older presets load their image on layer 1 and their video on layer 2.
 - **Drawing layers:** draw on the phone; pen and shapes, sizes, colours or gradients. Black is see-through. With several

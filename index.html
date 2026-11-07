@@ -106,6 +106,8 @@ label.tg{cursor:pointer}
 .lrow.on{border-color:#3d4a1c}.lrow .lname{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
 .lrow .lname b{font-size:12px;letter-spacing:.12em;text-transform:uppercase}.lrow .lname span{font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card:not(.open) .ch label.tg,.card:not(.open) .ch .mup{display:none}.card .ch b+.chev{margin-left:auto}.larr.lx{color:var(--hot);font-size:12px}
+.mfile{width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);text-align:left}.mfile b{flex:1;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mfile span{font:700 10px var(--mono);color:var(--lime)}.mfile.open span{opacity:.5}
+.mlib{margin-top:8px}.mlib[hidden],.mplay[hidden],.mfile[hidden],.mkey[hidden],.dpick[hidden]{display:none}
 .addlay{width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px dashed #3d4a1c;color:var(--lime);font:700 11px var(--sans);letter-spacing:.14em}
 .addmenu[hidden]{display:none}.addmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.addmenu button{padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase}
 .lrow.sel{background:#1d2a0c;border-color:var(--lime);box-shadow:inset 3px 0 0 var(--lime)}.lrow.sel .lname b{color:var(--lime)}.lrow.dim .lname{opacity:.45}
@@ -473,7 +475,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07r';
+const BUILD = '2026-11-07s';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -642,9 +644,9 @@ function clipUI(p){
   r.textContent = st === 'rec' ? '■ STOP  ' + (+p.Cliplen || 0).toFixed(1) + ' s' : '● RECORD';
   renderClips();
 }
-const MS = [1,2,3,4,5,6];
+const MS = [1,2,3,4,5,6], MLIB = {};          // MLIB[i] = file list of layer i is unfolded
 const LDEF = ['draw','m1','m2','m3','m4','m5','m6','camera','model'];
-const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op']));
+const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op', 'm' + i + 'play']));
 function mediaName(i){                    // "Video 2" = the 2nd video layer
   const p = S.pars, kd = j => ['image', 'draw'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
   const n = MS.filter(j => j <= i && p['M' + j + 'on'] && kd(j) === kind).length;
@@ -653,7 +655,11 @@ function mediaName(i){                    // "Video 2" = the 2nd video layer
 function mediaCardsBuild(){               // 6 cards exist once; only added layers show
   $('#mcards').innerHTML = MS.map(i => { const m = 'M' + i;
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
-      <div class="cb"><div class="seg sm" id="o-${m}mode" style="margin-bottom:8px"></div><div class="clips mlib" id="mlist${i}"></div>
+      <div class="cb"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button>
+        <div class="clips mlib" id="mlist${i}" hidden></div>
+        <div class="seg sm" id="o-${m}mode" style="margin:8px 0"></div>
+        <details class="box mbox mplay"><summary>Playback<span id="sum-m${i}play"></span></summary><div id="g-m${i}play"></div>
+          <div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mplayreset="${i}">NORMAL SPEED · FULL LENGTH</button></div></details>
         <div class="dhost" id="dhost${i}"></div><button class="btn dpick" data-dpick="${i}">✎ DRAW ON THIS LAYER</button>
         <details class="box mbox" style="margin-top:8px"><summary>Crop<span id="sum-m${i}crop"></span></summary><div id="g-m${i}crop"></div><div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mcrop="${i}">RESET CROP</button></div></details>
         <details class="box mbox mkey" style="margin-top:8px"><summary>Green / blue screen<span id="sum-m${i}key"></span></summary>
@@ -676,8 +682,14 @@ function mediaCardsUI(p){
     $('#sum-m' + i + 'key').textContent = p[m + 'keyon'] ? 'on' : '';
     $('#sum-m' + i + 'crop').textContent = ['l','r','t','b'].some(n => +p[m + 'crop' + n] > 0.001) ? 'cropped' : '';
     $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
-    const dr = p[m + 'kind'] === 'draw';
-    c.querySelector('.mlib').hidden = dr; c.querySelector('.mkey').hidden = dr; c.querySelector('.mup').hidden = dr;
+    const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
+    const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
+    mfb.hidden = dr; $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
+    lib.hidden = dr || (!!f && !MLIB[i]); mfb.classList.toggle('open', !lib.hidden);
+    c.querySelector('.mplay').hidden = !vid;
+    { const sp = +p[m + 'speed'] || 1, tr = (+p[m + 'trimin'] || 0) > 0.001 || (p[m + 'trimout'] != null && +p[m + 'trimout'] < 0.999);
+      $('#sum-m' + i + 'play').textContent = [sp !== 1 ? sp.toFixed(2) + '×' : '', tr ? 'trimmed' : ''].filter(Boolean).join(' · '); }
+    c.querySelector('.mkey').hidden = dr; c.querySelector('.mup').hidden = dr;
     c.querySelector('.dpick').hidden = !dr || DR.slot === i; });
   const ds = MS.filter(i => p['M' + i + 'on'] && p['M' + i + 'kind'] === 'draw');
   if (ds.length && !ds.includes(DR.slot)) { DR.slot = 0; drawPick(ds[0]); }
@@ -1349,7 +1361,7 @@ const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') { const nm = prompt('Name this FX preset:', S.layers.filter(l => l.on).map(l => l.label).slice(0, 3).join(' + ') || 'Clean');
         if (nm !== null) { send({t:'fxp', do:'save', name:nm.trim()}); toast('FX preset saved'); } }
       else { send({t:'fxp', do:'apply', i:+c.dataset.fxp, fade:ui.fade}); buzz(); } }
-    else if (c.dataset.media) { { const i = +c.dataset.mslot; send(c.dataset.media === S.pars['M' + i + 'file'] ? {t:'media', do:'stop', slot:i} : {t:'media', do:'play', slot:i, id:c.dataset.media}); }; buzz(); }
+    else if (c.dataset.media) { { const i = +c.dataset.mslot; if (c.dataset.media === S.pars['M' + i + 'file']) send({t:'media', do:'stop', slot:i}); else { send({t:'media', do:'play', slot:i, id:c.dataset.media}); MLIB[i] = false; S.pars['M' + i + 'file'] = c.dataset.media; mediaCardsUI(S.pars); } }; buzz(); }
     else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
     else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added · build it, then hold it → Update'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
@@ -1391,6 +1403,8 @@ document.addEventListener('click', e => {
   else if (d.tog) { const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear', tgt:FXT_SEL}); applyLayers(); fxTargets(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
+  else if (d.mlib) { const i = +d.mlib; MLIB[i] = !( !$('#mlist' + i).hidden ); mediaCardsUI(S.pars); buzz(); }
+  else if (d.mplayreset) { const m = 'M' + d.mplayreset; [['speed', 1], ['trimin', 0], ['trimout', 1]].forEach(([n, v]) => { S.pars[m + n] = v; send({t:'set', p:m + n, v}); }); build(); buzz(); }
   else if (d.dpick) { drawPick(+d.dpick); buzz(); }
   else if (d.mup) { send({t:'media', do:'target', slot:+d.mup}); const pk = $('#mediapick'); pk.accept = S.pars['M' + d.mup + 'kind'] === 'image' ? 'image/*' : 'video/*,image/gif'; pk.click(); }
   else if (d.mfit) { send({t:'media', do:'fit', slot:+d.mfit}); buzz(); }
