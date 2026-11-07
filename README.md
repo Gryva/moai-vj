@@ -218,7 +218,7 @@ Slow → fewer separate parts, 1024 px textures.
 
 ## 6. Adding media, effects and other content
 
-- **Pictures/videos:** drop into `media/` on the computer, or upload from the phone. They appear under SOURCE → Media.
+- **Pictures/videos:** drop into `videos/` or `media/` in the project folder (MP4, MOV, WEBM, AVI, MKV, GIF, JPG, PNG…), or upload from the phone. They appear under SOURCE → Media on the next phone connect (the newest 80). The first time, preview pictures take a few seconds per new file.
 - **Fonts:** any installed font name works in `CONTROLS → Text → Textfont`.
 - **Effects:** shader `td/fx/<key>.glsl` + GLSL TOP `fx_<key>` + a row in `/project1/FX_STACK` (key, label, group, on,
   amount, setting name/min/max/step). Uniforms: `uTime`, `uAudio` (low, mid, high, kick), `uMix` (amount), `uP`

@@ -164,18 +164,47 @@ def drawFrame(payload):
 MEDIADIR = os.path.join(project.folder, 'media')
 MEDIA_THUMBS = os.path.join(project.folder, 'td', 'mediathumbs')
 IMG_EXT = ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tif', '.tiff')
-VID_EXT = ('.mp4', '.mov', '.m4v', '.webm', '.avi', '.mkv')
+VID_EXT = ('.mp4', '.mov', '.m4v', '.webm', '.avi', '.mkv', '.gif')
+VIDEODIR = os.path.join(project.folder, 'videos')       # your own clip library: shows up in the phone's Media list
 UPLOADS = {}
 
 def _mediaFiles():
     out = []
-    for dp, dn, fn in os.walk(MEDIADIR):
-        for n in fn:
-            ext = os.path.splitext(n)[1].lower()
-            if ext in IMG_EXT or ext in VID_EXT:
-                full = os.path.join(dp, n)
-                out.append((os.path.relpath(full, MEDIADIR).replace('\\', '/'), full, 'video' if ext in VID_EXT else 'image'))
+    for root, pre in ((MEDIADIR, ''), (VIDEODIR, 'videos/')):
+        for dp, dn, fn in os.walk(root):
+            for n in fn:
+                ext = os.path.splitext(n)[1].lower()
+                if ext in IMG_EXT or ext in VID_EXT:
+                    full = os.path.join(dp, n)
+                    out.append((pre + os.path.relpath(full, root).replace('\\', '/'), full, 'video' if ext in VID_EXT else 'image'))
     return sorted(out, key=lambda x: os.path.getmtime(x[1]))
+
+def _asciiPath(p):
+    """OpenCV on Windows can't open names with letters like č ć đ š ž: use the short 8.3 name instead."""
+    try:
+        p.encode('ascii'); return p
+    except UnicodeEncodeError: pass
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(1024)
+        if ctypes.windll.kernel32.GetShortPathNameW(p, buf, 1024): return buf.value
+    except Exception: pass
+    return p
+
+def _tdGrab(full):
+    """A frame read by a hidden Movie File In TOP (handles any name and format TouchDesigner can play)."""
+    try:
+        import numpy as np, cv2
+        g = op('/project1/thumb_grab') or op('/project1').create(moviefileinTOP, 'thumb_grab')
+        g.par.play = False; g.par.file = full; g.par.indexunit = 'fraction'; g.par.index = 0.2
+        g.cook(force=True)
+        a = g.numpyArray(delayed=False)
+        g.par.file = ''
+        if a is None or a.size == 0 or g.width < 8: return None
+        a = (np.clip(a[::-1, :, :3], 0, 1) * 255).astype(np.uint8)
+        return cv2.cvtColor(a, cv2.COLOR_RGB2BGR)
+    except Exception as e:
+        print('thumb grab failed', full, e); return None
 
 def _mediaThumb(rel, full, kind):
     import cv2, base64, hashlib
@@ -186,13 +215,21 @@ def _mediaThumb(rel, full, kind):
         im = None
         try:
             if kind == 'video':
-                cap = cv2.VideoCapture(full); n = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+                cap = cv2.VideoCapture(_asciiPath(full)); n = cap.get(cv2.CAP_PROP_FRAME_COUNT)
                 if n > 10: cap.set(cv2.CAP_PROP_POS_FRAMES, int(n * 0.2))
                 ok, im = cap.read(); cap.release()
             else:
                 im = cv2.imread(full)
         except Exception as e:
             print('media thumb failed', rel, e)
+        if im is None:                                           # GIFs and odd files: try Pillow
+            try:
+                from PIL import Image
+                import numpy as np
+                g = Image.open(full); g.seek(0)
+                im = cv2.cvtColor(np.array(g.convert('RGB')), cv2.COLOR_RGB2BGR)
+            except Exception: pass
+        if im is None: im = _tdGrab(full)                       # last resort: TouchDesigner decodes it itself
         if im is None: return ''
         h, w = im.shape[:2]; k = 192.0 / max(w, h)
         cv2.imwrite(tp, cv2.resize(im, (max(1, int(w * k)), max(1, int(h * k)))), [cv2.IMWRITE_JPEG_QUALITY, 70])
@@ -201,7 +238,7 @@ def _mediaThumb(rel, full, kind):
 def mediaMsg():
     items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/'), 'thumb': _mediaThumb(rel, full, kind)}
              for rel, full, kind in _mediaFiles()]
-    return {'t': 'media', 'v': items[-40:], 'cur': _C().par.Media.eval() or None}
+    return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None}
 
 def _fitSoon():
     run("op('/project1/fx_engine').module.mediaFit()", delayFrames=12)   # after the new file has loaded (its size is known)
