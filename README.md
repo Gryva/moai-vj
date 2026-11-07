@@ -69,42 +69,34 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 - **Colour** (supported effects): Own, Solid, Ramp or Radial. Colour A/B from 10 swatches or any colour; angle for gradients.
 
 ### SOURCE
-**Layers** (top of SOURCE) shows the stack from front to back: Drawing → Images + videos → 3D models → Background.
-Each row has its own ON/OFF; tap a name to jump to its settings. **⇅** puts Images + videos in front of or behind the
-3D models (flat mode; in 3D OBJECT mode it lives inside the scene). Typical use: a background clip on **Background**,
-a green-screen clip on **Images + videos** with REMOVE SCREEN, and the subject stands on the background with the models
-in between. A card opens only while its source is ON.
+Six sources, each a card with its own **ON/OFF**. A card opens only while its source is ON.
 
-Every source has its own **ON/OFF** switch, and each one only controls itself:
-- **3D models** ON/OFF: shows or hides the statues and animations. With it OFF no model renders at all, but a
-  picture/video or drawing in 3D OBJECT mode still shows.
-- **Static models / 3D animations:** tap to switch.
-- **Loop / Bounce** (under animations): Loop restarts from the beginning. Bounce plays forward then backward, for clips
-  whose end doesn't match the start. Remembered per animation. Plus animation speed and speed-up on the beat.
-- **Scene** (inside Static models; animations always play solid): Solid, Particles, Grid (copies, depth, spacing, bass wave, spin offset).
-- **Object motion** (moves the object itself, never the camera): Spin, Bob, Sway, Float, Still; amount, tilt,
-  angle, spin speed, bass spin boost. When Spin is picked you also get **SPINNING** (on/off), **⟲ REVERSE** and the
-  axis: SPIN ↻ Y (turn), TUMBLE X, ROLL Z. Applies to models, animations, 3D-object pictures/videos and drawings;
-  saved in presets.
-- **Swap animation:** Scale, Spin, Drop or Cut when changing models, and its time.
-- **Camera feed:** phone camera as a source (Off, Cam, Behind, Blend, Mask), Fill / Whole image, mirror.
-- **Clips:** record a short loop from the phone camera; play, bounce, speed, delete.
-- **Images + videos:** own **ON/OFF** switch next to ＋ ADD. **FLAT** fills the screen; **3D OBJECT** puts it in the
-  scene as a card (spins, orbits, follows the camera), independent of the 3D models switch. Tapping a file turns
-  the source on.
-- **Crop:** left, right, top, bottom (up to 45 % each), works in both FLAT and 3D OBJECT; the card keeps the
-  cropped shape. **RESET CROP** clears it. Crop is saved in presets.
-- **Background:** own ON/OFF; tap any file from the library to put it behind everything. Fill or Whole image,
-  brightness, CLEAR. Saved in presets.
-- **Green / blue screen:** key out a video's background (tolerance, softness, spill, edge shrink).
-- **Move it in 3D:** left/right, up/down, size. **Fit** puts it back to full screen.
-- **Drawing:** draw on the phone; it appears as a 3D card in the scene (orbits, spins and follows the camera like a model). Pen and shapes, sizes, colours or gradients. An Object-mode picture/video takes priority.
+**Layers** (top of SOURCE) lists every source that is ON, front to back. **▲ ▼** move a layer in front of or behind
+the others; tap a name to jump to its card. Example, three layers: Text on top, a 3D model in the middle, a picture on
+Images at the back. Or: a background clip on Images, a green-screen clip on Videos with REMOVE SCREEN, and the 3D model
+between them. The order is saved in presets. Images or videos in **3D OBJECT** mode live inside the 3D scene, so they
+move with the 3D models layer. **Text** is always on top (it is drawn after the effects so it stays readable).
 
-### TEXT
-Type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave, scroll,
-tile, type, word per beat), modes (overlay, mask, cutout, invert, outline, glitch, refract), font, size, glow, speed,
-beat reaction, colour (solid, ramp, radial). **TEXT ON/OFF**; **Pin** keeps text when presets change. Recent texts
-are one tap away. Text is saved with a preset when you press **Update**.
+- **3D models:** shows or hides the statues and animations.
+  - Static models / 3D animations: tap to switch. **Scene** (Solid, Particles, Grid) sits under Static models;
+    animations always play solid.
+  - Loop / Bounce (under animations), animation speed, speed-up on the beat. Remembered per animation.
+  - **Object motion** (moves the object, never the camera): Spin, Bob, Sway, Float, Still; amount, tilt, angle, spin
+    speed, bass boost. With Spin: **SPINNING** on/off, **⟲ REVERSE**, axis Y / X / Z. Applies to models, animations,
+    3D-object pictures/videos and drawings.
+  - Swap animation: Scale, Spin, Drop or Cut when changing models, and its time.
+- **Phone camera:** NORMAL, BLEND or MASK, Fill / Whole image, mirror. **Clips:** record a short loop; play, bounce,
+  speed, delete (a playing clip is the camera layer).
+- **Images** (pictures) and **Videos** (videos and GIFs): two separate players, so both can show at once. Each has
+  ＋ ADD, **FLAT** (fills the screen) or **3D OBJECT** (a card in the scene), **Crop** (left/right/top/bottom, up to
+  45 %), **Green / blue screen** (tolerance, softness, spill, edge shrink) and **Move it in 3D** (left/right, up/down,
+  size, Fit). All saved in presets. Old presets with a video in them load it on the Videos layer.
+- **Draw:** draw on the phone; pen and shapes, sizes, colours or gradients. It becomes a 3D card in the scene
+  (unless an Images 3D object is using the card).
+- **Text:** type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave,
+  scroll, tile, type, word per beat), modes (overlay, mask, cutout, invert, outline, glitch, refract), font, size,
+  glow, speed, beat reaction, colour (solid, ramp, radial). **Pin** keeps text when presets change. Recent texts are
+  one tap away. Text is saved with a preset when you press **Update**.
 
 ### VIEW
 Camera only (how you look at the scene; object movement lives in SOURCE → Object motion): saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan, handheld shake.

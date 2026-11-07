@@ -112,7 +112,10 @@ def analyze(C, dt):
     return A['raw']
 
 def _ease(cur, tgt, tc, dt):
-    return cur + (tgt - cur) * (1.0 - math.exp(-dt / max(1e-3, tc)))
+    if not math.isfinite(cur): cur = tgt                               # self-heal: one bad value must never stick
+    dt = min(0.5, max(0.0, dt if math.isfinite(dt) else 0.0))           # clock jumps (reload, timeline) can't overshoot
+    v = cur + (tgt - cur) * (1.0 - math.exp(-dt / max(1e-3, tc)))
+    return tgt if abs(v - tgt) < 1e-6 else v                            # snap: tiny leftovers (1e-323) read as float-max in TD pars
 
 def audioUpdate(C, dt, T):
     raw = analyze(C, dt)
@@ -188,19 +191,21 @@ def motionOffsets(C, T, react=1.0):
     if m == 'float': return (math.sin(T * 0.21) * 40.0 * a, math.sin(T * 0.29) * 6.0 * a, math.sin(T * 0.37) * 8.0 * a, math.sin(T * 0.5) * 0.3 * a)
     return (0.0, 0.0, 0.0, 0.0)
 
-def mediaActive(C, mode=None):
-    """Images + videos are on (own ON/OFF switch, independent of 3D and the phone camera)."""
-    on = bool(C.par.Media.eval()) and bool(C.par.Mediaon.eval())
-    return on and (mode is None or C.par.Mediamode.eval() == mode)
+def mediaActive(C, mode=None, v=False):
+    """Images (v=False) or Videos (v=True): each has its own ON/OFF switch, independent of 3D and the phone camera."""
+    pre = 'Vmedia' if v else 'Media'
+    on = bool(C.par[pre].eval()) and bool(C.par[pre + 'on'].eval())
+    return on and (mode is None or C.par[pre + 'mode'].eval() == mode)
 
-def cropUpdate(C):
+def cropUpdate(C, v=False):
     """Crop the picture / video (both flat and 3D card): the shader cuts, the output keeps the cropped shape."""
-    k, mf = op('/project1/media_key'), op('/project1/mediafile')
+    k, mf = (op('/project1/vid_key'), op('/project1/vidfile')) if v else (op('/project1/media_key'), op('/project1/mediafile'))
     if k is None or mf is None: return
-    l, r, t, b = [max(0.0, min(0.45, float(C.par[n].eval()))) for n in ('Cropl', 'Cropr', 'Cropt', 'Cropb')]
+    pre = 'Vcrop' if v else 'Crop'
+    l, r, t, b = [max(0.0, min(0.45, float(C.par[pre + n].eval()))) for n in ('l', 'r', 't', 'b')]
     sig = (l, r, t, b, mf.width, mf.height)
-    if sig == S.get('cropsig'): return
-    S['cropsig'] = sig
+    if sig == S.get('cropsig' + str(v)): return
+    S['cropsig' + str(v)] = sig
     k.par.vec2valuex, k.par.vec2valuey, k.par.vec2valuez, k.par.vec2valuew = l, r, t, b
     if l + r + t + b < 1e-4:
         if k.par.outputresolution.eval() != 'useinput': k.par.outputresolution = 'useinput'
@@ -208,11 +213,18 @@ def cropUpdate(C):
         k.par.outputresolution = 'custom'
         k.par.resolutionw = max(8, int(mf.width * (1.0 - l - r))); k.par.resolutionh = max(8, int(mf.height * (1.0 - t - b)))
 
+def _cardShape(geo, tex):
+    w, h = tex.width, tex.height
+    asp = (w / h) if h else 1.0; card = geo.op('card')
+    sx, sy = (2.0 * asp, 2.0) if asp <= 1.6 else (3.2, 3.2 / asp)
+    if abs(card.par.sizex.eval() - sx) > 1e-3 or abs(card.par.sizey.eval() - sy) > 1e-3:
+        card.par.sizex = sx; card.par.sizey = sy
+
 def objUpdate(C):
-    """Picture / video in OBJECT mode, or the drawing: a card in the 3D scene, shown alongside (not instead of) the models."""
-    cropUpdate(C)
+    """Images / videos in 3D OBJECT mode, or the drawing: cards in the 3D scene, shown alongside (not instead of) the models."""
+    cropUpdate(C); cropUpdate(C, True)
     media = mediaActive(C, 'object')
-    drawing = bool(C.par.Drawon.eval()) and not media              # one card: a 3D picture wins over the drawing
+    drawing = bool(C.par.Drawon.eval()) and not media              # the images card doubles as the drawing card
     obj = media or drawing
     S['drawobj'] = drawing
     ig = op('/project1/img_geo')
@@ -221,12 +233,11 @@ def objUpdate(C):
     if ct is not None and int(ct.par.index.eval()) != (1 if drawing else 0): ct.par.index = 1 if drawing else 0
     if obj != S.get('obj'):
         S['obj'] = obj; ig.render = obj
-    if obj:                                                     # keep the card the picture's (cropped) shape
-        mf = op('/project1/phonedraw') if drawing else op('/project1/media_key'); w, h = mf.width, mf.height
-        asp = (w / h) if h else 1.0; card = ig.op('card')
-        sx, sy = (2.0 * asp, 2.0) if asp <= 1.6 else (3.2, 3.2 / asp)
-        if abs(card.par.sizex.eval() - sx) > 1e-3 or abs(card.par.sizey.eval() - sy) > 1e-3:
-            card.par.sizex = sx; card.par.sizey = sy
+    if obj: _cardShape(ig, op('/project1/phonedraw') if drawing else op('/project1/media_key'))
+    vg = op('/project1/vid_geo'); vobj = mediaActive(C, 'object', True)
+    if vg is not None:
+        if vobj != S.get('vobj'): S['vobj'] = vobj; vg.render = vobj
+        if vobj: _cardShape(vg, op('/project1/vid_key'))
 
 def renderGeo(C):
     """What the 3D render draws: the models only if 3D is ON, plus the picture / drawing card if that's on."""
@@ -237,6 +248,7 @@ def renderGeo(C):
         if g is not None: parts.append(g.path)
         else: parts.append('/project1/moai_particles' if C.par.Scene.eval() == 'particles' else '/project1/moai_geo')
     if S.get('obj'): parts.append('/project1/img_geo')
+    if S.get('vobj'): parts.append('/project1/vid_geo')
     geo = ' '.join(parts)
     r = op('/project1/render1')
     if r.par.geometry.eval() != geo: r.par.geometry = geo
@@ -353,7 +365,8 @@ def mediaFit():
     """Frame the picture / video so it fills the screen as if it were played flat.
     Nothing moves until you touch the camera, then it behaves like an object in the 3D scene."""
     C = op('/project1/CONTROLS')
-    mf = op('/project1/mediafile'); w, h = mf.width, mf.height
+    mf = op('/project1/vid_key') if (mediaActive(C, 'object', True) and not mediaActive(C, 'object')) else op('/project1/media_key')
+    w, h = mf.width, mf.height
     asp = (w / h) if h else 16 / 9.0
     sx, sy = (2.0 * asp, 2.0) if asp <= 1.6 else (3.2, 3.2 / asp)
     ren = op('/project1/render1'); ra = ren.width / float(ren.height) if ren.height else 16 / 9.0
@@ -361,7 +374,7 @@ def mediaFit():
     dist = max((sx / 2.0) / t, (sy / 2.0) * ra / t)                # whole picture visible, centred
     for k, v in (('Distance', round(dist, 4)), ('Orbit', 0.0), ('Elevation', 0.0), ('Height', 0.0), ('Pan', 0.0), ('Roll', 0.0),
                  ('Orbitspeed', 0.0), ('Orbitsway', 0.0), ('Elevsway', 0.0), ('Distsway', 0.0), ('Rollsway', 0.0), ('Shake', 0.0),
-                 ('Audiocam', 0.0), ('Angle', 0.0), ('Tilt', 0.0), ('Motion', 'still'), ('Objx', 0.0), ('Objy', 0.0), ('Objscale', 1.0)):
+                 ('Audiocam', 0.0), ('Angle', 0.0), ('Tilt', 0.0), ('Motion', 'still'), ('Objx', 0.0), ('Objy', 0.0), ('Objscale', 1.0), ('Vobjx', 0.0), ('Vobjy', 0.0), ('Vobjscale', 1.0)):
         try: C.par[k] = v
         except Exception: pass
     S['angle'] = 0.0
@@ -916,53 +929,71 @@ def snapshot():
 EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
+def _keyDict(C, v=False):
+    out = {}
+    for k in KEYPARS:
+        n = ('V' + k[0].lower() + k[1:]) if v else k              # Keyon -> Vkeyon, Objx -> Vobjx
+        out[k] = bool(C.par[n].eval()) if k == 'Keyon' else C.par[n].eval() if k == 'Keycolor' else round(float(C.par[n].eval()), 4)
+    return out
+
 def srcData():
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
     return {'camsrc': C.par.Camsrc.eval(), 'cammix': round(float(C.par.Cammix.eval()), 3), 'camfit': C.par.Camfit.eval(),
             'media': C.par.Media.eval(), 'mediamode': C.par.Mediamode.eval(), 'mediaon': bool(C.par.Mediaon.eval()),
             'crop': [round(float(C.par[n].eval()), 4) for n in ('Cropl', 'Cropr', 'Cropt', 'Cropb')],
-            'bg': {'file': C.par.Bgmedia.eval(), 'on': bool(C.par.Bgon.eval()), 'fit': C.par.Bgfit.eval(), 'dim': round(float(C.par.Bgdim.eval()), 3)},
-            'order': C.par.Mediaorder.eval(),
+            'vmedia': C.par.Vmedia.eval(), 'vmediamode': C.par.Vmediamode.eval(), 'vmediaon': bool(C.par.Vmediaon.eval()),
+            'vcrop': [round(float(C.par[n].eval()), 4) for n in ('Vcropl', 'Vcropr', 'Vcropt', 'Vcropb')],
+            'vkey': _keyDict(C, True),
+            'layers': layerOrder(C),
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
             'draw': bool(C.par.Drawon.eval()), 'drawmix': round(float(C.par.Drawmix.eval()), 3),
-            'key': {k: (bool(C.par[k].eval()) if k == 'Keyon' else C.par[k].eval() if k == 'Keycolor' else round(float(C.par[k].eval()), 4)) for k in KEYPARS}}
+            'key': _keyDict(C)}
 
 KEYPARS = ['Keyon', 'Keycolor', 'Keytol', 'Keysoft', 'Keyspill', 'Keyshrink', 'Objx', 'Objy', 'Objscale']
 
 def drawPath(slot): return '%s/td/drawings/p%d.png' % (project.folder, int(slot))
 
+def _setKey(C, kd, v=False):
+    for k in KEYPARS:
+        n = ('V' + k[0].lower() + k[1:]) if v else k
+        if k in kd:
+            try: C.par[n] = kd[k]
+            except Exception: pass
+        elif k in ('Keyon', 'Objx', 'Objy'): C.par[n] = False if k == 'Keyon' else 0.0
+        elif k == 'Objscale': C.par[n] = 1.0
+
 def applySrc(d, slot=None):
-    """Presets saved before sources existed just show the statue."""
+    """Presets saved before sources existed just show the statue. Presets from before Images / Videos were split:
+    a video in the old single media slot moves to the Videos layer with its green screen, crop and position."""
     import os
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
-    s = d.get('src') or {'camsrc': 'off', 'media': '', 'clip': None, 'draw': False}
-    C.par.Mediamode = s.get('mediamode', 'flat')
-    C.par.Mediaon = bool(s.get('mediaon', bool(s.get('media'))))
-    for n, v in zip(('Cropl', 'Cropr', 'Cropt', 'Cropb'), s.get('crop') or [0, 0, 0, 0]):
-        try: C.par[n] = v
-        except Exception: pass
-    if s.get('media'):
-        if C.par.Media.eval() != s['media'] and not R.mediaPlay(s['media']):
-            storeLog('preset media missing: %s' % s['media']); R.mediaStop()        # deleted file: show nothing, not the old picture
-    elif C.par.Media.eval(): R.mediaStop()
-    b = s.get('bg') or {}
-    C.par.Mediaorder = s.get('order', 'front')
-    C.par.Bgfit = b.get('fit', 'fill'); C.par.Bgdim = b.get('dim', 1.0)
-    if b.get('file'):
-        if C.par.Bgmedia.eval() != b['file'] and not R.bgPlay(b['file']):
-            storeLog('preset background missing: %s' % b['file']); R.bgStop()
-    elif C.par.Bgmedia.eval(): R.bgStop()
-    C.par.Bgon = bool(b.get('on', False)) and bool(C.par.Bgmedia.eval())
+    s = dict(d.get('src') or {'camsrc': 'off', 'media': '', 'clip': None, 'draw': False})
+    if 'vmedia' not in s and s.get('media') and R.isVideo(s['media']):
+        s.update({'vmedia': s['media'], 'vmediamode': s.get('mediamode', 'flat'), 'vmediaon': s.get('mediaon', True),
+                  'vcrop': s.get('crop'), 'vkey': s.get('key') or {}, 'media': '', 'mediaon': False, 'key': {}})
+    for v, pre, cp in ((False, 'Media', 'Crop'), (True, 'Vmedia', 'Vcrop')):
+        k = pre.lower()
+        C.par[pre + 'mode'] = s.get(k + 'mode', 'flat')
+        C.par[pre + 'on'] = bool(s.get(k + 'on', bool(s.get(k))))
+        for n, val in zip(('l', 'r', 't', 'b'), s.get(cp.lower()) or [0, 0, 0, 0]):
+            try: C.par[cp + n] = val
+            except Exception: pass
+        f = s.get(k)
+        if f:
+            if C.par[pre].eval() != f and not R.mediaPlay(f, layer='videos' if v else 'images'):
+                storeLog('preset media missing: %s' % f); R.mediaStop('videos' if v else 'images')   # deleted file: show nothing
+        elif C.par[pre].eval(): R.mediaStop('videos' if v else 'images')
+        _setKey(C, s.get('vkey' if v else 'key') or {}, v)
+    order = s.get('layers')
+    if not order:                                               # older presets: the camera's own BEHIND mode set the order
+        order = list(LAYER_DEFAULT)
+        if s.get('camsrc') == 'behind': order.remove('camera'); order.append('camera')
+    C.par.Layerorder = ','.join(order)
     if s.get('clip') and R.clipPlay(s['clip']): pass
     elif C.par.Clipstate.eval() == 'loop': R.clipLive()
-    C.par.Camsrc = s.get('camsrc', 'off')
+    C.par.Camsrc = 'cam' if s.get('camsrc') == 'behind' else s.get('camsrc', 'off')   # BEHIND is now just the layer order
     if 'cammix' in s: C.par.Cammix = s['cammix']
     if 'camfit' in s: C.par.Camfit = s['camfit']
-    for k in KEYPARS:                                            # green screen + where the picture stands
-        if k in s.get('key', {}):
-            try: C.par[k] = s['key'][k]
-            except Exception: pass
-    if 'key' not in s: C.par.Keyon = False; C.par.Objx = 0.0; C.par.Objy = 0.0; C.par.Objscale = 1.0
     C.par.Drawon = bool(s.get('draw'))
     if 'drawmix' in s: C.par.Drawmix = s['drawmix']
     dp = (DRAW_DIR + '/' + os.path.basename(d['_meta']['draw'])) if (d.get('_meta') or {}).get('draw') else (drawPath(slot) if slot else '')
@@ -1285,48 +1316,54 @@ def activeLabel():
 CAMS = {'alive': 0.0}
 CAMMODES = {'cam': 1, 'behind': 2, 'screen': 3, 'mask': 4}
 
-def bgUpdate(C, g, dt):
-    """Background layer: a picture / video behind everything (the 3D models, the front media, the drawing)."""
-    bf = op('/project1/bgfile')
-    on = bool(C.par.Bgon.eval()) and bool(C.par.Bgmedia.eval()) and bf is not None and bool(bf.par.file.eval())
-    CAMS['bg'] = _ease(CAMS.get('bg', 0.0), float(C.par.Bgdim.eval()) if on else 0.0, 0.25, dt)
-    if bf is not None:
-        play = CAMS['bg'] > 0.002
-        if bool(bf.par.play.eval()) != play: bf.par.play = play
-    p = g.par
-    p.vec5valuex = CAMS['bg']; p.vec5valuey = 1.0 if C.par.Bgfit.eval() == 'fit' else 0.0
-    p.vec5valuez = 1.0 if C.par.Mediaorder.eval() == 'behind' else 0.0
+LAYER_IDS = {'model': 1, 'camera': 2, 'images': 3, 'videos': 4, 'draw': 5}
+LAYER_DEFAULT = ['draw', 'images', 'videos', 'camera', 'model']          # front -> back
+
+def layerOrder(C=None):
+    """Front-to-back order of the layers (the phone's LAYERS list). Unknown names are dropped, missing ones added."""
+    C = C or op('/project1/CONTROLS')
+    seen = []
+    for k in str(C.par.Layerorder.eval()).split(','):
+        k = k.strip()
+        if k in LAYER_IDS and k not in seen: seen.append(k)
+    for k in LAYER_DEFAULT:
+        if k not in seen: seen.insert(min(len(seen), LAYER_DEFAULT.index(k)), k)
+    return seen
 
 def camfeedUpdate(C, dt, T):
     import time as _t
     g = op('/project1/fx_src')
     if g is None: return
     mode = C.par.Camsrc.eval()
-    CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if (C.par.Statue.eval() or S.get('obj')) else 0.0, 0.25, dt)   # 3D layer fades when nothing 3D is on
-    if mode not in CAMMODES and mediaActive(C, 'flat'): mode = 'cam'          # a flat picture fills the screen on its own
+    CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if (C.par.Statue.eval() or S.get('obj') or S.get('vobj')) else 0.0, 0.25, dt)
     flat = C.par.Drawon.eval() and not S.get('drawobj')            # shown as a 3D card instead: no flat overlay
     CAMS['draw'] = _ease(CAMS.get('draw', 0.0), float(C.par.Drawmix.eval()) if flat else 0.0, 0.25, dt)
-    D = op('/project1/remote_cb').module.DRAWF
-    if D['new']: op('/project1/phonedraw').cook(force=True)
-    g.par.vec4valuex = CAMS['draw']
-    bgUpdate(C, g, dt)
-    # never bypassed: the render now has a see-through background, and this pass makes the picture solid again
     R = op('/project1/remote_cb').module; F = R.CAMF
-    media = mediaActive(C, 'flat')
-    sel = op('/project1/camsel')
-    if sel is not None and int(sel.par.index.eval()) != (1 if media else 0): sel.par.index = 1 if media else 0
+    D = R.DRAWF
+    if D['new']: op('/project1/phonedraw').cook(force=True)
     if C.par.Clipstate.eval() == 'loop': R.clipFrame()          # recorded clip plays as the camera
-    fresh = media or (F['img'] is not None and (_t.perf_counter() - F['t']) < 1.5)   # phone stopped -> fade out, never freeze
-    CAMS['alive'] = _ease(CAMS['alive'], 1.0 if fresh else 0.0, 0.2 if fresh else 0.7, dt)
+    fresh = F['img'] is not None and (_t.perf_counter() - F['t']) < 1.5   # phone stopped -> fade out, never freeze
+    CAMS['alive'] = _ease(CAMS.get('alive', 0.0), 1.0 if fresh else 0.0, 0.2 if fresh else 0.7, dt)
     if F['new']: op('/project1/phonecam').cook(force=True)
+    CAMS['img'] = _ease(CAMS.get('img', 0.0), 1.0 if mediaActive(C, 'flat') else 0.0, 0.2, dt)
+    CAMS['vid'] = _ease(CAMS.get('vid', 0.0), 1.0 if mediaActive(C, 'flat', True) else 0.0, 0.2, dt)
+    vf = op('/project1/vidfile')
+    if vf is not None:
+        play = mediaActive(C, None, True)
+        if bool(vf.par.play.eval()) != play: vf.par.play = play
     if g.bypass: g.bypass = False
     p = g.par; o = op('/project1/AUDIO/OUT')
     p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
     p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
-    own = C.par.Camsrc.eval() not in CAMMODES                       # a flat picture on its own: always full strength (Cammix is the camera's)
-    p.vec2valuex = (1.0 if own else float(C.par.Cammix.eval())) * CAMS['alive'] if mode in CAMMODES else 1.0   # nothing running -> statue shows
+    p.vec2valuex = 1.0
     p.vec3valuex = CAMMODES.get(mode, 0); p.vec3valuey = (1.0 if C.par.Cammirror.eval() else 0.0) + (2.0 if C.par.Camfit.eval() == 'fit' else 0.0); p.vec3valuez = CAMS['alive']
     p.vec3valuew = CAMS['stat']
+    p.vec4valuex = CAMS['draw']
+    ids = [LAYER_IDS[k] for k in reversed(layerOrder(C))] + [0] * 8      # shader paints back to front
+    p.vec5valuex, p.vec5valuey, p.vec5valuez, p.vec5valuew = ids[0:4]
+    p.vec6valuex, p.vec6valuey, p.vec6valuez, p.vec6valuew = ids[4:8]
+    cam = float(C.par.Cammix.eval()) * CAMS['alive'] if mode in CAMMODES else 0.0
+    p.vec7valuex, p.vec7valuey, p.vec7valuez, p.vec7valuew = CAMS['stat'], cam, CAMS['img'], CAMS['vid']
 
 # ------------------------------------------------------------------ thumbnails (preset pictures + effect tiles)
 THUMB_DIR = project.folder + '/td/thumbs'
@@ -1488,16 +1525,17 @@ def _models(C, dt, T, react, grid):
     ag = _safe('animation', animUpdate, C, dt, react)
     o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, react)
     ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
-    for g in (op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/img_geo'), ag):
+    for g in (op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/img_geo'), op('/project1/vid_geo'), ag):
         if g is None: continue
         spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle']
         base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
         applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
         g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
         if o_ty: g.par.ty = g.par.ty.eval() + o_ty
-        if g.name == 'img_geo':                                  # the picture / video can be moved around the scene
-            g.par.tx = float(C.par.Objx.eval()); g.par.ty = g.par.ty.eval() + float(C.par.Objy.eval())
-            g.par.scale = g.par.scale.eval() * float(C.par.Objscale.eval())
+        if g.name in ('img_geo', 'vid_geo'):                     # the picture / video can be moved around the scene
+            q = 'Vobj' if g.name == 'vid_geo' else 'Obj'
+            g.par.tx = float(C.par[q + 'x'].eval()); g.par.ty = g.par.ty.eval() + float(C.par[q + 'y'].eval())
+            g.par.scale = g.par.scale.eval() * float(C.par[q + 'scale'].eval())
     if grid:
         op('/project1/moai_geo/grid_inst').cook(force=True)
 

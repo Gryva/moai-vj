@@ -3,7 +3,9 @@ uniform vec4 uAudio;
 uniform float uMix;
 uniform vec4 uP;
 uniform vec4 uQ;   // x drawing amount
-uniform vec4 uL;   // background layer: x amount (0 = off), y fit (0 fill / 1 fit), z media order (0 in front of 3D, 1 behind 3D)
+uniform vec4 uO;   // layer order, back to front: ids 1 3D models, 2 phone camera, 3 images, 4 videos, 5 drawing (0 = empty)
+uniform vec4 uO2;  // order slots 5..8
+uniform vec4 uA;   // amounts: x 3D models, y camera, z images, w videos
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -16,55 +18,41 @@ vec2 PX(){ return uTD2DInfos[0].res.xy; }
 vec2 RES(){ return uTD2DInfos[0].res.zw; }
 
 
-// PHONE CAMERA SOURCE  input 0 = 3D render, input 1 = phone camera (any aspect, cover-fit)
-// uP.x mode 1 cam only, 2 cam behind statue, 3 blend (screen), 4 statue seen through camera
-// uP.y mirror (selfie cam)  uP.z feed alive 0..1 (fades out if the phone stops)  uMix amount
-// uP.y = mirror (+1) + fit (+2): FILL crops the camera to the screen, FIT shows all of it with black bars
-vec4 cam(vec2 uv){                       // .a = keyed alpha (green / blue screen removed); 1 elsewhere
-  vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[1].res.zw;
+// LAYERED SOURCE  inputs: 0 3D render (premultiplied), 1 phone camera / clip, 2 drawing, 3 images (keyed, straight alpha), 4 videos
+// uP.x camera blend: 1/2 normal, 3 blend (screen), 4 mask   uP.y mirror (+1, camera only) + whole image (+2)
+vec4 fitTex(int i, vec2 uv, bool mir){       // .rgb colour, .a = alpha (keyed alpha x inside the picture)
+  vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[i].res.zw;
   float a0 = r0.x / r0.y, a1 = r1.x / r1.y;
-  bool mir = mod(uP.y, 2.0) > 0.5, fit = uP.y > 1.5;
+  bool fit = uP.y > 1.5;
   vec2 q = uv - 0.5;
   if (fit) { if (a1 > a0) q.y *= a1 / a0; else q.x *= a0 / a1; }
   else     { if (a1 > a0) q.x *= a0 / a1; else q.y *= a1 / a0; }
   if (mir) q.x = -q.x;
   vec2 p = q + 0.5;
   float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
-  vec4 t = texture(sTD2DInputs[1], clamp(p, 0.0, 1.0));
-  return vec4(t.rgb * clamp(uP.z, 0.0, 1.0) * inside, inside > 0.5 ? t.a : 1.0);
+  vec4 t = i == 1 ? texture(sTD2DInputs[1], clamp(p, 0.0, 1.0)) : i == 3 ? texture(sTD2DInputs[3], clamp(p, 0.0, 1.0)) : texture(sTD2DInputs[4], clamp(p, 0.0, 1.0));
+  return vec4(t.rgb, (i == 1 ? 1.0 : t.a) * inside);
 }
-// LAYERS (back to front): background file (input 3) -> [media behind 3D] -> 3D models -> [media in front] -> drawing
-vec3 bgl(vec2 uv){
-  if (uL.x < 0.002) return vec3(0.0);
-  vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[3].res.zw;
-  float a0 = r0.x / r0.y, a1 = r1.x / r1.y;
-  vec2 q = uv - 0.5;
-  if (uL.y > 0.5) { if (a1 > a0) q.y *= a1 / a0; else q.x *= a0 / a1; }
-  else            { if (a1 > a0) q.x *= a0 / a1; else q.y *= a1 / a0; }
-  vec2 p = q + 0.5;
-  float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
-  return texture(sTD2DInputs[3], clamp(p, 0.0, 1.0)).rgb * inside * uL.x;
+vec3 layer(int id, vec2 uv, vec3 o){
+  if (id == 1) { vec4 r = texture(sTD2DInputs[0], uv); float w = clamp(uA.x, 0.0, 1.0); return o * (1.0 - clamp(r.a, 0.0, 1.0) * w) + r.rgb * w; }
+  if (id == 2) {
+    if (uA.y < 0.002) return o;
+    vec4 c = fitTex(1, uv, mod(uP.y, 2.0) > 0.5); float k = clamp(uA.y, 0.0, 1.0);
+    int m = int(floor(uP.x + 0.5));
+    if (m == 3) return 1.0 - (1.0 - o) * (1.0 - c.rgb * c.a * 0.85 * k);
+    if (m == 4) return mix(o, o * smoothstep(0.08, 0.65, luma(c.rgb)) * 1.6 + c.rgb * 0.08, k * c.a);
+    return mix(o, c.rgb, c.a * k);
+  }
+  if (id == 3 || id == 4) {
+    float k = clamp(id == 3 ? uA.z : uA.w, 0.0, 1.0); if (k < 0.002) return o;
+    vec4 c = fitTex(id, uv, false); return mix(o, c.rgb, c.a * k);
+  }
+  if (id == 5) { vec3 d = clamp(texture(sTD2DInputs[2], uv).rgb * uQ.x, 0.0, 1.0); return 1.0 - (1.0 - o) * (1.0 - d); }
+  return o;
 }
-// uP.w statue amount (0 = statue switched off: effects run on the camera / clip only)
 void main(){
-  vec4 a = uAudio; vec2 uv = vUV.st;
-  vec4 rr = texture(sTD2DInputs[0], uv); float sw = clamp(uP.w, 0.0, 1.0);
-  vec3 r = rr.rgb * sw; float ra = clamp(rr.a, 0.0, 1.0) * sw;   // render is premultiplied: alpha = where the models are
-  vec3 bg = bgl(uv);
-  vec3 base = bg * (1.0 - ra) + r;                           // 3D models over the background
-  vec4 ck = cam(uv);
-  vec3 c = ck.rgb * ck.a;                                    // keyed-out pixels are empty
-  int m = int(floor(uP.x + 0.5));
-  vec3 o;
-  if (m == 0)      o = base;
-  else if (m == 1) o = uL.z > 0.5 ? mix(bg, ck.rgb, ck.a) * (1.0 - ra) + r   // media behind the models
-                                  : mix(base, ck.rgb, ck.a);                   // the cut-out subject in front of the 3D scene
-  else if (m == 2) { float k = smoothstep(0.07, 0.2, luma(r)); o = mix(c * (0.75 + a.x * 0.25), r, k); }
-  else if (m == 3) o = 1.0 - (1.0 - base) * (1.0 - c * 0.85);
-  else             o = base * smoothstep(0.08, 0.65, luma(c)) * 1.6 + c * 0.08;
-  o = mix(base, o, uMix);
-  // phone drawing on top (screen blend), same framing as the screen (the phone pad is 16:9)
-  vec3 d = texture(sTD2DInputs[2], uv).rgb * uQ.x;
-  o = 1.0 - (1.0 - o) * (1.0 - clamp(d, 0.0, 1.0));
+  vec2 uv = vUV.st; vec3 o = vec3(0.0);
+  float ids[8] = float[8](uO.x, uO.y, uO.z, uO.w, uO2.x, uO2.y, uO2.z, uO2.w);
+  for (int i = 0; i < 8; i++) o = layer(int(ids[i] + 0.5), uv, o);
   fragColor = TDOutputSwizzle(vec4(o, 1.0));
 }

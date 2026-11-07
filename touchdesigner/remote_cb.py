@@ -16,7 +16,6 @@ SLIDERS = [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
-    ('Bgdim', 'Background brightness', 0, 1, 0.01, 'bg'),
     ('Cropl', 'Crop left', 0, 0.45, 0.01, 'crop'), ('Cropr', 'Crop right', 0, 0.45, 0.01, 'crop'),
     ('Cropt', 'Crop top', 0, 0.45, 0.01, 'crop'), ('Cropb', 'Crop bottom', 0, 0.45, 0.01, 'crop'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
@@ -73,9 +72,18 @@ SLIDERS = [
     ('Objx', 'Left / right', -3, 3, 0.01, 'obj'),
     ('Objy', 'Up / down', -2, 2, 0.01, 'obj'),
     ('Objscale', 'Size', 0.2, 3, 0.01, 'obj'),
+    ('Vcropl', 'Crop left', 0, 0.45, 0.01, 'vcrop'), ('Vcropr', 'Crop right', 0, 0.45, 0.01, 'vcrop'),
+    ('Vcropt', 'Crop top', 0, 0.45, 0.01, 'vcrop'), ('Vcropb', 'Crop bottom', 0, 0.45, 0.01, 'vcrop'),
+    ('Vkeytol', 'Remove more screen', 0, 1, 0.01, 'vkey'),
+    ('Vkeysoft', 'Edge softness', 0, 1, 0.01, 'vkey'),
+    ('Vkeyspill', 'Remove green / blue tint', 0, 1, 0.01, 'vkey'),
+    ('Vkeyshrink', 'Shrink edges', 0, 4, 0.05, 'vkey'),
+    ('Vobjx', 'Left / right', -3, 3, 0.01, 'vobj'),
+    ('Vobjy', 'Up / down', -2, 2, 0.01, 'vobj'),
+    ('Vobjscale', 'Size', 0.2, 3, 0.01, 'vobj'),
 ]
-TOGGLES = ['Mediaon', 'Bgon', 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
-TEXTMENUS = ['Spinaxis', 'Bgfit', 'Mediaorder', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
+TOGGLES = ['Mediaon', 'Vmediaon', 'Vkeyon', 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
+TEXTMENUS = ['Spinaxis', 'Layerorder', 'Vmediamode', 'Vkeycolor', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -241,7 +249,7 @@ def _mediaThumb(rel, full, kind):
 def mediaMsg():
     """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
     items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/')} for rel, full, kind in _mediaFiles()]
-    return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None, 'bg': _C().par.Bgmedia.eval() or None}
+    return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None, 'vcur': _C().par.Vmedia.eval() or None}
 
 def mediaThumbs(send):
     for rel, full, kind in _mediaFiles()[-80:]:
@@ -251,40 +259,34 @@ def mediaThumbs(send):
 def _fitSoon():
     run("op('/project1/fx_engine').module.mediaFit()", delayFrames=12)   # after the new file has loaded (its size is known)
 
-def mediaPlay(mid, fit=False):
+def isVideo(rel):
+    return os.path.splitext(str(rel))[1].lower() in VID_EXT
+
+def mediaPlay(mid, fit=False, layer=None):
+    """Pictures go to the Images layer, videos (and GIFs) to the Videos layer: two players, so both can show at once."""
     C = _C()
     for rel, full, kind in _mediaFiles():
         if rel == mid:
-            mf = op('/project1/mediafile'); mf.par.file = full; mf.par.play = True
-            C.par.Media = rel; C.par.Mediaon = True                          # picking a clip switches Images + videos on
-            if C.par.Clipstate.eval() == 'loop': C.par.Clipstate = 'off'
-            if C.par.Mediamode.eval() == 'object' and fit: _fitSoon()
+            v = (layer == 'videos') if layer else (kind == 'video')
+            mf = op('/project1/vidfile' if v else '/project1/mediafile'); mf.par.file = full; mf.par.play = True
+            pre = 'Vmedia' if v else 'Media'
+            C.par[pre] = rel; C.par[pre + 'on'] = True                       # picking a file switches its layer on
+            if v and C.par.Clipstate.eval() == 'loop': pass
+            if C.par[pre + 'mode'].eval() == 'object' and fit: _fitSoon()
             return True
     return False
 
-def bgPlay(mid):
-    """Background layer: any picture / video from the library, shown behind everything."""
-    C = _C()
-    for rel, full, kind in _mediaFiles():
-        if rel == mid:
-            bf = op('/project1/bgfile'); bf.par.file = full; bf.par.play = True
-            C.par.Bgmedia = rel; C.par.Bgon = True
-            return True
-    return False
-
-def bgStop():
-    C = _C(); C.par.Bgmedia = ''; C.par.Bgon = False; op('/project1/bgfile').par.file = ''
-
-def mediaStop():
-    _C().par.Media = ''; op('/project1/mediafile').par.file = ''
+def mediaStop(layer='images'):
+    v = layer == 'videos'
+    _C().par['Vmedia' if v else 'Media'] = ''; op('/project1/vidfile' if v else '/project1/mediafile').par.file = ''
 
 def mediaDel(mid):
     """Only pictures sent from a phone can be deleted from a phone."""
     if not mid.startswith('uploads/') or '..' in mid: return
     full = os.path.normpath(os.path.join(MEDIADIR, mid))
     if os.path.commonpath([os.path.normpath(os.path.join(MEDIADIR, 'uploads')), full]) != os.path.normpath(os.path.join(MEDIADIR, 'uploads')): return
-    if _C().par.Media.eval() == mid: mediaStop()
-    if _C().par.Bgmedia.eval() == mid: bgStop()
+    if _C().par.Media.eval() == mid: mediaStop('images')
+    if _C().par.Vmedia.eval() == mid: mediaStop('videos')
     try: os.remove(full)
     except Exception: pass
 
@@ -362,7 +364,7 @@ def videoPoll(uid):
         run("op('/project1/remote_cb').module.videoPoll(%r)" % uid, delayMilliSeconds=300); return
     VJOBS.pop(uid, None)
     if j['state'] == 'done':
-        C = _C(); C.par.Mediamode = 'object'                         # a new video comes in as a movable object
+        C = _C(); C.par.Vmediamode = 'object'                        # a new video comes in as a movable object
         mediaPlay(j['name'], fit=True)
         _all({'t': 'vdone', 'u': uid, 'id': j['name']}); _allMedia(); _all(clipsMsg()); _publish(state())
     else:
@@ -394,7 +396,6 @@ def mediaChunk(msg):
 
 def clipRec():
     C = _C()
-    if C.par.Media.eval(): mediaStop()
     REC['frames'] = []; REC['times'] = []; C.par.Cliplen = 0
     if C.par.Camsrc.eval() == 'off': C.par.Camsrc = 'cam'
     C.par.Clipstate = 'rec'
@@ -441,7 +442,6 @@ def clipPlay(cid):
     C = _C()
     CLIP.update(id=cid, t0=time.perf_counter(), last=-1)
     C.par.Cliplen = round(c['dur'], 1)
-    if C.par.Media.eval(): mediaStop()
     if C.par.Camsrc.eval() == 'off': C.par.Camsrc = 'cam'
     C.par.Clipstate = 'loop'
     return True
@@ -775,15 +775,14 @@ def handle(msg, reply):
             _all(clipsMsg()); _publish(state())
         elif t == 'media':
             a = msg.get('do')
-            if a == 'play':
-                if msg.get('layer') == 'bg': bgPlay(str(msg.get('id', '')))
-                else: mediaPlay(str(msg.get('id', '')), fit=True)
-            elif a == 'bgstop': bgStop()
+            lay = 'videos' if msg.get('layer') == 'videos' else 'images'
+            pre = 'Vmedia' if lay == 'videos' else 'Media'
+            if a == 'play': mediaPlay(str(msg.get('id', '')), fit=True, layer=lay)
             elif a == 'mode':
-                C.par.Mediamode = 'object' if msg.get('v') == 'object' else 'flat'
-                if C.par.Media.eval(): mediaPlay(C.par.Media.eval(), fit=True)
+                C.par[pre + 'mode'] = 'object' if msg.get('v') == 'object' else 'flat'
+                if C.par[pre].eval(): mediaPlay(C.par[pre].eval(), fit=True, layer=lay)
             elif a == 'fit': E.mediaFit()
-            elif a == 'stop': mediaStop()
+            elif a == 'stop': mediaStop(lay)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
             _allMedia(); _all(clipsMsg()); _publish(state())
         elif t == 'vup':
