@@ -190,9 +190,14 @@ def motionOffsets(C, T, react=1.0):
 
 def objUpdate(C):
     """Image / video as a 3D object: a card in the 3D scene instead of the statue."""
-    obj = C.par.Mediamode.eval() == 'object' and bool(C.par.Media.eval())
+    media = C.par.Mediamode.eval() == 'object' and bool(C.par.Media.eval())
+    drawing = bool(C.par.Drawon.eval()) and not media              # the drawing is a 3D card too (orbit, spin, camera)
+    obj = media or drawing
+    S['drawobj'] = drawing
     ig = op('/project1/img_geo')
     if ig is None: return
+    ct = op('/project1/card_tex')
+    if ct is not None and int(ct.par.index.eval()) != (1 if drawing else 0): ct.par.index = 1 if drawing else 0
     if obj != S.get('obj'):
         S['obj'] = obj
         if obj:
@@ -202,7 +207,7 @@ def objUpdate(C):
             ig.render = False; applyScene(C.par.Scene.eval())
         S['anim'] = '?'                                          # re-check the animated model next
     if obj:                                                     # keep the card the picture's shape
-        mf = op('/project1/mediafile'); w, h = mf.width, mf.height
+        mf = op('/project1/phonedraw') if drawing else op('/project1/mediafile'); w, h = mf.width, mf.height
         asp = (w / h) if h else 1.0; card = ig.op('card')
         sx, sy = (2.0 * asp, 2.0) if asp <= 1.6 else (3.2, 3.2 / asp)
         if abs(card.par.sizex.eval() - sx) > 1e-3 or abs(card.par.sizey.eval() - sy) > 1e-3:
@@ -1243,7 +1248,8 @@ def camfeedUpdate(C, dt, T):
     if g is None: return
     mode = C.par.Camsrc.eval()
     CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if C.par.Statue.eval() else 0.0, 0.25, dt)   # statue on/off fades
-    CAMS['draw'] = _ease(CAMS.get('draw', 0.0), float(C.par.Drawmix.eval()) if C.par.Drawon.eval() else 0.0, 0.25, dt)
+    flat = C.par.Drawon.eval() and not S.get('drawobj')            # shown as a 3D card instead: no flat overlay
+    CAMS['draw'] = _ease(CAMS.get('draw', 0.0), float(C.par.Drawmix.eval()) if flat else 0.0, 0.25, dt)
     D = op('/project1/remote_cb').module.DRAWF
     if D['new']: op('/project1/phonedraw').cook(force=True)
     g.par.vec4valuex = CAMS['draw']

@@ -79,7 +79,7 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 - **Media:** upload images or videos. Flat (fills the screen) or Object (a card in the 3D scene).
 - **Green / blue screen:** key out a video's background (tolerance, softness, spill, edge shrink).
 - **Move it in 3D:** left/right, up/down, size. **Fit** puts it back to full screen.
-- **Drawing:** draw on the phone; it appears on screen (pen and shapes, sizes, colours or gradients).
+- **Drawing:** draw on the phone; it appears as a 3D card in the scene (orbits, spins and follows the camera like a model). Pen and shapes, sizes, colours or gradients. An Object-mode picture/video takes priority.
 
 ### TEXT
 Type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave, scroll,
