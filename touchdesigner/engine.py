@@ -1,13 +1,61 @@
 # MOAI VJ ENGINE  - runs every frame (fx_engine Execute DAT, synced to this file)
-import numpy as np, math, json
+import numpy as np, math, json, os, time, shutil
 
 NAMES = ['CLEAN']   # legacy (single-effect mode is replaced by the layer stack)
 S = {'angle': 0.0, 'low': 0.0, 'mid': 0.0, 'high': 0.0, 'level': 0.0, 'kick': 0.0,
      'scene': None, 'label': None, 'master': 1.0, 'frame': 0, 'layers': None,
      'dirty': True, 'rows': [], 'live': [], 'fades': {}, 'bank': 0, 'bankfade': 0.0}
-PRESETS_FILE = r'D:/Projects/Visuals/td/presets.json'
+PRESETS_FILE = project.folder + '/td/presets.json'          # THE presets (see STORE below) - not the table in the .toe
 BANK_SLOTS = 128
-LOOKS_FILE = r'D:/Projects/Visuals/td/looks.json'
+LOOKS_FILE = project.folder + '/td/looks.json'
+
+# ------------------------------------------------------------------ safe files (used by STORE, set list, colours, FX presets)
+STORE_DIR = project.folder + '/td'
+HIST_DIR = STORE_DIR + '/history'
+DRAW_DIR = STORE_DIR + '/drawings'
+STORE_LOG = STORE_DIR + '/store_log.txt'
+HIST_KEEP = 400                                                # newest restore points kept (+ the first one of every day)
+STORE = {'ok': True, 'err': '', 'saved': '', 'n': 0, 'from': '', 'colt': 0.0}
+
+def _now(): return time.strftime('%Y-%m-%d %H:%M:%S')
+
+def storeLog(msg):
+    print('[store]', msg)
+    try:
+        with open(STORE_LOG, 'a', encoding='utf-8') as f: f.write(_now() + '  ' + str(msg) + '\n')
+    except Exception: pass
+
+def readJson(path):
+    with open(path, 'r', encoding='utf-8') as f: return json.load(f)
+
+def readJsonSafe(path, default=None):
+    """The file, else its .bak, else default - and says so in the log."""
+    for p in (path, path + '.bak'):
+        if not os.path.exists(p): continue
+        try:
+            v = readJson(p)
+            if p != path: storeLog('%s was unreadable - used %s' % (os.path.basename(path), os.path.basename(p)))
+            return v
+        except Exception as e: storeLog('could not read %s: %s' % (p, e))
+    return default
+
+def writeJsonSafe(path, obj, bak=True, indent=None):
+    """Never leaves a half-written file behind. Raises if the data didn't land on disk intact."""
+    txt = json.dumps(obj, indent=indent)                       # ascii-escaped: any reader can open it
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        f.write(txt); f.flush(); os.fsync(f.fileno())
+    if readJson(tmp) != json.loads(txt): raise IOError('read-back check failed for ' + os.path.basename(path))
+    if bak and os.path.exists(path):
+        try: shutil.copyfile(path, path + '.bak')
+        except Exception as e: storeLog('could not keep .bak of %s: %s' % (os.path.basename(path), e))
+    for i in range(6):                                         # a scanner / sync tool can hold the file for a moment
+        try: os.replace(tmp, path); return True
+        except PermissionError:
+            if i == 5: raise
+            time.sleep(0.02)
+
 
 
 # ------------------------------------------------------------------ audio analysis (own FFT)
@@ -427,8 +475,8 @@ def pushUniforms(T):
 # ------------------------------------------------------------------ effect colours (own colour / solid / linear / radial gradient)
 COLFX = ['hologram', 'neon', 'lines', 'halftone', 'ascii', 'thermal', 'palette', 'glow', 'glitch', 'matte', 'strobe', 'kaleido', 'tunnel']
 LCOL_FILE = project.folder + '/td/lcols.json'
-try: LCOL = {k: v for k, v in json.load(open(LCOL_FILE)).items()}   # key -> {'m', 'a', 'b', 'ang'}
-except Exception: LCOL = {}
+LCOL = readJsonSafe(LCOL_FILE, {})                           # key -> {'m', 'a', 'b', 'ang'}
+if not isinstance(LCOL, dict): LCOL = {}
 LCOLF = {}                                                   # key -> glide {'f': from rgb/rgb/ang, 't0', 'dur'}
 def _hex(h, d=(1.0, 1.0, 1.0)):
     try:
@@ -458,8 +506,8 @@ def colSet(k, c, fade=0.0):
     return new
 
 def colSave():
-    try: json.dump(LCOL, open(LCOL_FILE, 'w'))
-    except Exception as e: print('colour save failed', e)
+    try: writeJsonSafe(LCOL_FILE, LCOL); return True
+    except Exception as e: storeLog('colour save failed: %s' % e); return False
 
 def colsApply(d, fade=0.0):
     """A look / preset brings its effect colours; effects it doesn't mention go back to their own colour."""
@@ -536,12 +584,224 @@ def saveLook(n, name=None):
     while t.numRows <= n: t.appendRow(['Look %d' % t.numRows, '{}'])
     t[n, 'name'] = name or t[n, 'name'].val or ('Look %d' % n)
     t[n, 'data'] = json.dumps(lookData())
-    try:
-        json.dump([{'name': t[r, 'name'].val, 'data': json.loads(t[r, 'data'].val)} for r in range(1, t.numRows)],
-                  open(LOOKS_FILE, 'w'), indent=1)
-    except Exception as e: print('looks export failed', e)
+    try: writeJsonSafe(LOOKS_FILE, [{'name': t[r, 'name'].val, 'data': json.loads(t[r, 'data'].val)} for r in range(1, t.numRows)], indent=1)
+    except Exception as e: storeLog('looks export failed: %s' % e)
 
-# ------------------------------------------------------------------ preset bank (64 slots, 4 banks x 16)
+# ------------------------------------------------------------------ STORE: presets live on disk, never only inside the .toe
+# td/presets.json is the one true copy. The PRESETS table is just a fast copy of it, refilled from disk every time
+# the engine starts, so an unsaved / old .toe, a crash, another phone or a cleared browser can't bring back old presets.
+# Every write: temp file -> fsync -> read back + compare -> atomic swap (previous file kept as .bak),
+# then a restore point (presets + set list + FX presets) in td/history/. Failures are shouted, never just printed.
+def _storeStatus():
+    s = ('OK' if STORE['ok'] else 'NOT SAVED: ' + STORE['err'][:80]) + ' | %d presets | saved %s' % (STORE['n'], STORE['saved'] or '-')
+    try:
+        C = op('/project1/CONTROLS')
+        if hasattr(C.par, 'Storestatus') and C.par.Storestatus.eval() != s: C.par.Storestatus = s
+    except Exception: pass
+    return s
+
+def storeInfo():
+    return {'ok': STORE['ok'], 'err': STORE['err'], 'saved': STORE['saved'], 'n': STORE['n']}
+
+def _storeAlert(msg):
+    """Something went wrong with saving: every phone gets a banner that stays until saving works again."""
+    storeLog('ALERT: ' + msg)
+    try:
+        R = op('/project1/remote_cb').module
+        R._all({'t': 'store', 'v': storeInfo(), 'alert': msg})
+    except Exception: pass
+
+def _presetRows():
+    """The PRESETS table as plain data: 128 entries of {'name', 'data'} or None."""
+    t = _bankTable(); out = []
+    for i in range(1, BANK_SLOTS + 1):
+        nm, data = t[i, 0].val, t[i, 1].val
+        if not data: out.append(None); continue
+        try: out.append({'name': nm, 'data': json.loads(data)})
+        except Exception: storeLog('slot %d in the table is damaged - skipped' % i); out.append(None)
+    return out
+
+def _parsePresets(obj):
+    """Reads the current format, a restore point, or the old [[name, json-text], ...] list. Raises on anything odd."""
+    if isinstance(obj, dict) and obj.get('format') == 'moai-restore': obj = obj['presets']
+    if isinstance(obj, dict) and obj.get('format') == 'moai-presets': rows = list(obj.get('slots') or [])
+    elif isinstance(obj, list):
+        rows = []
+        for r in obj:
+            if not r or not r[1]: rows.append(None); continue
+            rows.append({'name': str(r[0]), 'data': json.loads(r[1]) if isinstance(r[1], str) else r[1]})
+    else: raise ValueError('not a preset file')
+    if len(rows) > BANK_SLOTS: rows = rows[:BANK_SLOTS]
+    rows += [None] * (BANK_SLOTS - len(rows))
+    for r in rows:
+        if r is not None and not (isinstance(r, dict) and isinstance(r.get('data'), dict) and 'layers' in r['data']):
+            raise ValueError('a preset entry is damaged')
+    return rows
+
+def _presetDoc(rows, why):
+    return {'format': 'moai-presets', 'version': 2, 'saved': _now(), 'why': why,
+            'count': sum(1 for r in rows if r), 'slots': rows}
+
+def _sameRows(a, b):
+    return [(r['name'], r['data']) if r else None for r in a] == [(r['name'], r['data']) if r else None for r in b]
+
+def _rowsToTable(rows):
+    t = _bankTable()
+    for i in range(1, BANK_SLOTS + 1):
+        r = rows[i - 1]
+        nm, data = (r['name'], json.dumps(r['data'])) if r else ('', '')
+        if t[i, 0].val != nm: t[i, 0] = nm
+        if t[i, 1].val != data: t[i, 1] = data
+
+def _histWrite(why, rows=None):
+    """One restore point: presets + set list + FX presets."""
+    try:
+        rows = _presetRows() if rows is None else rows
+        q = qState()
+        doc = {'format': 'moai-restore', 'version': 2, 'saved': _now(), 'why': why,
+               'presets': _presetDoc(rows, why), 'queue': {'v': list(q['v']), 'pos': q['pos']}, 'fxpresets': list(fxList())}
+        tag = ''.join(c if c.isalnum() else '-' for c in str(why))[:32]
+        name = '%s_%03d_%s.json' % (time.strftime('%Y%m%d_%H%M%S'), int(time.time() * 1000) % 1000, tag)
+        writeJsonSafe(HIST_DIR + '/' + name, doc, bak=False)
+        files = sorted(f for f in os.listdir(HIST_DIR) if f.endswith('.json'))
+        firsts = {}
+        for f in files: firsts.setdefault(f[:8], f)            # first restore point of each day is kept forever
+        keepday = set(firsts.values())
+        for f in files[:-HIST_KEEP]:
+            if f not in keepday:
+                try: os.remove(HIST_DIR + '/' + f)
+                except Exception: pass
+        return name
+    except Exception as e:
+        storeLog('restore point failed (%s): %s' % (why, e)); return None
+
+def storeSave(why='save'):
+    """Writes the presets to disk. True = safely saved. On failure: retried, logged, and every phone is told."""
+    rows = _presetRows(); err = None
+    for attempt in range(3):
+        try: writeJsonSafe(PRESETS_FILE, _presetDoc(rows, why), indent=1); err = None; break
+        except Exception as e: err = e; time.sleep(0.05)
+    if err is not None:
+        STORE.update(ok=False, err=str(err)); _storeStatus()
+        _storeAlert('PRESETS NOT SAVED (%s): %s' % (why, err))
+        return False
+    was = STORE['ok']
+    STORE.update(ok=True, err='', saved=time.strftime('%H:%M:%S'), n=sum(1 for r in rows if r))
+    _histWrite(why, rows); _storeStatus()
+    if not was:
+        storeLog('saving works again')
+        try: op('/project1/remote_cb').module._all({'t': 'store', 'v': storeInfo()})
+        except Exception: pass
+    return True
+
+def _archiveOnly(f):
+    """Restore points that are NOT a step in the timeline: the stale copy a .toe held, or the state just before a restore."""
+    b = os.path.basename(f)
+    return '_project-copy' in b or '_before-restore' in b or '_before-reload' in b
+
+def _diskPresets():
+    """Newest readable copy: presets.json, then the newest restore point (written after every save), then .bak, then older ones."""
+    try: hist = [HIST_DIR + '/' + f for f in sorted(os.listdir(HIST_DIR), reverse=True) if f.endswith('.json')]
+    except Exception: hist = []
+    good = [h for h in hist if not _archiveOnly(h)]             # real states, newest first
+    cands = [PRESETS_FILE] + good[:1] + [PRESETS_FILE + '.bak'] + good[1:] + [h for h in hist if _archiveOnly(h)]
+    for p in cands:
+        if not os.path.exists(p): continue
+        try: return _parsePresets(readJson(p)), p
+        except Exception as e: storeLog('could not read %s: %s' % (os.path.basename(p), e))
+    return None, None
+
+def storeBoot():
+    """Engine start: the disk copy wins over whatever the .toe remembered. Nothing is ever thrown away."""
+    tbl = _presetRows()
+    rows, src = _diskPresets()
+    if rows is None:
+        if any(tbl):
+            storeLog('no readable preset file - writing the %d presets kept in the project to disk' % sum(1 for r in tbl if r))
+            storeSave('rescued from project')
+        else:
+            STORE.update(n=0, saved='-'); storeLog('no presets yet')
+        STORE['from'] = 'project'; _storeStatus(); return
+    if not _sameRows(tbl, rows):
+        if any(tbl): _histWrite('project copy replaced at start', tbl)   # the .toe's version stays restorable
+        _rowsToTable(rows)
+        storeLog('loaded %d presets from %s%s' % (sum(1 for r in rows if r), os.path.basename(src),
+                 ' (the project file held a different, older copy - kept in td/history)' if any(tbl) else ''))
+    else:
+        storeLog('loaded %d presets from %s' % (sum(1 for r in rows if r), os.path.basename(src)))
+    STORE.update(n=sum(1 for r in rows if r), **{'from': src})
+    try:
+        old = readJson(PRESETS_FILE) if src == PRESETS_FILE else None
+        if src != PRESETS_FILE or not (isinstance(old, dict) and old.get('format') == 'moai-presets'):
+            storeSave('restored at start' if src != PRESETS_FILE else 'converted to new format')
+        else:
+            STORE['saved'] = old.get('saved', '')[-8:]
+    except Exception: storeSave('start')
+    q = qState()                                               # set list: drop slots that are empty now
+    keep = [x for x in q['v'] if 1 <= x <= BANK_SLOTS and rows[x - 1]]
+    if keep != q['v']: qSet(keep)
+    _storeStatus()
+
+def _storeNotify():
+    """Presets changed underneath the phones (restore / reload): send them everything again."""
+    try:
+        R = op('/project1/remote_cb').module
+        R._all({'t': 'bank', 'bank': bankList()}); R._all(qMsg()); R._all(R.fxpMsg())
+        R._all({'t': 'store', 'v': storeInfo()}); R._publish(R.state())
+        for i in range(1, BANK_SLOTS + 1): R._all({'t': 'thumb', 's': i, 'img': thumbB64(i)})
+    except Exception as e: storeLog('phone refresh failed: %s' % e)
+
+def storeReload():
+    """Read presets.json again (e.g. after copying one in by hand)."""
+    rows, src = _diskPresets()
+    if rows is None: _storeAlert('No readable preset file found'); return False
+    if not _sameRows(_presetRows(), rows): _histWrite('before reload')
+    _rowsToTable(rows); STORE.update(n=sum(1 for r in rows if r), **{'from': src})
+    storeLog('reloaded %d presets from %s' % (STORE['n'], os.path.basename(src)))
+    _storeStatus(); _storeNotify(); return True
+
+def storeHistory(n=40):
+    try: files = sorted((f for f in os.listdir(HIST_DIR) if f.endswith('.json')), reverse=True)[:n]
+    except Exception: return []
+    out = []
+    for f in files:
+        p = f[:-5].split('_', 3)                              # 20261107_120102_123_save-4
+        when = '%s-%s-%s %s:%s:%s' % (p[0][:4], p[0][4:6], p[0][6:8], p[1][:2], p[1][2:4], p[1][4:6]) if len(p) >= 2 and len(p[0]) == 8 else f
+        out.append({'f': f, 'when': when, 'why': (p[3] if len(p) > 3 else '').replace('-', ' ')})
+    return out
+
+def storeRestore(fname):
+    """Bring back a restore point (the current state becomes a restore point first, so this can be undone too)."""
+    p = HIST_DIR + '/' + os.path.basename(str(fname))
+    try:
+        doc = readJson(p); rows = _parsePresets(doc)
+    except Exception as e:
+        _storeAlert('Restore point unreadable: %s' % e); return False
+    _histWrite('before restore')
+    _rowsToTable(rows)
+    if isinstance(doc, dict) and isinstance(doc.get('queue'), dict):
+        Q['v'] = [int(x) for x in doc['queue'].get('v', []) if 1 <= int(x) <= BANK_SLOTS and rows[int(x) - 1]][:64]
+        Q['pos'] = -1; _qSave()
+    if isinstance(doc, dict) and isinstance(doc.get('fxpresets'), list):
+        FXP['list'] = doc['fxpresets']; _fxSave()
+    ok = storeSave('restored ' + os.path.basename(p)[:15])
+    storeLog('restored %s' % os.path.basename(p)); _storeNotify()
+    return ok
+
+def storeUndo():
+    """One step back: the newest restore point whose presets differ from what is loaded now."""
+    cur = _presetRows()
+    for h in storeHistory(400):
+        if '_project-copy' in h['f']: continue                   # an old .toe copy is never "the previous step"
+        try: rows = _parsePresets(readJson(HIST_DIR + '/' + h['f']))
+        except Exception: continue
+        if not _sameRows(rows, cur): return storeRestore(h['f'])
+    _storeAlert('Nothing to undo'); return False
+
+def storeBackupNow(why='manual backup'):
+    n = _histWrite(why); storeLog('restore point %s' % n); return n
+
+# ------------------------------------------------------------------ preset bank (128 slots)
 def _bankTable():
     t = op('/project1/PRESETS')
     if t.numRows < BANK_SLOTS + 1:
@@ -558,7 +818,14 @@ def snapshot():
     d['obj'] = {k: (bool(C.par[k].eval()) if k == 'Autospin' else C.par[k].eval() if k == 'Motion' else round(float(C.par[k].eval()), 4)) for k in OBJKEYS}
     d['src'] = srcData()
     d['obj']['angle'] = round(S['angle'], 3)
+    d['extra'] = {}
+    for k in EXTRAPARS:                                          # small look settings that used to leak between presets
+        try:
+            v = C.par[k].eval(); d['extra'][k] = v if isinstance(v, (bool, str)) else round(float(v), 4)
+        except Exception: pass
     return d
+
+EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 def srcData():
@@ -580,7 +847,8 @@ def applySrc(d, slot=None):
     s = d.get('src') or {'camsrc': 'off', 'media': '', 'clip': None, 'draw': False}
     C.par.Mediamode = s.get('mediamode', 'flat')
     if s.get('media'):
-        if C.par.Media.eval() != s['media']: R.mediaPlay(s['media'])
+        if C.par.Media.eval() != s['media'] and not R.mediaPlay(s['media']):
+            storeLog('preset media missing: %s' % s['media']); R.mediaStop()        # deleted file: show nothing, not the old picture
     elif C.par.Media.eval(): R.mediaStop()
     if s.get('clip') and R.clipPlay(s['clip']): pass
     elif C.par.Clipstate.eval() == 'loop': R.clipLive()
@@ -594,9 +862,10 @@ def applySrc(d, slot=None):
     if 'key' not in s: C.par.Keyon = False; C.par.Objx = 0.0; C.par.Objy = 0.0; C.par.Objscale = 1.0
     C.par.Drawon = bool(s.get('draw'))
     if 'drawmix' in s: C.par.Drawmix = s['drawmix']
-    if s.get('draw') and slot and os.path.exists(drawPath(slot)):
+    dp = (DRAW_DIR + '/' + os.path.basename(d['_meta']['draw'])) if (d.get('_meta') or {}).get('draw') else (drawPath(slot) if slot else '')
+    if s.get('draw') and dp and os.path.exists(dp):
         import cv2
-        im = cv2.imread(drawPath(slot))
+        im = cv2.imread(dp)
         if im is not None:
             R.DRAWF['img'] = np.ascontiguousarray(cv2.cvtColor(im, cv2.COLOR_BGR2RGBA)[::-1]); R.DRAWF['new'] = True
 
@@ -605,13 +874,13 @@ FXP = {'list': None}
 
 def fxList():
     if FXP['list'] is None:
-        try: FXP['list'] = json.load(open(FXP_FILE))
-        except Exception: FXP['list'] = []
+        v = readJsonSafe(FXP_FILE, [])
+        FXP['list'] = v if isinstance(v, list) else []
     return FXP['list']
 
 def _fxSave():
-    try: json.dump(fxList(), open(FXP_FILE, 'w'))
-    except Exception as e: print('fx presets save failed', e)
+    try: writeJsonSafe(FXP_FILE, fxList()); _histWrite('fx presets'); return True
+    except Exception as e: _storeAlert('FX presets NOT saved: %s' % e); return False
 
 def fxSave(name=None):
     L = fxList(); lay = lookData()['layers']
@@ -662,48 +931,57 @@ def bankList():
     return out
 
 def bankSave(slot, name=None):
+    """Saves what is on screen into a slot. Returns True only once it is safely on disk."""
+    slot = int(slot)
+    if not 1 <= slot <= BANK_SLOTS: return False
     t = _bankTable()
-    t[slot, 0] = name or t[slot, 0].val or ('Preset %d' % slot)
-    t[slot, 1] = json.dumps(snapshot())
-    bankExport()
+    d = snapshot()
+    stamp = time.strftime('%Y%m%d_%H%M%S') + '%03d' % (int(time.time() * 1000) % 1000)
+    meta = {'saved': _now(), 'thumb': 'p%d_%s.jpg' % (slot, stamp)}   # own picture file per save: a restore point keeps its picture
     try:
         R = op('/project1/remote_cb').module; img = R.DRAWF.get('img')
         if op('/project1/CONTROLS').par.Drawon.eval() and img is not None:
-            import cv2, os
-            os.makedirs(os.path.dirname(drawPath(slot)), exist_ok=True)
-            cv2.imwrite(drawPath(slot), cv2.cvtColor(np.ascontiguousarray(img[::-1]), cv2.COLOR_RGBA2BGR))
-    except Exception as er: print('drawing save failed', er)
+            import cv2
+            meta['draw'] = 'p%d_%s.png' % (slot, stamp)
+            os.makedirs(DRAW_DIR, exist_ok=True)
+            cv2.imwrite(DRAW_DIR + '/' + meta['draw'], cv2.cvtColor(np.ascontiguousarray(img[::-1]), cv2.COLOR_RGBA2BGR))
+    except Exception as er: storeLog('drawing save failed (slot %d): %s' % (slot, er)); meta.pop('draw', None)
+    d['_meta'] = meta
+    t[slot, 0] = (name or t[slot, 0].val or ('Preset %d' % slot))[:60]
+    t[slot, 1] = json.dumps(d)
     try: thumbSave(slot)
-    except Exception as e: print('thumb failed', e)
+    except Exception as e: storeLog('thumb failed (slot %d): %s' % (slot, e))
+    return storeSave('save %d' % slot)
 
 def bankClear(slot):
-    t = _bankTable(); t[slot, 0] = ''; t[slot, 1] = ''; bankExport()
-    import os
-    try: os.remove(thumbPath(slot))
-    except Exception: pass
+    slot = int(slot)
+    if not 1 <= slot <= BANK_SLOTS: return False
+    t = _bankTable(); t[slot, 0] = ''; t[slot, 1] = ''        # its picture file stays: older restore points still use it
+    q = qState()
+    if slot in q['v']: qSet([x for x in q['v'] if x != slot])
+    return storeSave('clear %d' % slot)
 
 def bankRename(slot, name):
     t = _bankTable()
-    if t[slot, 1].val: t[slot, 0] = name; bankExport()
+    if t[slot, 1].val: t[slot, 0] = str(name)[:60]; return storeSave('rename %d' % slot)
+    return False
 
-def bankExport():
-    t = _bankTable()
-    try: json.dump([[t[i, 0].val, t[i, 1].val] for i in range(1, BANK_SLOTS + 1)], open(PRESETS_FILE, 'w'))
-    except Exception as e: print('preset export failed', e)
+def bankExport():                                              # old name, kept for anything that still calls it
+    return storeSave('export')
 
-def bankImport():
-    t = _bankTable()
-    try:
-        rows = json.load(open(PRESETS_FILE))
-        for i, (nm, data) in enumerate(rows[:BANK_SLOTS], start=1): t[i, 0] = nm; t[i, 1] = data
-        return True
-    except Exception:
-        return False
+def bankImport():                                              # old name: reload the presets from disk
+    return storeReload()
 
 def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     t = _bankTable()
-    if not t[slot, 1].val: return
-    d = json.loads(t[slot, 1].val); C = op('/project1/CONTROLS')
+    try: slot = int(slot)
+    except Exception: return False
+    if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+    try: d = json.loads(t[slot, 1].val)
+    except Exception as e:
+        storeLog('preset %d is unreadable: %s' % (slot, e)); _storeAlert('Preset %d is damaged - use Undo / a restore point' % slot)
+        return False
+    C = op('/project1/CONTROLS')
     newModel = bool(model and d.get('model') and d['model'] != C.par.Model.eval())
     newScene = bool(d.get('scene') and d['scene'] != C.par.Scene.eval())
     s_ = d.get('src') or {}
@@ -719,6 +997,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam, model, text, cut=True, slot=slot), keeptext=keepText)
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
+    return True
 
 def _bankApply(d, fade, cam, model, text, cut, slot=None):
     C = op('/project1/CONTROLS'); T = absTime.seconds
@@ -742,6 +1021,10 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None):
         try: C.par[k] = v
         except Exception: pass
     if 'angle' in d.get('obj', {}): S['angle'] = float(d['obj']['angle'])
+    ex = d.get('extra') or {}
+    for k in EXTRAPARS:                                          # older presets: back to the default, not the last look's value
+        try: C.par[k] = ex[k] if k in ex else C.par[k].default
+        except Exception: pass
     if cam and d.get('cam'):
         for k, v in d['cam'].items():
             try: C.par[k] = v
@@ -758,7 +1041,8 @@ Q = {'v': None, 'pos': -1}
 def qState():
     if Q['v'] is None:
         try:
-            d = json.load(open(QUEUE_FILE)); Q['v'] = [int(x) for x in d.get('v', [])][:64]; Q['pos'] = int(d.get('pos', -1))
+            d = readJsonSafe(QUEUE_FILE, {}) or {}
+            Q['v'] = [int(x) for x in d.get('v', [])][:64]; Q['pos'] = int(d.get('pos', -1))
         except Exception:
             Q['v'] = []; Q['pos'] = -1
     if not (-1 <= Q['pos'] < len(Q['v'])): Q['pos'] = -1
@@ -768,8 +1052,8 @@ def qMsg():
     q = qState(); return {'t': 'queue', 'v': list(q['v']), 'pos': q['pos']}
 
 def _qSave():
-    try: json.dump({'v': Q['v'], 'pos': Q['pos']}, open(QUEUE_FILE, 'w'))
-    except Exception as e: print('set list save failed', e)
+    try: writeJsonSafe(QUEUE_FILE, {'v': Q['v'], 'pos': Q['pos']}); return True
+    except Exception as e: _storeAlert('Set list NOT saved: %s' % e); return False
 
 def qSet(v):
     q = qState(); t = _bankTable()
@@ -779,8 +1063,10 @@ def qSet(v):
         try: x = int(x)
         except Exception: continue
         if 1 <= x <= BANK_SLOTS and t[x, 1].val: out.append(x)
+    changed = out != q['v']
     q['v'] = out; q['pos'] = out.index(cur) if cur in out else -1
     _qSave(); qPrewarm()
+    if changed: _histWrite('set list')
 
 def qGo(i, fade=0.0):
     q = qState(); n = len(q['v'])
@@ -942,17 +1228,27 @@ def thumbBytes(q=74, norm=False):
     ok, buf = cv2.imencode('.jpg', cv2.cvtColor(img, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, q])
     return buf.tobytes() if ok else b''
 
-def thumbPath(slot): return '%s/p%d.jpg' % (THUMB_DIR, int(slot))
+def _slotMeta(slot):
+    try: return (json.loads(_bankTable()[int(slot), 1].val or '{}').get('_meta') or {})
+    except Exception: return {}
+
+def thumbPath(slot):
+    """Each saved preset names its own picture file, so a picture can never belong to a different preset."""
+    th = _slotMeta(slot).get('thumb')
+    return '%s/%s' % (THUMB_DIR, os.path.basename(th)) if th else '%s/p%d.jpg' % (THUMB_DIR, int(slot))
 
 def thumbSave(slot):
-    import os
     os.makedirs(THUMB_DIR, exist_ok=True)
     b = thumbBytes()
-    if b: open(thumbPath(slot), 'wb').write(b)
+    if b:
+        p = thumbPath(slot); tmp = p + '.tmp'
+        with open(tmp, 'wb') as f: f.write(b)
+        os.replace(tmp, p)
     return b
 
 def thumbB64(slot):
-    import os, base64
+    import base64
+    if not _bankTable()[int(slot), 1].val: return None             # empty slot: no picture, whatever files exist
     p = thumbPath(slot)
     return base64.b64encode(open(p, 'rb').read()).decode('ascii') if os.path.exists(p) else None
 
@@ -979,7 +1275,7 @@ def captureThumbs(presets=True, effects=True):
     import os
     C = op('/project1/CONTROLS'); before = snapshot(); bankBefore = S.get('bank', 0)
     keep = {p: C.par[p].eval() for p in ('Texton', 'Camsrc', 'Blackout', 'Scene', 'Model')}
-    try: json.dump({'look': before, 'keep': keep, 'bank': bankBefore}, open(project.folder + '/td/_before_sweep.json', 'w'))   # survives a reload
+    try: writeJsonSafe(project.folder + '/td/_before_sweep.json', {'look': before, 'keep': keep, 'bank': bankBefore}, bak=False)   # survives a reload
     except Exception: pass
     q = SWEEP['q']
     def prep():
@@ -1003,23 +1299,27 @@ def captureThumbs(presets=True, effects=True):
             k = r['key']
             q.append(((lambda k=k: (clearLayers(), setLayer(k, on=True, amt=1.0))), 10))
             q.append(((lambda k=k: open('%s/%s.jpg' % (FXTHUMB_DIR, k), 'wb').write(thumbBytes(72, norm=True))), 1))
-    def restore():
-        applyLook(before); bankRestoreCam(before)
-        S['bank'] = bankBefore; S['dirty'] = True                 # the sweep walked through every slot: put the on-air slot back
-        for p, v in keep.items():
-            try: C.par[p] = v
-            except Exception: pass
-        print('thumb sweep done')
+    q.append((lambda: _sweepRestore(before, keep, bankBefore), 1))   # (this line was missing: the screen never came back)
+
+def _sweepRestore(before, keep, bank):
+    """After a picture shoot: the exact look from before (source, statue, camera, text), and the on-air slot."""
+    C = op('/project1/CONTROLS')
+    _bankApply(before, 0.0, True, True, True, cut=True, slot=None)
+    for p, v in keep.items():
+        try: C.par[p] = v
+        except Exception: pass
+    S['bank'] = int(bank or 0); S['dirty'] = True
+    try:
+        R = op('/project1/remote_cb').module
+        for i in range(1, BANK_SLOTS + 1):
+            if _bankTable()[i, 1].val: R._all({'t': 'thumb', 's': i, 'img': thumbB64(i)})
+    except Exception: pass
+    storeLog('picture shoot done, screen restored')
 
 def restoreBeforeSweep():
     """Put back the look from before the last picture shoot (if it was interrupted)."""
-    d = json.load(open(project.folder + '/td/_before_sweep.json'))
-    C = op('/project1/CONTROLS'); applyLook(d['look']); bankRestoreCam(d['look'])
-    for p, v in d['keep'].items():
-        try: C.par[p] = v
-        except Exception: pass
-    q.append((restore, 1))
-    q.append(((lambda: (S.__setitem__('bank', int(d.get('bank', 0))), S.__setitem__('dirty', True))), 1))
+    d = readJson(project.folder + '/td/_before_sweep.json')
+    _sweepRestore(d['look'], d.get('keep', {}), d.get('bank', 0))
 
 def bankRestoreCam(d):
     C = op('/project1/CONTROLS')
@@ -1082,7 +1382,8 @@ def onFrameStart(frame):
         op('/project1/moai_geo/grid_inst').cook(force=True)
     applyLayers(T)
     pushUniforms(T)
-    if S.pop('lcolsave', False) and S['frame'] % 1 == 0: colSave()
+    if S.get('lcolsave') and T - STORE['colt'] > 0.5:           # colour drags: at most 2 writes a second
+        S.pop('lcolsave', None); STORE['colt'] = T; colSave()
     camfeedUpdate(C, dt, T)
     sweepUpdate()
     xfadeUpdate(T)
@@ -1134,7 +1435,7 @@ def flashWatch(C, T):
 # ------------------------------------------------------------------ camera
 CAMKEYS = ['Orbit', 'Orbitspeed', 'Orbitsway', 'Elevation', 'Elevsway', 'Distance', 'Distsway',
            'Height', 'Fov', 'Roll', 'Rollsway', 'Swayspeed', 'Shake', 'Audiocam']
-PRESET_FILE = r'D:/Projects/Visuals/3D objects/hoa-hakananaia/cam_presets.json'
+PRESET_FILE = project.folder + '/td/cam_presets.json'          # camera shots F1-F8 (disk wins at start too)
 CS = {'orb': 0.0, 't': 0.0, 'cur': None}
 
 def _pv(pnl, name, default=0.0):
@@ -1300,8 +1601,34 @@ def savePreset(n, name=None):
 def exportPresets():
     t = op('/project1/CAM_PRESETS')
     rows = [{t[0, c].val: t[r, c].val for c in range(t.numCols)} for r in range(1, t.numRows)]
-    try:
-        with open(PRESET_FILE, 'w') as f:
-            json.dump(rows, f, indent=2)
-    except Exception as e:
-        print('could not write presets file:', e)
+    try: writeJsonSafe(PRESET_FILE, rows, indent=2)
+    except Exception as e: _storeAlert('Camera shots NOT saved: %s' % e)
+
+
+def camBoot():
+    """Camera shots (F1-F8) come from disk at start, same rule as the presets."""
+    t = op('/project1/CAM_PRESETS')
+    if t is None: return
+    rows = readJsonSafe(PRESET_FILE, None)
+    if rows is None:                                           # first run: the shots only lived in the .toe - put them on disk
+        if t.numRows > 1:
+            try: writeJsonSafe(PRESET_FILE, [{t[0, c].val: t[r, c].val for c in range(t.numCols)} for r in range(1, t.numRows)], indent=2)
+            except Exception as e: storeLog('camera shots rescue failed: %s' % e)
+        return
+    if not isinstance(rows, list) or not rows or not all(isinstance(r, dict) for r in rows): return
+    head = [t[0, c].val for c in range(t.numCols)] if t.numRows else []
+    for r in rows:
+        for k in r:
+            if k not in head: head.append(k)
+    want = [head] + [[str(r.get(k, '')) for k in head] for r in rows]
+    have = [[t[r, c].val for c in range(t.numCols)] for r in range(t.numRows)]
+    if want != have:
+        t.clear()
+        for row in want: t.appendRow(row)
+        storeLog('camera shots loaded from disk (%d)' % len(rows))
+
+# ------------------------------------------------------------------ start-up: presets come from disk
+try: storeBoot()
+except Exception as _e: storeLog('STORE BOOT FAILED: %r' % (_e,))
+try: camBoot()
+except Exception as _e: storeLog('camera shots boot failed: %r' % (_e,))

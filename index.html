@@ -100,6 +100,9 @@ label.tg{cursor:pointer}
 .h2r{display:flex;align-items:center;gap:10px}
 .sl-tog{font:700 10px var(--mono);letter-spacing:.1em;padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
 .sl-tog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.sbar{display:none;position:fixed;left:0;right:0;top:0;z-index:45;background:#d81e3a;color:#fff;font:700 13px/1.35 var(--sans,system-ui);padding:calc(10px + var(--st,0px)) 16px 10px;box-shadow:0 6px 24px #000a}.sbar.on{display:block}.sbar small{display:block;font-weight:500;opacity:.9;margin-top:2px}
+.sheet{max-height:82vh;overflow-y:auto}.acts .hist{text-align:left;font:600 12px var(--mono)}
+.offlocal{display:block;margin-top:12px;padding:10px 12px;border:1px solid var(--lime);border-radius:8px;color:var(--lime);font-weight:700;text-decoration:none;word-break:break-all}
 .sl-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.sl-hd b{font-size:12px;letter-spacing:.14em;text-transform:uppercase}
 .sl-next{flex:1;min-width:0;font:600 11px var(--mono);color:var(--lime);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
@@ -256,7 +259,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 <main>
   <section class="view" id="v-live">
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
-    <h2><span>Presets</span><span class="h2r"><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
+    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
@@ -370,7 +373,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 <div class="lock" id="lock"><div class="box"><div class="logo" style="font-size:20px">MOAI<i>//</i>VJ</div>
   <h3>Locked</h3><p>Enter the remote password set in TouchDesigner<br>(CONTROLS → Master → Remote password).</p>
   <input type="password" id="lockpw" placeholder="Password" autocomplete="current-password"><button id="lockgo">UNLOCK</button><div class="err" id="lockerr"></div></div></div>
-<div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span></div></div>
+<div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span><a class="offlocal" id="offL" style="display:none"></a></div></div>
+<div class="sbar" id="sbar"></div>
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
@@ -416,7 +420,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07b';
+const BUILD = '2026-11-07c';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -457,6 +461,7 @@ function onMsg(m){
   if (m.t === 'state') {
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, mediacur: S.mediacur, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
+    if (m.local) store.set('local', m.local); if (m.store) storeState(m.store);
     build(); applyPars(m.pars); applyLayers(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
   else if (!S) return;
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
@@ -474,6 +479,10 @@ function onMsg(m){
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
+  else if (m.t === 'saved') savedAck(m);
+  else if (m.t === 'store') storeState(m.v, m.alert);
+  else if (m.t === 'history') { HIST = m.v || []; if ($('#sheet').dataset.mode === 'bk') sheetBackups();
+    if (m.done) toast(m.ok ? ({undo:'Undone ✓', restore:'Restored ✓', reload:'Reloaded ✓', backup:'Restore point made ✓'}[m.done] || 'Done ✓') : 'Could not ' + m.done); }
   else if ((m.t === 'vmiss' || m.t === 'vbusy' || m.t === 'vdone') && VW[m.u]) { const r = VW[m.u]; delete VW[m.u]; r(m); }
 }
 function status(){
@@ -481,8 +490,11 @@ function status(){
   const ok = linkUp && performance.now() - lastM < 3000;
   $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', !ok);
   $('#offT').textContent = !linkUp ? 'Connecting…' : 'Waiting for TouchDesigner…';
-  $('#offS').innerHTML = KEY ? 'Relay ' + BROKERS[bi].url.split('/')[2] + (lastErr ? '<br><small>' + lastErr + '</small>' : '') + '<br>TouchDesigner must be open and online.'
+  $('#offS').innerHTML = KEY ? 'Relay ' + BROKERS[bi].url.split('/')[2] + (lastErr ? '<br><small>' + esc(lastErr) + '</small>' : '') + '<br>TouchDesigner must be open and online.'
                              : 'Phone and computer must be on the same Wi-Fi.';
+  const loc = store.get('local', ''), L = $('#offL');
+  if (loc && location.protocol === 'https:' && !ok) { L.style.display = 'block'; L.href = loc; L.textContent = 'No internet? On the same Wi-Fi as the computer, tap here: ' + loc.split('#')[0]; }
+  else L.style.display = 'none';
 }
 setInterval(status, 500);
 setInterval(() => linkUp && send({t:'ping'}), 10000);               // lets TD know a phone is listening
@@ -1002,6 +1014,37 @@ function sheetQ(i){
   $('#sheet').dataset.qi = i; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 
+/* ---------------- saving: the phone only says "saved" when the computer confirms it is on disk ---------------- */
+const SAVEQ = {}; let HIST = null;
+function bankOp(t, slot, name, what){
+  const n = Math.random().toString(36).slice(2, 9);
+  SAVEQ[n] = {what, timer: setTimeout(() => { delete SAVEQ[n];
+    storeBar('Not confirmed: ' + what, 'The computer did not answer. Check TouchDesigner before you carry on.'); }, 6000)};
+  send({t, v:slot, name, n}); toast(what + ' …');
+}
+function savedAck(m){
+  const q = SAVEQ[m.n]; if (q) { clearTimeout(q.timer); delete SAVEQ[m.n]; }
+  if (m.ok) { if (q) { toast(q.what + ' ✓ on computer'); buzz(10); } } else storeBar('NOT SAVED', 'The computer could not write the preset file. ' + ((m.v && m.v.err) || ''));
+  if (m.v) storeState(m.v);
+}
+function storeBar(title, sub){ const b = $('#sbar'); b.innerHTML = esc(title) + (sub ? '<small>' + esc(sub) + ' · tap to hide</small>' : ''); b.classList.add('on'); buzz([60, 40, 60]); }
+$('#sbar').addEventListener('click', () => $('#sbar').classList.remove('on'));
+function storeState(v, alert){
+  if (!v) return;
+  if (!v.ok) storeBar('PRESETS NOT SAVED', alert || v.err || 'Check the computer.');
+  else if (alert) toast(alert);
+  else if ($('#sbar').textContent.startsWith('PRESETS NOT SAVED')) $('#sbar').classList.remove('on');
+}
+function sheetBackups(){
+  $('#shI').style.display = 'none'; $('#shT').textContent = 'Backups';
+  $('#shP').textContent = 'Every change is kept on the computer as a restore point. Restoring brings back the presets, set list and FX presets from that moment.';
+  $('#shA').innerHTML = `<button class="pri" data-sh="undo">↶ Undo last preset change</button><button data-sh="bkn">Make a restore point now</button>`
+    + (HIST === null ? `<button disabled>Loading…</button>` : HIST.map(h => `<button class="hist" data-sh="rs" data-f="${esc(h.f)}" data-w="${esc(h.when)}">${esc(h.when.slice(5, 16))} · ${esc(h.why || '')}</button>`).join(''))
+    + `<button data-sh="cancel">Close</button>`;
+  $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
+$('#bkBtn').addEventListener('click', () => { HIST = null; sheetBackups(); send({t:'store', do:'history'}); buzz(); });
+
 /* ---------------- preset pads ---------------- */
 function go(slot){
   const p = S.bank[slot - 1]; if (!p) return;
@@ -1016,9 +1059,9 @@ function step(d){
 function saveNew(){
   const slot = S.bank.indexOf(null) + 1; if (!slot) { toast('All preset slots are full'); return; }
   const name = S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Clean';
-  send({t:'banksave', v:slot, name}); S.b = slot;
+  bankOp('banksave', slot, name, 'Saved · ' + name); S.b = slot;
   S.bank[slot - 1] = {name, on: S.layers.filter(l => l.on).map(l => l.k), scene: S.pars.Scene, model: S.pars.Model};
-  renderPads(); toast('Saved · ' + name + ' (hold it to rename)');
+  renderPads();
 }
 function sheet(slot, simple){
   const p = S.bank[slot - 1];
@@ -1034,7 +1077,7 @@ function sheet(slot, simple){
   $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const closeSheet = () => { delete $('#sheet').dataset.qi; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+const closeSheet = () => { delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   const qi = +$('#sheet').dataset.qi;
@@ -1044,10 +1087,13 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'qleft') qMove(qi, -1);
   else if (b.dataset.sh === 'qright') qMove(qi, 1);
   else if (b.dataset.sh === 'qdel') qDel(qi);
-  else if (b.dataset.sh === 'save') { send({t:'banksave', v:slot, name}); toast('Saved ' + slot + ' · ' + name); S.b = slot; }
-  else if (b.dataset.sh === 'rename') { send({t:'bankrename', v:slot, name}); toast('Renamed'); }
+  else if (b.dataset.sh === 'save') { bankOp('banksave', slot, name, 'Saved ' + slot + ' · ' + name); S.b = slot; }
+  else if (b.dataset.sh === 'rename') bankOp('bankrename', slot, name, 'Renamed');
+  else if (b.dataset.sh === 'undo') { if (confirm('Undo the last preset change?')) { send({t:'store', do:'undo'}); toast('Undoing…'); } }
+  else if (b.dataset.sh === 'rs') { if (confirm('Bring back all presets, the set list and FX presets from ' + b.dataset.w + '?\n(What you have now is kept as a restore point.)')) { send({t:'store', do:'restore', f:b.dataset.f}); toast('Restoring…'); } }
+  else if (b.dataset.sh === 'bkn') { send({t:'store', do:'backup'}); }
   else if (b.dataset.sh === 'fxfrom') { send({t:'fxp', do:'from', slot, fade:ui.fade}); toast('Effects copied onto what is on screen'); }
-  else if (b.dataset.sh === 'clear') { send({t:'bankclear', v:slot}); toast('Cleared ' + slot); }
+  else if (b.dataset.sh === 'clear') { if (confirm('Delete preset ' + slot + '? (Backups keep it.)')) bankOp('bankclear', slot, '', 'Deleted ' + slot); }
   closeSheet(); buzz(); });
 
 /* tap / hold on pads + camera chips */

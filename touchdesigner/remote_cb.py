@@ -447,7 +447,7 @@ def state():
     C = _C()
     return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
-            'bank': _E().bankList(), 'b': _E().S.get('bank', 0),
+            'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [{'name': n, 'label': l, 'anim': n.startswith('anim_')} for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
             'sliders': [dict(zip(('p', 'label', 'min', 'max', 'step', 'group'), s)) for s in SLIDERS]}
 
@@ -680,14 +680,23 @@ def handle(msg, reply):
             if c: _all({'t': 'lcols', 'v': {k: c}})
         elif t in ('banksave', 'bankclear', 'bankrename'):
             n = int(msg['v'])
-            if t == 'banksave': E.bankSave(n, msg.get('name') or None)
-            elif t == 'bankclear': E.bankClear(n)
-            else: E.bankRename(n, msg.get('name') or ('Preset %d' % n))
+            if t == 'banksave': ok = E.bankSave(n, msg.get('name') or None)
+            elif t == 'bankclear': ok = E.bankClear(n)
+            else: ok = E.bankRename(n, msg.get('name') or ('Preset %d' % n))
             _all({'t': 'bank', 'bank': E.bankList()})
+            _all(E.qMsg())
             _publish(state())
             if t != 'bankrename':
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}
-                _all(th); _publish(th)
+                _all(th)
+            _all({'t': 'saved', 's': n, 'do': t, 'ok': bool(ok), 'n': msg.get('n'), 'v': E.storeInfo()})   # the phone only says "saved" after this
+        elif t == 'store':
+            a = msg.get('do')
+            if a == 'history': reply({'t': 'history', 'v': E.storeHistory(40)})
+            elif a in ('undo', 'restore', 'reload'):
+                ok = E.storeUndo() if a == 'undo' else E.storeReload() if a == 'reload' else E.storeRestore(str(msg.get('f', '')))
+                reply({'t': 'history', 'v': E.storeHistory(40), 'done': a, 'ok': bool(ok)})
+            elif a == 'backup': E.storeBackupNow(); reply({'t': 'history', 'v': E.storeHistory(40), 'done': 'backup', 'ok': True})
         elif t == 'clip':
             a = msg.get('do')                                    # ('a' is the login token)
             if a == 'rec': clipRec()
@@ -734,6 +743,7 @@ def handle(msg, reply):
         elif t == 'hello':
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())
+            if not E.STORE['ok']: reply({'t': 'store', 'v': E.storeInfo(), 'alert': 'PRESETS NOT SAVED: ' + E.STORE['err']})
             for s_, img_ in E.thumbAll().items(): reply({'t': 'thumb', 's': int(s_), 'img': img_})   # one small message per picture
             reply(clipsMsg())
             reply(mediaMsg())
@@ -745,7 +755,12 @@ def onWebSocketReceiveBinary(dat, client, data):
     drawFrame(bytes(data))                                       # local Wi-Fi: drawings arrive as binary frames
 def onWebSocketReceivePing(dat, client, data): dat.webSocketSendPong(client, data=data)
 def onWebSocketReceivePong(dat, client, data): return
-def phoneLink():
+LOCAL = {'link': '', 't': -1e9}
+
+def localLink():
+    """Backup route: this computer's own address on the Wi-Fi - works with no internet at all."""
+    now = time.perf_counter()
+    if now - LOCAL['t'] < 30 and LOCAL['link']: return LOCAL['link']
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -754,7 +769,14 @@ def phoneLink():
         ip = '127.0.0.1'
     finally:
         s.close()
-    link = 'http://%s:%d' % (ip, int(op('/project1/remote_server').par.port.eval()))
+    LOCAL['link'] = 'http://%s:%d/#k=%s' % (ip, int(op('/project1/remote_server').par.port.eval()), relayKey()); LOCAL['t'] = now
+    try:
+        if hasattr(_C().par, 'Locallink') and _C().par.Locallink.eval() != LOCAL['link']: _C().par.Locallink = LOCAL['link']
+    except Exception: pass
+    return LOCAL['link']
+
+def phoneLink():
+    LOCAL['t'] = -1e9; link = localLink()
     try: _C().par.Phonelink = relayLink()
     except Exception: pass
     return link

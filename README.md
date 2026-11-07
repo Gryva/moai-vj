@@ -18,11 +18,13 @@ This repository contains the **phone page** (`index.html`) and the **TouchDesign
 | Path | What it is |
 |---|---|
 | `index.html` | The whole phone UI: one file, no build step. Served by GitHub Pages at `https://gryva.github.io/moai-vj/`. |
-| `touchdesigner/engine.py` | Main engine. Runs every frame: layer stack, presets (`PRESETS` table), set list, colours, text morph, 3D model animation, keyer, preset dips, thumbnails. |
+| `touchdesigner/engine.py` | Main engine. Runs every frame: layer stack, presets and their safe storage (`STORE`), set list, colours, text morph, 3D model animation, keyer, preset dips, thumbnails. |
 | `touchdesigner/remote_cb.py` | Phone bridge. Builds the state the phone sees, verifies signed messages, handles uploads (images, video), and routes each command to the engine. |
 | `touchdesigner/phonecam_cb.py`, `phonedraw_cb.py` | Callbacks for the phone camera feed and the phone drawing pad. |
 | `touchdesigner/grid_inst.py` | Instancing helper for the grid effect. |
 | `touchdesigner/remote_mqtt_cb.py` | MQTT transport callbacks used by the relay. |
+| `touchdesigner/keys_cb.py` | Keyboard shortcuts (`fx_keys` Keyboard In DAT), including the failsafe show keys. |
+| `touchdesigner/store_pex.py` | Buttons on the `CONTROLS → Safety` page (undo, restore, backup). |
 | `touchdesigner/fx/*.glsl` | GLSL pixel shaders: one per visual effect (`neon`, `hologram`, `ascii`, `thermal`, ...), the source compositor (`src.glsl`), the green/blue screen keyer (`key.glsl`), and the text shader (`text.glsl`). |
 | `thumbs/` | Static preview images used by the phone page. |
 
@@ -32,7 +34,7 @@ This repository contains the **phone page** (`index.html`) and the **TouchDesign
 
 1. **Presets.** A preset is a JSON snapshot of the whole look: layer stack and amounts, scene, grid, text
    (`Textstr`, font, colours, animation), statue/model, camera, source (camera, media, drawing, keyer), and colours.
-   Presets live in the `/project1/PRESETS` table (128 slots). Every save is also written to `td/presets.json`.
+   Presets are stored in `td/presets.json` (128 slots). See [How presets are saved](#how-presets-are-saved).
 2. **Set list.** An ordered list of preset slots (`td/queue.json`). The phone shows it as a track with ◀ ▶ arrows.
    The next preset is pre-loaded in the background so the switch is instant.
 3. **Colours.** Each effect, the text and the drawing have two colours (A, B) and a mode: solid, linear ramp
@@ -46,6 +48,47 @@ This repository contains the **phone page** (`index.html`) and the **TouchDesign
    screen) and moved in 3D.
 7. **Security.** Every phone message is signed with `sha256(relayKey + ':' + password)`. Messages are only accepted
    within a 120-second window, replays are rejected, and wrong passwords are rate-limited.
+
+---
+
+## How presets are saved
+
+A VJ set must never lose its presets, so storage follows four rules:
+
+1. **The disk file is the only truth.** `td/presets.json` holds every preset (effects, amounts, text and its colours,
+   model, camera, source, keyer, effect colours). The `PRESETS` table inside the `.toe` is only a fast copy. Every
+   time the engine starts, it fills the table from disk. An unsaved or older `.toe`, a crash, a different phone or a
+   cleared browser cannot bring back old presets. (Before this rule, the table inside the `.toe` won, which is how
+   edits were lost when TouchDesigner was closed without saving.)
+2. **Writes cannot leave a broken file.** Each save writes a temp file, flushes it to disk, reads it back and checks it,
+   then swaps it in. The previous file stays as `presets.json.bak`. A save takes about 20 ms.
+3. **Every change is a restore point.** After each save, `td/history/` gets a file with the presets, the set list and
+   the FX presets. The newest 400 are kept, plus the first one of every day. If `presets.json` is ever unreadable,
+   the engine loads the newest good restore point, then the `.bak`. If the `.toe` held a different copy at start,
+   that copy is archived in `td/history/` too (named `project-copy-…`), so nothing is thrown away.
+4. **Failures are loud.** If a save fails, it is retried. If it still fails, every phone shows a red
+   *PRESETS NOT SAVED* banner and `CONTROLS → Safety → Presets status` says why. The phone only shows
+   *Saved ✓ on computer* after the computer confirms the file is on disk; with no answer in 6 seconds it warns you.
+
+Each preset also names its own picture and drawing file (`td/thumbs/p<slot>_<time>.jpg`), so a picture can never
+belong to a different preset, and restore points keep their pictures.
+
+The phone stores nothing about presets. It keeps only screen preferences (tab, fade time, set list shown or
+hidden, recent texts).
+
+Log of everything the store does: `td/store_log.txt`.
+
+---
+
+## Failsafes (when the phone or the internet fails)
+
+| Problem | What to do |
+|---|---|
+| **Internet or relay down** | Phone and computer on the same Wi-Fi: open the link in `CONTROLS → Safety → Wi-Fi link`. TouchDesigner serves the same page itself (port 9980), no internet needed. The phone's offline screen shows this link automatically once it has connected once. |
+| **Phone dead or page broken** | Use the keyboard on the computer (TouchDesigner window focused): **PageDown / PageUp** = next / previous preset in the set list, **Shift + 1…9, 0** = preset slot 1…10, **B** = blackout on/off. A wireless presenter clicker (sends PageDown/PageUp, and B for "blank") works as a remote. |
+| **Wrong change / deleted preset** | Phone: *Edit → ↺ Backups → Undo last preset change*, or pick a restore point. Computer: `CONTROLS → Safety → Undo last preset change`. Restoring first saves the current state as a restore point, so a restore can be undone too. |
+| **Need a specific old version** | `CONTROLS → Safety → List restore points` prints a numbered list in the Textport. Set *Restore point #* and press *Restore that point*. Or *Open backups folder*. |
+| **Edited `presets.json` by hand** | `CONTROLS → Safety → Reload presets from disk`. |
 
 ---
 
@@ -78,7 +121,9 @@ operators up by these exact paths, so use them as written.
 | `/project1/fx_engine` | Execute DAT that runs `touchdesigner/engine.py` every frame (`Synced` to the file). |
 | `/project1/remote_cb` | Text DAT (or Module) holding `remote_cb.py`. Used by `op('/project1/remote_cb').module`. |
 | `/project1/remote_server` | Web/WebSocket server DAT that receives phone messages and passes them to `remote_cb`. |
-| `/project1/PRESETS` | Table DAT, 129 rows (row 0 header, rows 1–128 are slots). Holds `name` and preset JSON. |
+| `/project1/PRESETS` | Table DAT, 129 rows (row 0 header, rows 1–128 are slots). A copy of `td/presets.json`, refilled from disk at every start. |
+| `/project1/store_pex` | Parameter Execute DAT on `CONTROLS`, parameters `Store*`, *On Pulse* on, synced to `store_pex.py`. |
+| `/project1/fx_keys`, `/project1/fx_keys_callbacks` | Keyboard In DAT and its callbacks, synced to `keys_cb.py`. |
 | `/project1/FX_STACK` | Table of the effect layers (key, label, on, amount, parameters). |
 | `/project1/LOOKS` | Table of saved looks. |
 | `/project1/fx_text`, `/project1/text_src`, `/project1/text_old` | Text shader and the two text sources used for morphing. |
@@ -96,21 +141,17 @@ Then:
    to *Synced to file* so edits on disk reload automatically.
 2. Put the shaders from `touchdesigner/fx/` into GLSL TOPs (one per effect) or Text DATs, matching the layer keys
    in `FX_STACK`.
-3. Open `/project1/CONTROLS` and set the **Remote** page:
+3. Open `/project1/CONTROLS` and set the **Master** page:
    - `Remotepass`: the password for the phone. Leave it empty for no password (not recommended).
    - `Remotekey`: created automatically the first time the engine runs.
+4. Add a custom page **Safety** on `CONTROLS` with: `Storestatus` (string), `Storeundo`, `Storebackup`,
+   `Storereload`, `Storelist`, `Storerestore`, `Storeopen` (pulses), `Storepick` (integer) and `Locallink` (string).
 
-### 3. Fix the paths for your machine
+### 3. Folders
 
-`engine.py` and `remote_cb.py` have hard-coded folders, for example:
-
-```python
-PRESETS_FILE = r'D:/Projects/Visuals/td/presets.json'
-LOOKS_FILE   = r'D:/Projects/Visuals/td/looks.json'
-THUMB_DIR    = project.folder + '/td/thumbs'
-```
-
-Change `D:/Projects/Visuals` to your project folder before running.
+All data paths are relative to the folder of the `.toe` (`project.folder`): `td/` for presets, set list, colours,
+history and pictures, `media/` for uploads, `web/` for the page TouchDesigner serves on Wi-Fi, and `3D objects/` for
+models. Keep that layout and nothing needs editing.
 
 ### 4. Host the phone page
 
@@ -146,7 +187,7 @@ Change `D:/Projects/Visuals` to your project folder before running.
 Each change to `index.html` needs a new `BUILD` value, or phones will not show the update button:
 
 ```js
-const BUILD = '2026-11-07b';   // change this for every release
+const BUILD = '2026-11-07c';   // change this for every release
 ```
 
 Then commit and push. GitHub Pages can cache for up to 10 minutes; add `?v=<anything>` to the URL to force a refresh.
@@ -158,9 +199,10 @@ Then commit and push. GitHub Pages can cache for up to 10 minutes; add `?v=<anyt
 | Symptom | Likely cause |
 |---|---|
 | Phone shows *offline* | The Pages URL or pairing key is wrong, or the relay is down. Check `RELAY` in `remote_cb.py`. |
-| Preset shows the wrong text or picture | The saved preset is what the phone and screen use. Hold the preset and press *Update* after changing it; the preview picture is only refreshed on save. |
-| Preset highlight does not match the screen | The on-air slot is reported by the engine. Make sure `engine.py` is reloaded in TouchDesigner (the DAT is synced to disk), then reload the phone page. |
-| Missing preview pictures | Pictures are saved as `td/thumbs/p<slot>.jpg`. Presets without a picture file show a blank tile. Call `captureThumbs()` in `engine.py` (from the Textport) to shoot them all again. |
+| Red *PRESETS NOT SAVED* banner | The computer can't write `td/`. Check free disk space and that the folder isn't read-only or locked by a sync tool. Saving resumes on its own and the next save includes everything. |
+| *Not confirmed* warning after saving | The phone got no answer. Check that TouchDesigner is running; the preset may still have saved (check the tile). |
+| Preset shows the wrong text or picture | Hold the preset and press *Update* after changing it. To go back, use *Backups*. |
+| Missing preview pictures | Call `captureThumbs()` in `engine.py` (from the Textport) to shoot them all again; the screen is put back afterwards. |
 | Animated model stutters | Check the GPU load in TouchDesigner's Performance Monitor. Pre-baked frame sequences are faster than live Alembic. |
 | Phone upload stalls | Long videos are sent in chunks. Keep the phone on Wi-Fi and the screen on until the upload finishes. |
 
@@ -172,7 +214,7 @@ Then commit and push. GitHub Pages can cache for up to 10 minutes; add `?v=<anyt
   operator table above.
 - **3D models and animations.** These are third-party downloads with their own licences. Put your own `.fbx`,
   `.abc`, `.usdz` or `.glb` files in `3D objects/` and register them in `anims.json`.
-- **Presets, set list and colour files** (`presets.json`, `queue.json`, `lcols.json`). They are personal data.
+- **Presets, set list, colour files and restore points** (`presets.json`, `queue.json`, `lcols.json`, `history/`). They are personal data.
 - **Backups** (`*_backup_v*.py`, `_backup_*` folders).
 
 ---
