@@ -105,6 +105,8 @@ label.tg{cursor:pointer}
 .lrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 10px;background:#0c0b11}
 .lrow.on{border-color:#3d4a1c}.lrow .lname{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
 .lrow .lname b{font-size:12px;letter-spacing:.12em;text-transform:uppercase}.lrow .lname span{font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow.sel{background:#1d2a0c;border-color:var(--lime);box-shadow:inset 3px 0 0 var(--lime)}.lrow.sel .lname b{color:var(--lime)}.lrow.dim .lname{opacity:.45}
+.card .ch .chev{font-size:12px;color:var(--mute);transition:transform .2s;margin-left:2px}.card.open .ch .chev{transform:rotate(180deg)}.card.shut .ch .chev{transform:none}
 .lrow .tg.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 .larr{flex:0 0 38px;height:34px;border-radius:6px;border:1px solid var(--line);color:var(--ink);font-size:13px}.larr:disabled{opacity:.2}.lrow.pin{border-style:dashed}
 .srcnote{margin:0 2px 8px;font-size:11px;line-height:1.35;color:var(--mute)}
@@ -278,8 +280,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-layers">
-    <h2><span>Layer</span><em>effects go on the chosen layer</em></h2>
-    <div class="tgts" id="fxtg"></div><p class="srcnote" id="fxtgnote" style="margin-top:6px"></p>
+    <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b><em>tap = edit its effects</em></div>
+      <div class="cb"><div class="lstack" id="fxtg"></div><p class="srcnote" id="fxtgnote" style="margin:8px 2px 0"></p></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
     <div class="onair" id="onair"></div>
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
@@ -468,7 +470,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07m';
+const BUILD = '2026-11-07n';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -654,7 +656,7 @@ function layerMove(k, dir){                  // dir -1 = towards the front (up),
   const o = layerOrder(), vis = o.filter(x => layerInfo(x).on), i = vis.indexOf(k), j = i + dir;
   if (i < 0 || j < 0 || j >= vis.length) return;
   const a = o.indexOf(k), b = o.indexOf(vis[j]); o[a] = vis[j]; o[b] = k;
-  S.pars.Layerorder = o.join(','); send({t:'set', p:'Layerorder', v:S.pars.Layerorder}); layerStack();
+  S.pars.Layerorder = o.join(','); send({t:'set', p:'Layerorder', v:S.pars.Layerorder}); layerStack(); fxTargets();
 }
 /* which layer FX and VIEW edit */
 const TGTNAME = {all:'All layers', model:'3D models', camera:'Phone camera', images:'Images', videos:'Videos', draw:'Drawing'};
@@ -673,7 +675,7 @@ function fxTargets(){
   if (!S) return; const av = fxAvail();
   if (FXT_SEL !== 'all' && !av.includes(FXT_SEL) && !((S.tfx || {})[FXT_SEL] || []).some(x => x[1])) { FXT_SEL = 'all'; applyTarget(); return; }
   const n = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
-  $('#fxtg').innerHTML = ['all'].concat(av).map(k => `<button class="tgt ${k === FXT_SEL ? 'on' : ''}" data-fxt="${k}">${TGTNAME[k]}${n(k) ? `<i>${n(k)}</i>` : ''}</button>`).join('');
+  $('#fxtg').innerHTML = layerRows(true);
   $('#fxtgname').textContent = TGTNAME[FXT_SEL];
   const withFx = av.filter(k => n(k)).length;
   $('#fxtgnote').textContent = FXT_SEL === 'all' ? 'ALL = effects over the whole picture. Pick a layer to give only that layer its own effects.'
@@ -688,25 +690,41 @@ function viewTargets(){
   $('#view2d').hidden = VW_SEL === '3d'; $('#view3d').hidden = VW_SEL !== '3d';
   $$('#view2d [data-fr]').forEach(e => e.hidden = e.dataset.fr !== VW_SEL);
 }
-function layerStack(){
+function layerRows(fx){
   const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on);
-  let h = p.Texton ? `<div class="lrow on pin"><button class="lname" data-jump="cardText"><b>Text</b><span>always on top</span></button></div>` : '';
-  h += vis.map((k, i) => { const L = layerInfo(k);
-    return `<div class="lrow on"><button class="lname" data-jump="${L.card}"><b>${L.name}</b><span>${esc(L.sub)}</span></button>`
+  const cnt = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
+  const tag = k => fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '';
+  const pick = (k, card) => fx ? `data-fxt="${k}"` : `data-jump="${card}"`;
+  const sel = k => fx && FXT_SEL === k ? ' sel' : '';
+  let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
+  h += p.Texton ? `<div class="lrow on pin"><button class="lname" ${fx ? '' : 'data-jump="cardText"'}><b>Text</b><span>always on top${fx ? ' · no layer effects' : ''}</span></button></div>` : '';
+  h += vis.map((k, i) => { const L = layerInfo(k), ok = !fx || fxAvail().includes(k);
+    const sub = esc(L.sub) + (fx && !ok ? ' · uses the 3D models effects' : tag(k));
+    return `<div class="lrow on${sel(k)}${ok ? '' : ' dim'}"><button class="lname" ${ok ? pick(k, L.card) : ''}><b>${L.name}</b><span>${sub}</span></button>`
       + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button></div>`; }).join('');
-  $('#lstack').innerHTML = h || '<p class="hint2" style="margin:2px">Nothing on yet. Switch on 3D models, Phone camera, Images, Videos, Draw or Text below.</p>';
+  return h || '<p class="hint2" style="margin:2px">Nothing on yet. Switch on 3D models, Phone camera, Images, Videos, Draw or Text in SOURCE.</p>';
+}
+function layerStack(){ $('#lstack').innerHTML = layerRows(false); }
+const SHUT = (() => { try { return JSON.parse(localStorage.getItem('shut') || '{}'); } catch (e) { return {}; } })();
+function shutSave(){ try { localStorage.setItem('shut', JSON.stringify(SHUT)); } catch (e) {} }
+function cardOpen(id, on){                // ON opens the card; tapping its header can fold it away again
+  const c = $('#' + id); if (!c) return;
+  if (!on) delete SHUT[id];
+  c.classList.toggle('open', !!on && !SHUT[id]); c.classList.toggle('shut', !!on && !!SHUT[id]);
+  const h = c.querySelector('.ch'); if (h && !h.querySelector('.chev')) h.insertAdjacentHTML('beforeend', '<span class="chev">▾</span>');
 }
 function cards(){
   if (!S) return; const p = S.pars, loop = p.Clipstate === 'loop';
-  $('#cardStatue').classList.toggle('open', p.Statue !== false);
-  $('#cardCam').classList.toggle('open', CAMF.on || loop);
-  $('#cardMedia').classList.toggle('open', !!p.Mediaon);
-  $('#cardVid').classList.toggle('open', !!p.Vmediaon);
-  $('#cardText').classList.toggle('open', !!p.Texton);
+  cardOpen('cardStatue', p.Statue !== false);
+  cardOpen('cardCam', CAMF.on || loop);
+  cardOpen('cardMedia', !!p.Mediaon);
+  cardOpen('cardVid', !!p.Vmediaon);
+  cardOpen('cardText', !!p.Texton);
+  cardOpen('cardLayers', true); cardOpen('cardFxLayers', true);
   layerStack(); fxTargets();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
-  $('#cardDraw').classList.toggle('open', !!p.Drawon);
+  cardOpen('cardDraw', !!p.Drawon);
   $('#cliprec').disabled = !CAMF.on && p.Clipstate !== 'rec';
 }
 /* local copies of the frames this phone recorded, so the preview can play the clip */
@@ -1273,6 +1291,9 @@ document.addEventListener('pointerup', endHold); document.addEventListener('poin
 
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
+  const h = e.target.closest('.card .ch');
+  if (h && S && !e.target.closest('button, label, input')) { const c = h.parentElement;
+    if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
   if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); buzz(); return; }
