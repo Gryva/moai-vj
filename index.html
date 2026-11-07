@@ -285,6 +285,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <details class="box mbox" id="box-static"><summary>Static models<span id="sum-static"></span></summary><div class="models" id="models"></div></details>
         <details class="box mbox" id="box-anim"><summary>3D animations<span id="sum-anim"></span></summary><div class="models" id="models-anim"></div><div id="animLoopBox" hidden style="margin-top:10px"><div class="seg sm" id="animLoop"><button data-aloop="loop">⟳ LOOP</button><button data-aloop="bounce">⇄ BOUNCE</button></div><p class="hint" style="margin:6px 2px 0;font-size:11px;color:var(--mute)">Bounce plays the clip forward, then backward. Use it when the end doesn't match the start. Remembered per animation.</p></div><div id="g-anim" style="margin-top:8px"></div></details>
         <div class="seg sm" id="o-Motion" style="margin-top:8px"></div>
+        <div class="seg sm" id="o-Spinaxis" style="margin-top:6px"></div>
         <div id="g-motion2" style="margin-top:7px"></div>
         <div class="seg" id="scene" style="margin-top:8px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
         <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
@@ -346,7 +347,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2><span>Saved views</span><em>hold = save current</em></h2><div class="presets" id="presets"></div>
     <div class="tpad" id="tpad" style="margin-top:14px"><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
       <div class="hint">1 FINGER ORBIT · FLICK TO SPIN<br>2 FINGERS PINCH ZOOM · DRAG PAN · DOUBLE-TAP CENTRE</div></div>
-    <div class="btns"><button class="btn" data-act="center">CENTRE</button><button class="btn" data-act="reset">RESET</button><button class="btn" id="t-Autospin" data-tog="Autospin">AUTO SPIN</button></div>
+    <div class="btns"><button class="btn" data-act="center">CENTRE</button><button class="btn" data-act="reset">RESET</button><button class="btn" id="t-Autospin" data-tog="Autospin">AUTO SPIN</button><button class="btn" id="t-Spinrev" data-tog="Spinrev">⟲ REVERSE</button></div>
     <h2>Camera</h2><div id="g-camera"></div>
     <details class="box"><summary>Movement + kick</summary><div id="g-move"></div><div id="g-kick"></div></details>
   </section>
@@ -422,7 +423,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07f';
+const BUILD = '2026-11-07g';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -761,6 +762,7 @@ function build(){
   airSig = null; uiPrefs();
 }
 const TOPTS = {
+  Spinaxis: [['y','SPIN ↻ Y'],['x','TUMBLE X'],['z','ROLL Z']],
   Camsrc: [['off','OFF'],['cam','CAM'],['behind','BEHIND'],['screen','BLEND'],['mask','MASK']],
   Camfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
   Motion: [['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']],
@@ -837,7 +839,7 @@ function applyPars(p){
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon','Keyon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon','Keyon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
   $('#t-Keyon').textContent = p.Keyon ? '✓ SCREEN REMOVED' : 'REMOVE SCREEN';
   $('#sum-key').textContent = p.Keyon ? 'on' : '';
   $('#box-obj').hidden = p.Mediamode !== 'object';

@@ -868,14 +868,14 @@ def _bankTable():
         while t.numRows < BANK_SLOTS + 1: t.appendRow(['', ''])
     return t
 
-OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat']
+OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat']
 
 def snapshot():
     C = op('/project1/CONTROLS')
     d = lookData()
     d['model'] = C.par.Model.eval()
     d['cam'] = {k: round(float(C.par[k].eval()), 4) for k in CAMKEYS + ['Pan']}
-    d['obj'] = {k: (bool(C.par[k].eval()) if k == 'Autospin' else C.par[k].eval() if k == 'Motion' else round(float(C.par[k].eval()), 4)) for k in OBJKEYS}
+    d['obj'] = {k: (bool(C.par[k].eval()) if k in ('Autospin', 'Spinrev') else C.par[k].eval() if k in ('Motion', 'Spinaxis') else round(float(C.par[k].eval()), 4)) for k in OBJKEYS}
     d['src'] = srcData()
     d['obj']['angle'] = round(S['angle'], 3)
     d['extra'] = {}
@@ -1432,11 +1432,13 @@ def _models(C, dt, T, react, grid):
     _safe('objects', objUpdate, C)
     ag = _safe('animation', animUpdate, C, dt, react)
     o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, react)
+    ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
     for g in (op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/img_geo'), ag):
         if g is None: continue
-        base = 0.0 if (grid and g.name == 'moai_geo') else S['angle'] + C.par.Angle.eval()
-        applyModelXform(C, g, ms, base + o_ry)
-        g.par.rx = C.par.Tilt.eval() + o_rx; g.par.rz = o_rz
+        spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle']
+        base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
+        applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
+        g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
         if o_ty: g.par.ty = g.par.ty.eval() + o_ty
         if g.name == 'img_geo':                                  # the picture / video can be moved around the scene
             g.par.tx = float(C.par.Objx.eval()); g.par.ty = g.par.ty.eval() + float(C.par.Objy.eval())
@@ -1467,7 +1469,8 @@ def onFrameStart(frame):
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()
     if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin':
-        S['angle'] = (S['angle'] + (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * react) * dt) % 360.0
+        sd = -1.0 if C.par.Spinrev.eval() else 1.0                  # spin direction (statues, animations, pictures, drawings)
+        S['angle'] = (S['angle'] + sd * (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * react) * dt) % 360.0
     sc = C.par.Scene.eval()
     if sc != S['scene']:
         _safe('scene', applyScene, sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'

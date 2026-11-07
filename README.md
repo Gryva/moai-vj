@@ -74,6 +74,7 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
   whose end doesn't match the start. Remembered per animation. Plus animation speed and speed-up on the beat.
 - **Scene:** Solid, Particles, Grid (copies, depth, spacing, bass wave, spin offset).
 - **Motion:** Spin, Bob, Sway, Float, Still; amount, tilt, angle, spin speed, bass spin boost.
+- **Spin axis:** SPIN ↻ Y (turn), TUMBLE X, ROLL Z. **⟲ REVERSE** (VIEW tab, next to Auto spin) flips the direction. Both apply to statues, animations, pictures/videos in Object mode and drawings, and are saved in presets.
 - **Swap animation:** Scale, Spin, Drop or Cut when changing models, and its time.
 - **Camera feed:** phone camera as a source (Off, Cam, Behind, Blend, Mask), Fill / Whole image, mirror.
 - **Clips:** record a short loop from the phone camera; play, bounce, speed, delete.
