@@ -1,224 +1,304 @@
 # MOAI // VJ
 
-A live audio-reactive VJ rig built in TouchDesigner, with a phone web page as the control surface.
-The phone page is served from GitHub Pages; it talks to TouchDesigner through a public MQTT relay, so
-phone and computer do not need to be on the same network.
+A live, audio-reactive VJ rig built in TouchDesigner, controlled from a phone web page.
 
 ```
-Phone (GitHub Pages: index.html)  <-- MQTT relay (broker.hivemq.com) -->  TouchDesigner (td/*.py, fx/*.glsl)
+Phone page (GitHub Pages, or the computer's own Wi-Fi page)
+        │  signed messages
+        ▼
+MQTT relay (broker.hivemq.com)  ── or direct Wi-Fi WebSocket (port 9980)
+        │
+        ▼
+TouchDesigner: engine.py (every frame) + remote_cb.py (phone bridge) + GLSL effects
 ```
 
-This repository contains the **phone page** (`index.html`) and the **TouchDesigner scripts and shaders**
-(`touchdesigner/`). It does not contain the `.toe` project file (see [What is not included](#what-is-not-included)).
+This repo holds the phone page (`index.html`), the TouchDesigner scripts and shaders (`touchdesigner/`), the model
+converter (`tools/`) and model thumbnails (`thumbs/`). The `.toe` project, presets and 3D model files are not
+included (see [What is not in this repo](#what-is-not-in-this-repo)).
+
+**Contents**
+1. [Quick start](#1-quick-start)
+2. [Phone controls](#2-phone-controls)
+3. [Computer controls (failsafes)](#3-computer-controls-failsafes)
+4. [How presets are saved](#4-how-presets-are-saved)
+5. [Adding your own 3D models and animations](#5-adding-your-own-3d-models-and-animations)
+6. [Adding media, effects and other content](#6-adding-media-effects-and-other-content)
+7. [Troubleshooting](#7-troubleshooting)
+8. [Setting it up from scratch](#8-setting-it-up-from-scratch)
+9. [Files and folders](#9-files-and-folders)
 
 ---
 
-## Repository layout
+## 1. Quick start
 
-| Path | What it is |
+1. Open the newest `NewProject.<n>.toe` in TouchDesigner.
+2. Press **F1** for perform mode (or drag the output window to the projector).
+3. On the phone, open the link from `CONTROLS → Master → Phone link` (it carries your private pairing key after `#k=`).
+4. Enter the password (`CONTROLS → Master → Remotepass`).
+5. Green dot = connected. Tap a preset.
+
+**No internet?** Put the phone on the same Wi-Fi as the computer and open `CONTROLS → Safety → Wi-Fi link`.
+The phone's offline screen shows this link automatically once it has connected once.
+
+---
+
+## 2. Phone controls
+
+**Header:** status dot (green = live), fps, **✎ EDIT**, **BLACKOUT**.
+Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks all tabs.
+
+### LIVE
+| Control | What it does |
 |---|---|
-| `index.html` | The whole phone UI: one file, no build step. Served by GitHub Pages at `https://gryva.github.io/moai-vj/`. |
-| `touchdesigner/engine.py` | Main engine. Runs every frame: layer stack, presets and their safe storage (`STORE`), set list, colours, text morph, 3D model animation, keyer, preset dips, thumbnails. |
-| `touchdesigner/remote_cb.py` | Phone bridge. Builds the state the phone sees, verifies signed messages, handles uploads (images, video), and routes each command to the engine. |
-| `touchdesigner/phonecam_cb.py`, `phonedraw_cb.py` | Callbacks for the phone camera feed and the phone drawing pad. |
-| `touchdesigner/grid_inst.py` | Instancing helper for the grid effect. |
-| `touchdesigner/remote_mqtt_cb.py` | MQTT transport callbacks used by the relay. |
-| `touchdesigner/keys_cb.py` | Keyboard shortcuts (`fx_keys` Keyboard In DAT), including the failsafe show keys. |
-| `touchdesigner/store_pex.py` | Buttons on the `CONTROLS → Safety` page (undo, restore, backup). |
-| `touchdesigner/fx/*.glsl` | GLSL pixel shaders: one per visual effect (`neon`, `hologram`, `ascii`, `thermal`, ...), the source compositor (`src.glsl`), the green/blue screen keyer (`key.glsl`), and the text shader (`text.glsl`). |
-| `thumbs/` | Static preview images used by the phone page. |
+| CUT / 0.5s / 1s / 2s / 4s | How long switching to a preset takes. |
+| Preset tile, tap | Loads it: effects, text, model, camera, source, colours. The number is its slot. **ON AIR** = on screen. |
+| Preset tile, hold | Friends: add to set list or play. Edit mode: **Update** (save what's on screen), rename, delete, add to set list, copy its effects. |
+| ＋ tile, hold (edit) | Save what's on screen as a new preset. |
+| ◻ tile (edit) | New clean preset (no effects, no text). |
+| **Set list** | Show or hide the set list (remembered on this phone). |
+| **↺ Backups** (edit) | Undo the last preset change, make a restore point, or bring back any earlier one. |
+| Set list track | ◀ ▶ step through it. Hold a preset tile to add it; hold a track item to move or remove it. |
+
+"Saved ✓ on computer" appears only after the computer confirms the save is on disk. A red banner = the save failed.
+
+### FX
+- **FX presets:** tap = apply that effect stack to what's on screen, hold = rename or delete, ＋ = save the current stack.
+- **On air:** effects currently on. **CLEAR ALL** turns them off.
+- **Warp / Style / Post:** tap an effect to turn it on; each has an amount and its own setting.
+- **Colour** (supported effects): Own, Solid, Ramp or Radial. Colour A/B from 10 swatches or any colour; angle for gradients.
+
+### SOURCE
+- **Static models / 3D animations:** tap to switch.
+- **Loop / Bounce** (under animations): Loop restarts from the beginning. Bounce plays forward then backward, for clips
+  whose end doesn't match the start. Remembered per animation. Plus animation speed and speed-up on the beat.
+- **Scene:** Solid, Particles, Grid (copies, depth, spacing, bass wave, spin offset).
+- **Motion:** Spin, Bob, Sway, Float, Still; amount, tilt, angle, spin speed, bass spin boost.
+- **Swap animation:** Scale, Spin, Drop or Cut when changing models, and its time.
+- **Camera feed:** phone camera as a source (Off, Cam, Behind, Blend, Mask), Fill / Whole image, mirror.
+- **Clips:** record a short loop from the phone camera; play, bounce, speed, delete.
+- **Media:** upload images or videos. Flat (fills the screen) or Object (a card in the 3D scene).
+- **Green / blue screen:** key out a video's background (tolerance, softness, spill, edge shrink).
+- **Move it in 3D:** left/right, up/down, size. **Fit** puts it back to full screen.
+- **Drawing:** draw on the phone; it appears on screen (pen and shapes, sizes, colours or gradients).
+
+### TEXT
+Type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave, scroll,
+tile, type, word per beat), modes (overlay, mask, cutout, invert, outline, glitch, refract), font, size, glow, speed,
+beat reaction, colour (solid, ramp, radial). **TEXT ON/OFF**; **Pin** keeps text when presets change. Recent texts
+are one tap away. Text is saved with a preset when you press **Update**.
+
+### VIEW
+Camera: saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan, handheld shake.
+On the preview: drag = orbit, pinch = zoom, two fingers = pan, flick = keep spinning.
+
+### AUDIO
+Input gain, noise gate, dynamic range, smoothing, beat sensitivity, beat feel (punchy ↔ smooth), flash safety,
+headphone monitor and volume. Meters show low, mid, high, kick.
+
+### TUNE
+Camera sway (orbit, elevation, push/pull, roll, sway speed), audio → camera, kick push-in, kick jolt, preset glide
+time, response, flick inertia, brightness and blackout fade.
+
+**Updates:** when a new version is published, the phone shows **New version ready · tap to update**.
 
 ---
 
-## How the pieces fit
+## 3. Computer controls (failsafes)
 
-1. **Presets.** A preset is a JSON snapshot of the whole look: layer stack and amounts, scene, grid, text
-   (`Textstr`, font, colours, animation), statue/model, camera, source (camera, media, drawing, keyer), and colours.
-   Presets are stored in `td/presets.json` (128 slots). See [How presets are saved](#how-presets-are-saved).
-2. **Set list.** An ordered list of preset slots (`td/queue.json`). The phone shows it as a track with ◀ ▶ arrows.
-   The next preset is pre-loaded in the background so the switch is instant.
-3. **Colours.** Each effect, the text and the drawing have two colours (A, B) and a mode: solid, linear ramp
-   or radial. Stored per effect in `td/lcols.json` and inside each preset.
-4. **Text.** The text string and its style are part of the preset. Switching presets can morph the old words into
-   the new ones (`textMorphStart`, shader `fx/text.glsl`).
-5. **Models.** Static 3D models are imported from `3D objects/`. Animated models are FBX or Alembic files wired under
-   `/project1/anims/`; `anims.json` lists them for the phone. Long Alembic clips are pre-baked to fixed frame counts
-   so they play at full speed.
-6. **Phone uploads.** Images and short videos are sent from the phone in chunks. Videos can be keyed (green or blue
-   screen) and moved in 3D.
-7. **Security.** Every phone message is signed with `sha256(relayKey + ':' + password)`. Messages are only accepted
-   within a 120-second window, replays are rejected, and wrong passwords are rate-limited.
+Work with the TouchDesigner window focused, no phone needed.
 
----
-
-## How presets are saved
-
-A VJ set must never lose its presets, so storage follows four rules:
-
-1. **The disk file is the only truth.** `td/presets.json` holds every preset (effects, amounts, text and its colours,
-   model, camera, source, keyer, effect colours). The `PRESETS` table inside the `.toe` is only a fast copy. Every
-   time the engine starts, it fills the table from disk. An unsaved or older `.toe`, a crash, a different phone or a
-   cleared browser cannot bring back old presets. (Before this rule, the table inside the `.toe` won, which is how
-   edits were lost when TouchDesigner was closed without saving.)
-2. **Writes cannot leave a broken file.** Each save writes a temp file, flushes it to disk, reads it back and checks it,
-   then swaps it in. The previous file stays as `presets.json.bak`. A save takes about 20 ms.
-3. **Every change is a restore point.** After each save, `td/history/` gets a file with the presets, the set list and
-   the FX presets. The newest 400 are kept, plus the first one of every day. If `presets.json` is ever unreadable,
-   the engine loads the newest good restore point, then the `.bak`. If the `.toe` held a different copy at start,
-   that copy is archived in `td/history/` too (named `project-copy-…`), so nothing is thrown away.
-4. **Failures are loud.** If a save fails, it is retried. If it still fails, every phone shows a red
-   *PRESETS NOT SAVED* banner and `CONTROLS → Safety → Presets status` says why. The phone only shows
-   *Saved ✓ on computer* after the computer confirms the file is on disk; with no answer in 6 seconds it warns you.
-
-Each preset also names its own picture and drawing file (`td/thumbs/p<slot>_<time>.jpg`), so a picture can never
-belong to a different preset, and restore points keep their pictures.
-
-The phone stores nothing about presets. It keeps only screen preferences (tab, fade time, set list shown or
-hidden, recent texts).
-
-Log of everything the store does: `td/store_log.txt`.
-
----
-
-## Failsafes (when the phone or the internet fails)
-
-| Problem | What to do |
+| Key | Action |
 |---|---|
-| **Internet or relay down** | Phone and computer on the same Wi-Fi: open the link in `CONTROLS → Safety → Wi-Fi link`. TouchDesigner serves the same page itself (port 9980), no internet needed. The phone's offline screen shows this link automatically once it has connected once. |
-| **Phone dead or page broken** | Use the keyboard on the computer (TouchDesigner window focused): **PageDown / PageUp** = next / previous preset in the set list, **Shift + 1…9, 0** = preset slot 1…10, **B** = blackout on/off. A wireless presenter clicker (sends PageDown/PageUp, and B for "blank") works as a remote. |
-| **Wrong change / deleted preset** | Phone: *Edit → ↺ Backups → Undo last preset change*, or pick a restore point. Computer: `CONTROLS → Safety → Undo last preset change`. Restoring first saves the current state as a restore point, so a restore can be undone too. |
-| **Need a specific old version** | `CONTROLS → Safety → List restore points` prints a numbered list in the Textport. Set *Restore point #* and press *Restore that point*. Or *Open backups folder*. |
-| **Edited `presets.json` by hand** | `CONTROLS → Safety → Reload presets from disk`. |
+| **PageDown / PageUp** | Next / previous preset in the set list (a wireless presenter clicker sends these) |
+| **Shift + 1…9, 0** | Load preset slot 1…10 |
+| **B** | Blackout on/off (the clicker's "blank" button) |
+| 1…9, 0 / C | Toggle effect 1…10 / clear all effects |
+| M / N, Ctrl + 1…9 | Next / previous model, model by number |
+| A D / W S / Q E / Z X | Orbit / elevation / distance / lens |
+| ← → / ↑ ↓ | Spin speed / tilt |
+| , . / [ ] / + − | Angle / roll / zoom |
+| F | Centre the camera |
+| F1…F8, Shift + F1…F8 | Load / save a camera view |
+| Space | Auto spin on/off |
+
+**`CONTROLS → Safety`:** presets status, Undo last preset change, Make restore point now, Reload presets from disk,
+List restore points (printed in the Textport), Restore point # + Restore that point, Open backups folder, Wi-Fi link.
 
 ---
 
-## Requirements
+## 4. How presets are saved
 
-- Windows PC with a GPU (the scripts were developed on Windows)
-- TouchDesigner 2025 (build 099 or later)
-- Python packages available to TouchDesigner: `numpy` and `opencv-python` (`cv2`)
-- A GitHub account (for GitHub Pages) if you want to host your own phone page
-- Any phone with a modern browser
+1. **The disk file is the only truth.** `td/presets.json` holds every preset. The table inside the `.toe` is a fast
+   copy, refilled from disk every time TouchDesigner starts, so an unsaved or older project can never bring back
+   old presets. The phone stores nothing about presets.
+2. **Saves can't leave a broken file:** temp file → flush → read back and check → swap. The previous file stays as `.bak`.
+3. **Every change is a restore point** in `td/history/` (presets + set list + FX presets). The newest 400 are kept,
+   plus the first of every day. If `presets.json` is unreadable, the newest good restore point is loaded.
+4. **Failures are loud:** a red banner on every phone and `CONTROLS → Safety → Presets status`.
+
+The same safe saving covers the set list, effect colours, FX presets, camera views, the animation list and clip info.
+Everything is logged in `td/store_log.txt`.
 
 ---
 
-## Setup
+## 5. Adding your own 3D models and animations
 
-### 1. Clone this repository
+Models are normalised to **2 units on their longest side, centred on the origin, Y up, front facing +Z**.
+Keep to that and they fit the camera and every effect.
 
+### 5a. Automatic: the converter (recommended)
+
+`tools/convert.py` runs Blender's Python module: fixes textures, normalises size, measures whether an animation
+loops cleanly, and writes files TouchDesigner reads well. Inputs: `.fbx`, `.gltf/.glb`, `.blend`, `.dae`, `.usdz`, `.obj`.
+
+One-time setup:
 ```
-git clone https://github.com/Gryva/moai-vj.git
+pip install uv
+uv venv -p 3.11 bpyenv
+bpyenv\Scripts\pip install bpy==4.2.0        (Mac/Linux: bpyenv/bin/pip)
 ```
+Edit the folder paths at the top of `tools/run.py`, add a line per model to `tools/jobs.json`, run `python tools/run.py <name>`:
+```json
+{"name":"duck", "kind":"static", "src":"duck/source/rubber duck.fbx", "texdir":"duck", "tex":{"*":"Duck_Diffuse.png"}, "label":"Rubber Duck"}
+{"name":"alien", "kind":"anim", "src":"alien/source/Arms Hip Hop Dance.fbx", "texdir":"alien", "label":"Dancing Alien"}
+```
+- `static` → `<name>.obj` + `<name>.jpg` (several materials get baked into one picture).
+- `anim` → `<name>.fbx` (animation baked, textures embedded as PNG) + `<name>.json` (length, suggested loop/bounce).
+- `tex` → which picture goes on which material (`"*"` = all). Only needed when the file doesn't link its own.
 
-### 2. Build the TouchDesigner project
+Then follow 5b or 5c from step 2.
 
-The `.toe` project is not in this repository. Recreate the network using the operator names below. The scripts look
-operators up by these exact paths, so use them as written.
+### 5b. Static model
 
-| Operator path | Role |
+1. **Files:** `3D objects/_library/<name>/<name>.obj` + `<name>.jpg` (max 1024 px). By hand in Blender: one object,
+   one material with one texture, longest side 2, apply transforms, Export → Wavefront OBJ, **Forward −Z, Up Y**, UVs + normals on.
+2. **Geometry:** in `/project1/moai_geo` copy `m_moai` → rename `m_<name>`, set File, connect to the next free input of
+   `model_switch`. Same in `/project1/moai_particles`.
+3. **Texture:** in `/project1` copy `tex_moai` → rename `tex_<name>`, set File, connect to `model_tex`.
+   Models are matched to geometry and texture **by name**, so input order doesn't matter.
+4. **Menu:** in the Textport:
+   ```python
+   C = op('/project1/CONTROLS')
+   for p in ('Model', 'Modelshown'):
+       C.par[p].menuNames  = list(C.par[p].menuNames)  + ['<name>']
+       C.par[p].menuLabels = list(C.par[p].menuLabels) + ['<Label>']
+   ```
+5. **Thumbnail:** 240×240 `<name>.jpg` in `web/thumbs/` (Wi-Fi page) and `thumbs/` in this repo (GitHub page).
+6. **Ctrl+S.** Reconnect the phone; it's under **Static models**. Works with Particles and Grid too.
+
+### 5c. Animation
+
+1. **File:** `3D objects/_anim/<name>/<name>.fbx` with baked animation. Embed textures as **PNG** (TouchDesigner can't
+   read JPEGs embedded in FBX). Alembic `.abc` also works (see Flower Loop).
+2. **Import:** in `/project1/anims` add an **FBX COMP** named `a_<name>`, set File, press **Import**, turn Render off
+   (the engine turns on the one in use).
+3. **Size:** if far too big/small, set Pre-Transform → Uniform Scale (aim for about 2 units).
+4. **Register** in `3D objects/_anim/anims.json`:
+   ```json
+   {"name": "<name>", "label": "<Label>", "kind": "fbx", "loop": "loop"}
+   ```
+   `loop` = `"loop"` or `"bounce"` (changeable on the phone). Alembic: `"kind": "abc", "dur": <seconds>`.
+5. **Menu:** add `anim_<name>` / `<Label>` (code in 5b step 4).
+6. **Thumbnail:** `anim_<name>.jpg` in `web/thumbs/` and `thumbs/`.
+7. **Ctrl+S.** The engine reads the clip length from the file and drives it with the shared clock, so speed, beat
+   push and Loop/Bounce work automatically.
+
+**If it looks wrong:** black/white blobs → the engine makes fully transparent materials solid on first use; if colours
+are still wrong, assign your own `phongMAT`s. Nothing moves → the file's animation may be empty (check in Blender).
+Slow → fewer separate parts, 1024 px textures.
+
+---
+
+## 6. Adding media, effects and other content
+
+- **Pictures/videos:** drop into `media/` on the computer, or upload from the phone. They appear under SOURCE → Media.
+- **Fonts:** any installed font name works in `CONTROLS → Text → Textfont`.
+- **Effects:** shader `td/fx/<key>.glsl` + GLSL TOP `fx_<key>` + a row in `/project1/FX_STACK` (key, label, group, on,
+  amount, setting name/min/max/step). Uniforms: `uTime`, `uAudio` (low, mid, high, kick), `uMix` (amount), `uP`
+  (setting); colour effects also get `uCA`/`uCB`.
+- **Preset pictures:** re-shoot all with `op('/project1/fx_engine').module.captureThumbs()` (screen restored after).
+
+---
+
+## 7. Troubleshooting
+
+| Symptom | What to do |
 |---|---|
-| `/project1/CONTROLS` | Base COMP with all custom parameters (Master, Text, Camfeed, Moai, Keyer, Remote). The scripts read and write these. |
-| `/project1/fx_engine` | Execute DAT that runs `touchdesigner/engine.py` every frame (`Synced` to the file). |
-| `/project1/remote_cb` | Text DAT (or Module) holding `remote_cb.py`. Used by `op('/project1/remote_cb').module`. |
-| `/project1/remote_server` | Web/WebSocket server DAT that receives phone messages and passes them to `remote_cb`. |
-| `/project1/PRESETS` | Table DAT, 129 rows (row 0 header, rows 1–128 are slots). A copy of `td/presets.json`, refilled from disk at every start. |
-| `/project1/store_pex` | Parameter Execute DAT on `CONTROLS`, parameters `Store*`, *On Pulse* on, synced to `store_pex.py`. |
-| `/project1/fx_keys`, `/project1/fx_keys_callbacks` | Keyboard In DAT and its callbacks, synced to `keys_cb.py`. |
-| `/project1/FX_STACK` | Table of the effect layers (key, label, on, amount, parameters). |
-| `/project1/LOOKS` | Table of saved looks. |
-| `/project1/fx_text`, `/project1/text_src`, `/project1/text_old` | Text shader and the two text sources used for morphing. |
-| `/project1/xf_mix`, `/project1/xf_black` | Preset dip (fade out, switch at black, fade in). |
-| `/project1/camsel`, `/project1/media_key`, `/project1/media_next` | Camera/media source switch, keyer, and the preloaded next media. |
-| `/project1/moai_geo`, `/project1/img_geo`, `/project1/moai_particles` | Model and image geometry. |
-| `/project1/anims/` | One sub-COMP per animated model (`a_skeleton`, `a_mushroom`, `a_steamboat`, `a_hibiscus`, `a_flower`, `a_orrery`). |
-| `/project1/AUDIO/OUT`, `/project1/AUDIO/source` | Audio input and analysis (low, mid, high, kick). |
-| `/project1/thumb_out` | The final output TOP that thumbnails are captured from. |
-| `/project1/render1` | Render TOP of the whole scene. |
-
-Then:
-
-1. Put each `touchdesigner/*.py` file into a Text DAT (or the matching callback DAT) with the same name. Set the DAT
-   to *Synced to file* so edits on disk reload automatically.
-2. Put the shaders from `touchdesigner/fx/` into GLSL TOPs (one per effect) or Text DATs, matching the layer keys
-   in `FX_STACK`.
-3. Open `/project1/CONTROLS` and set the **Master** page:
-   - `Remotepass`: the password for the phone. Leave it empty for no password (not recommended).
-   - `Remotekey`: created automatically the first time the engine runs.
-4. Add a custom page **Safety** on `CONTROLS` with: `Storestatus` (string), `Storeundo`, `Storebackup`,
-   `Storereload`, `Storelist`, `Storerestore`, `Storeopen` (pulses), `Storepick` (integer) and `Locallink` (string).
-
-### 3. Folders
-
-All data paths are relative to the folder of the `.toe` (`project.folder`): `td/` for presets, set list, colours,
-history and pictures, `media/` for uploads, `web/` for the page TouchDesigner serves on Wi-Fi, and `3D objects/` for
-models. Keep that layout and nothing needs editing.
-
-### 4. Host the phone page
-
-1. Fork this repository on GitHub.
-2. In the fork, go to **Settings → Pages**, choose *Deploy from a branch*, branch `main`, folder `/ (root)`.
-3. Wait a minute, then open `https://<your-user>.github.io/<repo>/`.
-4. In `remote_cb.py`, change `RELAY['page']` to your Pages URL. TouchDesigner shows the link with the pairing key in
-   `CONTROLS → Remote → Phone link`.
-
-### 5. Connect a phone
-
-1. Open the link from TouchDesigner on the phone (it contains `#k=<key>`; keep the key private).
-2. Enter the password from `Remotepass`.
-3. You should see the preset grid, the set list, and the live status dot turn green.
+| Phone *offline* | TouchDesigner open and online? Try the Wi-Fi link. |
+| "Wrong password" | Check `Remotepass`. (A wrong phone clock is corrected automatically.) |
+| Red *PRESETS NOT SAVED* | `td/` can't be written: disk full, read-only, or locked by a sync tool. Resumes on its own. |
+| *Not confirmed* after saving | The computer didn't answer. Check TouchDesigner; the preset may still have saved. |
+| Wrong / lost preset | Phone: Edit → ↺ Backups → Undo or a restore point. Computer: `CONTROLS → Safety`. |
+| Model has wrong texture | `m_<name>` and `tex_<name>` must match the menu name. |
+| Missing preview picture | Hold the preset → Update, or run `captureThumbs()`. |
+| Stutter | Frame time in `/project1/perf` should stay under 16 ms. Rubik's Cube is the heaviest model (~15 ms). |
+| Projector blank | F1 for perform mode; output is `/project1/out1`. |
 
 ---
 
-## Using it
+## 8. Setting it up from scratch
 
-- **LIVE tab (perform mode):** tap a preset to load it. Hold a preset to edit it. The **Set list** button hides or
-  shows the set list (remembered per phone).
-- **Set list:** hold a preset to add it. Drag inside the track to reorder or remove. ◀ ▶ step through it.
-- **Colours:** tap a colour box to open the picker. Choose solid, ramp or radial, then pick one of the 10 swatches
-  or any colour.
-- **Text:** type in the text box and press Enter. The text is saved with the preset when you press *Update*.
-- **Video:** upload from the phone under *Source*. Choose green or blue screen to key it out, then move it in 3D.
-- **New version:** the phone page checks for a new build every few seconds and shows *New version ready · tap to update*.
+Requirements: Windows PC with a GPU, TouchDesigner 2025 (build 099+), `numpy` + `opencv-python` for TouchDesigner,
+any modern phone browser.
 
----
+1. `git clone https://github.com/Gryva/moai-vj.git`
+2. Recreate the network with these names (the scripts use them exactly):
 
-## Updating the phone page
-
-Each change to `index.html` needs a new `BUILD` value, or phones will not show the update button:
-
-```js
-const BUILD = '2026-11-07c';   // change this for every release
-```
-
-Then commit and push. GitHub Pages can cache for up to 10 minutes; add `?v=<anything>` to the URL to force a refresh.
-
----
-
-## Troubleshooting
-
-| Symptom | Likely cause |
+| Operator | Role |
 |---|---|
-| Phone shows *offline* | The Pages URL or pairing key is wrong, or the relay is down. Check `RELAY` in `remote_cb.py`. |
-| Red *PRESETS NOT SAVED* banner | The computer can't write `td/`. Check free disk space and that the folder isn't read-only or locked by a sync tool. Saving resumes on its own and the next save includes everything. |
-| *Not confirmed* warning after saving | The phone got no answer. Check that TouchDesigner is running; the preset may still have saved (check the tile). |
-| Preset shows the wrong text or picture | Hold the preset and press *Update* after changing it. To go back, use *Backups*. |
-| Missing preview pictures | Call `captureThumbs()` in `engine.py` (from the Textport) to shoot them all again; the screen is put back afterwards. |
-| Animated model stutters | Check the GPU load in TouchDesigner's Performance Monitor. Pre-baked frame sequences are faster than live Alembic. |
-| Phone upload stalls | Long videos are sent in chunks. Keep the phone on Wi-Fi and the screen on until the upload finishes. |
+| `/project1/CONTROLS` | Base COMP with all custom parameters (Master, Moai, Model, Text, Camfeed, Audio, Camera, Safety…). |
+| `/project1/fx_engine` | Execute DAT synced to `td/engine.py`, Frame Start on. |
+| `/project1/remote_server` + `remote_cb` | Web Server DAT (port 9980) with callbacks synced to `td/remote_cb.py`. |
+| `/project1/remote_mqtt`, `2`, `3` | MQTT Client DATs (relay), callbacks `remote_mqtt_cb`. |
+| `/project1/fx_keys` + `fx_keys_callbacks` | Keyboard In DAT, callbacks synced to `td/keys_cb.py`. |
+| `/project1/store_pex` | Parameter Execute DAT on `CONTROLS`, pars `Store*`, On Pulse, synced to `td/store_pex.py`. |
+| `PRESETS`, `FX_STACK`, `LOOKS`, `CAM_PRESETS` | Tables (PRESETS is refilled from disk at start). |
+| `moai_geo`, `moai_particles` | `m_<name>` File In SOPs → `model_switch` → `fix_axes` → `orient`. |
+| `model_tex` | Switch TOP of `tex_<name>` textures. |
+| `anims/a_<name>` | One FBX COMP (or Geometry COMP with Alembic) per animation. |
+| `render1` → effects → `xf_mix` → `OUT` → `out1` | Render, effects, preset dip, output. |
+| `fx_text`, `text_src`, `text_old` | Text shader + the two text sources for morphing. |
+| `AUDIO` | Audio in, analysis (`OUT`: low, mid, high, level, kick), headphone monitor. |
+| `thumb_out` | Small copy of the output for preset pictures. |
+
+3. `CONTROLS → Master`: set `Remotepass`; `Remotekey` is created on first run.
+4. Phone page: fork this repo, *Settings → Pages → Deploy from branch `main`, root*, put your URL in `RELAY['page']`
+   in `remote_cb.py`.
+5. Every change to `index.html` needs a new `const BUILD = '…'` so phones offer the update.
+
+All data paths are relative to the project folder.
 
 ---
 
-## What is not included
+## 9. Files and folders
 
-- **The `.toe` project file.** It contains the pairing key and your saved presets. Recreate the network from the
-  operator table above.
-- **3D models and animations.** These are third-party downloads with their own licences. Put your own `.fbx`,
-  `.abc`, `.usdz` or `.glb` files in `3D objects/` and register them in `anims.json`.
-- **Presets, set list, colour files and restore points** (`presets.json`, `queue.json`, `lcols.json`, `history/`). They are personal data.
-- **Backups** (`*_backup_v*.py`, `_backup_*` folders).
+**In this repo**
 
----
+| Path | What |
+|---|---|
+| `index.html` | The whole phone page. |
+| `thumbs/` | Model thumbnails (GitHub page). |
+| `touchdesigner/engine.py` | Engine: layers, presets + safe storage, set list, colours, text, models, animation clock, camera. |
+| `touchdesigner/remote_cb.py` | Phone bridge: state, signed messages, uploads, clips, media. |
+| `touchdesigner/keys_cb.py`, `store_pex.py` | Keyboard shortcuts, Safety buttons. |
+| `touchdesigner/fx/*.glsl` | Effect shaders, source compositor, keyer, text. |
+| `tools/` | Model converter (section 5a). |
 
-## Credits
+**On the computer**
 
-Built by Gryva. Relay: HiveMQ public broker.
+| Path | What |
+|---|---|
+| `td/presets.json`, `.bak`, `history/` | Presets and restore points. |
+| `td/queue.json`, `lcols.json`, `fxpresets.json`, `cam_presets.json` | Set list, colours, FX presets, camera views. |
+| `td/thumbs/`, `drawings/`, `clips/`, `store_log.txt` | Preset pictures, drawings, camera clips, storage log. |
+| `media/` | Pictures and videos (`uploads/` from phones). |
+| `3D objects/_library/`, `_anim/` | Static models (`library.json`), animations (`anims.json`). |
+| `web/` | Page the computer serves on Wi-Fi. |
+
+## What is not in this repo
+
+- The `.toe` project (contains your pairing key and password).
+- Presets, set list, colours, restore points, media (personal data).
+- 3D model files (third-party downloads with their own licences).
+
+Built by Gryva. Relay: HiveMQ public broker. Models converted with Blender.
