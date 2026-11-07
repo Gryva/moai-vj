@@ -416,7 +416,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07a';
+const BUILD = '2026-11-07b';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -903,7 +903,7 @@ function renderPads(){
   const pads = S.bank.map((p, i) => { if (!p) return ''; const slot = i + 1; n++;
     const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
     const img = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : '';
-    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${n} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
+    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
   }).join('');
   const free = S.bank.indexOf(null) + 1;
   $('#pads').innerHTML = pads + (free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE<br>WHAT IS ON SCREEN</small></span></button>`
