@@ -423,7 +423,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07g';
+const BUILD = '2026-11-07h';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -481,7 +481,10 @@ function onMsg(m){
   else if (m.t === 'fxps') { S.fxps = m.v; renderFxps(); }
   else if (m.t === 'queue') { if (!(QD.on)) { S.queue = {v:m.v, pos:m.pos}; renderQueue(); } }
   else if (m.t === 'lcols') { Object.assign(S.lcols, m.v); for (const k in m.v) colUI(k); }
-  else if (m.t === 'media') { S.media = m.v; S.mediacur = m.cur; renderMedia(); cards(); }
+  else if (m.t === 'media') { const old = {}; (S.media || []).forEach(x => { if (x.thumb) old[x.id] = x.thumb; });
+    S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); S.mediacur = m.cur; renderMedia(); cards(); }
+  else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
+    if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(renderMedia, 80); } }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);

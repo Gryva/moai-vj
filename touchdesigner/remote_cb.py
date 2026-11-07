@@ -236,9 +236,14 @@ def _mediaThumb(rel, full, kind):
     return base64.b64encode(open(tp, 'rb').read()).decode('ascii')
 
 def mediaMsg():
-    items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/'), 'thumb': _mediaThumb(rel, full, kind)}
-             for rel, full, kind in _mediaFiles()]
+    """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
+    items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/')} for rel, full, kind in _mediaFiles()]
     return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None}
+
+def mediaThumbs(send):
+    for rel, full, kind in _mediaFiles()[-80:]:
+        th = _mediaThumb(rel, full, kind)
+        if th: send({'t': 'mthumb', 'id': rel, 'img': th})
 
 def _fitSoon():
     run("op('/project1/fx_engine').module.mediaFit()", delayFrames=12)   # after the new file has loaded (its size is known)
@@ -345,7 +350,7 @@ def videoPoll(uid):
     if j['state'] == 'done':
         C = _C(); C.par.Mediamode = 'object'                         # a new video comes in as a movable object
         mediaPlay(j['name'], fit=True)
-        _all({'t': 'vdone', 'u': uid, 'id': j['name']}); _all(mediaMsg()); _all(clipsMsg()); _publish(state())
+        _all({'t': 'vdone', 'u': uid, 'id': j['name']}); _allMedia(); _all(clipsMsg()); _publish(state())
     else:
         _all({'t': 'err', 'msg': 'Video failed: ' + j['err']})
 
@@ -540,6 +545,9 @@ def _all(obj, skip=None, retain=False):
     for c in list(CLIENTS):
         if c != skip: _send(dat, c, obj)
     _publish(obj, retain)
+
+def _allMedia():
+    _all(mediaMsg()); mediaThumbs(_all)
 
 def _phones():
     now = time.perf_counter()
@@ -760,7 +768,7 @@ def handle(msg, reply):
             elif a == 'fit': E.mediaFit()
             elif a == 'stop': mediaStop()
             elif a == 'del': mediaDel(str(msg.get('id', '')))
-            _all(mediaMsg()); _all(clipsMsg()); _publish(state())
+            _allMedia(); _all(clipsMsg()); _publish(state())
         elif t == 'vup':
             videoPart(msg)
         elif t == 'vend':
@@ -768,7 +776,7 @@ def handle(msg, reply):
             if r_: reply(r_)
         elif t == 'up':
             r_ = mediaChunk(msg)
-            if r_ == 'ok': _all(mediaMsg()); _all(clipsMsg()); _publish(state())
+            if r_ == 'ok': _allMedia(); _all(clipsMsg()); _publish(state())
             elif r_: reply({'t': 'err', 'msg': 'Upload failed: ' + r_})
         elif t == 'fxp':
             a = msg.get('do'); i = int(msg.get('i', -1))
@@ -791,7 +799,7 @@ def handle(msg, reply):
             if not E.STORE['ok']: reply({'t': 'store', 'v': E.storeInfo(), 'alert': 'PRESETS NOT SAVED: ' + E.STORE['err']})
             for s_, img_ in E.thumbAll().items(): reply({'t': 'thumb', 's': int(s_), 'img': img_})   # one small message per picture
             reply(clipsMsg())
-            reply(mediaMsg())
+            reply(mediaMsg()); mediaThumbs(reply)
             reply(fxpMsg())
     except Exception as e:
         reply({'t': 'err', 'msg': str(e)})
