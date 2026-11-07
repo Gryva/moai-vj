@@ -421,7 +421,7 @@ def textUpdate(C, T):
         v = float(C.par[key].eval())
         return TXM['frm'][key] + (v - TXM['frm'][key]) * e if M else v
     mode = TXM['mode'] if (M and e < 0.5) else C.par.Textmode.eval()
-    pp.vec0valuex = T
+    pp.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
     pp.vec1valuex, pp.vec1valuey, pp.vec1valuez, pp.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
     pp.vec2valuex = L('Textamount')
     pp.vec3valuex = TMODES.index(mode) if mode in TMODES else 0
@@ -528,7 +528,7 @@ def pushUniforms(T):
     au = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval())
     for k in S['live']:
         p = op('/project1/fx_' + k).par
-        p.vec0valuex = T
+        p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
         p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
         if k in COLFX: _colPush(k, p, T)
 
@@ -1267,7 +1267,7 @@ def camfeedUpdate(C, dt, T):
     if F['new']: op('/project1/phonecam').cook(force=True)
     if g.bypass: g.bypass = False
     p = g.par; o = op('/project1/AUDIO/OUT')
-    p.vec0valuex = T
+    p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
     p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
     p.vec2valuex = float(C.par.Cammix.eval()) * CAMS['alive'] if mode in CAMMODES else 1.0   # nothing running -> statue shows
     p.vec3valuex = CAMMODES.get(mode, 0); p.vec3valuey = (1.0 if C.par.Cammirror.eval() else 0.0) + (2.0 if C.par.Camfit.eval() == 'fit' else 0.0); p.vec3valuez = CAMS['alive']
@@ -1412,25 +1412,25 @@ def preloadStep():
         except Exception:
             pass
 
-def onFrameStart(frame):
-    C = op('/project1/CONTROLS')
-    dt = 1.0 / max(1.0, float(project.cookRate))
-    T = absTime.seconds
-    S['frame'] += 1
-    if PRELOAD['todo'] is None or PRELOAD['todo']: preloadStep()
-    audioUpdate(C, dt, T)
-    react = C.par.Reactivity.eval()
-    if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin':
-        S['angle'] = (S['angle'] + (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * react) * dt) % 360.0
-    sc = C.par.Scene.eval()
-    if sc != S['scene']:
-        applyScene(sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'
-    grid = (sc == 'grid')
+# ------------------------------------------------------------------ frame loop (built to run for hours)
+# Every stage is isolated: if one part ever throws, only that part skips a frame - the rest keeps drawing.
+# (Before, one error stopped everything after it in that frame, every frame: visuals froze or vanished.)
+ERRS = {}
+TWRAP = 1200.0                     # shader clock wraps every 20 min: float precision stays perfect for any set length
+
+def _safe(name, fn, *a):
+    try: return fn(*a)
+    except Exception as e:
+        n = ERRS.get(name, 0) + 1; ERRS[name] = n
+        if n in (1, 10, 100) or n % 3600 == 0: storeLog('FRAME ERROR in %s (x%d): %r' % (name, n, e))
+        return None
+
+def _models(C, dt, T, react, grid):
     ms = modelUpdate(C, T)
     msh = C.par.Modelshown.eval()
     if msh != S.get('msw'): S['msw'] = msh; staticSwitch(msh)
-    objUpdate(C)
-    ag = animUpdate(C, dt, react)
+    _safe('objects', objUpdate, C)
+    ag = _safe('animation', animUpdate, C, dt, react)
     o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, react)
     for g in (op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/img_geo'), ag):
         if g is None: continue
@@ -1443,14 +1443,8 @@ def onFrameStart(frame):
             g.par.scale = g.par.scale.eval() * float(C.par.Objscale.eval())
     if grid:
         op('/project1/moai_geo/grid_inst').cook(force=True)
-    applyLayers(T)
-    pushUniforms(T)
-    if S.get('lcolsave') and T - STORE['colt'] > 0.5:           # colour drags: at most 2 writes a second
-        S.pop('lcolsave', None); STORE['colt'] = T; colSave()
-    camfeedUpdate(C, dt, T)
-    sweepUpdate()
-    xfadeUpdate(T)
-    camUpdate(C, dt)
+
+def _label(C):
     show = bool(C.par.Showlabel.eval())
     txt = ('%s      CAM %s' % (activeLabel(), camLabel())) if show else ''
     if txt != S['label']:
@@ -1459,13 +1453,66 @@ def onFrameStart(frame):
         except Exception: pass
         lab.bypass = not show                                  # no full-screen pass when the label is off
         S['label'] = txt
-    textUpdate(C, T)
-    masterUpdate(C, dt)
-    safetyUpdate(C)
-    flashWatch(C, T)
+
+def _colsave(T):
+    if S.get('lcolsave') and T - STORE['colt'] > 0.5:           # colour drags: at most 2 writes a second
+        S.pop('lcolsave', None); STORE['colt'] = T; colSave()
+
+def onFrameStart(frame):
+    C = op('/project1/CONTROLS')
+    dt = 1.0 / max(1.0, float(project.cookRate))
+    T = absTime.seconds
+    S['frame'] += 1
+    if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
+    _safe('audio', audioUpdate, C, dt, T)
+    react = C.par.Reactivity.eval()
+    if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin':
+        S['angle'] = (S['angle'] + (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * react) * dt) % 360.0
+    sc = C.par.Scene.eval()
+    if sc != S['scene']:
+        _safe('scene', applyScene, sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'
+    _safe('models', _models, C, dt, T, react, sc == 'grid')
+    _safe('layers', applyLayers, T)
+    _safe('uniforms', pushUniforms, T)
+    _safe('colours', _colsave, T)
+    _safe('camfeed', camfeedUpdate, C, dt, T)
+    _safe('sweep', sweepUpdate)
+    _safe('dip', xfadeUpdate, T)
+    _safe('camera', camUpdate, C, dt)
+    _safe('label', _label, C)
+    _safe('text', textUpdate, C, T)
+    _safe('master', masterUpdate, C, dt)
+    _safe('safety', safetyUpdate, C)
+    _safe('flash', flashWatch, C, T)
+    if S['frame'] % 300 == 0: _safe('watchdog', watchdog)       # every ~5 s
     if S['frame'] % 4 == 0:
         try: op('/project1/remote_cb').module.broadcastMeters()
         except Exception: pass
+
+def watchdog():
+    """Long sets: bring dropped phone relays back, and log the rig's health every 10 minutes."""
+    now = absTime.seconds
+    for n in ('remote_mqtt', 'remote_mqtt2', 'remote_mqtt3'):
+        m = op('/project1/' + n)
+        if m is None: continue
+        if m.isConnected: WD[n] = now; continue
+        if now - WD.get(n, now) > 15:                            # down 15 s: restart that connection
+            storeLog('relay %s was down - reconnecting' % n)
+            try: m.par.reconnect.pulse()
+            except Exception: m.par.active = False; run("op('/project1/%s').par.active = True" % n, delayFrames=30)
+            WD[n] = now
+        WD.setdefault(n, now)
+    if now - WD.get('_health', -1e9) > 600:
+        WD['_health'] = now
+        try:
+            p = op('/project1/perf')
+            storeLog('health: %.0f min up, %.0f fps, %.1f ms, gpu %.0f MB, relays %s, errors %s'
+                     % (now / 60, p['fps'].eval(), p['msec'].eval(), p['gpu_mem_used'].eval(),
+                        ''.join('1' if op('/project1/' + n) and op('/project1/' + n).isConnected else '0' for n in ('remote_mqtt', 'remote_mqtt2', 'remote_mqtt3')),
+                        dict(ERRS) or 'none'))
+        except Exception: pass
+
+WD = {}
 
 def masterUpdate(C, dt):
     tgt = 0.0 if C.par.Blackout.eval() else float(C.par.Master.eval())

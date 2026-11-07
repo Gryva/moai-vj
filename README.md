@@ -139,6 +139,10 @@ List restore points (printed in the Textport), Restore point # + Restore that po
 The same safe saving covers the set list, effect colours, FX presets, camera views, the animation list and clip info.
 Everything is logged in `td/store_log.txt`.
 
+**Long sets:** each part of the per-frame engine is isolated (one failure can't freeze the picture), the shader clock
+wraps every 20 minutes (no precision drift after hours), feedback effects reject bad pixel values, and a watchdog
+reconnects any dropped phone relay within ~15 seconds.
+
 ---
 
 ## 5. Adding your own 3D models and animations
@@ -233,6 +237,7 @@ Slow → fewer separate parts, 1024 px textures.
 | Missing preview picture | Hold the preset → Update, or run `captureThumbs()`. |
 | Stutter | Frame time in `/project1/perf` should stay under 16 ms. Rubik's Cube is the heaviest model (~15 ms). |
 | Projector blank | F1 for perform mode; output is `/project1/out1`. |
+| Something off after hours | Open `td/store_log.txt`: every 10 min a `health:` line shows fps, frame time, GPU memory, relays (1 = connected) and any errors. Errors in one part never stop the rest from drawing. |
 
 ---
 

@@ -22,11 +22,14 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 void main(){
   vec3 cur = tex(vUV.st);
   vec3 prev = texture(sTD2DInputs[1], vUV.st).rgb;
+  if (any(isnan(prev)) || any(isinf(prev))) prev = clamp(cur, 0.0, 1.0);        // a bad value must never stick in the loop
   float s = clamp(uP.x, 0.0, 1.0);
   float maxd = mix(1.0, 0.035, s * s * (3.0 - 2.0 * s));          // per-frame step limit
   float lc = luma(cur), lp = luma(prev), dl = lc - lp;
   float lim = clamp(dl, -maxd, maxd);                                // limit brightness change...
   vec3 outc = cur * ((lp + lim + 1e-4) / (lc + 1e-4));               // ...but keep the new colours / motion
   outc = mix(outc, prev + clamp(cur - prev, -maxd * 1.5, maxd * 1.5), 0.35 * s);   // tame colour flips too
-  fragColor = TDOutputSwizzle(vec4(mix(cur, clamp(outc, 0.0, 1.0), uMix), 1.0));
+  vec3 o = mix(cur, clamp(outc, 0.0, 1.0), uMix);
+  if (any(isnan(o)) || any(isinf(o))) o = vec3(0.0);
+  fragColor = TDOutputSwizzle(vec4(o, 1.0));
 }

@@ -12,8 +12,12 @@ def onConnect(dat):
     dat.publish(R.relayBase() + '/state', b'', qos=0, retain=True)     # wipe any old public copy
     print('PHONE RELAY connected ->', R.relayLink())
 
-def onConnectFailure(dat, msg): print('PHONE RELAY connect failed:', msg)
-def onConnectionLost(dat, msg): print('PHONE RELAY lost:', msg)
+def onConnectFailure(dat, msg):
+    print('PHONE RELAY connect failed:', msg)
+    run("op(%r).par.reconnect.pulse()" % dat.path, delayMilliSeconds=10000)
+def onConnectionLost(dat, msg):
+    print('PHONE RELAY lost:', msg)
+    run("op(%r).par.reconnect.pulse()" % dat.path, delayMilliSeconds=3000)     # come back on our own (watchdog retries too)
 def onSubscribe(dat): return
 def onSubscribeFailure(dat, msg): print('PHONE RELAY subscribe failed:', msg)
 def onUnsubscribe(dat): return

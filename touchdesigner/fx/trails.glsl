@@ -23,6 +23,7 @@ void main(){
   float z = 0.994 - a.x * 0.012, r = 0.002 + a.y * 0.004;
   vec2 q = (uv - 0.5) * z; q = mat2(cos(r), -sin(r), sin(r), cos(r)) * q + 0.5;
   vec3 fb = texture(sTD2DInputs[1], q).rgb * (0.78 + 0.2 * clamp(uP.x, 0.0, 1.0));
+  if (any(isnan(fb)) || any(isinf(fb))) fb = vec3(0.0);                      // a bad value must never stick in the loop
   vec3 cur = tex(uv);
   OUT(max(cur, fb));
 }
