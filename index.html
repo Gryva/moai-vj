@@ -100,6 +100,7 @@ label.tg{cursor:pointer}
 .h2r{display:flex;align-items:center;gap:10px}
 .sl-tog{font:700 10px var(--mono);letter-spacing:.1em;padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
 .sl-tog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.aprow{display:flex;gap:6px;margin-top:8px;align-items:stretch}.aptog{flex:0 0 96px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;font-size:10px;letter-spacing:.08em;padding:6px 4px}.aptog b{font-size:11px}.aptog span{font:700 10px var(--mono)}.aptog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.aptimes{flex:1}
 .sbar{display:none;position:fixed;left:0;right:0;top:0;z-index:45;background:#d81e3a;color:#fff;font:700 13px/1.35 var(--sans,system-ui);padding:calc(10px + var(--st,0px)) 16px 10px;box-shadow:0 6px 24px #000a}.sbar.on{display:block}.sbar small{display:block;font-weight:500;opacity:.9;margin-top:2px}
 .sheet{max-height:82vh;overflow-y:auto}.acts .hist{text-align:left;font:600 12px var(--mono)}
 .offlocal{display:block;margin-top:12px;padding:10px 12px;border:1px solid var(--lime);border-radius:8px;color:var(--lime);font-weight:700;text-decoration:none;word-break:break-all}
@@ -259,7 +260,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 <main>
   <section class="view" id="v-live">
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
-    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="apBtn" title="Random preset every few seconds (TUNE → Autopilot)">Auto</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
+    <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div></div>
+    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
@@ -420,7 +422,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07e';
+const BUILD = '2026-11-07f';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -829,7 +831,9 @@ function applyPars(p){
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   { const cur = (S.models || []).find(m => m.name === p.Model), a = !!cur && String(cur.name).startsWith('anim_');
     $('#sum-static').textContent = cur && !a ? cur.label : ''; $('#sum-anim').textContent = cur && a ? cur.label : '';
-    $('#apBtn').classList.toggle('on', !!p.Autopilot); $('#apBtn').textContent = p.Autopilot ? 'Auto ' + Math.round(p.Autotime || 30) + 's' : 'Auto';
+    { const at = Math.round(p.Autotime || 30); $('#apBtn').classList.toggle('on', !!p.Autopilot);
+      $('#apState').textContent = p.Autopilot ? 'ON · ' + (at >= 60 ? (at / 60) + ' min' : at + ' s') : 'OFF';
+      $$('[data-apt]').forEach(b => b.classList.toggle('on', +b.dataset.apt === at)); }
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
@@ -1049,7 +1053,9 @@ function sheetBackups(){
     + `<button data-sh="cancel">Close</button>`;
   $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-$('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on · new preset every ' + Math.round(S.pars.Autotime || 30) + ' s' : 'Autopilot off'); buzz(); });
+$('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on' : 'Autopilot off'); buzz(); });
+$('#apTimes').addEventListener('click', e => { const b = e.target.closest('[data-apt]'); if (!b || !S) return; const v = +b.dataset.apt;
+  S.pars.Autotime = v; applyPars(S.pars); send({t:'set', p:'Autotime', v}); toast('Each preset stays ' + b.textContent); buzz(); });
 $('#bkBtn').addEventListener('click', () => { HIST = null; sheetBackups(); send({t:'store', do:'history'}); buzz(); });
 
 /* ---------------- preset pads ---------------- */
