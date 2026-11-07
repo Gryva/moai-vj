@@ -72,6 +72,10 @@ SLIDERS = [
     ('Objx', 'Left / right', -3, 3, 0.01, 'obj'),
     ('Objy', 'Up / down', -2, 2, 0.01, 'obj'),
     ('Objscale', 'Size', 0.2, 3, 0.01, 'obj'),
+    ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
+    ('Fimgzoom', 'Zoom', 0.2, 4, 0.01, 'frimg'), ('Fimgx', 'Left / right', -1, 1, 0.005, 'frimg'), ('Fimgy', 'Up / down', -1, 1, 0.005, 'frimg'), ('Fimgrot', 'Rotate', -180, 180, 1, 'frimg'),
+    ('Fvidzoom', 'Zoom', 0.2, 4, 0.01, 'frvid'), ('Fvidx', 'Left / right', -1, 1, 0.005, 'frvid'), ('Fvidy', 'Up / down', -1, 1, 0.005, 'frvid'), ('Fvidrot', 'Rotate', -180, 180, 1, 'frvid'),
+    ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
     ('Vcropl', 'Crop left', 0, 0.45, 0.01, 'vcrop'), ('Vcropr', 'Crop right', 0, 0.45, 0.01, 'vcrop'),
     ('Vcropt', 'Crop top', 0, 0.45, 0.01, 'vcrop'), ('Vcropb', 'Crop bottom', 0, 0.45, 0.01, 'vcrop'),
     ('Vkeytol', 'Remove more screen', 0, 1, 0.01, 'vkey'),
@@ -506,6 +510,7 @@ def state():
     C = _C()
     return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
+            'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
                        for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
@@ -580,6 +585,8 @@ def broadcastMeters():
     P, L = _pars(), _layersLive()
     if full or P != LAST['pars']: msg['pars'] = P; LAST['pars'] = P
     if full or L != LAST['L']: msg['L'] = L; LAST['L'] = L
+    LT = _E().tLive()
+    if full or LT != LAST.get('LT'): msg['LT'] = LT; LAST['LT'] = LT
     dat = op('/project1/remote_server')
     for c in list(CLIENTS): _send(dat, c, msg)
     _publish(msg, active_only=True)
@@ -697,9 +704,13 @@ def handle(msg, reply):
                 if hasattr(par, 'menuNames') and par.menuNames and v not in par.menuNames: return
             setattr(C.par, p, v)
         elif t == 'layer':
-            E.setLayer(msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
+            tg = msg.get('tgt') or 'all'                          # which layer the effect is for (FX tab chips)
+            if tg == 'all': E.setLayer(msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
+            else: E.tSetLayer(tg, msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
         elif t == 'clear':
-            E.clearLayers()
+            tg = msg.get('tgt') or 'all'
+            if tg == 'all': E.clearLayers()
+            else: E.tClear(tg)
         elif t == 'scene':
             C.par.Scene = msg['v']
         elif t == 'look':
@@ -742,9 +753,14 @@ def handle(msg, reply):
             c = E._colClean({'m': msg.get('m', 1), 'a': msg.get('a'), 'b': msg.get('b'), 'ang': msg.get('ang', 0)})
             C.par.Textcm = max(1, c['m']); C.par.Textca = c['a']; C.par.Textcb = c['b']; C.par.Textcang = c['ang']
         elif t == 'lcol':
-            k = str(msg.get('k', ''))
-            c = E.colSet(k, {'m': msg.get('m', 0), 'a': msg.get('a'), 'b': msg.get('b'), 'ang': msg.get('ang', 0)})
-            if c: _all({'t': 'lcols', 'v': {k: c}})
+            k = str(msg.get('k', '')); tg = msg.get('tgt') or 'all'
+            cv = {'m': msg.get('m', 0), 'a': msg.get('a'), 'b': msg.get('b'), 'ang': msg.get('ang', 0)}
+            if tg == 'all':
+                c = E.colSet(k, cv)
+                if c: _all({'t': 'lcols', 'v': {k: c}})
+            else:
+                c = E.tColSet(tg, k, cv)
+                if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
         elif t in ('banksave', 'bankclear', 'bankrename'):
             n = int(msg['v'])
             if t == 'banksave': ok = E.bankSave(n, msg.get('name') or None)

@@ -648,6 +648,103 @@ def toggleLayerIndex(i):
 def clearLayers():
     for r in layers(): setLayer(r['key'], on=False)
 
+# ------------------------------------------------------------------ per-layer effects
+# 'all' = the main chain (FX_STACK, whole picture). Each source layer can have its own effect stack; up to 4 layers
+# with effects at once get one of the four copies of the chain (fxS<n>_*), fed by an isolated copy of that layer (lyr<n>).
+FXTGTS = ['model', 'camera', 'images', 'videos', 'draw']
+FXT = {k: {} for k in FXTGTS}                                  # target -> effect key -> [on, amt, p1]
+TCOL = {k: {} for k in FXTGTS}                                 # target -> effect key -> colour
+SLOTS = {}                                                     # target -> chain 1..4
+SLOTSIG = {}
+
+def _defRow(key):
+    for r in layers():
+        if r['key'] == key: return float(r['amt'] or 1.0), float(r['p1'] or 0.0)
+    return 1.0, 0.0
+
+def tSetLayer(tgt, key, on=None, amt=None, p1=None):
+    if tgt not in FXT: return
+    cur = FXT[tgt].get(key) or ([False] + list(_defRow(key)))
+    if on is not None: cur[0] = bool(on)
+    if amt is not None: cur[1] = float(amt)
+    if p1 is not None: cur[2] = float(p1)
+    FXT[tgt][key] = cur
+
+def tClear(tgt=None):
+    for t in ([tgt] if tgt else FXTGTS):
+        if t in FXT: FXT[t] = {}
+
+def tColSet(tgt, k, c):
+    if tgt not in TCOL or k not in COLFX: return None
+    TCOL[tgt][k] = _colClean(c); return TCOL[tgt][k]
+
+def tData():
+    return {t: {k: [int(v[0]), round(v[1], 4), round(v[2], 4)] for k, v in FXT[t].items() if v[0]} for t in FXTGTS}
+
+def tLive():
+    return {t: [[k, int(v[0]), round(v[1], 3), round(v[2], 3)] for k, v in sorted(FXT[t].items())] for t in FXTGTS if FXT[t]}
+
+def _layerShown(C, t):
+    if t == 'model': return bool(C.par.Statue.eval())
+    if t == 'camera': return C.par.Camsrc.eval() in CAMMODES
+    if t == 'images': return mediaActive(C, 'flat')
+    if t == 'videos': return mediaActive(C, 'flat', True)
+    if t == 'draw': return bool(C.par.Drawon.eval()) and not S.get('drawobj')
+    return False
+
+def fxTargets(C):
+    """Give each visible layer that has effects one of the four chains (front layers first); free the rest."""
+    want = [t for t in layerOrder(C) if t in FXT and any(v[0] and v[1] > 0.001 for v in FXT[t].values()) and _layerShown(C, t)][:4]
+    for t in list(SLOTS):
+        if t not in want: del SLOTS[t]
+    free = [n for n in (1, 2, 3, 4) if n not in SLOTS.values()]
+    for t in want:
+        if t not in SLOTS and free: SLOTS[t] = free.pop(0)
+    P = op('/project1'); fx = P.op('fx_src')
+    sl = [float(SLOTS.get(t, 0)) for t in FXTGTS]
+    fx.par.vec8valuex, fx.par.vec8valuey, fx.par.vec8valuez, fx.par.vec8valuew = sl[0:4]
+    fx.par.vec9valuex = sl[4]
+    for n in (1, 2, 3, 4):
+        t = next((k for k, v in SLOTS.items() if v == n), None)
+        sw = P.op('lfx%d' % n)
+        if sw is not None and int(sw.par.index.eval()) != (1 if t else 0): sw.par.index = 1 if t else 0
+        if t is None: SLOTSIG.pop(n, None); continue
+        iso = P.op('lyr%d' % n)
+        if iso is not None and iso.par.vec9valuey.eval() != LAYER_IDS[t]: iso.par.vec9valuey = LAYER_IDS[t]
+        sig = (t, tuple(sorted((k, bool(v[0] and v[1] > 0.001), v[1], v[2]) for k, v in FXT[t].items())))
+        if SLOTSIG.get(n) != sig:
+            SLOTSIG[n] = sig
+            for r in layers():
+                k = r['key']; g = P.op('fxS%d_%s' % (n, k))
+                if g is None: continue
+                v = FXT[t].get(k); on = bool(v and v[0] and v[1] > 0.001)
+                if on and g.bypass and k in FEEDBACK:
+                    fb = P.op('fxS%d_%s_fb' % (n, k))
+                    if fb: fb.par.resetpulse.pulse()
+                g.bypass = not on
+                if on: g.par.vec2valuex = v[1]; g.par.vec3valuex = v[2]
+
+def tUniforms(T):
+    if not SLOTS: return
+    o = op('/project1/AUDIO/OUT')
+    au = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval())
+    for t, n in SLOTS.items():
+        for k, v in FXT[t].items():
+            if not (v[0] and v[1] > 0.001): continue
+            g = op('/project1/fxS%d_%s' % (n, k))
+            if g is None: continue
+            p = g.par
+            p.vec0valuex = T % TWRAP
+            p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
+            if k in COLFX:
+                c = TCOL[t].get(k)
+                if not c or c['m'] == 0:
+                    if p.vec4valuew != 0: p.vec4valuew = 0
+                else:
+                    cv = _colVals(c)
+                    p.vec4valuex, p.vec4valuey, p.vec4valuez, p.vec4valuew = cv[0], cv[1], cv[2], float(c['m'])
+                    p.vec5valuex, p.vec5valuey, p.vec5valuez, p.vec5valuew = cv[3], cv[4], cv[5], math.radians(cv[6])
+
 GRIDPARS = ['Gridcount', 'Griddepth', 'Gridspace', 'Gridwave', 'Gridstagger']
 
 def lookData():
@@ -655,7 +752,8 @@ def lookData():
     return {'layers': {r['key']: [int(r['on'] in ('1', 'True', 'true')), float(r['amt']), float(r['p1'])] for r in layers()},
             'scene': C.par.Scene.eval(), 'grid': {p: C.par[p].eval() for p in GRIDPARS},
             'text': {p: C.par[p].eval() for p in TEXTPARS}, 'statue': bool(C.par.Statue.eval()),
-            'lcols': {k: dict(v) for k, v in LCOL.items() if v.get('m', 0) > 0}}
+            'lcols': {k: dict(v) for k, v in LCOL.items() if v.get('m', 0) > 0},
+            'tfx': tData(), 'tcol': {t: {k: dict(v) for k, v in TCOL[t].items() if v.get('m', 0) > 0} for t in FXTGTS}}
 
 def applyLook(d, text=True):
     C = op('/project1/CONTROLS'); S['dirty'] = True
@@ -671,6 +769,10 @@ def applyLook(d, text=True):
     if d.get('scene'): C.par.Scene = d['scene']
     C.par.Statue = bool(d.get('statue', True))                  # older presets: statue on
     colsApply(d.get('lcols'), S.get('colfade', 0.0))
+    tfx = d.get('tfx') or {}; tcol = d.get('tcol') or {}           # per-layer effects (older presets: none)
+    for t in FXTGTS:
+        FXT[t] = {k: [bool(v[0]), float(v[1]), float(v[2])] for k, v in (tfx.get(t) or {}).items()}
+        TCOL[t] = {k: _colClean(v) for k, v in (tcol.get(t) or {}).items()}
 
 def lookNames():
     t = op('/project1/LOOKS')
@@ -945,10 +1047,12 @@ def srcData():
             'vcrop': [round(float(C.par[n].eval()), 4) for n in ('Vcropl', 'Vcropr', 'Vcropt', 'Vcropb')],
             'vkey': _keyDict(C, True),
             'layers': layerOrder(C),
+            'frame': {n: round(float(C.par[n].eval()), 4) for n in FRAMEPARS},
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
             'draw': bool(C.par.Drawon.eval()), 'drawmix': round(float(C.par.Drawmix.eval()), 3),
             'key': _keyDict(C)}
 
+FRAMEPARS = ['F%s%s' % (l, n) for l in ('cam', 'img', 'vid', 'draw') for n in ('zoom', 'x', 'y', 'rot')]
 KEYPARS = ['Keyon', 'Keycolor', 'Keytol', 'Keysoft', 'Keyspill', 'Keyshrink', 'Objx', 'Objy', 'Objscale']
 
 def drawPath(slot): return '%s/td/drawings/p%d.png' % (project.folder, int(slot))
@@ -989,6 +1093,8 @@ def applySrc(d, slot=None):
         order = list(LAYER_DEFAULT)
         if s.get('camsrc') == 'behind': order.remove('camera'); order.append('camera')
     C.par.Layerorder = ','.join(order)
+    fr = s.get('frame') or {}
+    for n in FRAMEPARS: C.par[n] = fr.get(n, C.par[n].default)
     if s.get('clip') and R.clipPlay(s['clip']): pass
     elif C.par.Clipstate.eval() == 'loop': R.clipLive()
     C.par.Camsrc = 'cam' if s.get('camsrc') == 'behind' else s.get('camsrc', 'off')   # BEHIND is now just the layer order
@@ -1571,6 +1677,8 @@ def onFrameStart(frame):
     _safe('render', renderGeo, C)
     _safe('layers', applyLayers, T)
     _safe('uniforms', pushUniforms, T)
+    _safe('layerfx', fxTargets, C)
+    _safe('layerfxu', tUniforms, T)
     _safe('colours', _colsave, T)
     _safe('camfeed', camfeedUpdate, C, dt, T)
     _safe('sweep', sweepUpdate)

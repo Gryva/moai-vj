@@ -86,6 +86,7 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .hint2{font-size:11px;color:var(--mute);margin:8px 2px 0;line-height:1.4}.hint2 b{color:var(--ink)}
 .clip .vid{position:absolute;right:5px;top:4px;font-size:11px;text-shadow:0 1px 4px #000}
 label.tg{cursor:pointer}
+.tgts{display:flex;flex-wrap:wrap;gap:6px}.tgt{border-radius:18px;border:1px solid var(--line);background:var(--panel);padding:9px 13px;font:700 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:6px}.tgt.on{background:var(--lime);color:#0b0a0f;border-color:transparent}.tgt i{font:700 10px var(--mono);font-style:normal;opacity:.75}
 .fxps{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px}
 .fxp{flex:0 0 auto;max-width:150px;padding:9px 12px 8px;border-radius:4px;border:1px solid var(--line);background:var(--panel);text-align:left}
 .fxp b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fxp .d{display:flex;gap:3px;margin-top:5px;min-height:5px}.fxp .d i{width:5px;height:5px;border-radius:50%}
@@ -217,7 +218,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radiu
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
 .bar div{width:100%;border-radius:6px;background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(7,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:6px}nav button.on{color:var(--ink);background:var(--panel2)}
 
 /* text tab */
@@ -277,9 +278,9 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-layers">
-    <h2><span>FX presets</span><em>tap = use on what's on screen · hold = edit</em></h2>
-    <div class="fxps" id="fxps"></div>
-    <h2><span>On air</span><button class="clr" data-act="clear">CLEAR ALL</button></h2>
+    <h2><span>Layer</span><em>effects go on the chosen layer</em></h2>
+    <div class="tgts" id="fxtg"></div><p class="srcnote" id="fxtgnote" style="margin-top:6px"></p>
+    <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
     <div class="onair" id="onair"></div>
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
@@ -291,6 +292,21 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <div class="cb"><div class="lstack" id="lstack"></div>
         <p class="srcnote" style="margin:8px 2px 0" id="lnote">Switch a source ON below and it appears here. ▲ ▼ change what is in front. Tap a name to jump to its settings.</p></div></div>
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
+
+    <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
+      <div class="cb">
+        <p class="srcnote">Text always sits on top of every layer, after the effects, so it stays readable.</p>
+    <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
+    <div class="trow"><button class="go" id="tsend">SHOW TEXT</button></div>
+    <div class="recent" id="recent"></div>
+    <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
+    <h2>Layout</h2><div class="opts" id="o-Textlayout"></div>
+    <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
+    <h2>Font</h2><div class="opts" id="o-Textfont"></div>
+    <h2>Colour</h2><div id="tcolbox"></div>
+    <h2>Adjust</h2><div id="g-text"></div>
+      </div></div>
+
     <div class="card" id="cardStatue"><div class="ch"><b>3D models</b><button class="tg" id="t-Statue" data-tog="Statue">ON</button></div>
       <div class="cb">
         <p class="srcnote">OFF hides every model and animation. Pictures, videos and drawings have their own switches.</p>
@@ -308,22 +324,6 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <details class="box"><summary>Swap animation</summary>
           <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
           <div id="g-model" style="margin-top:7px"></div></details>
-      </div></div>
-
-    <div class="card" id="cardCam"><div class="ch"><b>Phone camera</b><span class="camst" id="camst"></span><button class="tg" id="camgo">OFF</button></div>
-      <div class="cb">
-        <div class="camwrap"><div class="camv" id="camvw"><video id="camv" playsinline muted autoplay></video><img id="clipview" alt=""></div>
-          <div class="camb"><button class="big" id="camflip">FLIP ⟲</button><button class="recbtn" id="cliprec">● RECORD</button></div></div>
-        <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
-        <div class="seg sm" id="o-Camfit" style="margin-top:7px"></div>
-        <div id="g-camfeed" style="margin-top:7px"></div>
-      </div></div>
-
-    <div class="card" id="cardClips"><div class="ch"><b>Clips</b><em>hold = delete</em></div>
-      <div class="cb">
-        <div class="clips" id="clips"></div>
-        <div id="g-clip" style="margin-top:7px"></div>
-        <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
       </div></div>
 
     <div class="card" id="cardMedia"><div class="ch"><b>Images</b><label class="tg" for="mediapick">＋ ADD</label><button class="tg" id="t-Mediaon" data-tog="Mediaon">OFF</button><input type="file" id="mediapick" accept="image/*" hidden></div>
@@ -358,23 +358,35 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR</button></div>
         <div id="g-draw" style="margin-top:7px"></div>
       </div></div>
-    <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
+
+    <div class="card" id="cardCam"><div class="ch"><b>Phone camera</b><span class="camst" id="camst"></span><button class="tg" id="camgo">OFF</button></div>
       <div class="cb">
-        <p class="srcnote">Text always sits on top of every layer, after the effects, so it stays readable.</p>
-    <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
-    <div class="trow"><button class="go" id="tsend">SHOW TEXT</button></div>
-    <div class="recent" id="recent"></div>
-    <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
-    <h2>Layout</h2><div class="opts" id="o-Textlayout"></div>
-    <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
-    <h2>Font</h2><div class="opts" id="o-Textfont"></div>
-    <h2>Colour</h2><div id="tcolbox"></div>
-    <h2>Adjust</h2><div id="g-text"></div>
+        <div class="camwrap"><div class="camv" id="camvw"><video id="camv" playsinline muted autoplay></video><img id="clipview" alt=""></div>
+          <div class="camb"><button class="big" id="camflip">FLIP ⟲</button><button class="recbtn" id="cliprec">● RECORD</button></div></div>
+        <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
+        <div class="seg sm" id="o-Camfit" style="margin-top:7px"></div>
+        <div id="g-camfeed" style="margin-top:7px"></div>
       </div></div>
+
+    <div class="card" id="cardClips"><div class="ch"><b>Clips</b><em>hold = delete</em></div>
+      <div class="cb">
+        <div class="clips" id="clips"></div>
+        <div id="g-clip" style="margin-top:7px"></div>
+        <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
+      </div></div>
+
   </section>
 
 
   <section class="view" id="v-cam">
+    <h2><span>Layer</span><em>what you are framing</em></h2>
+    <div class="tgts" id="vwtg"></div>
+    <div id="view2d" hidden>
+      <p class="srcnote" style="margin-top:8px">Flat layer: zoom, move and rotate it on screen. The 3D camera doesn't touch it.</p>
+      <div id="g-frcam" data-fr="camera"></div><div id="g-frimg" data-fr="images"></div><div id="g-frvid" data-fr="videos"></div><div id="g-frdraw" data-fr="draw"></div>
+      <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="frreset">RESET FRAMING</button></div>
+    </div>
+    <div id="view3d">
     <h2><span>Saved views</span><em>hold = save current</em></h2><div class="presets" id="presets"></div>
     <div class="tpad" id="tpad" style="margin-top:14px"><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
       <div class="hint">1 FINGER ORBIT · FLICK TO SPIN<br>2 FINGERS PINCH ZOOM · DRAG PAN · DOUBLE-TAP CENTRE</div></div>
@@ -382,6 +394,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <p class="srcnote">Camera only. How the object itself moves (spin, bob…) is in SOURCE → 3D.</p>
     <h2>Camera</h2><div id="g-camera"></div>
     <details class="box"><summary>Movement + kick</summary><div id="g-move"></div><div id="g-kick"></div></details>
+    </div>
   </section>
 
   <section class="view" id="v-audio">
@@ -455,7 +468,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07k';
+const BUILD = '2026-11-07m';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -500,9 +513,10 @@ function onMsg(m){
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, mediacur: S.mediacur, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
     if (m.local) store.set('local', m.local); if (m.store) storeState(m.store);
-    build(); applyPars(m.pars); applyLayers(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
+    S.allL = S.layers.map(l => [l.k, l.on ? 1 : 0, l.amt, l.p1]); S.tfx = S.tfx || {};
+    build(); applyPars(m.pars); applyTarget(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
   else if (!S) return;
-  else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L);
+  else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); }
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
   else if (m.t === 'clips') {
@@ -512,7 +526,8 @@ function onMsg(m){
     S.clips = m.v; S.clipcur = m.cur; renderClips(); cards(); }
   else if (m.t === 'fxps') { S.fxps = m.v; renderFxps(); }
   else if (m.t === 'queue') { if (!(QD.on)) { S.queue = {v:m.v, pos:m.pos}; renderQueue(); } }
-  else if (m.t === 'lcols') { Object.assign(S.lcols, m.v); for (const k in m.v) colUI(k); }
+  else if (m.t === 'lcols') { Object.assign(S.lcols, m.v); if (FXT_SEL === 'all') for (const k in m.v) colUI(k); }
+  else if (m.t === 'tcols') { S.tcol = S.tcol || {}; Object.assign(S.tcol[m.tgt] = S.tcol[m.tgt] || {}, m.v); if (FXT_SEL === m.tgt) for (const k in m.v) colUI(k); }
   else if (m.t === 'media') { const old = {}; (S.media || []).forEach(x => { if (x.thumb) old[x.id] = x.thumb; });
     S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); S.mediacur = m.cur; S.vidcur = m.vcur || null; renderMedia(); cards(); }
   else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
@@ -641,6 +656,38 @@ function layerMove(k, dir){                  // dir -1 = towards the front (up),
   const a = o.indexOf(k), b = o.indexOf(vis[j]); o[a] = vis[j]; o[b] = k;
   S.pars.Layerorder = o.join(','); send({t:'set', p:'Layerorder', v:S.pars.Layerorder}); layerStack();
 }
+/* which layer FX and VIEW edit */
+const TGTNAME = {all:'All layers', model:'3D models', camera:'Phone camera', images:'Images', videos:'Videos', draw:'Drawing'};
+function applyTarget(){
+  const cur = {}; (FXT_SEL === 'all' ? (S.allL || []) : ((S.tfx || {})[FXT_SEL] || [])).forEach(([k, on, amt, p1]) => cur[k] = [on, amt, p1]);
+  const base = {}; (S.allL || []).forEach(([k, on, amt, p1]) => base[k] = [on, amt, p1]);
+  S.layers.forEach(l => { const v = cur[l.k];
+    if (v) { l.on = !!v[0]; l.amt = v[1]; l.p1 = v[2]; }
+    else { l.on = false; if (base[l.k]) { l.amt = base[l.k][1] || 1; l.p1 = base[l.k][2]; } } });
+  airSig = null; applyLayers(); fxTargets();
+}
+function fxAvail(){                       // layers that can carry their own effects: ON and flat (3D objects ride with 3D models)
+  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.in3d && !(k === 'draw' && !(S.pars.Mediaon && S.pars.Mediamode === 'object')); });
+}
+function fxTargets(){
+  if (!S) return; const av = fxAvail();
+  if (FXT_SEL !== 'all' && !av.includes(FXT_SEL) && !((S.tfx || {})[FXT_SEL] || []).some(x => x[1])) { FXT_SEL = 'all'; applyTarget(); return; }
+  const n = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
+  $('#fxtg').innerHTML = ['all'].concat(av).map(k => `<button class="tgt ${k === FXT_SEL ? 'on' : ''}" data-fxt="${k}">${TGTNAME[k]}${n(k) ? `<i>${n(k)}</i>` : ''}</button>`).join('');
+  $('#fxtgname').textContent = TGTNAME[FXT_SEL];
+  const withFx = av.filter(k => n(k)).length;
+  $('#fxtgnote').textContent = FXT_SEL === 'all' ? 'ALL = effects over the whole picture. Pick a layer to give only that layer its own effects.'
+    : (withFx > 4 ? 'Only 4 layers can have their own effects at once - the 4 front ones get them.' : 'These effects only touch ' + TGTNAME[FXT_SEL] + '.');
+  viewTargets();
+}
+function viewTargets(){
+  if (!S || !$('#vwtg')) return;
+  const flat = layerOrder().filter(k => k !== 'model' && k !== 'draw' && layerInfo(k).on && !layerInfo(k).in3d);
+  if (VW_SEL !== '3d' && !flat.includes(VW_SEL)) VW_SEL = '3d';
+  $('#vwtg').innerHTML = ['3d'].concat(flat).map(k => `<button class="tgt ${k === VW_SEL ? 'on' : ''}" data-vwt="${k}">${k === '3d' ? '3D camera' : TGTNAME[k]}</button>`).join('');
+  $('#view2d').hidden = VW_SEL === '3d'; $('#view3d').hidden = VW_SEL !== '3d';
+  $$('#view2d [data-fr]').forEach(e => e.hidden = e.dataset.fr !== VW_SEL);
+}
 function layerStack(){
   const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on);
   let h = p.Texton ? `<div class="lrow on pin"><button class="lname" data-jump="cardText"><b>Text</b><span>always on top</span></button></div>` : '';
@@ -656,7 +703,7 @@ function cards(){
   $('#cardMedia').classList.toggle('open', !!p.Mediaon);
   $('#cardVid').classList.toggle('open', !!p.Vmediaon);
   $('#cardText').classList.toggle('open', !!p.Texton);
-  layerStack();
+  layerStack(); fxTargets();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
   $('#cardDraw').classList.toggle('open', !!p.Drawon);
@@ -676,7 +723,7 @@ function clipView(){
 }
 setInterval(() => S && ui.tab === 'source' && clipView(), 50);
 function renderFxps(){
-  if (!S) return;
+  if (!S || !$('#fxps')) return;
   $('#fxps').innerHTML = (S.fxps || []).map((x, i) => `<button class="fxp" data-fxp="${i}"><b>${esc(x.name)}</b><span class="d">${x.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('')}</span></button>`).join('')
     + `<button class="fxp add" data-fxp="new">＋ SAVE FX</button>`;
 }
@@ -825,7 +872,7 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','key','obj','crop','vcrop','vkey','vobj'].forEach(g => $('#g-' + g).innerHTML = '');
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','key','obj','crop','vcrop','vkey','vobj','frcam','frimg','frvid','frdraw'].forEach(g => $('#g-' + g).innerHTML = '');
   const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
@@ -935,7 +982,7 @@ function header(){
   $('#nowA').textContent = pr ? pr.name : 'Custom look';
 }
 function applyLayers(L){
-  if (L) L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } });
+  if (L) { S.allL = L; if (FXT_SEL === 'all') L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } }); }
   EL.layerBtns.forEach(b => b.classList.toggle('on', !!S.layers.find(x => x.k === b.dataset.layer && x.on)));
   onAir(); header();
 }
@@ -952,7 +999,7 @@ function onAir(){
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
-  $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', k:el.dataset.lk, [el.dataset.f]: v})));
+  $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', tgt:FXT_SEL, k:el.dataset.lk, [el.dataset.f]: v})));
   ccBind($('#onair'));
   act.forEach(l => l.col && colUI(l.k));
 }
@@ -988,9 +1035,11 @@ document.addEventListener('input', e => { const k = e.target.dataset && e.target
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.cbox; if (k) COPEN[k] = e.target.open; }, true);
 /* effects */
 const FXMODES = [[0,'OWN'],[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']], GMODES = [[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']];
-const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, (S.lcols || {})[k]);
+let FXT_SEL = 'all', VW_SEL = '3d';
+const colMap = () => FXT_SEL === 'all' ? (S.lcols = S.lcols || {}) : ((S.tcol = S.tcol || {})[FXT_SEL] = S.tcol[FXT_SEL] || {});
+const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, colMap()[k]);
 function colBox(k){
-  ccDef('fx:' + k, () => colOf(k), c => { S.lcols[k] = c; clearTimeout(colBox[k]); colBox[k] = setTimeout(() => send({t:'lcol', k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, FXMODES);
+  ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; clearTimeout(colBox[k]); colBox[k] = setTimeout(() => send({t:'lcol', tgt:FXT_SEL, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, FXMODES);
   return ccBox('fx:' + k, '🎨 Colour');
 }
 const colUI = k => ccUI('fx:' + k);
@@ -1244,16 +1293,19 @@ document.addEventListener('click', e => {
   else if (d.dc) { DR.ops = []; drawRender(); drawSend(); drawSave(); buzz(15); }
 
   else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
-  else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', k:l.k, on:l.on}); applyLayers(); buzz(); }
-  else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', k:l.k, on:false}); applyLayers(); buzz(); }
-  else if (d.mode) { send({t:'layer', k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
+  else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', tgt:FXT_SEL, k:l.k, on:l.on}); applyLayers(); buzz(); }
+  else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', tgt:FXT_SEL, k:l.k, on:false}); applyLayers(); buzz(); }
+  else if (d.mode) { send({t:'layer', tgt:FXT_SEL, k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
   else if (d.scene) { send({t:'scene', v:d.scene}); buzz(); }
   else if (d.model) { send({t:'model', v:d.model}); buzz(); }
   else if (d.mstyle) { send({t:'set', p:'Modelstyle', v:d.mstyle}); S.pars.Modelstyle = d.mstyle; applyPars({}); buzz(); }
   else if (d.tog) { const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
-  else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); applyLayers(); buzz(); }
+  else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear', tgt:FXT_SEL}); applyLayers(); fxTargets(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
   else if (d.vmedia) { send(d.vmedia === S.vidcur ? {t:'media', do:'stop', layer:'videos'} : {t:'media', do:'play', layer:'videos', id:d.vmedia}); buzz(); }
+  else if (d.fxt) { FXT_SEL = d.fxt; applyTarget(); buzz(); }
+  else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
+  else if (d.act === 'frreset') { const pre = {camera:'Fcam', images:'Fimg', videos:'Fvid', draw:'Fdraw'}[VW_SEL]; if (pre) { [['zoom',1],['x',0],['y',0],['rot',0]].forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
   else if (d.lmove) { layerMove(d.lmove, +d.dir); buzz(); }
   else if (d.act === 'vcropreset') { ['Vcropl','Vcropr','Vcropt','Vcropb'].forEach(k => { S.pars[k] = 0; send({t:'set', p:k, v:0}); }); build(); buzz(); }
   else if (d.jump) { const c = $('#' + d.jump); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }

@@ -63,10 +63,14 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 "Saved ✓ on computer" appears only after the computer confirms the save is on disk. A red banner = the save failed.
 
 ### FX
-- **FX presets:** tap = apply that effect stack to what's on screen, hold = rename or delete, ＋ = save the current stack.
-- **On air:** effects currently on. **CLEAR ALL** turns them off.
-- **Warp / Style / Post:** tap an effect to turn it on; each has an amount and its own setting.
+- **Layer chips** at the top: **ALL LAYERS** (effects over the whole picture) plus every source that is ON and flat
+  (3D models, Phone camera, Images, Videos, a flat Drawing). Tap one: everything below now edits only that layer.
+  A number on a chip = how many effects that layer has. Up to 4 layers can carry their own effects at once.
+  Text never gets layer effects (it is drawn after them). 3D-object images/videos ride with the 3D models layer.
+- **On air:** the chosen layer's effects, with amount, setting and colour. **CLEAR** clears only that layer.
+- **Warp / Style / Post:** tap an effect to add it to the chosen layer.
 - **Colour** (supported effects): Own, Solid, Ramp or Radial. Colour A/B from 10 swatches or any colour; angle for gradients.
+- Presets save every layer's effects. Older presets keep their effects on ALL, so they look the same.
 
 ### SOURCE
 Six sources, each a card with its own **ON/OFF**. A card opens only while its source is ON.
@@ -99,8 +103,11 @@ move with the 3D models layer. **Text** is always on top (it is drawn after the 
   one tap away. Text is saved with a preset when you press **Update**.
 
 ### VIEW
-Camera only (how you look at the scene; object movement lives in SOURCE → Object motion): saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan, handheld shake.
-On the preview: drag = orbit, pinch = zoom, two fingers = pan, flick = keep spinning.
+- **Layer chips** at the top: **3D CAMERA** plus each flat layer that is ON (Phone camera, Images, Videos).
+- 3D camera (models and 3D objects): saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan,
+  handheld shake. On the preview: drag = orbit, pinch = zoom, two fingers = pan, flick = keep spinning.
+  Object movement (spin, bob…) lives in SOURCE → 3D models.
+- Flat layer: **zoom, left/right, up/down, rotate** just for that layer, **RESET FRAMING**. Saved in presets.
 
 ### AUDIO
 Input gain, noise gate, dynamic range, smoothing, beat sensitivity, beat feel (punchy ↔ smooth), flash safety,
