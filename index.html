@@ -95,7 +95,11 @@ label.tg{cursor:pointer}
 .btn:disabled{opacity:.35}
 .clipst{font:600 12px var(--mono);color:var(--mute);margin:7px 2px 0}.clipst.rec{color:var(--hot)}.clipst.loop{color:var(--lime)}
 .intro{margin:14px 2px 2px;font-size:13px;line-height:1.45;color:var(--mute)}.intro b{color:var(--ink);font-weight:600}
-.setlist{position:sticky;bottom:6px;z-index:6;margin-top:14px;background:#14101bf2;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #3a2d48;border-radius:10px;padding:8px 8px 9px;box-shadow:0 -8px 24px #000a}
+.setlist{margin:18px 0 6px;background:#14101b;border:1px solid #3a2d48;border-radius:10px;padding:8px 8px 9px}
+.setlist.off{display:none}
+.h2r{display:flex;align-items:center;gap:10px}
+.sl-tog{font:700 10px var(--mono);letter-spacing:.1em;padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
+.sl-tog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 .sl-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.sl-hd b{font-size:12px;letter-spacing:.14em;text-transform:uppercase}
 .sl-next{flex:1;min-width:0;font:600 11px var(--mono);color:var(--lime);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
@@ -252,7 +256,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 <main>
   <section class="view" id="v-live">
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
-    <h2><span>Presets</span><em class="edonly">hold = edit</em></h2>
+    <h2><span>Presets</span><span class="h2r"><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
@@ -412,7 +416,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-06c';
+const BUILD = '2026-11-07a';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -422,7 +426,7 @@ setTimeout(async () => {
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
 const THUMBS = {}; const FXV = 'v1';
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
-let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam2', true), model: store.get('model', true), text: store.get('text', false)};
+let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam2', true), model: store.get('model', true), text: store.get('text', false), setlist: store.get('setlist', true)};
 const touching = {};
 let TOKEN = store.get('tok_' + (KEY || 'local'), '');
 const CID = Math.random().toString(36).slice(2, 10);       // this phone's id: auth replies are addressed to it
@@ -793,7 +797,12 @@ function uiPrefs(){
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab));
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
+  const sl = $('#setlist'), tg = $('#slTog');
+  if (sl) sl.classList.toggle('off', !ui.setlist);
+  if (tg) { tg.classList.toggle('on', ui.setlist); tg.setAttribute('aria-pressed', ui.setlist); }
+  store.set('setlist', ui.setlist);
 }
+$('#slTog').addEventListener('click', () => { ui.setlist = !ui.setlist; uiPrefs(); buzz(); });
 
 /* ---------------- render ---------------- */
 function applyPars(p){
