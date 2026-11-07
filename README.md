@@ -55,6 +55,7 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 | Preset tile, hold | Friends: add to set list or play. Edit mode: **Update** (save what's on screen), rename, delete, add to set list, copy its effects. |
 | ＋ tile, hold (edit) | Save what's on screen as a new preset. |
 | ◻ tile (edit) | New clean preset (no effects, no text). |
+| **Auto** | Autopilot: a random preset every 30 s (change the time in TUNE). Never repeats the one on screen or the last 5. Uses the set list if it has 2+ presets, otherwise all presets. Tapping a preset restarts the timer. |
 | **Set list** | Show or hide the set list (remembered on this phone). |
 | **↺ Backups** (edit) | Undo the last preset change, make a restore point, or bring back any earlier one. |
 | Set list track | ◀ ▶ step through it. Hold a preset tile to add it; hold a track item to move or remove it. |
@@ -97,7 +98,7 @@ headphone monitor and volume. Meters show low, mid, high, kick.
 
 ### TUNE
 Camera sway (orbit, elevation, push/pull, roll, sway speed), audio → camera, kick push-in, kick jolt, preset glide
-time, response, flick inertia, brightness and blackout fade.
+time, response, flick inertia, brightness, blackout fade, and **Autopilot: new preset every (s)**.
 
 **Updates:** when a new version is published, the phone shows **New version ready · tap to update**.
 
@@ -112,6 +113,7 @@ Work with the TouchDesigner window focused, no phone needed.
 | **PageDown / PageUp** | Next / previous preset in the set list (a wireless presenter clicker sends these) |
 | **Shift + 1…9, 0** | Load preset slot 1…10 |
 | **B** | Blackout on/off (the clicker's "blank" button) |
+| **P** | Autopilot on/off |
 | 1…9, 0 / C | Toggle effect 1…10 / clear all effects |
 | M / N, Ctrl + 1…9 | Next / previous model, model by number |
 | A D / W S / Q E / Z X | Orbit / elevation / distance / lens |

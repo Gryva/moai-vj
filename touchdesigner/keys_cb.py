@@ -3,6 +3,7 @@
 #   PageDown / PageUp  next / previous preset in the set list  (most presenter clickers send these)
 #   Shift + 1..9, 0    load preset slot 1..10 (the numbers on the phone tiles)
 #   B                  blackout on / off  (the "blank screen" button on most clickers)
+#   P                  autopilot on / off (random preset every N seconds)
 KEYFADE = 1.0
 
 def _mods(args, kwargs):
@@ -45,6 +46,8 @@ def onKey(dat, key, character, *args, **kwargs):
         return
     if ch.lower() == 'b' and not ctrl:
         C.par.Blackout = not C.par.Blackout.eval(); return
+    if ch.lower() == 'p' and not ctrl:                          # autopilot on / off
+        C.par.Autopilot = not C.par.Autopilot.eval(); return
 
     # ---- models-nav
     if ctrl and dg:

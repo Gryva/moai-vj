@@ -259,7 +259,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 <main>
   <section class="view" id="v-live">
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
-    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
+    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="apBtn" title="Random preset every few seconds (TUNE → Autopilot)">Auto</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
@@ -420,7 +420,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07d';
+const BUILD = '2026-11-07e';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -829,6 +829,7 @@ function applyPars(p){
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   { const cur = (S.models || []).find(m => m.name === p.Model), a = !!cur && String(cur.name).startsWith('anim_');
     $('#sum-static').textContent = cur && !a ? cur.label : ''; $('#sum-anim').textContent = cur && a ? cur.label : '';
+    $('#apBtn').classList.toggle('on', !!p.Autopilot); $('#apBtn').textContent = p.Autopilot ? 'Auto ' + Math.round(p.Autotime || 30) + 's' : 'Auto';
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
@@ -1048,6 +1049,7 @@ function sheetBackups(){
     + `<button data-sh="cancel">Close</button>`;
   $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
+$('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on · new preset every ' + Math.round(S.pars.Autotime || 30) + ' s' : 'Autopilot off'); buzz(); });
 $('#bkBtn').addEventListener('click', () => { HIST = null; sheetBackups(); send({t:'store', do:'history'}); buzz(); });
 
 /* ---------------- preset pads ---------------- */

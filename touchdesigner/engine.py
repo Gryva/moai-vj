@@ -1484,9 +1484,34 @@ def onFrameStart(frame):
     _safe('master', masterUpdate, C, dt)
     _safe('safety', safetyUpdate, C)
     _safe('flash', flashWatch, C, T)
+    _safe('autopilot', autopilotUpdate, C, T)
     if S['frame'] % 300 == 0: _safe('watchdog', watchdog)       # every ~5 s
     if S['frame'] % 4 == 0:
         try: op('/project1/remote_cb').module.broadcastMeters()
+        except Exception: pass
+
+# ------------------------------------------------------------------ autopilot: a new preset every N seconds
+# Random, but never the one on screen or any of the last 5 shown. Uses the set list if it has 2+ presets,
+# otherwise every saved preset. Tapping a preset yourself restarts the timer.
+AP = {'t': 0.0, 'recent': [], 'last': 0}
+
+def autopilotUpdate(C, T):
+    import random
+    b = int(S.get('bank', 0) or 0)
+    if b and b != AP['last']:                                    # remember what was shown (autopilot or by hand)
+        AP['last'] = b; AP['recent'] = ([x for x in AP['recent'] if x != b] + [b])[-5:]; AP['t'] = T
+    if not C.par.Autopilot.eval(): AP['t'] = T; return
+    if T - AP['t'] < max(5.0, float(C.par.Autotime.eval())): return
+    AP['t'] = T
+    q = [x for x in qState()['v'] if _bankTable()[x, 1].val]
+    pool = sorted(set(q)) if len(set(q)) >= 2 else [i for i in range(1, BANK_SLOTS + 1) if _bankTable()[i, 1].val]
+    if len(pool) < 2: return
+    avoid = set(AP['recent'][-min(5, len(pool) - 1):]) | {b}
+    cand = [x for x in pool if x not in avoid] or [x for x in pool if x != b]
+    slot = random.choice(cand)
+    if bankLoad(slot, fade=1.5, cam=True, model=True, text=True):
+        try:
+            if qSync(slot): op('/project1/remote_cb').module._all(qMsg())
         except Exception: pass
 
 def watchdog():

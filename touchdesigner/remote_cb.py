@@ -15,6 +15,7 @@ LIVE = {'t': time.perf_counter(), 'f': absTime.frame, 'fps': 60.0}
 SLIDERS = [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
+    ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
     ('Gain', 'Input gain', 0, 4, 0.01, 'audio'),
     ('Gate', 'Noise gate dB', -90, -20, 1, 'audio'),
@@ -70,7 +71,7 @@ SLIDERS = [
     ('Objy', 'Up / down', -2, 2, 0.01, 'obj'),
     ('Objscale', 'Size', 0.2, 3, 0.01, 'obj'),
 ]
-TOGGLES = ['Autospin', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
+TOGGLES = ['Autopilot', 'Autospin', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
 TEXTMENUS = ['Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
