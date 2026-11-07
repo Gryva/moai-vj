@@ -477,7 +477,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07u';
+const BUILD = '2026-11-07v';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1331,11 +1331,26 @@ function sheet(slot, simple){
   $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const closeSheet = () => { delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+function sheetFx(k){
+  const n = k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
+  const from = FXCLIP && FXCLIP !== k ? FXCLIP : null;
+  $('#shI').style.display = 'none'; $('#shT').textContent = tgtName(k);
+  $('#shP').textContent = (n ? n + ' effect' + (n > 1 ? 's' : '') + ' on it.' : 'No effects on it yet.') + (from ? ' Copied: ' + tgtName(from) + '.' : '');
+  $('#shA').innerHTML = (from ? `<button class="pri" data-sh="fxpaste">Paste effects of ${esc(tgtName(from))} here</button>` : '')
+    + `<button class="${from ? '' : 'pri'}" data-sh="fxedit">Edit its effects</button>`
+    + (n ? `<button data-sh="fxcopy">Copy its effects</button>` : '')
+    + (n ? `<button class="dan" data-sh="fxclear">Remove all its effects</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.fxk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
+const closeSheet = () => { delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
-  const qi = +$('#sheet').dataset.qi;
-  if (b.dataset.sh === 'qadd') qAdd(slot);
+  const qi = +$('#sheet').dataset.qi, fk = $('#sheet').dataset.fxk;
+  if (b.dataset.sh === 'fxedit') { FXT_SEL = fk; applyTarget(); }
+  else if (b.dataset.sh === 'fxcopy') { FXCLIP = fk; fxTargets(); toast('Effects of ' + tgtName(fk) + ' copied · hold another layer to paste'); }
+  else if (b.dataset.sh === 'fxpaste') { send({t:'fxcopy', from:FXCLIP, to:fk}); toast('Effects of ' + tgtName(FXCLIP) + ' pasted on ' + tgtName(fk)); FXT_SEL = fk; applyTarget(); }
+  else if (b.dataset.sh === 'fxclear') { send({t:'clear', tgt:fk}); if (FXT_SEL === fk) { S.layers.forEach(l => l.on = false); applyLayers(); } toast('Effects removed from ' + tgtName(fk)); }
+  else if (b.dataset.sh === 'qadd') qAdd(slot);
   else if (b.dataset.sh === 'play') go(slot);
   else if (b.dataset.sh === 'qplay') qGo(qi);
   else if (b.dataset.sh === 'qleft') qMove(qi, -1);
@@ -1356,10 +1371,7 @@ document.addEventListener('pointerdown', e => {
   const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
-    if (c.dataset.fxt) { FXHOLD = performance.now(); const k = c.dataset.fxt;          // hold = copy this layer's effects, hold another = paste
-      if (!FXCLIP || FXCLIP === k) { FXCLIP = FXCLIP === k ? null : k; toast(FXCLIP ? 'Effects of ' + tgtName(k) + ' copied · hold another layer to paste' : 'Copy cleared'); }
-      else { send({t:'fxcopy', from:FXCLIP, to:k}); toast('Effects of ' + tgtName(FXCLIP) + ' pasted on ' + tgtName(k)); }
-      fxTargets(); return; }
+    if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }   // hold a layer = its menu (copy / paste / clear)
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
       const nn = prompt('Rename this FX preset (leave empty to delete it):', cur.name);
       if (nn === null) return; if (nn.trim()) send({t:'fxp', do:'rename', i, name:nn.trim()}); else if (confirm('Delete "' + cur.name + '"?')) send({t:'fxp', do:'del', i}); return; }

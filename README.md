@@ -68,9 +68,8 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
   A number on a chip = how many effects that layer has. Up to 4 layers can carry their own effects at once.
   Text layers can have their own effects too: they are drawn on their own, run through a chain and laid back on top.
 - **Brightness** (per layer): below 1 fades the layer see-through, above 1 makes it brighter. Saved in presets.
-- **Copy effects:** hold a layer in the FX Layers card to copy its effects and colours (it shows COPIED), then hold
-  any other layer to paste them there (works with All layers too). Paste as often as you like; hold the copied layer again
-  to clear.
+- **Hold a layer** in the FX Layers card for its menu: **Edit its effects**, **Copy its effects**, **Paste effects of …
+  here** (once something is copied) and **Remove all its effects**. Works with All layers too.
 - **On air:** the chosen layer's effects, with amount, setting and colour. **CLEAR** clears only that layer.
 - **Warp / Style / Post:** tap an effect to add it to the chosen layer.
 - **Colour** (supported effects): Own, Solid, Ramp or Radial. Colour A/B from 10 swatches or any colour; angle for gradients.
