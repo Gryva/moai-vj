@@ -1,0 +1,110 @@
+[
+ {
+  "name": "africanmask",
+  "kind": "static",
+  "src": "african_mask/source/SM_Mask_07_LP.fbx",
+  "texdir": "african_mask",
+  "tex": {
+   "*": "T_Mask_7_BC.png"
+  },
+  "label": "African Mask"
+ },
+ {
+  "name": "duck",
+  "kind": "static",
+  "src": "duck/source/Yellow rubber duck/source/rubber duck.fbx",
+  "texdir": "duck",
+  "tex": {
+   "*": "Duck_Diffuse.png"
+  },
+  "label": "Rubber Duck"
+ },
+ {
+  "name": "nepalmask",
+  "kind": "static",
+  "src": "Nepalese_tribal_mask.usdz",
+  "label": "Nepalese Mask"
+ },
+ {
+  "name": "sunglasses",
+  "kind": "static",
+  "src": "sunglasses/source/sketchfab_preview.fbx",
+  "label": "Deal With It"
+ },
+ {
+  "name": "yugo",
+  "kind": "static",
+  "src": "yugo/source/model/model/model.dae",
+  "texdir": "yugo",
+  "tex": {
+   "black": "black_albedo.jpg",
+   "glass": "glass_albedo.jpg",
+   "metal": "metal_albedo.jpg",
+   "other": "other_albedo.jpg",
+   "red": "red_albedo.jpeg",
+   "white": "white_albedo.jpg",
+   "yellow": "yellow_albedo.jpg"
+  },
+  "label": "Yugo Koral"
+ },
+ {
+  "name": "streetlight",
+  "kind": "static",
+  "src": "streetlight/source/Sketchfab_2021_08_28_22_13_33.blend",
+  "label": "Street Lamp"
+ },
+ {
+  "name": "alien",
+  "kind": "anim",
+  "src": "alien/source/Arms Hip Hop Dance.fbx",
+  "texdir": "alien",
+  "label": "Dancing Alien"
+ },
+ {
+  "name": "dna",
+  "kind": "anim",
+  "src": "dna/source/DNA.fbx",
+  "label": "DNA Helix"
+ },
+ {
+  "name": "ferris",
+  "kind": "anim",
+  "src": "ferris/source/FerrisWheelFixed.fbx",
+  "texdir": "ferris",
+  "tex": {
+   "lambert1": "FerrisWheelFixed_lambert1_AlbedoTransparen.png",
+   "UnUsed": "FerrisWheelFixed_UnUsed_AlbedoTransparency.png"
+  },
+  "label": "Ferris Wheel",
+  "ferris_spin": {
+   "hub": "joint22",
+   "axis": 0
+  }
+ },
+ {
+  "name": "palm",
+  "kind": "anim",
+  "src": "palm/scene.gltf",
+  "label": "Palm Tree"
+ },
+ {
+  "name": "puzzle",
+  "kind": "anim",
+  "src": "puzzle/source/Puzzle.blend",
+  "label": "Puzzle Core"
+ },
+ {
+  "name": "rubiks",
+  "kind": "anim",
+  "src": "rubiks/source/cube/1_cube.fbx",
+  "label": "Rubik's Cube",
+  "fix_normals": true,
+  "abc": true
+ },
+ {
+  "name": "turntable",
+  "kind": "anim",
+  "src": "turntable/source/Turntable Show.fbx",
+  "label": "Turntable"
+ }
+]

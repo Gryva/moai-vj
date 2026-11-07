@@ -281,7 +281,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="card" id="cardStatue"><div class="ch"><b>3D</b><button class="tg" id="t-Statue" data-tog="Statue">ON</button></div>
       <div class="cb">
         <details class="box mbox" id="box-static"><summary>Static models<span id="sum-static"></span></summary><div class="models" id="models"></div></details>
-        <details class="box mbox" id="box-anim"><summary>3D animations<span id="sum-anim"></span></summary><div class="models" id="models-anim"></div><div id="g-anim" style="margin-top:8px"></div></details>
+        <details class="box mbox" id="box-anim"><summary>3D animations<span id="sum-anim"></span></summary><div class="models" id="models-anim"></div><div id="animLoopBox" hidden style="margin-top:10px"><div class="seg sm" id="animLoop"><button data-aloop="loop">⟳ LOOP</button><button data-aloop="bounce">⇄ BOUNCE</button></div><p class="hint" style="margin:6px 2px 0;font-size:11px;color:var(--mute)">Bounce plays the clip forward, then backward. Use it when the end doesn't match the start. Remembered per animation.</p></div><div id="g-anim" style="margin-top:8px"></div></details>
         <div class="seg sm" id="o-Motion" style="margin-top:8px"></div>
         <div id="g-motion2" style="margin-top:7px"></div>
         <div class="seg" id="scene" style="margin-top:8px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
@@ -420,7 +420,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07c';
+const BUILD = '2026-11-07d';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -435,11 +435,12 @@ const touching = {};
 let TOKEN = store.get('tok_' + (KEY || 'local'), '');
 const CID = Math.random().toString(36).slice(2, 10);       // this phone's id: auth replies are addressed to it
 // every command is signed: the token itself never leaves this phone; each signature works once, for 2 minutes
-const send = o => { o.c = CID; o.ts = Date.now(); o.r = Math.random().toString(36).slice(2, 10);
+let CLK = 0, CLKFIX = false;                                      // phone clock vs computer clock (ms)
+const send = o => { o.c = CID; o.ts = Date.now() + CLK; o.r = Math.random().toString(36).slice(2, 10);
   const p = JSON.stringify(o); T.send(TOKEN ? {p, s: hmac(TOKEN, p)} : {p}); };
 const SK = {m: -1, b: new Uint8Array(0)};
 function withKey(u8){                                       // camera / drawing frames carry a key that changes every minute
-  const m = Math.floor(Date.now() / 60000);
+  const m = Math.floor((Date.now() + CLK) / 60000);
   if (SK.m !== m) { SK.m = m; const h = TOKEN ? hmac(TOKEN, 'stream:' + m).slice(0, 32) : ''; SK.b = new Uint8Array(h.length / 2).map((_, i) => parseInt(h.substr(i * 2, 2), 16)); }
   const o = new Uint8Array(SK.b.length + u8.length); o.set(SK.b); o.set(u8, SK.b.length); return o;
 }
@@ -454,6 +455,8 @@ function onMsg(m){
   if (m.t === 'auth') {
     if (m.changed) { send({t:'hello'}); return; }          // password changed somewhere: re-check this phone's token
     if (m.to !== CID) return;                               // someone else's login result - ignore it
+    if (!m.ok && m.now && !CLKFIX && Math.abs(m.now - (Date.now() + CLK)) > 60000) {   // wrong phone clock, not a wrong password
+      CLKFIX = true; CLK = m.now - Date.now(); send({t:'hello'}); return; }
     if (m.ok) $('#lock').classList.remove('on');
     else lock(TOKEN ? 'Wrong password' : '');
     return;
@@ -480,6 +483,7 @@ function onMsg(m){
   else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
   else if (m.t === 'saved') savedAck(m);
+  else if (m.t === 'animloop') { const md = (S.models || []).find(x => x.name === m.name); if (md) md.loop = m.v; applyPars(S.pars); }
   else if (m.t === 'store') storeState(m.v, m.alert);
   else if (m.t === 'history') { HIST = m.v || []; if ($('#sheet').dataset.mode === 'bk') sheetBackups();
     if (m.done) toast(m.ok ? ({undo:'Undone ✓', restore:'Restored ✓', reload:'Reloaded ✓', backup:'Restore point made ✓'}[m.done] || 'Done ✓') : 'Could not ' + m.done); }
@@ -824,7 +828,8 @@ function applyPars(p){
   $('#gridbox').classList.toggle('on', p.Scene === 'grid');
   EL.models.forEach(b => b.classList.toggle('on', b.dataset.model === p.Model));
   { const cur = (S.models || []).find(m => m.name === p.Model), a = !!cur && String(cur.name).startsWith('anim_');
-    $('#sum-static').textContent = cur && !a ? cur.label : ''; $('#sum-anim').textContent = cur && a ? cur.label : ''; }
+    $('#sum-static').textContent = cur && !a ? cur.label : ''; $('#sum-anim').textContent = cur && a ? cur.label : '';
+    $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
   ['Autospin','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon','Keyon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
@@ -1137,6 +1142,7 @@ document.addEventListener('click', e => {
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); buzz(); }
+  else if (d.aloop) { const md = (S.models || []).find(x => x.name === S.pars.Model); if (md) { md.loop = d.aloop; applyPars(S.pars); } send({t:'animloop', v:d.aloop}); buzz(); }
   else if (d.step) step(+d.step);
   else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }
   else if (t.id === 'cliprec') clipRecTap();

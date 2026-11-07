@@ -102,7 +102,7 @@ def _clipScan():
         for fn in sorted(os.listdir(CLIPDIR)):
             if fn.endswith('.json'):
                 try:
-                    m = json.load(open(os.path.join(CLIPDIR, fn)))
+                    with open(os.path.join(CLIPDIR, fn)) as fh: m = json.load(fh)
                     CLIPS[fn[:-5]] = {'times': m['times'], 'sizes': m['sizes'], 'thumb': m.get('thumb', ''), 'dur': m['times'][-1], 'frames': None}
                 except Exception as e:
                     print('clip skipped', fn, e)
@@ -362,7 +362,7 @@ def clipStop():
         os.makedirs(CLIPDIR, exist_ok=True)
         with open(os.path.join(CLIPDIR, cid + '.mjpg'), 'wb') as fh:
             for b in fr: fh.write(b)
-        json.dump({'times': times, 'sizes': [len(b) for b in fr], 'thumb': thumb}, open(os.path.join(CLIPDIR, cid + '.json'), 'w'))
+        _E().writeJsonSafe(os.path.join(CLIPDIR, cid + '.json'), {'times': times, 'sizes': [len(b) for b in fr], 'thumb': thumb}, bak=False)
     except Exception as e:
         print('clip save failed', e)
     _clipScan()
@@ -379,6 +379,8 @@ def clipPlay(cid):
         data = open(os.path.join(CLIPDIR, cid + '.mjpg'), 'rb').read(); fr, p = [], 0
         for n in c['sizes']: fr.append(data[p:p + n]); p += n
         c['frames'] = fr
+    for k, v in CLIPS.items():                                   # long sets: don't keep every clip ever played in memory
+        if k != cid: v['frames'] = None
     C = _C()
     CLIP.update(id=cid, t0=time.perf_counter(), last=-1)
     C.par.Cliplen = round(c['dur'], 1)
@@ -448,7 +450,8 @@ def state():
     return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'store': _E().storeInfo(), 'local': localLink(),
-            'models': [{'name': n, 'label': l, 'anim': n.startswith('anim_')} for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
+            'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
+                       for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
             'sliders': [dict(zip(('p', 'label', 'min', 'max', 'step', 'group'), s)) for s in SLIDERS]}
 
 def _send(dat, client, obj):
@@ -620,7 +623,7 @@ def handle(msg, reply):
         if t == 'hello':
             FAILS.append(time.time())
             if not _tooManyFails():                   # answer only a login attempt, only to that phone, not too often
-                reply({'t': 'auth', 'ok': False, 'locked': True, 'to': cid})
+                reply({'t': 'auth', 'ok': False, 'locked': True, 'to': cid, 'now': time.time() * 1000.0})   # phone clocks can be wrong
         return
     if t == 'setpass':
         C.par.Remotepass = str(msg.get('v', ''))[:64]
@@ -671,6 +674,10 @@ def handle(msg, reply):
             if a == 'set' and isinstance(msg.get('v'), list): E.qSet(msg['v'])
             elif a == 'go': E.qGo(int(msg.get('i', 0)), fade=max(0.0, min(10.0, float(msg.get('fade', 0)))))
             _all(E.qMsg())
+        elif t == 'animloop':                                    # loop / bounce for the animation on screen
+            m = str(C.par.Model.eval())
+            if m.startswith('anim_') and E.animSetLoop(m[5:], str(msg.get('v', ''))):
+                _all({'t': 'animloop', 'name': m, 'v': E.animLoop(E.animInfo(m))})
         elif t == 'tcol':
             c = E._colClean({'m': msg.get('m', 1), 'a': msg.get('a'), 'b': msg.get('b'), 'ang': msg.get('ang', 0)})
             C.par.Textcm = max(1, c['m']); C.par.Textca = c['a']; C.par.Textcb = c['b']; C.par.Textcang = c['ang']

@@ -214,8 +214,8 @@ ANIMS = {'list': None}
 
 def animList():
     if ANIMS['list'] is None:
-        try: ANIMS['list'] = json.load(open(ANIM_FILE))
-        except Exception: ANIMS['list'] = []
+        v = readJsonSafe(ANIM_FILE, [])
+        ANIMS['list'] = v if isinstance(v, list) else []
     return ANIMS['list']
 
 def animInfo(model):
@@ -226,39 +226,94 @@ def animInfo(model):
 
 def animComp(a): return op('/project1/anims/a_' + a['name']) if a else None
 
+LOOPMODES = ('loop', 'bounce')
+
+def animLoop(a):
+    """'loop' = start again from the beginning, 'bounce' = play forward, then backward (for clips whose end doesn't meet the start)."""
+    m = (a or {}).get('loop', 'loop')
+    return m if m in LOOPMODES else 'loop'
+
+def animSetLoop(name, mode):
+    """Remembered per animation (it's a property of the clip), saved safely to anims.json."""
+    if mode not in LOOPMODES: return False
+    for a in animList():
+        if a['name'] == name:
+            a['loop'] = mode
+            try: writeJsonSafe(ANIM_FILE, animList(), indent=1); return True
+            except Exception as e: _storeAlert('Animation setting NOT saved: %s' % e); return False
+    return False
+
+def animDur(a, g):
+    """Clip length in seconds: FBX files report it themselves, the others carry it in anims.json."""
+    if g is not None and g.OPType == 'fbxCOMP':
+        try:
+            L = float(g.op('fbx_info')['length_seconds'].eval())
+            if L > 0.05: return L
+        except Exception: pass
+    return max(0.05, float(a.get('dur', 1.0) or 1.0))
+
+def animPrepare(g):
+    """Once per imported model: some FBX exporters mark materials fully transparent (alpha 0),
+    which renders as black / white blobs. Nothing we show is meant to be invisible: make them solid."""
+    if g.fetch('prepared', False, search=False): return
+    n = 0
+    for m in g.findChildren(type=MAT):
+        try:
+            if m.OPType == 'phongMAT' and m.par.alphamode.eval() and float(m.par.alphafront.eval()) < 0.01:
+                m.par.alphamode = False; n += 1
+        except Exception: pass
+    if n: storeLog('%s: %d invisible materials made solid' % (g.name, n))
+    g.store('prepared', True)
+
+def animPos(p, mode):
+    """p counts clip lengths (0..2). Returns 0..1 inside the clip.
+    bounce: forward then backward, slowing to a stop at each end so the turn never jerks."""
+    if mode != 'bounce': return p % 1.0
+    q = p % 2.0; x = q if q <= 1.0 else 2.0 - q
+    e = 0.06
+    if x < e: x = x * x / (2.0 * e) + e * 0.5
+    elif x > 1.0 - e:
+        y = 1.0 - x; x = 1.0 - (y * y / (2.0 * e) + e * 0.5)
+    return x
+
 def animUpdate(C, dt, react):
-    """Show the animated model (instead of the statue) and drive its playback speed from the music."""
+    """Show the animated model (instead of the statue). One clock drives every kind of clip,
+    so speed, beat push and loop / bounce behave the same for FBX, Alembic and baked frames."""
     a = None if S.get('obj') else animInfo(C.par.Modelshown.eval())
     g = animComp(a)
     if g is None: a = None
     key = a['name'] if a else None
     if key != S.get('anim'):
         for c in op('/project1/anims').children:
-            if c.isCOMP:
-                c.render = False
-                if c.OPType == 'fbxCOMP': c.par.play = False
+            if c.isCOMP and c is not g:
+                if c.render: c.render = False
+                if c.OPType == 'fbxCOMP' and c.par.play.eval(): c.par.play = False
         if g is not None:
+            animPrepare(g)
             g.render = True
-            if g.OPType == 'fbxCOMP': g.par.play = True
+            if g.OPType == 'fbxCOMP':                               # we set the position ourselves every frame
+                g.par.playmode = 'specifyindex'; g.par.indexunit = 'fraction'; g.par.play = True
             op('/project1/moai_geo').render = False; op('/project1/moai_particles').render = False
             op('/project1/moai_geo').par.instancing = False
             op('/project1/render1').par.geometry = g.path
         elif not S.get('obj'):
             applyScene(C.par.Scene.eval())
-        S['anim'] = key
+        S['anim'] = key; S['animp'] = 0.0                            # a new clip starts at its beginning
     if g is None: return None
     sp = float(C.par.Animspeed.eval()) * (1.0 + float(C.par.Animbeat.eval()) * S['kick'] * react)
+    dur = animDur(a, g)
+    S['animp'] = (S.get('animp', 0.0) + dt * sp / dur) % 2.0         # 0..2 = one full forward + backward cycle
+    x = animPos(S['animp'], animLoop(a))
+    kind = a.get('kind')
     if g.OPType == 'fbxCOMP':
-        if abs(g.par.speed.eval() - sp) > 1e-3: g.par.speed = sp
+        if abs(g.par.index.eval() - x) > 1e-6: g.par.index = x
+    elif kind == 'seq':                                              # baked frames (heavy Alembic, pre-decoded)
+        n = max(1, int(a.get('frames', 1)))
+        i = min(n - 1, int(x * n))
+        sw = g.op('seq')
+        if int(sw.par.input.eval()) != i: sw.par.input = i
     else:
-        dur = max(0.05, float(a.get('dur', 1.0)))
-        S['animt'] = (S.get('animt', 0.0) + dt * sp) % dur
-        if a.get('kind') == 'seq':                                # baked frames (heavy Alembic, pre-decoded)
-            i = int(S['animt'] * float(a.get('fps', 12))) % int(a.get('frames', 1))
-            sw = g.op('seq')
-            if int(sw.par.input.eval()) != i: sw.par.input = i
-        else:
-            g.op('abc').par.time = S['animt']
+        g.op('abc').par.time = x * dur
     return g
 
 def mediaFit():
@@ -1366,6 +1421,8 @@ def onFrameStart(frame):
         applyScene(sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'
     grid = (sc == 'grid')
     ms = modelUpdate(C, T)
+    msh = C.par.Modelshown.eval()
+    if msh != S.get('msw'): S['msw'] = msh; staticSwitch(msh)
     objUpdate(C)
     ag = animUpdate(C, dt, react)
     o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, react)
@@ -1424,6 +1481,7 @@ def flashWatch(C, T):
     prev = S.get('bright', b); S['bright'] = b
     if b > 0.75 and prev <= 0.75:
         t = op('/project1/flash_log')
+        if t.numRows > 400: t.deleteRows(range(1, t.numRows - 300))     # long sets: keep the newest 300
         if t.numRows == 0:
             t.appendRow(['time', 'bright', 'style', 'model', 'kick', 'low', 'camdist', 'fov', 'campreset'])
         cam = op('/project1/cam')
@@ -1562,6 +1620,19 @@ def setModel(i):
     C = op('/project1/CONTROLS'); names = C.par.Model.menuNames
     if 0 <= i < len(names):
         C.par.Model = names[i]
+
+def staticSwitch(name):
+    """Point the statue geometry + texture switches at a model BY NAME (m_<name> / tex_<name>),
+    so the order of the model list can never pair a statue with the wrong picture."""
+    for path, prefix, par in (('/project1/moai_geo/model_switch', 'm_', 'input'), ('/project1/moai_particles/model_switch', 'm_', 'input'),
+                              ('/project1/model_tex', 'tex_', 'index')):
+        sw = op(path)
+        if sw is None: continue
+        names = [i.name for i in sw.inputs]
+        if prefix + str(name) not in names: continue                 # an animation: the statue isn't shown anyway
+        i = names.index(prefix + str(name)); p = sw.par[par]
+        if p.mode != ParMode.CONSTANT: p.mode = ParMode.CONSTANT
+        if int(p.eval()) != i: p.val = i
 
 def stepModel(d):
     C = op('/project1/CONTROLS')
