@@ -197,7 +197,8 @@ def mp(C, i, n): return C.par['M%d%s' % (i, n)]
 
 def mediaActive(C, i, mode=None):
     """Media layer i is added, switched on and has a file (each layer is independent of 3D and the camera)."""
-    on = bool(mp(C, i, 'on').eval()) and bool(mp(C, i, 'vis').eval()) and bool(mp(C, i, 'file').eval())
+    has = bool(mp(C, i, 'file').eval()) or mp(C, i, 'kind').eval() == 'draw'      # a drawing layer needs no file
+    on = bool(mp(C, i, 'on').eval()) and bool(mp(C, i, 'vis').eval()) and has
     return on and (mode is None or mp(C, i, 'mode').eval() == mode)
 
 def cropUpdate(C, i):
@@ -231,10 +232,12 @@ def objUpdate(C):
         if g is None: continue
         if g.render != on: g.render = on
         if on: objs.append(i); _cardShape(g, op('/project1/mk%d' % i))
+        src = op('/project1/msrc%d' % i); dr = 1 if mp(C, i, 'kind').eval() == 'draw' else 0   # drawing layers show the phone drawing
+        if src is not None and int(src.par.index.eval()) != dr: src.par.index = dr
         sw = op('/project1/mfeed%d' % i)                             # a 3D object is drawn by its own render pass (mr<n>),
         if sw is not None and int(sw.par.index.eval()) != (1 if on else 0): sw.par.index = 1 if on else 0   # so it stays its own layer
     S['objs'] = objs
-    drawing = bool(C.par.Drawon.eval())
+    drawing = False                                               # drawings are media layers now (kind 'draw')
     S['drawobj'] = drawing
     dg = op('/project1/draw_geo')
     if dg is not None:
@@ -414,27 +417,40 @@ TLAYOUT = {  # align x, align y, pos x, pos y, font px, autosize, wrap
     'corner': ('left', 'top', 50, -50, 40, 'fitiffat', True)}
 TX = {'sig': None, 't0': 0.0, 'words': [' '], 'wi': 0, 'lk': None, 'shown': None}
 
-def textUpdate(C, T):
-    g = op('/project1/fx_text')
-    on = bool(C.par.Texton.eval()) and float(C.par.Textamount.eval()) > 0.001
+TXN = {1: TX, 2: {'sig': None, 't0': 0.0, 'words': [' '], 'wi': 0, 'lk': None, 'shown': None},
+       3: {'sig': None, 't0': 0.0, 'words': [' '], 'wi': 0, 'lk': None, 'shown': None}}
+TEXTN = (1, 2, 3)
+
+def tpn(n, key):
+    """Parameter name of text layer n: layer 1 = Text*, layers 2-3 = T2* / T3* (Textstr -> T2str, Texton -> T2on)."""
+    return key if n == 1 else 'T%d%s' % (n, key[4:])
+
+def textAll(C, T):
+    for n in TEXTN: textUpdate(C, T, n)
+
+def textUpdate(C, T, n=1):
+    TX = TXN[n]; tp = lambda k: C.par[tpn(n, k)]
+    g = op('/project1/fx_text' + ('' if n == 1 else str(n)))
+    if g is None: return False
+    on = bool(tp('Texton').eval()) and float(tp('Textamount').eval()) > 0.001
     if g.bypass == on: g.bypass = not on
     if not on: return False
-    tt = op('/project1/text_src')
-    full = C.par.Textstr.eval() or ' '
-    lay, anim, size = C.par.Textlayout.eval(), C.par.Textanim.eval(), float(C.par.Textsize.eval())
+    tt = op('/project1/text_src' + ('' if n == 1 else str(n)))
+    full = tp('Textstr').eval() or ' '
+    lay, anim, size = tp('Textlayout').eval(), tp('Textanim').eval(), float(tp('Textsize').eval())
     small = lay in ('lower', 'corner')
-    sig = (full, lay, anim, C.par.Textfont.eval(), round(size, 3) if small else 0)
+    sig = (full, lay, anim, tp('Textfont').eval(), round(size, 3) if small else 0)
     if sig != TX['sig']:
         TX['sig'] = sig; TX['t0'] = T; TX['words'] = full.split() or [' ']; TX['wi'] = 0; TX['shown'] = None
         ax, ay, px, py, fpx, fit, wrap = TLAYOUT.get(lay, TLAYOUT['center'])
         if anim == 'scroll': wrap = False
         p = tt.par
-        p.font = C.par.Textfont.eval(); p.alignx = ax; p.aligny = ay
+        p.font = tp('Textfont').eval(); p.alignx = ax; p.aligny = ay
         p.positionx = px; p.positiony = py
         p.fontsizex = fpx * (size if small else 1.0); p.fontautosize = fit; p.wordwrap = wrap
     if anim == 'type':
-        n = int((T - TX['t0']) * 14.0 * max(0.1, C.par.Textspeed.eval())) % (len(full) + 25)
-        txt = full[:min(n, len(full))] or ' '
+        nch = int((T - TX['t0']) * 14.0 * max(0.1, tp('Textspeed').eval())) % (len(full) + 25)
+        txt = full[:min(nch, len(full))] or ' '
     elif anim == 'beat':
         if A['lastkick'] != TX['lk']:
             TX['lk'] = A['lastkick']; TX['wi'] = (TX['wi'] + 1) % len(TX['words'])
@@ -460,24 +476,25 @@ def textUpdate(C, T):
         k = (T - TXM['t0']) / TXM['dur']
         if k >= 1.0: TXM['on'] = False
         else: e = k * k * (3.0 - 2.0 * k)
-    M = TXM['on']
+    M = TXM['on'] and n == 1                                   # the preset word morph is for text layer 1
+    if n != 1: e = 1.0
     def L(key):
-        v = float(C.par[key].eval())
+        v = float(tp(key).eval())
         return TXM['frm'][key] + (v - TXM['frm'][key]) * e if M else v
-    mode = TXM['mode'] if (M and e < 0.5) else C.par.Textmode.eval()
+    mode = TXM['mode'] if (M and e < 0.5) else tp('Textmode').eval()
     pp.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
     pp.vec1valuex, pp.vec1valuey, pp.vec1valuez, pp.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
     pp.vec2valuex = L('Textamount')
     pp.vec3valuex = TMODES.index(mode) if mode in TMODES else 0
     pp.vec3valuey = TANIM.get(anim, 0); pp.vec3valuez = L('Textspeed'); pp.vec3valuew = L('Textreact')
-    r, gg, b = TCOLORS.get(C.par.Textcolor.eval(), (1, 1, 1))
+    r, gg, b = TCOLORS.get(tp('Textcolor').eval(), (1, 1, 1))
     if M:
         r0, g0, b0 = TXM['col']; r, gg, b = r0 + (r - r0) * e, g0 + (gg - g0) * e, b0 + (b - b0) * e
     pp.vec4valuex, pp.vec4valuey, pp.vec4valuez, pp.vec4valuew = r, gg, b, L('Textglow')
     sz = L('Textsize')
     pp.vec5valuex = 1.0 if small else sz; pp.vec5valuey = sz; pp.vec5valuez = 0.5
     pp.vec6valuex = e; pp.vec6valuez = 1.0 if M else 0.0
-    tm = int(C.par.Textcm.eval()); tv = _hex(C.par.Textca.eval()) + _hex(C.par.Textcb.eval(), (1.0, 0.24, 0.66)) + (float(C.par.Textcang.eval()),)
+    tm = int(tp('Textcm').eval()); tv = _hex(tp('Textca').eval()) + _hex(tp('Textcb').eval(), (1.0, 0.24, 0.66)) + (float(tp('Textcang').eval()),)
     if M and TXM.get('tc'):                                      # colours glide with the word morph
         m0, v0 = TXM['tc']
         if m0 == tm: tv = tuple(a_ + (b_ - a_) * e for a_, b_ in zip(v0, tv))
@@ -755,6 +772,7 @@ def lookData():
     return {'layers': {r['key']: [int(r['on'] in ('1', 'True', 'true')), float(r['amt']), float(r['p1'])] for r in layers()},
             'scene': C.par.Scene.eval(), 'grid': {p: C.par[p].eval() for p in GRIDPARS},
             'text': {p: C.par[p].eval() for p in TEXTPARS}, 'statue': bool(C.par.Statue.eval()),
+            'texts': {str(n): {p: C.par[tpn(n, p)].eval() for p in TEXTPARS} for n in (2, 3) if C.par[tpn(n, 'Texton')].eval()},
             'lcols': {k: dict(v) for k, v in LCOL.items() if v.get('m', 0) > 0},
             'tfx': tData(), 'tcol': {t: {k: dict(v) for k, v in TCOL[t].items() if v.get('m', 0) > 0} for t in FXTGTS}}
 
@@ -770,6 +788,12 @@ def applyLook(d, text=True):
         try: C.par[p] = v
         except Exception: pass
     if d.get('scene'): C.par.Scene = d['scene']
+    tx2 = d.get('texts') or {}                                   # text layers 2 and 3 (older presets: off)
+    for n in (2, 3):
+        for p_, v in (tx2.get(str(n)) or {'Texton': False}).items():
+            try: C.par[tpn(n, p_)] = v
+            except Exception: pass
+        if str(n) not in tx2: C.par[tpn(n, 'Texton')] = False
     C.par.Statue = bool(d.get('statue', True))                  # older presets: statue on
     colsApply(d.get('lcols'), S.get('colfade', 0.0))
     tfx = dict(d.get('tfx') or {}); tcol = dict(d.get('tcol') or {})   # per-layer effects (older presets: none)
@@ -1128,14 +1152,28 @@ def applySrc(d, slot=None):
     C.par.Camsrc = 'cam' if s.get('camsrc') == 'behind' else s.get('camsrc', 'off')   # BEHIND is now just the layer order
     if 'cammix' in s: C.par.Cammix = s['cammix']
     if 'camfit' in s: C.par.Camfit = s['camfit']
-    C.par.Drawon = bool(s.get('draw'))
-    if 'drawmix' in s: C.par.Drawmix = s['drawmix']
-    dp = (DRAW_DIR + '/' + os.path.basename(d['_meta']['draw'])) if (d.get('_meta') or {}).get('draw') else (drawPath(slot) if slot else '')
-    if s.get('draw') and dp and os.path.exists(dp):
-        import cv2
-        im = cv2.imread(dp)
-        if im is not None:
-            R.DRAWF['img'] = np.ascontiguousarray(cv2.cvtColor(im, cv2.COLOR_BGR2RGBA)[::-1]); R.DRAWF['new'] = True
+    C.par.Drawon = False                                          # drawings are media layers now
+    meta = d.get('_meta') or {}
+    for i in MSLOTS:
+        R.DRAWS[i] = {'img': None, 'new': True}
+    draws = dict(meta.get('draws') or {})
+    if s.get('draw') and meta.get('draw') and not any((m or {}).get('kind') == 'draw' for m in ms.values()):   # older preset: one drawing
+        n = R.mediaFree('draw')
+        if n:
+            draws[str(n)] = meta['draw']
+            fr = s.get('frame') or {}
+            for a, b in (('zoom', 'fzoom'), ('x', 'fx'), ('y', 'fy'), ('rot', 'frot')):
+                if 'Fdraw' + a in fr: mp(C, n, b).val = fr['Fdraw' + a]
+    for k, fn in draws.items():
+        dp = DRAW_DIR + '/' + os.path.basename(fn)
+        if os.path.exists(dp):
+            import cv2
+            im = cv2.imread(dp, cv2.IMREAD_UNCHANGED)
+            if im is not None:
+                if im.shape[2] == 3: im = R.drawRGBA(im)
+                else: im = cv2.cvtColor(im, cv2.COLOR_BGRA2RGBA)
+                R.DRAWS[int(k)] = {'img': np.ascontiguousarray(im[::-1]), 'new': True}
+
 def drawPath(slot): return '%s/td/drawings/p%d.png' % (project.folder, int(slot))
 
 FXP_FILE = project.folder + '/td/fxpresets.json'
@@ -1208,13 +1246,17 @@ def bankSave(slot, name=None):
     stamp = time.strftime('%Y%m%d_%H%M%S') + '%03d' % (int(time.time() * 1000) % 1000)
     meta = {'saved': _now(), 'thumb': 'p%d_%s.jpg' % (slot, stamp)}   # own picture file per save: a restore point keeps its picture
     try:
-        R = op('/project1/remote_cb').module; img = R.DRAWF.get('img')
-        if op('/project1/CONTROLS').par.Drawon.eval() and img is not None:
-            import cv2
-            meta['draw'] = 'p%d_%s.png' % (slot, stamp)
-            os.makedirs(DRAW_DIR, exist_ok=True)
-            cv2.imwrite(DRAW_DIR + '/' + meta['draw'], cv2.cvtColor(np.ascontiguousarray(img[::-1]), cv2.COLOR_RGBA2BGR))
-    except Exception as er: storeLog('drawing save failed (slot %d): %s' % (slot, er)); meta.pop('draw', None)
+        R = op('/project1/remote_cb').module; C_ = op('/project1/CONTROLS'); draws = {}
+        for i in MSLOTS:
+            img = (R.DRAWS.get(i) or {}).get('img')
+            if mp(C_, i, 'on').eval() and mp(C_, i, 'kind').eval() == 'draw' and img is not None:
+                import cv2
+                fn = 'p%d_%s_d%d.png' % (slot, stamp, i)
+                os.makedirs(DRAW_DIR, exist_ok=True)
+                cv2.imwrite(DRAW_DIR + '/' + fn, cv2.cvtColor(np.ascontiguousarray(img[::-1]), cv2.COLOR_RGBA2BGRA))
+                draws[str(i)] = fn
+        if draws: meta['draws'] = draws
+    except Exception as er: storeLog('drawing save failed (slot %d): %s' % (slot, er)); meta.pop('draws', None)
     d['_meta'] = meta
     t[slot, 0] = (name or t[slot, 0].val or ('Preset %d' % slot))[:60]
     t[slot, 1] = json.dumps(d)
@@ -1254,7 +1296,8 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     newModel = bool(model and d.get('model') and d['model'] != C.par.Model.eval())
     newScene = bool(d.get('scene') and d['scene'] != C.par.Scene.eval())
     s_ = d.get('src') or {}
-    newSrc = (s_.get('media', '') != C.par.Media.eval()) or (s_.get('camsrc', 'off') != C.par.Camsrc.eval()) or bool(s_.get('draw')) != bool(C.par.Drawon.eval())
+    newSrc = (sorted(m.get('file', '') for m in (s_.get('mslots') or {}).values()) != sorted(mp(C, i, 'file').eval() for i in MSLOTS if mp(C, i, 'on').eval())) \
+             or (s_.get('camsrc', 'off') != C.par.Camsrc.eval())
     S['bank'] = slot; S['dirty'] = True
     tx = dict(d.get('text') or {})
     if tx: tx.setdefault('Textcm', 0)                           # presets from before text gradients: named colour
@@ -1286,7 +1329,10 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None):
     if model and d.get('model') and d['model'] != C.par.Model.eval():
         S['modelcut'] = True                                     # presets never play the statue swap animation
         C.par.Model = d['model']
-    for k, v in d.get('obj', {}).items():                        # statue pose: angle, tilt, spin
+    ob = d.get('obj', {})
+    if 'Spinaxis' not in ob: C.par.Spinaxis = 'y'                # older presets: spin turns around Y
+    if 'Spinrev' not in ob: C.par.Spinrev = False
+    for k, v in ob.items():                                      # statue pose: angle, tilt, spin
         try: C.par[k] = v
         except Exception: pass
     if 'angle' in d.get('obj', {}): S['angle'] = float(d['obj']['angle'])
@@ -1426,9 +1472,10 @@ def cleanSlate():
     slot = next((i for i in range(1, BANK_SLOTS + 1) if not t[i, 1].val), None)
     clearLayers(); S['fades'].clear(); tClear()
     R = op('/project1/remote_cb').module                         # a clean preset is EMPTY: every source off
-    C.par.Texton = False; C.par.Statue = False; C.par.Scene = 'solid'
+    C.par.Texton = False; C.par.T2on = False; C.par.T3on = False; C.par.Statue = False; C.par.Scene = 'solid'
     C.par.Drawon = False; C.par.Camsrc = 'off'
-    for i in MSLOTS: mediaSlotClear(C, i)
+    for i in MSLOTS: mediaSlotClear(C, i); R.DRAWS[i] = {'img': None, 'new': True}
+    C.par.Spinaxis = 'y'; C.par.Spinrev = False
     if C.par.Clipstate.eval() == 'loop': C.par.Clipstate = 'off'
     C.par.Layerorder = ','.join(LAYER_DEFAULT)
     for n in FRAMEPARS + OPPARS: C.par[n] = C.par[n].default
@@ -1483,7 +1530,8 @@ def camfeedUpdate(C, dt, T):
     CAMS['draw'] = _ease(CAMS.get('draw', 0.0), float(C.par.Drawmix.eval()) if flat else 0.0, 0.25, dt)
     R = op('/project1/remote_cb').module; F = R.CAMF
     D = R.DRAWF
-    if D['new']: op('/project1/phonedraw').cook(force=True)
+    for i, DF in list(R.DRAWS.items()):
+        if DF.get('new'): op('/project1/ds%d' % i).cook(force=True)
     if C.par.Clipstate.eval() == 'loop': R.clipFrame()          # recorded clip plays as the camera
     fresh = F['img'] is not None and (_t.perf_counter() - F['t']) < 1.5   # phone stopped -> fade out, never freeze
     CAMS['alive'] = _ease(CAMS.get('alive', 0.0), 1.0 if fresh else 0.0, 0.2 if fresh else 0.7, dt)
@@ -1731,7 +1779,7 @@ def onFrameStart(frame):
     _safe('dip', xfadeUpdate, T)
     _safe('camera', camUpdate, C, dt)
     _safe('label', _label, C)
-    _safe('text', textUpdate, C, T)
+    _safe('text', textAll, C, T)
     _safe('master', masterUpdate, C, dt)
     _safe('safety', safetyUpdate, C)
     _safe('flash', flashWatch, C, T)

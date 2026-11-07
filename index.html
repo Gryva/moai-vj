@@ -302,8 +302,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
     <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
       <div class="cb">
-        <p class="srcnote">Text always sits on top of every layer, after the effects, so it stays readable.</p>
-    <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
+            <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
     <div class="trow"><button class="go" id="tsend">SHOW TEXT</button></div>
     <div class="recent" id="recent"></div>
     <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
@@ -312,6 +311,28 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
     <h2>Colour</h2><div id="tcolbox"></div>
     <h2>Adjust</h2><div id="g-text"></div>
+      </div></div>
+    <div class="card hide" id="cardT2"><div class="ch"><b>Text 2</b><button class="tg" id="t-T2on" data-tog="T2on">OFF</button></div>
+      <div class="cb">
+    <textarea class="tin" id="tin2" maxlength="120" placeholder="Type your text…"></textarea>
+    <div class="trow"><button class="go" data-tsend="2">SHOW TEXT</button></div>
+    <h2>Effect</h2><div class="opts" id="o-T2mode"></div>
+    <h2>Layout</h2><div class="opts" id="o-T2layout"></div>
+    <h2>Animation</h2><div class="opts" id="o-T2anim"></div>
+    <h2>Font</h2><div class="opts" id="o-T2font"></div>
+    <h2>Colour</h2><div id="tcolbox2"></div>
+    <h2>Adjust</h2><div id="g-text2"></div>
+      </div></div>
+    <div class="card hide" id="cardT3"><div class="ch"><b>Text 3</b><button class="tg" id="t-T3on" data-tog="T3on">OFF</button></div>
+      <div class="cb">
+    <textarea class="tin" id="tin3" maxlength="120" placeholder="Type your text…"></textarea>
+    <div class="trow"><button class="go" data-tsend="3">SHOW TEXT</button></div>
+    <h2>Effect</h2><div class="opts" id="o-T3mode"></div>
+    <h2>Layout</h2><div class="opts" id="o-T3layout"></div>
+    <h2>Animation</h2><div class="opts" id="o-T3anim"></div>
+    <h2>Font</h2><div class="opts" id="o-T3font"></div>
+    <h2>Colour</h2><div id="tcolbox3"></div>
+    <h2>Adjust</h2><div id="g-text3"></div>
       </div></div>
 
     <div class="card" id="cardStatue"><div class="ch"><b>3D models</b><button class="tg" id="t-Statue" data-tog="Statue">ON</button></div>
@@ -335,13 +356,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
     <div id="mcards"></div><input type="file" id="mediapick" accept="image/*,video/*" hidden>
 
-    <div class="card" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
-      <div class="cb">
+    <div class="card hide" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
+      <div class="cb" id="dpadwrap">
         <canvas class="drawpad" id="drawpad" width="640" height="360"></canvas>
         <div class="tools" id="dtools"><button data-dt="pen" class="on">✎</button><button data-dt="line">／</button><button data-dt="circle">○</button><button data-dt="square">□</button><button data-dt="triangle">△</button><button data-dt="star">☆</button></div>
         <div id="dcolbox"></div>
         <div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR</button></div>
-        <div id="g-draw" style="margin-top:7px"></div>
+        <div id="g-draw" style="margin-top:7px" hidden></div>
       </div></div>
 
     <div class="card" id="cardCam"><div class="ch"><b>Phone camera</b><span class="camst" id="camst"></span><button class="tg" id="camgo">OFF</button></div>
@@ -452,7 +473,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07q';
+const BUILD = '2026-11-07r';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -625,16 +646,17 @@ const MS = [1,2,3,4,5,6];
 const LDEF = ['draw','m1','m2','m3','m4','m5','m6','camera','model'];
 const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op']));
 function mediaName(i){                    // "Video 2" = the 2nd video layer
-  const p = S.pars, kind = p['M' + i + 'kind'] === 'image' ? 'image' : 'video';
-  const n = MS.filter(j => j <= i && p['M' + j + 'on'] && (p['M' + j + 'kind'] === 'image' ? 'image' : 'video') === kind).length;
-  return (kind === 'image' ? 'Image' : 'Video') + ' ' + n;
+  const p = S.pars, kd = j => ['image', 'draw'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
+  const n = MS.filter(j => j <= i && p['M' + j + 'on'] && kd(j) === kind).length;
+  return ({image:'Image', video:'Video', draw:'Drawing'}[kind]) + ' ' + n;
 }
 function mediaCardsBuild(){               // 6 cards exist once; only added layers show
   $('#mcards').innerHTML = MS.map(i => { const m = 'M' + i;
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
-      <div class="cb"><div class="seg sm" id="o-${m}mode" style="margin-bottom:8px"></div><div class="clips" id="mlist${i}"></div>
+      <div class="cb"><div class="seg sm" id="o-${m}mode" style="margin-bottom:8px"></div><div class="clips mlib" id="mlist${i}"></div>
+        <div class="dhost" id="dhost${i}"></div><button class="btn dpick" data-dpick="${i}">✎ DRAW ON THIS LAYER</button>
         <details class="box mbox" style="margin-top:8px"><summary>Crop<span id="sum-m${i}crop"></span></summary><div id="g-m${i}crop"></div><div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mcrop="${i}">RESET CROP</button></div></details>
-        <details class="box mbox" style="margin-top:8px"><summary>Green / blue screen<span id="sum-m${i}key"></span></summary>
+        <details class="box mbox mkey" style="margin-top:8px"><summary>Green / blue screen<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
           <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:7px"></div><div id="g-m${i}key"></div></details>
         <details class="box mbox" id="box-m${i}obj"><summary>Move it in 3D</summary>
@@ -653,13 +675,20 @@ function mediaCardsUI(p){
     const k = $('#t-' + m + 'keyon'); k.textContent = p[m + 'keyon'] ? '✓ SCREEN REMOVED' : 'REMOVE SCREEN'; k.classList.toggle('on', !!p[m + 'keyon']);
     $('#sum-m' + i + 'key').textContent = p[m + 'keyon'] ? 'on' : '';
     $('#sum-m' + i + 'crop').textContent = ['l','r','t','b'].some(n => +p[m + 'crop' + n] > 0.001) ? 'cropped' : '';
-    $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object'; });
+    $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
+    const dr = p[m + 'kind'] === 'draw';
+    c.querySelector('.mlib').hidden = dr; c.querySelector('.mkey').hidden = dr; c.querySelector('.mup').hidden = dr;
+    c.querySelector('.dpick').hidden = !dr || DR.slot === i; });
+  const ds = MS.filter(i => p['M' + i + 'on'] && p['M' + i + 'kind'] === 'draw');
+  if (ds.length && !ds.includes(DR.slot)) { DR.slot = 0; drawPick(ds[0]); }
 }
 function addLayer(t){
   $('#addMenu').hidden = true; const p = S.pars;
-  if (t === 'image' || t === 'video') { send({t:'media', do:'add', kind:t}); return; }
-  const on = {text:['Texton', true], model:['Statue', true], draw:['Drawon', true]}[t];
-  if (on) { S.pars[on[0]] = true; send({t:'set', p:on[0], v:true}); if (t === 'draw') setTimeout(drawSend, 150); delete SHUT['card' + {text:'Text', model:'Statue', draw:'Draw'}[t]]; }
+  if (t === 'image' || t === 'video' || t === 'draw') { send({t:'media', do:'add', kind:t}); return; }
+  if (t === 'text') { const free = [['Texton', 'cardText'], ['T2on', 'cardT2'], ['T3on', 'cardT3']].find(([k]) => !p[k]);
+    if (!free) { toast('Up to 3 text layers'); return; }
+    S.pars[free[0]] = true; send({t:'set', p:free[0], v:true}); delete SHUT[free[1]]; setTimeout(() => $('#' + free[1]).scrollIntoView({behavior:'smooth', block:'start'}), 300); }
+  if (t === 'model') { S.pars.Statue = true; send({t:'set', p:'Statue', v:true}); S.pars.Spinaxis = 'y'; send({t:'set', p:'Spinaxis', v:'y'}); delete SHUT.cardStatue; }
   if (t === 'camera') camStart();
   applyPars({});
 }
@@ -673,7 +702,7 @@ function layerInfo(k){
   if (k === 'model') return {on: p.Statue !== false, name: '3D models', sub: (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', card: 'cardStatue'};
   if (k === 'camera') return {on: !!p.Camsrc && p.Camsrc !== 'off', name: 'Phone camera', sub: (p.Clipstate === 'loop' ? 'clip · ' : '') + ({cam:'normal', behind:'normal', screen:'blend', mask:'mask'}[p.Camsrc] || ''), card: 'cardCam'};
   if (/^m\d$/.test(k)) { const m = 'M' + k.slice(1), obj = p[m + 'mode'] === 'object';
-    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + file(p[m + 'file']) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
+    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
   if (k === 'draw') return {on: !!p.Drawon, name: 'Drawing', sub: 'drawn on the phone', card: 'cardDraw'};
 }
 function layerMove(k, dir){                  // dir -1 = towards the front (up), +1 = towards the back
@@ -724,7 +753,8 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const sel = k => (fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '';
   const x = k => src ? `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
-  h += p.Texton ? `<div class="lrow on pin${src ? '' : ' dim'}"><button class="lname" ${src ? 'data-jump="cardText"' : ''}><b>Text</b><span>always on top</span></button>${x('text')}</div>` : '';
+  [['Texton', 'text', 'cardText', 'Textstr'], ['T2on', 'text2', 'cardT2', 'T2str'], ['T3on', 'text3', 'cardT3', 'T3str']].forEach(([on, k, card, str], j) => { if (p[on])
+    h += `<div class="lrow on pin${src ? '' : ' dim'}"><button class="lname" ${src ? `data-jump="${card}"` : ''}><b>Text${j ? ' ' + (j + 1) : ''}</b><span>${esc(p[str] || '')} · always on top</span></button>${x(k)}</div>`; });
   h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
     const sub = esc(L.sub) + (vw && !flat(k) ? ' · 3D camera' : '') + tag(k);
     return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}"><button class="lname" ${a || ''}><b>${L.name}</b><span>${sub}</span></button>`
@@ -742,15 +772,18 @@ function cardOpen(id, on){                // ON opens the card; tapping its head
 }
 function cards(){
   if (!S) return; const p = S.pars, loop = p.Clipstate === 'loop';
+  const camOn = CAMF.on || loop || (!!p.Camsrc && p.Camsrc !== 'off');
+  $('#cardText').classList.toggle('hide', !p.Texton); $('#cardT2').classList.toggle('hide', !p.T2on); $('#cardT3').classList.toggle('hide', !p.T3on);
+  $('#cardStatue').classList.toggle('hide', p.Statue === false); $('#cardCam').classList.toggle('hide', !camOn); $('#cardDraw').classList.add('hide');
+  cardOpen('cardT2', !!p.T2on); cardOpen('cardT3', !!p.T3on);
   cardOpen('cardStatue', p.Statue !== false);
-  cardOpen('cardCam', CAMF.on || loop);
+  cardOpen('cardCam', camOn);
   MS.forEach(i => cardOpen('cardM' + i, !!p['M' + i + 'on'] && !!p['M' + i + 'vis']));
   cardOpen('cardText', !!p.Texton);
   cardOpen('cardLayers', true); cardOpen('cardFxLayers', true); cardOpen('cardVwLayers', true);
   layerStack(); fxTargets();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
-  $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
-  cardOpen('cardDraw', !!p.Drawon);
+  $('#cardClips').classList.toggle('hide', !camOn);
   $('#cliprec').disabled = !CAMF.on && p.Clipstate !== 'rec';
 }
 /* local copies of the frames this phone recorded, so the preview can play the clip */
@@ -879,12 +912,20 @@ function drawShape(o){
 }
 function drawRender(){ dcx.fillStyle = '#000'; dcx.fillRect(0, 0, 640, 360); DR.ops.forEach(drawShape); if (DR.cur) drawShape(DR.cur); }
 function drawSend(){
-  if (!T.draw || !(S && S.pars.Drawon)) return;
+  if (!T.draw || !(S && DR.slot && S.pars['M' + DR.slot + 'on'] && S.pars['M' + DR.slot + 'kind'] === 'draw')) return;
   if (DR.busy) { DR.again = true; return; }
   DR.busy = true;
-  dcv.toBlob(b => { if (!b) { DR.busy = false; return; } b.arrayBuffer().then(ab => T.draw(withKey(new Uint8Array(ab)), () => { DR.busy = false; if (DR.again) { DR.again = false; setTimeout(drawSend, 60); } })); }, 'image/png');
+  dcv.toBlob(b => { if (!b) { DR.busy = false; return; } b.arrayBuffer().then(ab => { const u = new Uint8Array(ab.byteLength + 1); u[0] = DR.slot; u.set(new Uint8Array(ab), 1); return u; }).then(u => T.draw(withKey(u), () => { DR.busy = false; if (DR.again) { DR.again = false; setTimeout(drawSend, 60); } })); }, 'image/png');
 }
-function drawSave(){ store.set('draw', DR.ops.slice(-200)); }
+function drawSave(){ if (DR.slot) store.set('draw' + DR.slot, DR.ops.slice(-200)); }
+function drawPick(i){                     // which drawing layer the pad is drawing on
+  if (DR.slot === i) return; drawSave(); DR.slot = i;
+  let ops = store.get('draw' + i, null);
+  if (!ops) { ops = store.get('drawmig', 0) ? [] : store.get('draw', []); store.set('drawmig', 1); }
+  DR.ops = ops;
+  const h = $('#dhost' + i); if (h) h.appendChild($('#dpadwrap'));
+  drawRender(); drawSend(); if (S) mediaCardsUI(S.pars);
+}
 const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
 dcv.addEventListener('pointerdown', e => { dcv.setPointerCapture(e.pointerId); const [x, y] = dpos(e);
   const cc = Object.assign({}, DR.cc);
@@ -931,6 +972,7 @@ const TOPTS = {
   Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
   Textanim: [['static','STATIC'],['pulse','BEAT'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['type','TYPE'],['beat','WORD/BEAT']],
   Textfont: [['Bebas Neue','BEBAS'],['Impact','IMPACT'],['Bahnschrift','BAHN'],['Agency FB','AGENCY'],['Cascadia Mono','MONO'],['Georgia','SERIF'],['Algerian','DECO'],['Blackadder ITC','GOTHIC']]};
+[2,3].forEach(n => ['mode','layout','anim','font'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
@@ -940,6 +982,12 @@ function buildText(){
     c => { Object.assign(S.pars, {Textcm:c.m, Textca:c.a, Textcb:c.b, Textcang:c.ang}); clearTimeout(ccDef._t);
            ccDef._t = setTimeout(() => send({t:'tcol', m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, GMODES);
   $('#tcolbox').innerHTML = ccBox('text', 'Text colour', true); ccBind($('#tcolbox')); ccUI('text');
+  [2,3].forEach(n => { const q = 'T' + n;
+    ccDef('text' + n, () => { const p = S.pars; return +p[q + 'cm'] > 0 ? {m:+p[q + 'cm'], a:p[q + 'ca'] || '#ffffff', b:p[q + 'cb'] || '#ff3da8', ang:+p[q + 'cang'] || 0}
+                                                  : {m:1, a:TCOL[p[q + 'color']] || '#ffffff', b:p[q + 'cb'] || '#ff3da8', ang:+p[q + 'cang'] || 0}; },
+      c => { Object.assign(S.pars, {[q + 'cm']:c.m, [q + 'ca']:c.a, [q + 'cb']:c.b, [q + 'cang']:c.ang}); clearTimeout(ccDef['_t' + n]);
+             ccDef['_t' + n] = setTimeout(() => send({t:'tcol', n, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, GMODES);
+    $('#tcolbox' + n).innerHTML = ccBox('text' + n, 'Text colour', true); ccBind($('#tcolbox' + n)); ccUI('text' + n); });
   renderRecent();
 }
 function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); }
@@ -947,6 +995,12 @@ function syncText(p){
   $$('[data-tp]').forEach(b => b.classList.toggle('on', p[b.dataset.tp] === b.dataset.tv));
   const t = $('#t-Texton'); t.textContent = p.Texton ? 'ON' : 'OFF';
   if (document.activeElement !== $('#tin') && !$('#tin')._dirty) $('#tin').value = p.Textstr || '';
+  [2,3].forEach(n => { const b = $('#t-T' + n + 'on'), ti = $('#tin' + n); if (b) { b.textContent = p['T' + n + 'on'] ? 'ON' : 'OFF'; b.classList.toggle('on', !!p['T' + n + 'on']); }
+    if (ti && document.activeElement !== ti && !ti._dirty) ti.value = p['T' + n + 'str'] || ''; });
+}
+function showTextN(n){
+  const ti = $('#tin' + n), v = ti.value.trim(); if (!v) return;
+  send({t:'set', p:'T' + n + 'str', v}); send({t:'set', p:'T' + n + 'on', v:true}); ti._dirty = false; toast('Text ' + n + ' on screen'); buzz(12);
 }
 function showText(){
   const v = $('#tin').value.trim(); if (!v) return;
@@ -1337,11 +1391,12 @@ document.addEventListener('click', e => {
   else if (d.tog) { const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear', tgt:FXT_SEL}); applyLayers(); fxTargets(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
+  else if (d.dpick) { drawPick(+d.dpick); buzz(); }
   else if (d.mup) { send({t:'media', do:'target', slot:+d.mup}); const pk = $('#mediapick'); pk.accept = S.pars['M' + d.mup + 'kind'] === 'image' ? 'image/*' : 'video/*,image/gif'; pk.click(); }
   else if (d.mfit) { send({t:'media', do:'fit', slot:+d.mfit}); buzz(); }
   else if (d.mcrop) { ['l','r','t','b'].forEach(n => { const k = 'M' + d.mcrop + 'crop' + n; S.pars[k] = 0; send({t:'set', p:k, v:0}); }); build(); buzz(); }
   else if (d.addl) { addLayer(d.addl); buzz(); }
-  else if (d.loff) { const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false]}[k];
+  else if (d.loff) { const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false], text2:['T2on', false], text3:['T3on', false]}[k];
     if (/^m\d$/.test(k)) { send({t:'media', do:'remove', slot:+k.slice(1)}); S.pars['M' + k.slice(1) + 'on'] = false; }
     if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
     else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }
@@ -1357,6 +1412,7 @@ document.addEventListener('click', e => {
     syncText(S.pars); applyPars(S.pars); buzz(); }
   else if (d.recent) { $('#tin').value = decodeURIComponent(d.recent); showText(); }
   else if (t.id === 'tsend') showText();
+  else if (d.tsend) showTextN(+d.tsend);
   else if (t.id === 'chpass') { const np = prompt('New remote password (leave empty to remove the lock):'); if (np !== null) {
       send({t:'setpass', v:np}); TOKEN = makeToken(np); store.set('tok_' + (KEY || 'local'), TOKEN); setTimeout(() => send({t:'hello'}), 600); toast(np ? 'Password changed' : 'Lock removed'); } }
   else if (t.id === 'logout') { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); lock('Locked on this phone'); }
@@ -1397,6 +1453,7 @@ document.addEventListener('visibilitychange', () => document.visibilityState ===
 $('#lockgo').addEventListener('click', unlockTry);
 $('#lockpw').addEventListener('keydown', e => { if (e.key === 'Enter') unlockTry(); });
 $('#tin').addEventListener('input', () => $('#tin')._dirty = true);
+[2,3].forEach(n => { const ti = $('#tin' + n); ti.addEventListener('input', () => ti._dirty = true); ti.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); showTextN(n); } }); });
 $('#tin').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); showText(); } });
 uiPrefs(); wake(); connect();
 </script>

@@ -79,8 +79,9 @@ Six sources, each a card with its own **ON/OFF**. A card opens when its source i
 
 **Layers** (top of SOURCE) lists every layer you added, front to back. **▲ ▼** move it in front of / behind the
 others, **✕** removes it, tap a name to jump to its card. **＋ ADD LAYER** adds Text, 3D models, an Image, a Video,
-Draw or the Phone camera. Images and videos can be added again and again: up to **6 picture / video layers** at once
-(e.g. three videos stacked, a background picture under a green-screen clip). Example: Text on top, a 3D model in the
+a Drawing or the Phone camera. A source's card only shows once it is added. Images, videos and drawings can be added
+again and again: up to **6 picture / video / drawing layers** at once (e.g. three videos stacked, a background picture
+under a green-screen clip, two drawings). Up to **3 text layers**, each with its own words, style, font and colour. Example: Text on top, a 3D model in the
 middle, a picture at the back. The order is saved in presets. Pictures / videos in **3D OBJECT** mode are drawn by their
 own 3D pass with the shared 3D camera, so they stay separate layers too (own order, effects and brightness). **Text** is always on top (drawn after the effects).
 
@@ -98,8 +99,9 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
   library (pictures or videos, tap to play on this layer), **FLAT** or **3D OBJECT**, **Crop**, **Green / blue screen**
   and **Move it in 3D**. Each layer also has its own effects and brightness (FX tab) and framing (VIEW tab). All saved
   in presets; older presets load their image on layer 1 and their video on layer 2.
-- **Draw:** draw on the phone; pen and shapes, sizes, colours or gradients. It becomes a 3D card in the scene
-  (unless an Images 3D object is using the card).
+- **Drawing layers:** draw on the phone; pen and shapes, sizes, colours or gradients. Black is see-through. With several
+  drawings, **✎ DRAW ON THIS LAYER** moves the pad to that drawing. Like pictures they can be flat or a 3D object and
+  have their own effects, brightness and framing. Saved in presets.
 - **Text:** type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave,
   scroll, tile, type, word per beat), modes (overlay, mask, cutout, invert, outline, glitch, refract), font, size,
   glow, speed, beat reaction, colour (solid, ramp, radial). **Pin** keeps text when presets change. Recent texts are

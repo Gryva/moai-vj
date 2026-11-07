@@ -42,6 +42,8 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Textglow', 'Glow', 0, 1.5, 0.01, 'text'),
     ('Textspeed', 'Speed', 0, 3, 0.01, 'text'),
     ('Textreact', 'Beat reaction', 0, 2, 0.01, 'text'),
+    ('T2amount', 'Amount', 0, 1, 0.01, 'text2'), ('T2size', 'Size', 0.3, 2.5, 0.01, 'text2'), ('T2glow', 'Glow', 0, 1.5, 0.01, 'text2'), ('T2speed', 'Speed', 0, 3, 0.01, 'text2'), ('T2react', 'Beat reaction', 0, 2, 0.01, 'text2'),
+    ('T3amount', 'Amount', 0, 1, 0.01, 'text3'), ('T3size', 'Size', 0.3, 2.5, 0.01, 'text3'), ('T3glow', 'Glow', 0, 1.5, 0.01, 'text3'), ('T3speed', 'Speed', 0, 3, 0.01, 'text3'), ('T3react', 'Beat reaction', 0, 2, 0.01, 'text3'),
     ('Speed', 'Spin speed', -180, 180, 1, 'motion'),
     ('Spinboost', 'Bass spin boost', 0, 300, 1, 'motion'),
     ('Tilt', 'Model tilt', -60, 60, 1, 'motion'),
@@ -81,8 +83,8 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Motion']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -152,19 +154,30 @@ def camFrame(payload):
         CAMF['bad'] += 1
 
 # ---------------------------------------------------------------- doodles / shapes drawn on the phone
-DRAWF = {'img': None, 'new': False, 't': 0.0}
+DRAWF = {'img': None, 'new': False, 't': 0.0}              # (old single drawing - kept so older code never breaks)
+DRAWS = {}                                                  # media layer -> {'img': RGBA, 'new'} for layers of kind 'draw'
+
+def drawRGBA(bgr):
+    """Phone drawings are colour on black: black becomes see-through, colours keep full strength."""
+    import numpy as np, cv2
+    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
+    a = rgb.max(axis=2, keepdims=True)
+    col = np.where(a > 0, rgb * 255.0 / np.maximum(a, 1.0), 0)
+    return np.concatenate([col, a], axis=2).clip(0, 255).astype(np.uint8)
 
 def drawFrame(payload):
     """The phone sends its whole drawing as a PNG whenever it changes (black = empty). Only while Draw is on."""
     payload = streamCheck(payload)
-    if payload is None or not _C().par.Drawon.eval(): return
-    if not isinstance(payload, (bytes, bytearray)) or len(payload) < 60 or len(payload) > 1500000: return
+    if payload is None or not isinstance(payload, (bytes, bytearray)) or len(payload) < 60 or len(payload) > 1500000: return
+    C = _C()
+    if payload[0] != 0x89 and 1 <= payload[0] <= 6: slot, payload = payload[0], payload[1:]     # first byte = which drawing layer
+    else: slot = next((i for i in range(1, 7) if C.par['M%don' % i].eval() and C.par['M%dkind' % i].eval() == 'draw'), 0)
+    if not slot or not C.par['M%don' % slot].eval() or C.par['M%dkind' % slot].eval() != 'draw': return
     try:
         import cv2, numpy as np
         img = cv2.imdecode(np.frombuffer(payload, np.uint8), cv2.IMREAD_COLOR)
         if img is None or img.shape[0] > 1080 or img.shape[1] > 1920: return
-        DRAWF['img'] = np.ascontiguousarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGBA)[::-1])
-        DRAWF['new'] = True; DRAWF['t'] = time.perf_counter()
+        DRAWS[slot] = {'img': np.ascontiguousarray(drawRGBA(img)[::-1]), 'new': True, 't': time.perf_counter()}
     except Exception as e:
         print('draw frame failed', e)
 
@@ -494,7 +507,8 @@ def _pars():
     for t in TEXTMENUS: d[t] = C.par[t].eval()
     d['Presetslot'] = int(C.par.Presetslot.eval()); d['Presetname'] = C.par.Presetname.eval()
     d['Cliplen'] = round(float(C.par.Cliplen.eval()), 1)
-    d['Textcm'] = int(C.par.Textcm.eval()); d['Textca'] = C.par.Textca.eval(); d['Textcb'] = C.par.Textcb.eval(); d['Textcang'] = round(float(C.par.Textcang.eval()), 1)
+    for pre in ('Text', 'T2', 'T3'):
+        d[pre + 'cm'] = int(C.par[pre + 'cm'].eval()); d[pre + 'ca'] = C.par[pre + 'ca'].eval(); d[pre + 'cb'] = C.par[pre + 'cb'].eval(); d[pre + 'cang'] = round(float(C.par[pre + 'cang'].eval()), 1)
     return d
 
 def _presets():
@@ -758,7 +772,8 @@ def handle(msg, reply):
                 _all({'t': 'animloop', 'name': m, 'v': E.animLoop(E.animInfo(m))})
         elif t == 'tcol':
             c = E._colClean({'m': msg.get('m', 1), 'a': msg.get('a'), 'b': msg.get('b'), 'ang': msg.get('ang', 0)})
-            C.par.Textcm = max(1, c['m']); C.par.Textca = c['a']; C.par.Textcb = c['b']; C.par.Textcang = c['ang']
+            pre = {2: 'T2', 3: 'T3'}.get(int(msg.get('n') or 1), 'Text')         # which text layer
+            C.par[pre + 'cm'] = max(1, c['m']); C.par[pre + 'ca'] = c['a']; C.par[pre + 'cb'] = c['b']; C.par[pre + 'cang'] = c['ang']
         elif t == 'lcol':
             k = str(msg.get('k', '')); tg = msg.get('tgt') or 'all'
             cv = {'m': msg.get('m', 0), 'a': msg.get('a'), 'b': msg.get('b'), 'ang': msg.get('ang', 0)}
@@ -802,7 +817,8 @@ def handle(msg, reply):
             except Exception: sl = 0
             sl = sl if 1 <= sl <= 6 else 0
             if a == 'add':                                        # + ADD LAYER -> a new empty picture / video layer
-                n = mediaFree('image' if msg.get('kind') == 'image' else 'video')
+                kd = msg.get('kind'); n = mediaFree(kd if kd in ('image', 'draw') else 'video')
+                if n and kd == 'draw': DRAWS[n] = {'img': None, 'new': True}
                 if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
                 else: reply({'t': 'added', 'slot': n})
             elif a == 'remove' and sl: E.mediaSlotClear(C, sl); E.tClear('m%d' % sl)

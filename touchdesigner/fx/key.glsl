@@ -33,7 +33,7 @@ float alphaAt(vec2 uv){
 void main(){
   vec2 uv = vUV.st;
   vec3 c = src(uv);
-  if (uK.x < 0.5) { fragColor = TDOutputSwizzle(vec4(c, 1.0)); return; }
+  if (uK.x < 0.5) { fragColor = TDOutputSwizzle(vec4(c, texture(sTD2DInputs[0], clamp(crop(vUV.st), 0.0, 1.0)).a)); return; }   // no key: keep the file's own see-through parts
   pickKey();
   float a = alphaAt(uv);
   if (uS.y > 0.01) {                                         // choke: pull the edge in by a few pixels
