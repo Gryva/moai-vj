@@ -16,6 +16,8 @@ SLIDERS = [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
+    ('Cropl', 'Crop left', 0, 0.45, 0.01, 'crop'), ('Cropr', 'Crop right', 0, 0.45, 0.01, 'crop'),
+    ('Cropt', 'Crop top', 0, 0.45, 0.01, 'crop'), ('Cropb', 'Crop bottom', 0, 0.45, 0.01, 'crop'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
     ('Gain', 'Input gain', 0, 4, 0.01, 'audio'),
     ('Gate', 'Noise gate dB', -90, -20, 1, 'audio'),
@@ -71,7 +73,7 @@ SLIDERS = [
     ('Objy', 'Up / down', -2, 2, 0.01, 'obj'),
     ('Objscale', 'Size', 0.2, 3, 0.01, 'obj'),
 ]
-TOGGLES = ['Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
+TOGGLES = ['Mediaon', 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
 TEXTMENUS = ['Spinaxis', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
@@ -253,12 +255,9 @@ def mediaPlay(mid, fit=False):
     for rel, full, kind in _mediaFiles():
         if rel == mid:
             mf = op('/project1/mediafile'); mf.par.file = full; mf.par.play = True
-            C.par.Media = rel
+            C.par.Media = rel; C.par.Mediaon = True                          # picking a clip switches Images + videos on
             if C.par.Clipstate.eval() == 'loop': C.par.Clipstate = 'off'
-            if C.par.Mediamode.eval() == 'object':
-                C.par.Statue = True                                          # shown as a 3D card in the scene
-                if fit: _fitSoon()
-            elif C.par.Camsrc.eval() == 'off': C.par.Camsrc = 'cam'
+            if C.par.Mediamode.eval() == 'object' and fit: _fitSoon()
             return True
     return False
 

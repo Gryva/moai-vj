@@ -69,16 +69,25 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 - **Colour** (supported effects): Own, Solid, Ramp or Radial. Colour A/B from 10 swatches or any colour; angle for gradients.
 
 ### SOURCE
+Every source has its own **ON/OFF** switch, and each one only controls itself:
+- **3D models** ON/OFF: shows or hides the statues and animations. With it OFF no model renders at all, but a
+  picture/video or drawing in 3D OBJECT mode still shows.
 - **Static models / 3D animations:** tap to switch.
 - **Loop / Bounce** (under animations): Loop restarts from the beginning. Bounce plays forward then backward, for clips
   whose end doesn't match the start. Remembered per animation. Plus animation speed and speed-up on the beat.
 - **Scene:** Solid, Particles, Grid (copies, depth, spacing, bass wave, spin offset).
-- **Motion:** Spin, Bob, Sway, Float, Still; amount, tilt, angle, spin speed, bass spin boost.
-- **Spin axis:** SPIN ↻ Y (turn), TUMBLE X, ROLL Z. **⟲ REVERSE** (VIEW tab, next to Auto spin) flips the direction. Both apply to statues, animations, pictures/videos in Object mode and drawings, and are saved in presets.
+- **Object motion** (moves the object itself, never the camera): Spin, Bob, Sway, Float, Still; amount, tilt,
+  angle, spin speed, bass spin boost. When Spin is picked you also get **SPINNING** (on/off), **⟲ REVERSE** and the
+  axis: SPIN ↻ Y (turn), TUMBLE X, ROLL Z. Applies to models, animations, 3D-object pictures/videos and drawings;
+  saved in presets.
 - **Swap animation:** Scale, Spin, Drop or Cut when changing models, and its time.
 - **Camera feed:** phone camera as a source (Off, Cam, Behind, Blend, Mask), Fill / Whole image, mirror.
 - **Clips:** record a short loop from the phone camera; play, bounce, speed, delete.
-- **Media:** upload images or videos. Flat (fills the screen) or Object (a card in the 3D scene).
+- **Images + videos:** own **ON/OFF** switch next to ＋ ADD. **FLAT** fills the screen; **3D OBJECT** puts it in the
+  scene as a card (spins, orbits, follows the camera), independent of the 3D models switch. Tapping a file turns
+  the source on.
+- **Crop:** left, right, top, bottom (up to 45 % each), works in both FLAT and 3D OBJECT; the card keeps the
+  cropped shape. **RESET CROP** clears it. Crop is saved in presets.
 - **Green / blue screen:** key out a video's background (tolerance, softness, spill, edge shrink).
 - **Move it in 3D:** left/right, up/down, size. **Fit** puts it back to full screen.
 - **Drawing:** draw on the phone; it appears as a 3D card in the scene (orbits, spins and follows the camera like a model). Pen and shapes, sizes, colours or gradients. An Object-mode picture/video takes priority.
@@ -90,7 +99,7 @@ beat reaction, colour (solid, ramp, radial). **TEXT ON/OFF**; **Pin** keeps text
 are one tap away. Text is saved with a preset when you press **Update**.
 
 ### VIEW
-Camera: saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan, handheld shake.
+Camera only (how you look at the scene; object movement lives in SOURCE → Object motion): saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan, handheld shake.
 On the preview: drag = orbit, pinch = zoom, two fingers = pan, flick = keep spinning.
 
 ### AUDIO

@@ -188,10 +188,31 @@ def motionOffsets(C, T, react=1.0):
     if m == 'float': return (math.sin(T * 0.21) * 40.0 * a, math.sin(T * 0.29) * 6.0 * a, math.sin(T * 0.37) * 8.0 * a, math.sin(T * 0.5) * 0.3 * a)
     return (0.0, 0.0, 0.0, 0.0)
 
+def mediaActive(C, mode=None):
+    """Images + videos are on (own ON/OFF switch, independent of 3D and the phone camera)."""
+    on = bool(C.par.Media.eval()) and bool(C.par.Mediaon.eval())
+    return on and (mode is None or C.par.Mediamode.eval() == mode)
+
+def cropUpdate(C):
+    """Crop the picture / video (both flat and 3D card): the shader cuts, the output keeps the cropped shape."""
+    k, mf = op('/project1/media_key'), op('/project1/mediafile')
+    if k is None or mf is None: return
+    l, r, t, b = [max(0.0, min(0.45, float(C.par[n].eval()))) for n in ('Cropl', 'Cropr', 'Cropt', 'Cropb')]
+    sig = (l, r, t, b, mf.width, mf.height)
+    if sig == S.get('cropsig'): return
+    S['cropsig'] = sig
+    k.par.vec2valuex, k.par.vec2valuey, k.par.vec2valuez, k.par.vec2valuew = l, r, t, b
+    if l + r + t + b < 1e-4:
+        if k.par.outputresolution.eval() != 'useinput': k.par.outputresolution = 'useinput'
+    else:
+        k.par.outputresolution = 'custom'
+        k.par.resolutionw = max(8, int(mf.width * (1.0 - l - r))); k.par.resolutionh = max(8, int(mf.height * (1.0 - t - b)))
+
 def objUpdate(C):
-    """Image / video as a 3D object: a card in the 3D scene instead of the statue."""
-    media = C.par.Mediamode.eval() == 'object' and bool(C.par.Media.eval())
-    drawing = bool(C.par.Drawon.eval()) and not media              # the drawing is a 3D card too (orbit, spin, camera)
+    """Picture / video in OBJECT mode, or the drawing: a card in the 3D scene, shown alongside (not instead of) the models."""
+    cropUpdate(C)
+    media = mediaActive(C, 'object')
+    drawing = bool(C.par.Drawon.eval()) and not media              # one card: a 3D picture wins over the drawing
     obj = media or drawing
     S['drawobj'] = drawing
     ig = op('/project1/img_geo')
@@ -199,19 +220,26 @@ def objUpdate(C):
     ct = op('/project1/card_tex')
     if ct is not None and int(ct.par.index.eval()) != (1 if drawing else 0): ct.par.index = 1 if drawing else 0
     if obj != S.get('obj'):
-        S['obj'] = obj
-        if obj:
-            op('/project1/moai_geo').render = False; op('/project1/moai_particles').render = False
-            ig.render = True; op('/project1/render1').par.geometry = ig.path
-        else:
-            ig.render = False; applyScene(C.par.Scene.eval())
-        S['anim'] = '?'                                          # re-check the animated model next
-    if obj:                                                     # keep the card the picture's shape
-        mf = op('/project1/phonedraw') if drawing else op('/project1/mediafile'); w, h = mf.width, mf.height
+        S['obj'] = obj; ig.render = obj
+    if obj:                                                     # keep the card the picture's (cropped) shape
+        mf = op('/project1/phonedraw') if drawing else op('/project1/media_key'); w, h = mf.width, mf.height
         asp = (w / h) if h else 1.0; card = ig.op('card')
         sx, sy = (2.0 * asp, 2.0) if asp <= 1.6 else (3.2, 3.2 / asp)
         if abs(card.par.sizex.eval() - sx) > 1e-3 or abs(card.par.sizey.eval() - sy) > 1e-3:
             card.par.sizex = sx; card.par.sizey = sy
+
+def renderGeo(C):
+    """What the 3D render draws: the models only if 3D is ON, plus the picture / drawing card if that's on."""
+    parts = []
+    if C.par.Statue.eval():
+        a = animInfo(C.par.Modelshown.eval())
+        g = animComp(a) if a else None
+        if g is not None: parts.append(g.path)
+        else: parts.append('/project1/moai_particles' if C.par.Scene.eval() == 'particles' else '/project1/moai_geo')
+    if S.get('obj'): parts.append('/project1/img_geo')
+    geo = ' '.join(parts)
+    r = op('/project1/render1')
+    if r.par.geometry.eval() != geo: r.par.geometry = geo
 
 # ------------------------------------------------------------------ animated 3D models (FBX / Alembic in /project1/anims)
 ANIM_FILE = project.folder + '/3D objects/_anim/anims.json'
@@ -284,7 +312,7 @@ def animPos(p, mode):
 def animUpdate(C, dt, react):
     """Show the animated model (instead of the statue). One clock drives every kind of clip,
     so speed, beat push and loop / bounce behave the same for FBX, Alembic and baked frames."""
-    a = None if S.get('obj') else animInfo(C.par.Modelshown.eval())
+    a = animInfo(C.par.Modelshown.eval())
     g = animComp(a)
     if g is None: a = None
     key = a['name'] if a else None
@@ -301,7 +329,7 @@ def animUpdate(C, dt, react):
             op('/project1/moai_geo').render = False; op('/project1/moai_particles').render = False
             op('/project1/moai_geo').par.instancing = False
             op('/project1/render1').par.geometry = g.path
-        elif not S.get('obj'):
+        else:
             applyScene(C.par.Scene.eval())
         S['anim'] = key; S['animp'] = 0.0                            # a new clip starts at its beginning
     if g is None: return None
@@ -891,7 +919,8 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 def srcData():
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
     return {'camsrc': C.par.Camsrc.eval(), 'cammix': round(float(C.par.Cammix.eval()), 3), 'camfit': C.par.Camfit.eval(),
-            'media': C.par.Media.eval(), 'mediamode': C.par.Mediamode.eval(),
+            'media': C.par.Media.eval(), 'mediamode': C.par.Mediamode.eval(), 'mediaon': bool(C.par.Mediaon.eval()),
+            'crop': [round(float(C.par[n].eval()), 4) for n in ('Cropl', 'Cropr', 'Cropt', 'Cropb')],
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
             'draw': bool(C.par.Drawon.eval()), 'drawmix': round(float(C.par.Drawmix.eval()), 3),
             'key': {k: (bool(C.par[k].eval()) if k == 'Keyon' else C.par[k].eval() if k == 'Keycolor' else round(float(C.par[k].eval()), 4)) for k in KEYPARS}}
@@ -906,6 +935,10 @@ def applySrc(d, slot=None):
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
     s = d.get('src') or {'camsrc': 'off', 'media': '', 'clip': None, 'draw': False}
     C.par.Mediamode = s.get('mediamode', 'flat')
+    C.par.Mediaon = bool(s.get('mediaon', bool(s.get('media'))))
+    for n, v in zip(('Cropl', 'Cropr', 'Cropt', 'Cropb'), s.get('crop') or [0, 0, 0, 0]):
+        try: C.par[n] = v
+        except Exception: pass
     if s.get('media'):
         if C.par.Media.eval() != s['media'] and not R.mediaPlay(s['media']):
             storeLog('preset media missing: %s' % s['media']); R.mediaStop()        # deleted file: show nothing, not the old picture
@@ -1247,7 +1280,8 @@ def camfeedUpdate(C, dt, T):
     g = op('/project1/fx_src')
     if g is None: return
     mode = C.par.Camsrc.eval()
-    CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if C.par.Statue.eval() else 0.0, 0.25, dt)   # statue on/off fades
+    CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if (C.par.Statue.eval() or S.get('obj')) else 0.0, 0.25, dt)   # 3D layer fades when nothing 3D is on
+    if mode not in CAMMODES and mediaActive(C, 'flat'): mode = 'cam'          # a flat picture fills the screen on its own
     flat = C.par.Drawon.eval() and not S.get('drawobj')            # shown as a 3D card instead: no flat overlay
     CAMS['draw'] = _ease(CAMS.get('draw', 0.0), float(C.par.Drawmix.eval()) if flat else 0.0, 0.25, dt)
     D = op('/project1/remote_cb').module.DRAWF
@@ -1258,7 +1292,7 @@ def camfeedUpdate(C, dt, T):
         CAMS['alive'] = 0.0
         return
     R = op('/project1/remote_cb').module; F = R.CAMF
-    media = bool(C.par.Media.eval()) and C.par.Mediamode.eval() == 'flat'
+    media = mediaActive(C, 'flat')
     sel = op('/project1/camsel')
     if sel is not None and int(sel.par.index.eval()) != (1 if media else 0): sel.par.index = 1 if media else 0
     if C.par.Clipstate.eval() == 'loop': R.clipFrame()          # recorded clip plays as the camera
@@ -1475,6 +1509,7 @@ def onFrameStart(frame):
     if sc != S['scene']:
         _safe('scene', applyScene, sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'
     _safe('models', _models, C, dt, T, react, sc == 'grid')
+    _safe('render', renderGeo, C)
     _safe('layers', applyLayers, T)
     _safe('uniforms', pushUniforms, T)
     _safe('colours', _colsave, T)

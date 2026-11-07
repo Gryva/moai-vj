@@ -2,9 +2,11 @@
 // uK = (on, colour 0 auto / 1 green / 2 blue, tolerance, softness)   uS = (spill removal, shrink edges px, 0, 0)
 uniform vec4 uK;
 uniform vec4 uS;
+uniform vec4 uC;   // crop: x left, y right, z top, w bottom (0..0.45)
 layout(location = 0) out vec4 fragColor;
 vec2 cc(vec3 c){ return vec2(-0.169 * c.r - 0.331 * c.g + 0.5 * c.b, 0.5 * c.r - 0.419 * c.g - 0.081 * c.b); }
-vec3 src(vec2 uv){ return texture(sTD2DInputs[0], clamp(uv, 0.0, 1.0)).rgb; }
+vec2 crop(vec2 uv){ return vec2(uC.x + uv.x * (1.0 - uC.x - uC.y), uC.w + uv.y * (1.0 - uC.z - uC.w)); }
+vec3 src(vec2 uv){ return texture(sTD2DInputs[0], clamp(crop(uv), 0.0, 1.0)).rgb; }
 vec3 KEY;
 void pickKey(){
   // sample the frame border: the screen is whatever surrounds the subject
