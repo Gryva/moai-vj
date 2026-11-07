@@ -696,6 +696,24 @@ def tClear(tgt=None):
     for t in ([tgt] if tgt else FXTGTS):
         if t in FXT: FXT[t] = {}
 
+def fxCopy(src, dst):
+    """Copy every effect (on/amount/setting) and its colour from one layer to another ('all' = the whole-picture stack)."""
+    if src == dst or (src != 'all' and src not in FXT) or (dst != 'all' and dst not in FXT): return False
+    if src == 'all':
+        stack = {r['key']: [_isOn(r), float(r['amt']), float(r['p1'])] for r in layers() if _isOn(r)}
+        cols = {k: dict(v) for k, v in LCOL.items() if v.get('m', 0) > 0}
+    else:
+        stack = {k: list(v) for k, v in FXT[src].items() if v[0]}
+        cols = {k: dict(v) for k, v in TCOL[src].items()}
+    if dst == 'all':
+        clearLayers()
+        for k, v in stack.items(): setLayer(k, on=True, amt=v[1], p1=v[2])
+        for k in COLFX: colSet(k, cols.get(k, {'m': 0}))
+    else:
+        FXT[dst] = {k: [True, v[1], v[2]] for k, v in stack.items()}
+        TCOL[dst] = {k: _colClean(v) for k, v in cols.items()}
+    return True
+
 def tColSet(tgt, k, c):
     if tgt not in TCOL or k not in COLFX: return None
     TCOL[tgt][k] = _colClean(c); return TCOL[tgt][k]

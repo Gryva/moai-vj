@@ -730,6 +730,9 @@ def handle(msg, reply):
             tg = msg.get('tgt') or 'all'                          # which layer the effect is for (FX tab chips)
             if tg == 'all': E.setLayer(msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
             else: E.tSetLayer(tg, msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
+        elif t == 'fxcopy':                                        # hold a layer in FX = copy, hold another = paste
+            if E.fxCopy(str(msg.get('from', '')), str(msg.get('to', ''))):
+                _all({'t': 'lcols', 'v': dict(E.LCOL)}); _publish(state())
         elif t == 'clear':
             tg = msg.get('tgt') or 'all'
             if tg == 'all': E.clearLayers()

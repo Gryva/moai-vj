@@ -110,6 +110,7 @@ label.tg{cursor:pointer}
 .mlib{margin-top:8px}.mlib[hidden],.mplay[hidden],.mfile[hidden],.mkey[hidden],.dpick[hidden]{display:none}
 .addlay{width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px dashed #3d4a1c;color:var(--lime);font:700 11px var(--sans);letter-spacing:.14em}
 .addmenu[hidden]{display:none}.addmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.addmenu button{padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.lrow.copied{border-style:dashed;border-color:var(--cyan)}
 .lrow.sel{background:#1d2a0c;border-color:var(--lime);box-shadow:inset 3px 0 0 var(--lime)}.lrow.sel .lname b{color:var(--lime)}.lrow.dim .lname{opacity:.45}
 .card .ch .chev{font-size:12px;color:var(--mute);transition:transform .2s;margin-left:2px}.card.open .ch .chev{transform:rotate(180deg)}.card.shut .ch .chev{transform:none}
 .lrow .tg.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
@@ -476,7 +477,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07t';
+const BUILD = '2026-11-07u';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -769,11 +770,11 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const fx = mode === 'fx', vw = mode === 'view', src = !fx && !vw;
   const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on);
   const cnt = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
-  const tag = k => fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '';
+  const tag = k => (fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '') + (fx && FXCLIP === k ? ' · COPIED' : '');
   const flat = k => (k === 'camera' || /^m\d$/.test(k)) && !layerInfo(k).in3d;
   const vkey = k => flat(k) ? k : '3d';                                   // VIEW: 3D models, 3D objects and the drawing card use the 3D camera
   const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? `data-vwt="${vkey(k)}"` : `data-jump="${layerInfo(k).card}"`;
-  const sel = k => (fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '';
+  const sel = k => ((fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
   const x = k => src ? `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
   [['Texton', 'text', 'cardText', 'Textstr'], ['T2on', 'text2', 'cardT2', 'T2str'], ['T3on', 'text3', 'cardT3', 'T3str']].forEach(([on, k, card, str], j) => { if (p[on])
@@ -1144,7 +1145,7 @@ document.addEventListener('input', e => { const k = e.target.dataset && e.target
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.cbox; if (k) COPEN[k] = e.target.open; }, true);
 /* effects */
 const FXMODES = [[0,'OWN'],[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']], GMODES = [[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']];
-let FXT_SEL = 'all', VW_SEL = '3d';
+let FXT_SEL = 'all', VW_SEL = '3d', FXCLIP = null, FXHOLD = 0;   // FXCLIP = layer whose effects were copied
 const colMap = () => FXT_SEL === 'all' ? (S.lcols = S.lcols || {}) : ((S.tcol = S.tcol || {})[FXT_SEL] = S.tcol[FXT_SEL] || {});
 const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, colMap()[k]);
 function colBox(k){
@@ -1352,9 +1353,13 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
+    if (c.dataset.fxt) { FXHOLD = performance.now(); const k = c.dataset.fxt;          // hold = copy this layer's effects, hold another = paste
+      if (!FXCLIP || FXCLIP === k) { FXCLIP = FXCLIP === k ? null : k; toast(FXCLIP ? 'Effects of ' + tgtName(k) + ' copied · hold another layer to paste' : 'Copy cleared'); }
+      else { send({t:'fxcopy', from:FXCLIP, to:k}); toast('Effects of ' + tgtName(FXCLIP) + ' pasted on ' + tgtName(k)); }
+      fxTargets(); return; }
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
       const nn = prompt('Rename this FX preset (leave empty to delete it):', cur.name);
       if (nn === null) return; if (nn.trim()) send({t:'fxp', do:'rename', i, name:nn.trim()}); else if (confirm('Delete "' + cur.name + '"?')) send({t:'fxp', do:'del', i}); return; }
@@ -1426,7 +1431,7 @@ document.addEventListener('click', e => {
     if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
     else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }
     applyPars({}); buzz(); }
-  else if (d.fxt) { FXT_SEL = d.fxt; applyTarget(); buzz(); }
+  else if (d.fxt) { if (performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.act === 'frreset') { const pre = {camera:'Fcam', draw:'Fdraw'}[VW_SEL] || (/^m\d$/.test(VW_SEL) ? 'M' + VW_SEL.slice(1) + 'f' : null); if (pre) { (pre.endsWith('f') ? [['zoom',1],['x',0],['y',0],['rot',0]] : [['zoom',1],['x',0],['y',0],['rot',0]]).forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
   else if (d.lmove) { layerMove(d.lmove, +d.dir); buzz(); }
