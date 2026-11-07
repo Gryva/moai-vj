@@ -77,11 +77,12 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 Six sources, each a card with its own **ON/OFF**. A card opens when its source is ON; tap its header to fold it away (▴/▾). In the Layers card, **✕** switches that source off.
 **NEW CLEAN PRESET** starts from nothing: every source off, no effects.
 
-**Layers** (top of SOURCE) lists every source that is ON, front to back. **▲ ▼** move a layer in front of or behind
-the others; tap a name to jump to its card. Example, three layers: Text on top, a 3D model in the middle, a picture on
-Images at the back. Or: a background clip on Images, a green-screen clip on Videos with REMOVE SCREEN, and the 3D model
-between them. The order is saved in presets. Images or videos in **3D OBJECT** mode live inside the 3D scene, so they
-move with the 3D models layer. **Text** is always on top (it is drawn after the effects so it stays readable).
+**Layers** (top of SOURCE) lists every layer you added, front to back. **▲ ▼** move it in front of / behind the
+others, **✕** removes it, tap a name to jump to its card. **＋ ADD LAYER** adds Text, 3D models, an Image, a Video,
+Draw or the Phone camera. Images and videos can be added again and again: up to **6 picture / video layers** at once
+(e.g. three videos stacked, a background picture under a green-screen clip). Example: Text on top, a 3D model in the
+middle, a picture at the back. The order is saved in presets. Pictures / videos in **3D OBJECT** mode live inside the
+3D scene, so they move with the 3D models layer. **Text** is always on top (drawn after the effects).
 
 - **3D models:** shows or hides the statues and animations.
   - Static models / 3D animations: tap to switch. **Scene** (Solid, Particles, Grid) sits under Static models;
@@ -93,10 +94,10 @@ move with the 3D models layer. **Text** is always on top (it is drawn after the 
   - Swap animation: Scale, Spin, Drop or Cut when changing models, and its time.
 - **Phone camera:** NORMAL, BLEND or MASK, Fill / Whole image, mirror. **Clips:** record a short loop; play, bounce,
   speed, delete (a playing clip is the camera layer).
-- **Images** (pictures) and **Videos** (videos and GIFs): two separate players, so both can show at once. Each has
-  ＋ ADD, **FLAT** (fills the screen) or **3D OBJECT** (a card in the scene), **Crop** (left/right/top/bottom, up to
-  45 %), **Green / blue screen** (tolerance, softness, spill, edge shrink) and **Move it in 3D** (left/right, up/down,
-  size, Fit). All saved in presets. Old presets with a video in them load it on the Videos layer.
+- **Image / Video layers** (one card each, named Image 1, Video 2…): ON/OFF, ＋ ADD (upload to this layer), the
+  library (pictures or videos, tap to play on this layer), **FLAT** or **3D OBJECT**, **Crop**, **Green / blue screen**
+  and **Move it in 3D**. Each layer also has its own effects and brightness (FX tab) and framing (VIEW tab). All saved
+  in presets; older presets load their image on layer 1 and their video on layer 2.
 - **Draw:** draw on the phone; pen and shapes, sizes, colours or gradients. It becomes a 3D card in the scene
   (unless an Images 3D object is using the card).
 - **Text:** type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave,

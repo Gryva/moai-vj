@@ -3,13 +3,15 @@ uniform vec4 uAudio;
 uniform float uMix;
 uniform vec4 uP;
 uniform vec4 uQ;   // x drawing amount
-uniform vec4 uO;   // layer order, back to front: ids 1 3D models, 2 phone camera, 3 images, 4 videos, 5 drawing (0 = empty)
-uniform vec4 uO2;  // order slots 5..8
-uniform vec4 uA;   // amounts: x 3D models, y camera, z images, w videos
-uniform vec4 uS;   // effect slot (1-4, 0 = none) of: x 3D models, y camera, z images, w videos
-uniform vec4 uS2;  // x effect slot of the drawing, y = isolate this layer id (the per-layer effect chains), z drawing brightness
-uniform vec4 uOp;  // brightness / see-through of 3D models, camera, images, videos (1 = as is, <1 fades, >1 brighter)
-uniform vec4 uF2; uniform vec4 uF3; uniform vec4 uF4; uniform vec4 uF5;   // 2D framing of camera / images / videos / drawing: zoom, x, y, rotate deg
+uniform vec4 uO; uniform vec4 uO2; uniform vec4 uO3;   // layer order, back to front: 1 3D models, 2 phone camera, 5 drawing, 11-16 media layers 1-6, 0 = empty
+uniform vec4 uA;    // amounts: x 3D models, y camera
+uniform vec4 uS;    // effect chain (1-4, 0 none) of x 3D models, y camera, z drawing;  w = isolate this layer id (the per-layer chains)
+uniform vec4 uOp;   // brightness: x 3D models, y camera, z drawing  (1 = as is, <1 see-through, >1 brighter)
+uniform vec4 uF2; uniform vec4 uF5;                     // 2D framing of camera / drawing: zoom, x, y, rotate deg
+uniform vec4 uMA1; uniform vec4 uMA2;                   // media layers 1-6: amount (0 = off or in 3D)
+uniform vec4 uMS1; uniform vec4 uMS2;                   // media layers 1-6: effect chain
+uniform vec4 uMO1; uniform vec4 uMO2;                   // media layers 1-6: brightness
+uniform vec4 uMF1; uniform vec4 uMF2; uniform vec4 uMF3; uniform vec4 uMF4; uniform vec4 uMF5; uniform vec4 uMF6;   // media framing
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -22,14 +24,21 @@ vec2 PX(){ return uTD2DInfos[0].res.xy; }
 vec2 RES(){ return uTD2DInfos[0].res.zw; }
 
 
-// LAYERED SOURCE  inputs: 0 3D render (premultiplied), 1 phone camera / clip, 2 drawing, 3 images (keyed), 4 videos,
-// 5-8 the four per-layer effect chains (premultiplied RGBA, same order as uS)
+// LAYERED SOURCE  inputs: 0 3D render (premultiplied), 1 phone camera / clip, 2 drawing, 3-8 media layers 1-6 (keyed, straight alpha),
+// 9-12 the four per-layer effect chains (premultiplied RGBA)
 // uP.x camera blend: 1/2 normal, 3 blend (screen), 4 mask   uP.y mirror (+1, camera only) + whole image (+2)
 vec2 frame(vec2 uv, vec4 f){
   vec2 res = uTD2DInfos[0].res.zw; float asp = res.x / res.y;
   vec2 q = uv - 0.5 - vec2(f.y, f.z) * 0.5; q.x *= asp;
   float r = radians(-f.w); q = mat2(cos(r), sin(r), -sin(r), cos(r)) * q; q.x /= asp;
   return q / max(0.05, f.x) + 0.5;
+}
+vec4 tin(int i, vec2 p){
+  p = clamp(p, 0.0, 1.0);
+  if (i == 1) return texture(sTD2DInputs[1], p);
+  if (i == 3) return texture(sTD2DInputs[3], p); if (i == 4) return texture(sTD2DInputs[4], p);
+  if (i == 5) return texture(sTD2DInputs[5], p); if (i == 6) return texture(sTD2DInputs[6], p);
+  if (i == 7) return texture(sTD2DInputs[7], p); return texture(sTD2DInputs[8], p);
 }
 vec4 fitTex(int i, vec2 uv, bool mir){       // .rgb colour, .a = alpha (keyed alpha x inside the picture)
   vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[i].res.zw;
@@ -42,29 +51,31 @@ vec4 fitTex(int i, vec2 uv, bool mir){       // .rgb colour, .a = alpha (keyed a
   vec2 p = q + 0.5;
   float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0)
                * step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
-  vec4 t = i == 1 ? texture(sTD2DInputs[1], clamp(p, 0.0, 1.0)) : i == 3 ? texture(sTD2DInputs[3], clamp(p, 0.0, 1.0)) : texture(sTD2DInputs[4], clamp(p, 0.0, 1.0));
+  vec4 t = tin(i, p);
   return vec4(t.rgb, (i == 1 ? 1.0 : t.a) * inside);
 }
+float pick4(vec4 a, vec4 b, int j){ return j == 0 ? a.x : j == 1 ? a.y : j == 2 ? a.z : j == 3 ? a.w : j == 4 ? b.x : b.y; }
+vec4 mframe(int j){ return j == 0 ? uMF1 : j == 1 ? uMF2 : j == 2 ? uMF3 : j == 3 ? uMF4 : j == 4 ? uMF5 : uMF6; }
 vec4 layerPM(int id, vec2 uv){                 // one layer on its own, premultiplied
   if (id == 1) return texture(sTD2DInputs[0], uv) * clamp(uA.x, 0.0, 1.0);
   if (id == 2) { vec4 c = fitTex(1, frame(uv, uF2), mod(uP.y, 2.0) > 0.5); float a = c.a * clamp(uA.y, 0.0, 1.0); return vec4(c.rgb * a, a); }
-  if (id == 3) { vec4 c = fitTex(3, frame(uv, uF3), false); float a = c.a * clamp(uA.z, 0.0, 1.0); return vec4(c.rgb * a, a); }
-  if (id == 4) { vec4 c = fitTex(4, frame(uv, uF4), false); float a = c.a * clamp(uA.w, 0.0, 1.0); return vec4(c.rgb * a, a); }
   if (id == 5) { vec2 p = frame(uv, uF5); float ins = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
                  vec3 d = clamp(texture(sTD2DInputs[2], clamp(p, 0.0, 1.0)).rgb * uQ.x, 0.0, 1.0) * ins; return vec4(d, max(d.r, max(d.g, d.b))); }
+  if (id >= 11 && id <= 16) { int j = id - 11; float k = clamp(pick4(uMA1, uMA2, j), 0.0, 1.0); if (k < 0.002) return vec4(0.0);
+                 vec4 c = fitTex(3 + j, frame(uv, mframe(j)), false); float a = c.a * k; return vec4(c.rgb * a, a); }
   return vec4(0.0);
 }
-int slotOf(int id){ return int(floor((id == 1 ? uS.x : id == 2 ? uS.y : id == 3 ? uS.z : id == 4 ? uS.w : uS2.x) + 0.5)); }
+int slotOf(int id){ return int(floor((id == 1 ? uS.x : id == 2 ? uS.y : id == 5 ? uS.z : (id >= 11 && id <= 16) ? pick4(uMS1, uMS2, id - 11) : 0.0) + 0.5)); }
+float opOf(int id){ return id == 1 ? uOp.x : id == 2 ? uOp.y : id == 5 ? uOp.z : (id >= 11 && id <= 16) ? pick4(uMO1, uMO2, id - 11) : 1.0; }
 vec4 slotTex(int s, vec2 uv){
-  return s == 1 ? texture(sTD2DInputs[5], uv) : s == 2 ? texture(sTD2DInputs[6], uv) : s == 3 ? texture(sTD2DInputs[7], uv) : texture(sTD2DInputs[8], uv);
+  return s == 1 ? texture(sTD2DInputs[9], uv) : s == 2 ? texture(sTD2DInputs[10], uv) : s == 3 ? texture(sTD2DInputs[11], uv) : texture(sTD2DInputs[12], uv);
 }
 vec3 layer(int id, vec2 uv, vec3 o){
-  if (id < 1 || id > 5) return o;
+  if (id < 1) return o;
   int s = slotOf(id);
   vec4 L = s > 0 ? slotTex(s, uv) : layerPM(id, uv);
   if (L.a < 0.0005 && max(L.r, max(L.g, L.b)) < 0.0005) return o;
-  float op = id == 1 ? uOp.x : id == 2 ? uOp.y : id == 3 ? uOp.z : id == 4 ? uOp.w : uS2.z;
-  L *= clamp(op, 0.0, 1.0); L.rgb *= max(op, 1.0);
+  float op = opOf(id); L *= clamp(op, 0.0, 1.0); L.rgb *= max(op, 1.0);
   if (id == 5) return 1.0 - (1.0 - o) * (1.0 - clamp(L.rgb, 0.0, 1.0));               // drawing: screen
   if (id == 2) {
     int m = int(floor(uP.x + 0.5));
@@ -75,10 +86,10 @@ vec3 layer(int id, vec2 uv, vec3 o){
 }
 void main(){
   vec2 uv = vUV.st;
-  int iso = int(floor(uS2.y + 0.5));
+  int iso = int(floor(uS.w + 0.5));
   if (iso > 0) { fragColor = TDOutputSwizzle(layerPM(iso, uv)); return; }
   vec3 o = vec3(0.0);
-  float ids[8] = float[8](uO.x, uO.y, uO.z, uO.w, uO2.x, uO2.y, uO2.z, uO2.w);
-  for (int i = 0; i < 8; i++) o = layer(int(ids[i] + 0.5), uv, o);
+  float ids[12] = float[12](uO.x, uO.y, uO.z, uO.w, uO2.x, uO2.y, uO2.z, uO2.w, uO3.x, uO3.y, uO3.z, uO3.w);
+  for (int i = 0; i < 12; i++) o = layer(int(ids[i] + 0.5), uv, o);
   fragColor = TDOutputSwizzle(vec4(o, 1.0));
 }

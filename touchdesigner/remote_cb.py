@@ -12,12 +12,22 @@ LAST = {'pars': None, 'L': None, 'b': None, 'n': 0}
 LIVE = {'t': time.perf_counter(), 'f': absTime.frame, 'fps': 60.0}
 
 # name, label, min, max, step, group
-SLIDERS = [
+MSLOT_SLIDERS = []                                       # media layers 1-6: one set each (phone groups m<n>crop / key / obj / fr / op)
+for _i in range(1, 7):
+    _m = 'M%d' % _i
+    MSLOT_SLIDERS += [(_m + 'cropl', 'Crop left', 0, 0.45, 0.01, 'm%dcrop' % _i), (_m + 'cropr', 'Crop right', 0, 0.45, 0.01, 'm%dcrop' % _i),
+                      (_m + 'cropt', 'Crop top', 0, 0.45, 0.01, 'm%dcrop' % _i), (_m + 'cropb', 'Crop bottom', 0, 0.45, 0.01, 'm%dcrop' % _i),
+                      (_m + 'keytol', 'Remove more screen', 0, 1, 0.01, 'm%dkey' % _i), (_m + 'keysoft', 'Edge softness', 0, 1, 0.01, 'm%dkey' % _i),
+                      (_m + 'keyspill', 'Remove green / blue tint', 0, 1, 0.01, 'm%dkey' % _i), (_m + 'keyshrink', 'Shrink edges', 0, 4, 0.05, 'm%dkey' % _i),
+                      (_m + 'objx', 'Left / right', -3, 3, 0.01, 'm%dobj' % _i), (_m + 'objy', 'Up / down', -2, 2, 0.01, 'm%dobj' % _i),
+                      (_m + 'objscale', 'Size', 0.2, 3, 0.01, 'm%dobj' % _i),
+                      (_m + 'fzoom', 'Zoom', 0.2, 4, 0.01, 'm%dfr' % _i), (_m + 'fx', 'Left / right', -1, 1, 0.005, 'm%dfr' % _i),
+                      (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
+                      (_m + 'op', 'Brightness', 0, 1.5, 0.01, 'm%dop' % _i)]
+SLIDERS = MSLOT_SLIDERS + [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
-    ('Cropl', 'Crop left', 0, 0.45, 0.01, 'crop'), ('Cropr', 'Crop right', 0, 0.45, 0.01, 'crop'),
-    ('Cropt', 'Crop top', 0, 0.45, 0.01, 'crop'), ('Cropb', 'Crop bottom', 0, 0.45, 0.01, 'crop'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
     ('Gain', 'Input gain', 0, 4, 0.01, 'audio'),
     ('Gate', 'Noise gate dB', -90, -20, 1, 'audio'),
@@ -65,34 +75,14 @@ SLIDERS = [
     ('Motionamt', 'Motion amount', 0, 2, 0.01, 'motion2'),
     ('Animspeed', 'Animation speed', 0, 3, 0.01, 'anim'),
     ('Animbeat', 'Speed-up on the beat', 0, 2, 0.01, 'anim'),
-    ('Keytol', 'Remove more screen', 0, 1, 0.01, 'key'),
-    ('Keysoft', 'Edge softness', 0, 1, 0.01, 'key'),
-    ('Keyspill', 'Remove green / blue tint', 0, 1, 0.01, 'key'),
-    ('Keyshrink', 'Shrink edges', 0, 4, 0.05, 'key'),
-    ('Objx', 'Left / right', -3, 3, 0.01, 'obj'),
-    ('Objy', 'Up / down', -2, 2, 0.01, 'obj'),
-    ('Objscale', 'Size', 0.2, 3, 0.01, 'obj'),
     ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
-    ('Fimgzoom', 'Zoom', 0.2, 4, 0.01, 'frimg'), ('Fimgx', 'Left / right', -1, 1, 0.005, 'frimg'), ('Fimgy', 'Up / down', -1, 1, 0.005, 'frimg'), ('Fimgrot', 'Rotate', -180, 180, 1, 'frimg'),
-    ('Fvidzoom', 'Zoom', 0.2, 4, 0.01, 'frvid'), ('Fvidx', 'Left / right', -1, 1, 0.005, 'frvid'), ('Fvidy', 'Up / down', -1, 1, 0.005, 'frvid'), ('Fvidrot', 'Rotate', -180, 180, 1, 'frvid'),
     ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
     ('Opmodel', 'Brightness', 0, 1.5, 0.01, 'opmodel'),
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
-    ('Opimages', 'Brightness', 0, 1.5, 0.01, 'opimages'),
-    ('Opvideos', 'Brightness', 0, 1.5, 0.01, 'opvideos'),
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
-    ('Vcropl', 'Crop left', 0, 0.45, 0.01, 'vcrop'), ('Vcropr', 'Crop right', 0, 0.45, 0.01, 'vcrop'),
-    ('Vcropt', 'Crop top', 0, 0.45, 0.01, 'vcrop'), ('Vcropb', 'Crop bottom', 0, 0.45, 0.01, 'vcrop'),
-    ('Vkeytol', 'Remove more screen', 0, 1, 0.01, 'vkey'),
-    ('Vkeysoft', 'Edge softness', 0, 1, 0.01, 'vkey'),
-    ('Vkeyspill', 'Remove green / blue tint', 0, 1, 0.01, 'vkey'),
-    ('Vkeyshrink', 'Shrink edges', 0, 4, 0.05, 'vkey'),
-    ('Vobjx', 'Left / right', -3, 3, 0.01, 'vobj'),
-    ('Vobjy', 'Up / down', -2, 2, 0.01, 'vobj'),
-    ('Vobjscale', 'Size', 0.2, 3, 0.01, 'vobj'),
 ]
-TOGGLES = ['Mediaon', 'Vmediaon', 'Vkeyon', 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
-TEXTMENUS = ['Spinaxis', 'Layerorder', 'Vmediamode', 'Vkeycolor', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Motion']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -258,44 +248,57 @@ def _mediaThumb(rel, full, kind):
 def mediaMsg():
     """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
     items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/')} for rel, full, kind in _mediaFiles()]
-    return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None, 'vcur': _C().par.Vmedia.eval() or None}
+    return {'t': 'media', 'v': items[-80:]}
 
 def mediaThumbs(send):
     for rel, full, kind in _mediaFiles()[-80:]:
         th = _mediaThumb(rel, full, kind)
         if th: send({'t': 'mthumb', 'id': rel, 'img': th})
 
-def _fitSoon():
-    run("op('/project1/fx_engine').module.mediaFit()", delayFrames=12)   # after the new file has loaded (its size is known)
+def _fitSoon(i=None):
+    run("op('/project1/fx_engine').module.mediaFit(%r)" % i, delayFrames=12)   # after the new file has loaded (its size is known)
 
 def isVideo(rel):
     return os.path.splitext(str(rel))[1].lower() in VID_EXT
 
-def mediaPlay(mid, fit=False, layer=None):
-    """Pictures go to the Images layer, videos (and GIFs) to the Videos layer: two players, so both can show at once."""
+MEDIA_UP = {'slot': None}                                  # the layer that pressed + ADD gets the next upload
+
+def mediaFree(kind='video'):
+    """First empty media layer (1-6), switched on and ready for a file; None when all 6 are used."""
+    C = _C()
+    for i in range(1, 7):
+        if not C.par['M%don' % i].eval():
+            _E().mediaSlotClear(C, i)
+            C.par['M%don' % i] = True; C.par['M%dvis' % i] = True; C.par['M%dkind' % i] = kind
+            o = [k for k in _E().layerOrder(C) if k != 'm%d' % i]                 # a new layer goes on top of the others
+            C.par.Layerorder = ','.join(['m%d' % i] + o)
+            return i
+    return None
+
+def mediaPlay(mid, fit=False, slot=None, keep=False):
+    """Put a picture / video on media layer <slot> (a new layer if none given)."""
     C = _C()
     for rel, full, kind in _mediaFiles():
         if rel == mid:
-            v = (layer == 'videos') if layer else (kind == 'video')
-            mf = op('/project1/vidfile' if v else '/project1/mediafile'); mf.par.file = full; mf.par.play = True
-            pre = 'Vmedia' if v else 'Media'
-            C.par[pre] = rel; C.par[pre + 'on'] = True                       # picking a file switches its layer on
-            if v and C.par.Clipstate.eval() == 'loop': pass
-            if C.par[pre + 'mode'].eval() == 'object' and fit: _fitSoon()
+            i = slot or mediaFree(kind)
+            if not i: return False
+            mf = op('/project1/mf%d' % i); mf.par.file = full; mf.par.play = True
+            C.par['M%dfile' % i] = rel; C.par['M%dkind' % i] = kind
+            if not keep: C.par['M%don' % i] = True; C.par['M%dvis' % i] = True       # picking a file switches its layer on
+            if C.par['M%dmode' % i].eval() == 'object' and fit: _fitSoon(i)
             return True
     return False
 
-def mediaStop(layer='images'):
-    v = layer == 'videos'
-    _C().par['Vmedia' if v else 'Media'] = ''; op('/project1/vidfile' if v else '/project1/mediafile').par.file = ''
+def mediaStop(i):
+    C = _C(); C.par['M%dfile' % i] = ''; op('/project1/mf%d' % i).par.file = ''
 
 def mediaDel(mid):
     """Only pictures sent from a phone can be deleted from a phone."""
     if not mid.startswith('uploads/') or '..' in mid: return
     full = os.path.normpath(os.path.join(MEDIADIR, mid))
     if os.path.commonpath([os.path.normpath(os.path.join(MEDIADIR, 'uploads')), full]) != os.path.normpath(os.path.join(MEDIADIR, 'uploads')): return
-    if _C().par.Media.eval() == mid: mediaStop('images')
-    if _C().par.Vmedia.eval() == mid: mediaStop('videos')
+    for i in range(1, 7):
+        if _C().par['M%dfile' % i].eval() == mid: mediaStop(i)
     try: os.remove(full)
     except Exception: pass
 
@@ -373,8 +376,7 @@ def videoPoll(uid):
         run("op('/project1/remote_cb').module.videoPoll(%r)" % uid, delayMilliSeconds=300); return
     VJOBS.pop(uid, None)
     if j['state'] == 'done':
-        C = _C(); C.par.Vmediamode = 'object'                        # a new video comes in as a movable object
-        mediaPlay(j['name'], fit=True)
+        mediaPlay(j['name'], fit=True, slot=MEDIA_UP['slot'] if MEDIA_UP['slot'] and not _C().par['M%dfile' % MEDIA_UP['slot']].eval() else None)
         _all({'t': 'vdone', 'u': uid, 'id': j['name']}); _allMedia(); _all(clipsMsg()); _publish(state())
     else:
         _all({'t': 'err', 'msg': 'Video failed: ' + j['err']})
@@ -400,7 +402,7 @@ def mediaChunk(msg):
     os.makedirs(os.path.join(MEDIADIR, 'uploads'), exist_ok=True)
     name = 'uploads/phone_%s.jpg' % time.strftime('%Y%m%d_%H%M%S')
     cv2.imwrite(os.path.join(MEDIADIR, name), im, [cv2.IMWRITE_JPEG_QUALITY, 90])
-    mediaPlay(name)
+    mediaPlay(name, slot=MEDIA_UP['slot'] if MEDIA_UP['slot'] and not _C().par['M%dfile' % MEDIA_UP['slot']].eval() else None)
     return 'ok'
 
 def clipRec():
@@ -796,14 +798,21 @@ def handle(msg, reply):
             _all(clipsMsg()); _publish(state())
         elif t == 'media':
             a = msg.get('do')
-            lay = 'videos' if msg.get('layer') == 'videos' else 'images'
-            pre = 'Vmedia' if lay == 'videos' else 'Media'
-            if a == 'play': mediaPlay(str(msg.get('id', '')), fit=True, layer=lay)
-            elif a == 'mode':
-                C.par[pre + 'mode'] = 'object' if msg.get('v') == 'object' else 'flat'
-                if C.par[pre].eval(): mediaPlay(C.par[pre].eval(), fit=True, layer=lay)
-            elif a == 'fit': E.mediaFit()
-            elif a == 'stop': mediaStop(lay)
+            try: sl = int(msg.get('slot') or 0)
+            except Exception: sl = 0
+            sl = sl if 1 <= sl <= 6 else 0
+            if a == 'add':                                        # + ADD LAYER -> a new empty picture / video layer
+                n = mediaFree('image' if msg.get('kind') == 'image' else 'video')
+                if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
+                else: reply({'t': 'added', 'slot': n})
+            elif a == 'remove' and sl: E.mediaSlotClear(C, sl); E.tClear('m%d' % sl)
+            elif a == 'target': MEDIA_UP['slot'] = sl or None
+            elif a == 'play' and sl: mediaPlay(str(msg.get('id', '')), fit=True, slot=sl)
+            elif a == 'mode' and sl:
+                C.par['M%dmode' % sl] = 'object' if msg.get('v') == 'object' else 'flat'
+                if C.par['M%dfile' % sl].eval(): mediaPlay(C.par['M%dfile' % sl].eval(), fit=True, slot=sl)
+            elif a == 'fit': E.mediaFit(sl or None)
+            elif a == 'stop' and sl: mediaStop(sl)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
             _allMedia(); _all(clipsMsg()); _publish(state())
         elif t == 'vup':
