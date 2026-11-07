@@ -921,6 +921,8 @@ def srcData():
     return {'camsrc': C.par.Camsrc.eval(), 'cammix': round(float(C.par.Cammix.eval()), 3), 'camfit': C.par.Camfit.eval(),
             'media': C.par.Media.eval(), 'mediamode': C.par.Mediamode.eval(), 'mediaon': bool(C.par.Mediaon.eval()),
             'crop': [round(float(C.par[n].eval()), 4) for n in ('Cropl', 'Cropr', 'Cropt', 'Cropb')],
+            'bg': {'file': C.par.Bgmedia.eval(), 'on': bool(C.par.Bgon.eval()), 'fit': C.par.Bgfit.eval(), 'dim': round(float(C.par.Bgdim.eval()), 3)},
+            'order': C.par.Mediaorder.eval(),
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
             'draw': bool(C.par.Drawon.eval()), 'drawmix': round(float(C.par.Drawmix.eval()), 3),
             'key': {k: (bool(C.par[k].eval()) if k == 'Keyon' else C.par[k].eval() if k == 'Keycolor' else round(float(C.par[k].eval()), 4)) for k in KEYPARS}}
@@ -943,6 +945,14 @@ def applySrc(d, slot=None):
         if C.par.Media.eval() != s['media'] and not R.mediaPlay(s['media']):
             storeLog('preset media missing: %s' % s['media']); R.mediaStop()        # deleted file: show nothing, not the old picture
     elif C.par.Media.eval(): R.mediaStop()
+    b = s.get('bg') or {}
+    C.par.Mediaorder = s.get('order', 'front')
+    C.par.Bgfit = b.get('fit', 'fill'); C.par.Bgdim = b.get('dim', 1.0)
+    if b.get('file'):
+        if C.par.Bgmedia.eval() != b['file'] and not R.bgPlay(b['file']):
+            storeLog('preset background missing: %s' % b['file']); R.bgStop()
+    elif C.par.Bgmedia.eval(): R.bgStop()
+    C.par.Bgon = bool(b.get('on', False)) and bool(C.par.Bgmedia.eval())
     if s.get('clip') and R.clipPlay(s['clip']): pass
     elif C.par.Clipstate.eval() == 'loop': R.clipLive()
     C.par.Camsrc = s.get('camsrc', 'off')
@@ -1275,6 +1285,18 @@ def activeLabel():
 CAMS = {'alive': 0.0}
 CAMMODES = {'cam': 1, 'behind': 2, 'screen': 3, 'mask': 4}
 
+def bgUpdate(C, g, dt):
+    """Background layer: a picture / video behind everything (the 3D models, the front media, the drawing)."""
+    bf = op('/project1/bgfile')
+    on = bool(C.par.Bgon.eval()) and bool(C.par.Bgmedia.eval()) and bf is not None and bool(bf.par.file.eval())
+    CAMS['bg'] = _ease(CAMS.get('bg', 0.0), float(C.par.Bgdim.eval()) if on else 0.0, 0.25, dt)
+    if bf is not None:
+        play = CAMS['bg'] > 0.002
+        if bool(bf.par.play.eval()) != play: bf.par.play = play
+    p = g.par
+    p.vec5valuex = CAMS['bg']; p.vec5valuey = 1.0 if C.par.Bgfit.eval() == 'fit' else 0.0
+    p.vec5valuez = 1.0 if C.par.Mediaorder.eval() == 'behind' else 0.0
+
 def camfeedUpdate(C, dt, T):
     import time as _t
     g = op('/project1/fx_src')
@@ -1287,10 +1309,8 @@ def camfeedUpdate(C, dt, T):
     D = op('/project1/remote_cb').module.DRAWF
     if D['new']: op('/project1/phonedraw').cook(force=True)
     g.par.vec4valuex = CAMS['draw']
-    if mode not in CAMMODES and CAMS['stat'] > 0.999 and CAMS['draw'] < 0.002:
-        if not g.bypass: g.bypass = True
-        CAMS['alive'] = 0.0
-        return
+    bgUpdate(C, g, dt)
+    # never bypassed: the render now has a see-through background, and this pass makes the picture solid again
     R = op('/project1/remote_cb').module; F = R.CAMF
     media = mediaActive(C, 'flat')
     sel = op('/project1/camsel')
@@ -1303,7 +1323,8 @@ def camfeedUpdate(C, dt, T):
     p = g.par; o = op('/project1/AUDIO/OUT')
     p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
     p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
-    p.vec2valuex = float(C.par.Cammix.eval()) * CAMS['alive'] if mode in CAMMODES else 1.0   # nothing running -> statue shows
+    own = C.par.Camsrc.eval() not in CAMMODES                       # a flat picture on its own: always full strength (Cammix is the camera's)
+    p.vec2valuex = (1.0 if own else float(C.par.Cammix.eval())) * CAMS['alive'] if mode in CAMMODES else 1.0   # nothing running -> statue shows
     p.vec3valuex = CAMMODES.get(mode, 0); p.vec3valuey = (1.0 if C.par.Cammirror.eval() else 0.0) + (2.0 if C.par.Camfit.eval() == 'fit' else 0.0); p.vec3valuez = CAMS['alive']
     p.vec3valuew = CAMS['stat']
 

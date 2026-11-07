@@ -3,6 +3,7 @@ uniform vec4 uAudio;
 uniform float uMix;
 uniform vec4 uP;
 uniform vec4 uQ;   // x drawing amount
+uniform vec4 uL;   // background layer: x amount (0 = off), y fit (0 fill / 1 fit), z media order (0 in front of 3D, 1 behind 3D)
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -32,20 +33,36 @@ vec4 cam(vec2 uv){                       // .a = keyed alpha (green / blue scree
   vec4 t = texture(sTD2DInputs[1], clamp(p, 0.0, 1.0));
   return vec4(t.rgb * clamp(uP.z, 0.0, 1.0) * inside, inside > 0.5 ? t.a : 1.0);
 }
+// LAYERS (back to front): background file (input 3) -> [media behind 3D] -> 3D models -> [media in front] -> drawing
+vec3 bgl(vec2 uv){
+  if (uL.x < 0.002) return vec3(0.0);
+  vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[3].res.zw;
+  float a0 = r0.x / r0.y, a1 = r1.x / r1.y;
+  vec2 q = uv - 0.5;
+  if (uL.y > 0.5) { if (a1 > a0) q.y *= a1 / a0; else q.x *= a0 / a1; }
+  else            { if (a1 > a0) q.x *= a0 / a1; else q.y *= a1 / a0; }
+  vec2 p = q + 0.5;
+  float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
+  return texture(sTD2DInputs[3], clamp(p, 0.0, 1.0)).rgb * inside * uL.x;
+}
 // uP.w statue amount (0 = statue switched off: effects run on the camera / clip only)
 void main(){
   vec4 a = uAudio; vec2 uv = vUV.st;
-  vec3 r = texture(sTD2DInputs[0], uv).rgb * clamp(uP.w, 0.0, 1.0);
+  vec4 rr = texture(sTD2DInputs[0], uv); float sw = clamp(uP.w, 0.0, 1.0);
+  vec3 r = rr.rgb * sw; float ra = clamp(rr.a, 0.0, 1.0) * sw;   // render is premultiplied: alpha = where the models are
+  vec3 bg = bgl(uv);
+  vec3 base = bg * (1.0 - ra) + r;                           // 3D models over the background
   vec4 ck = cam(uv);
   vec3 c = ck.rgb * ck.a;                                    // keyed-out pixels are empty
   int m = int(floor(uP.x + 0.5));
   vec3 o;
-  if (m == 0)      o = r;
-  else if (m == 1) o = mix(r, ck.rgb, ck.a);                // the cut-out subject stands in front of the 3D scene
+  if (m == 0)      o = base;
+  else if (m == 1) o = uL.z > 0.5 ? mix(bg, ck.rgb, ck.a) * (1.0 - ra) + r   // media behind the models
+                                  : mix(base, ck.rgb, ck.a);                   // the cut-out subject in front of the 3D scene
   else if (m == 2) { float k = smoothstep(0.07, 0.2, luma(r)); o = mix(c * (0.75 + a.x * 0.25), r, k); }
-  else if (m == 3) o = 1.0 - (1.0 - r) * (1.0 - c * 0.85);
-  else             o = r * smoothstep(0.08, 0.65, luma(c)) * 1.6 + c * 0.08;
-  o = mix(r, o, uMix);
+  else if (m == 3) o = 1.0 - (1.0 - base) * (1.0 - c * 0.85);
+  else             o = base * smoothstep(0.08, 0.65, luma(c)) * 1.6 + c * 0.08;
+  o = mix(base, o, uMix);
   // phone drawing on top (screen blend), same framing as the screen (the phone pad is 16:9)
   vec3 d = texture(sTD2DInputs[2], uv).rgb * uQ.x;
   o = 1.0 - (1.0 - o) * (1.0 - clamp(d, 0.0, 1.0));

@@ -16,6 +16,7 @@ SLIDERS = [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
+    ('Bgdim', 'Background brightness', 0, 1, 0.01, 'bg'),
     ('Cropl', 'Crop left', 0, 0.45, 0.01, 'crop'), ('Cropr', 'Crop right', 0, 0.45, 0.01, 'crop'),
     ('Cropt', 'Crop top', 0, 0.45, 0.01, 'crop'), ('Cropb', 'Crop bottom', 0, 0.45, 0.01, 'crop'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
@@ -73,8 +74,8 @@ SLIDERS = [
     ('Objy', 'Up / down', -2, 2, 0.01, 'obj'),
     ('Objscale', 'Size', 0.2, 3, 0.01, 'obj'),
 ]
-TOGGLES = ['Mediaon', 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
-TEXTMENUS = ['Spinaxis', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
+TOGGLES = ['Mediaon', 'Bgon', 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Keyon']
+TEXTMENUS = ['Spinaxis', 'Bgfit', 'Mediaorder', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Camsrc', 'Clipstate', 'Camfit', 'Mediamode', 'Motion', 'Keycolor']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -240,7 +241,7 @@ def _mediaThumb(rel, full, kind):
 def mediaMsg():
     """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
     items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/')} for rel, full, kind in _mediaFiles()]
-    return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None}
+    return {'t': 'media', 'v': items[-80:], 'cur': _C().par.Media.eval() or None, 'bg': _C().par.Bgmedia.eval() or None}
 
 def mediaThumbs(send):
     for rel, full, kind in _mediaFiles()[-80:]:
@@ -261,6 +262,19 @@ def mediaPlay(mid, fit=False):
             return True
     return False
 
+def bgPlay(mid):
+    """Background layer: any picture / video from the library, shown behind everything."""
+    C = _C()
+    for rel, full, kind in _mediaFiles():
+        if rel == mid:
+            bf = op('/project1/bgfile'); bf.par.file = full; bf.par.play = True
+            C.par.Bgmedia = rel; C.par.Bgon = True
+            return True
+    return False
+
+def bgStop():
+    C = _C(); C.par.Bgmedia = ''; C.par.Bgon = False; op('/project1/bgfile').par.file = ''
+
 def mediaStop():
     _C().par.Media = ''; op('/project1/mediafile').par.file = ''
 
@@ -270,6 +284,7 @@ def mediaDel(mid):
     full = os.path.normpath(os.path.join(MEDIADIR, mid))
     if os.path.commonpath([os.path.normpath(os.path.join(MEDIADIR, 'uploads')), full]) != os.path.normpath(os.path.join(MEDIADIR, 'uploads')): return
     if _C().par.Media.eval() == mid: mediaStop()
+    if _C().par.Bgmedia.eval() == mid: bgStop()
     try: os.remove(full)
     except Exception: pass
 
@@ -760,7 +775,10 @@ def handle(msg, reply):
             _all(clipsMsg()); _publish(state())
         elif t == 'media':
             a = msg.get('do')
-            if a == 'play': mediaPlay(str(msg.get('id', '')), fit=True)
+            if a == 'play':
+                if msg.get('layer') == 'bg': bgPlay(str(msg.get('id', '')))
+                else: mediaPlay(str(msg.get('id', '')), fit=True)
+            elif a == 'bgstop': bgStop()
             elif a == 'mode':
                 C.par.Mediamode = 'object' if msg.get('v') == 'object' else 'flat'
                 if C.par.Media.eval(): mediaPlay(C.par.Media.eval(), fit=True)

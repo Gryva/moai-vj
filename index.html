@@ -100,6 +100,12 @@ label.tg{cursor:pointer}
 .h2r{display:flex;align-items:center;gap:10px}
 .sl-tog{font:700 10px var(--mono);letter-spacing:.1em;padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
 .sl-tog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.lstack{display:flex;flex-direction:column;gap:5px}
+.lrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 10px;background:#0c0b11}
+.lrow.on{border-color:#3d4a1c}.lrow .lname{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lrow .lname b{font-size:12px;letter-spacing:.12em;text-transform:uppercase}.lrow .lname span{font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .tg.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.lswap{align-self:center;font:700 10px var(--mono);letter-spacing:.06em;color:var(--lime);padding:3px 8px;border:1px dashed #3d4a1c;border-radius:12px}
 .srcnote{margin:0 2px 8px;font-size:11px;line-height:1.35;color:var(--mute)}
 .aprow{display:flex;gap:6px;margin-top:8px;align-items:stretch}.aptog{flex:0 0 96px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;font-size:10px;letter-spacing:.08em;padding:6px 4px}.aptog b{font-size:11px}.aptog span{font:700 10px var(--mono)}.aptog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.aptimes{flex:1}
 .sbar{display:none;position:fixed;left:0;right:0;top:0;z-index:45;background:#d81e3a;color:#fff;font:700 13px/1.35 var(--sans,system-ui);padding:calc(10px + var(--st,0px)) 16px 10px;box-shadow:0 6px 24px #000a}.sbar.on{display:block}.sbar small{display:block;font-weight:500;opacity:.9;margin-top:2px}
@@ -281,18 +287,23 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
 
   <section class="view" id="v-source">
+    <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b><em>top = in front</em></div>
+      <div class="cb"><div class="lstack" id="lstack"></div>
+        <p class="srcnote" style="margin:8px 2px 0">Each layer has its own switch. ⇅ moves Images + videos in front of or behind the 3D models. Tap a name to jump to its settings.</p></div></div>
     <div class="card" id="cardStatue"><div class="ch"><b>3D models</b><button class="tg" id="t-Statue" data-tog="Statue">ON</button></div>
       <div class="cb">
         <p class="srcnote">OFF hides every model and animation. Pictures, videos and drawings have their own switches.</p>
-        <details class="box mbox" id="box-static"><summary>Static models<span id="sum-static"></span></summary><div class="models" id="models"></div></details>
+        <details class="box mbox" id="box-static"><summary>Static models<span id="sum-static"></span></summary><div class="models" id="models"></div>
+          <p class="srcnote" style="margin:10px 2px 0">Look of the static models (animations always play solid):</p>
+        <div class="seg" id="scene" style="margin-top:6px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
+        <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
+        </details>
         <details class="box mbox" id="box-anim"><summary>3D animations<span id="sum-anim"></span></summary><div class="models" id="models-anim"></div><div id="animLoopBox" hidden style="margin-top:10px"><div class="seg sm" id="animLoop"><button data-aloop="loop">⟳ LOOP</button><button data-aloop="bounce">⇄ BOUNCE</button></div><p class="hint" style="margin:6px 2px 0;font-size:11px;color:var(--mute)">Bounce plays the clip forward, then backward. Use it when the end doesn't match the start. Remembered per animation.</p></div><div id="g-anim" style="margin-top:8px"></div></details>
         <p class="srcnote" style="margin-top:10px">OBJECT MOTION · moves the model (and pictures / drawings in 3D). The camera is in VIEW.</p>
         <div class="seg sm" id="o-Motion"></div>
         <div id="spinrow"><div class="btns" style="grid-template-columns:1fr 1fr;margin-top:6px"><button class="btn" id="t-Autospin" data-tog="Autospin">SPINNING</button><button class="btn" id="t-Spinrev" data-tog="Spinrev">⟲ REVERSE</button></div>
           <div class="seg sm" id="o-Spinaxis" style="margin-top:6px"></div></div>
         <div id="g-motion2" style="margin-top:7px"></div>
-        <div class="seg" id="scene" style="margin-top:8px"><button data-scene="solid">SOLID</button><button data-scene="particles">PARTICLES</button><button data-scene="grid">GRID</button></div>
-        <details class="box" id="gridbox"><summary>Grid settings</summary><div id="g-grid"></div></details>
         <details class="box"><summary>Swap animation</summary>
           <div class="seg sm" id="mstyle"><button data-mstyle="scale">SCALE</button><button data-mstyle="spin">SPIN</button><button data-mstyle="drop">DROP</button><button data-mstyle="cut">CUT</button></div>
           <div id="g-model" style="margin-top:7px"></div></details>
@@ -314,7 +325,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
       </div></div>
 
-    <div class="card open" id="cardMedia"><div class="ch"><b>Images + videos</b><label class="tg" for="mediapick">＋ ADD</label><button class="tg" id="t-Mediaon" data-tog="Mediaon">OFF</button><input type="file" id="mediapick" accept="image/*,video/*" hidden></div>
+    <div class="card" id="cardMedia"><div class="ch"><b>Images + videos</b><label class="tg" for="mediapick">＋ ADD</label><button class="tg" id="t-Mediaon" data-tog="Mediaon">OFF</button><input type="file" id="mediapick" accept="image/*,video/*" hidden></div>
       <div class="cb"><div class="upbar" id="upbar"><i></i><span></span></div>
         <p class="srcnote">FLAT fills the screen · 3D OBJECT puts it in the scene (spin, camera, motion apply).</p><div class="seg sm" id="o-Mediamode" style="margin-bottom:8px"></div><div class="clips" id="medialist"></div>
         <details class="box mbox" id="box-crop" style="margin-top:8px"><summary>Crop<span id="sum-crop"></span></summary><div id="g-crop"></div><div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-act="cropreset">RESET CROP</button></div></details>
@@ -325,6 +336,15 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="mfit">⤢ FIT TO SCREEN</button></div>
           <div id="g-obj"></div><div class="hint2">Turn the camera in the VIEW tab to walk around it.</div></details>
         <div class="hint2">Tap to show · tap again to stop · 3D OBJECT puts it in the scene like a statue (PNGs keep their see-through parts) · laptop: drop files into the <b>media</b> folder</div></div></div>
+
+    <div class="card" id="cardBg"><div class="ch"><b>Background</b><button class="tg" id="t-Bgon" data-tog="Bgon">OFF</button></div>
+      <div class="cb">
+        <p class="srcnote">The bottom layer: a picture or video behind everything. Put a green-screen clip in Images + videos (REMOVE SCREEN) and the subject stands on this background, with the 3D models in between.</p>
+        <div class="clips" id="bglist"></div>
+        <div class="seg sm" id="o-Bgfit" style="margin-top:8px"></div>
+        <div id="g-bg" style="margin-top:7px"></div>
+        <div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-act="bgclear">CLEAR BACKGROUND</button></div>
+      </div></div>
 
     <div class="card" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
       <div class="cb">
@@ -429,7 +449,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07i';
+const BUILD = '2026-11-07j';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -488,7 +508,7 @@ function onMsg(m){
   else if (m.t === 'queue') { if (!(QD.on)) { S.queue = {v:m.v, pos:m.pos}; renderQueue(); } }
   else if (m.t === 'lcols') { Object.assign(S.lcols, m.v); for (const k in m.v) colUI(k); }
   else if (m.t === 'media') { const old = {}; (S.media || []).forEach(x => { if (x.thumb) old[x.id] = x.thumb; });
-    S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); S.mediacur = m.cur; renderMedia(); cards(); }
+    S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); S.mediacur = m.cur; S.bgcur = m.bg || null; renderMedia(); cards(); }
   else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
     if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(renderMedia, 80); } }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
@@ -595,10 +615,23 @@ function clipUI(p){
   r.textContent = st === 'rec' ? '■ STOP  ' + (+p.Cliplen || 0).toFixed(1) + ' s' : '● RECORD';
   renderClips();
 }
+function layerStack(){
+  const p = S.pars, obj = p.Mediamode === 'object', behind = p.Mediaorder === 'behind' && !obj;
+  const row = (k, name, on, sub, card) => `<div class="lrow ${on ? 'on' : ''}"><button class="lname" data-jump="${card}"><b>${name}</b><span>${sub}</span></button><button class="tg ${on ? 'on' : ''}" data-tog="${k}">${on ? 'ON' : 'OFF'}</button></div>`;
+  const media = row('Mediaon', 'Images + videos', !!p.Mediaon, obj ? '3D object · lives inside the 3D scene' : (S.mediacur ? (p.Keyon ? 'flat · screen removed' : 'flat') : 'no file picked'), 'cardMedia');
+  const models = row('Statue', '3D models', p.Statue !== false, (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', 'cardStatue');
+  const swap = obj ? '' : `<button class="lswap" data-act="lswap">⇅ ${behind ? 'bring Images + videos to the front' : 'send Images + videos behind 3D'}</button>`;
+  $('#lstack').innerHTML = row('Drawon', 'Drawing', !!p.Drawon, 'always on top', 'cardDraw')
+    + (behind ? models + swap + media : media + swap + models)
+    + row('Bgon', 'Background', !!p.Bgon, S.bgcur ? S.bgcur.split('/').pop() : 'no file picked', 'cardBg');
+}
 function cards(){
   if (!S) return; const p = S.pars, loop = p.Clipstate === 'loop';
   $('#cardStatue').classList.toggle('open', p.Statue !== false);
-  $('#cardCam').classList.toggle('open', CAMF.on || loop || !!S.mediacur);
+  $('#cardCam').classList.toggle('open', CAMF.on || loop);
+  $('#cardMedia').classList.toggle('open', !!p.Mediaon);
+  $('#cardBg').classList.toggle('open', !!p.Bgon);
+  layerStack();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !(CAMF.on || loop || (S.clips && S.clips.length)));
   $('#cardDraw').classList.toggle('open', !!p.Drawon);
@@ -626,6 +659,8 @@ function renderMedia(){
   if (!S) return;
   $('#medialist').innerHTML = (S.media || []).slice().reverse().map(x =>
     `<button class="clip ${x.id === S.mediacur ? 'on' : ''}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}</button>`).join('');
+  $('#bglist').innerHTML = (S.media || []).slice().reverse().map(x =>
+    `<button class="clip ${x.id === S.bgcur ? 'on' : ''}" data-bgmedia="${esc(x.id)}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}</button>`).join('');
 }
 async function uploadPhoto(file){
   if (!file) return;
@@ -762,7 +797,7 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','key','obj','crop'].forEach(g => $('#g-' + g).innerHTML = '');
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','key','obj','crop','bg'].forEach(g => $('#g-' + g).innerHTML = '');
   const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
@@ -776,6 +811,7 @@ const TOPTS = {
   Camfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
   Motion: [['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']],
   Mediamode: [['flat','FLAT'],['object','3D OBJECT']],
+  Bgfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
   Keycolor: [['auto','AUTO'],['green','GREEN'],['blue','BLUE']],
   Textmode: [['overlay','OVERLAY'],['mask','MASK'],['cutout','CUT-OUT'],['invert','INVERT'],['outline','OUTLINE'],['glitch','GLITCH'],['refract','REFRACT']],
   Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
@@ -848,8 +884,8 @@ function applyPars(p){
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon','Keyon','Mediaon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
-  $('#t-Mediaon').textContent = p.Mediaon ? 'ON' : 'OFF'; $('#spinrow').hidden = p.Motion !== 'spin';
+  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon','Keyon','Mediaon','Bgon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t]));
+  $('#t-Mediaon').textContent = p.Mediaon ? 'ON' : 'OFF'; $('#t-Bgon').textContent = p.Bgon ? 'ON' : 'OFF'; $('#spinrow').hidden = p.Motion !== 'spin';
   { const c = ['Cropl','Cropr','Cropt','Cropb'].some(k => +p[k] > 0.001); $('#sum-crop').textContent = c ? 'cropped' : ''; }
   $('#t-Keyon').textContent = p.Keyon ? '✓ SCREEN REMOVED' : 'REMOVE SCREEN';
   $('#sum-key').textContent = p.Keyon ? 'on' : '';
@@ -1184,6 +1220,10 @@ document.addEventListener('click', e => {
   else if (d.tog) { const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear'}); applyLayers(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
+  else if (d.bgmedia) { if (d.bgmedia === S.bgcur) send({t:'media', do:'bgstop'}); else send({t:'media', do:'play', layer:'bg', id:d.bgmedia}); buzz(); }
+  else if (d.act === 'bgclear') { send({t:'media', do:'bgstop'}); S.bgcur = null; S.pars.Bgon = false; applyPars({}); buzz(); }
+  else if (d.act === 'lswap') { const v = S.pars.Mediaorder === 'behind' ? 'front' : 'behind'; S.pars.Mediaorder = v; send({t:'set', p:'Mediaorder', v}); applyPars({}); buzz(); }
+  else if (d.jump) { const c = $('#' + d.jump); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }
   else if (d.act === 'cropreset') { ['Cropl','Cropr','Cropt','Cropb'].forEach(k => { S.pars[k] = 0; send({t:'set', p:k, v:0}); }); build(); buzz(); }
   else if (d.act === 'reset') { send({t:'preset', v:1}); buzz(); }
   else if (d.tp) { send({t:'set', p:d.tp, v:d.tv}); S.pars[d.tp] = d.tv;
