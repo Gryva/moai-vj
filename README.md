@@ -66,7 +66,7 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 - **Layers** card at the top, the same list as in SOURCE (with ▲ ▼), plus **ALL LAYERS** (effects over the whole
   picture). Tap a layer: it lights up and everything below now edits only that layer.
   A number on a chip = how many effects that layer has. Up to 4 layers can carry their own effects at once.
-  Text never gets layer effects (it is drawn after them). 3D-object images/videos ride with the 3D models layer.
+  Text layers can have their own effects too: they are drawn on their own, run through a chain and laid back on top.
 - **Brightness** (per layer): below 1 fades the layer see-through, above 1 makes it brighter. Saved in presets.
 - **On air:** the chosen layer's effects, with amount, setting and colour. **CLEAR** clears only that layer.
 - **Warp / Style / Post:** tap an effect to add it to the chosen layer.
@@ -74,7 +74,7 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 - Presets save every layer's effects. Older presets keep their effects on ALL, so they look the same.
 
 ### SOURCE
-Six sources, each a card with its own **ON/OFF**. A card opens when its source is ON; tap its header to fold it away (▴/▾). In the Layers card, **✕** switches that source off.
+Source cards follow the Layers order (text first, then front to back); each has its own **ON/OFF**. A card opens when its source is ON; tap its header to fold it away (▴/▾). In the Layers card, **✕** switches that source off.
 **NEW CLEAN PRESET** starts from nothing: every source off, no effects.
 
 **Layers** (top of SOURCE) lists every layer you added, front to back. **▲ ▼** move it in front of / behind the

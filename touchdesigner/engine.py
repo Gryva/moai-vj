@@ -433,7 +433,8 @@ def textUpdate(C, T, n=1):
     g = op('/project1/fx_text' + ('' if n == 1 else str(n)))
     if g is None: return False
     on = bool(tp('Texton').eval()) and float(tp('Textamount').eval()) > 0.001
-    if g.bypass == on: g.bypass = not on
+    own = (('text' if n == 1 else 'text%d' % n) in SLOTS)                # has its own effects: drawn by txcomp instead
+    if g.bypass != ((not on) or own): g.bypass = (not on) or own
     if not on: return False
     tt = op('/project1/text_src' + ('' if n == 1 else str(n)))
     full = tp('Textstr').eval() or ' '
@@ -671,7 +672,8 @@ def clearLayers():
 # ------------------------------------------------------------------ per-layer effects
 # 'all' = the main chain (FX_STACK, whole picture). Each source layer can have its own effect stack; up to 4 layers
 # with effects at once get one of the four copies of the chain (fxS<n>_*), fed by an isolated copy of that layer (lyr<n>).
-FXTGTS = ['model', 'camera', 'draw'] + ['m%d' % i for i in MSLOTS]
+FXTGTS = ['model', 'camera', 'draw'] + ['m%d' % i for i in MSLOTS] + ['text', 'text2', 'text3']
+TXTGT = {'text': 1, 'text2': 2, 'text3': 3}                     # text layers: drawn after the effects, own chain via txo/txa
 FXT = {k: {} for k in FXTGTS}                                  # target -> effect key -> [on, amt, p1]
 TCOL = {k: {} for k in FXTGTS}                                 # target -> effect key -> colour
 SLOTS = {}                                                     # target -> chain 1..4
@@ -709,11 +711,12 @@ def _layerShown(C, t):
     if t == 'camera': return C.par.Camsrc.eval() in CAMMODES
     if t == 'draw': return bool(C.par.Drawon.eval()) and not S.get('drawobj')
     if t[:1] == 'm' and t[1:].isdigit(): return mediaActive(C, int(t[1:]))
+    if t in TXTGT: return bool(C.par[tpn(TXTGT[t], 'Texton')].eval())
     return False
 
 def fxTargets(C):
     """Give each visible layer that has effects one of the four chains (front layers first); free the rest."""
-    want = [t for t in layerOrder(C) if t in FXT and any(v[0] and v[1] > 0.001 for v in FXT[t].values()) and _layerShown(C, t)][:4]
+    want = [t for t in ['text', 'text2', 'text3'] + layerOrder(C) if t in FXT and any(v[0] and v[1] > 0.001 for v in FXT[t].values()) and _layerShown(C, t)][:4]
     for t in list(SLOTS):
         if t not in want: del SLOTS[t]
     free = [n for n in (1, 2, 3, 4) if n not in SLOTS.values()]
@@ -724,13 +727,17 @@ def fxTargets(C):
     fx.par.vec9valuex, fx.par.vec9valuey, fx.par.vec9valuez = g('model'), g('camera'), g('draw')
     fx.par.vec15valuex, fx.par.vec15valuey, fx.par.vec15valuez, fx.par.vec15valuew = g('m1'), g('m2'), g('m3'), g('m4')
     fx.par.vec16valuex, fx.par.vec16valuey = g('m5'), g('m6')
+    tc = P.op('txcomp')
+    if tc is not None: tc.par.vec0valuex, tc.par.vec0valuey, tc.par.vec0valuez = g('text'), g('text2'), g('text3')
     for n in (1, 2, 3, 4):
         t = next((k for k, v in SLOTS.items() if v == n), None)
         sw = P.op('lfx%d' % n)
         if sw is not None and int(sw.par.index.eval()) != (1 if t else 0): sw.par.index = 1 if t else 0
         if t is None: SLOTSIG.pop(n, None); continue
+        cin = P.op('cin%d' % n); ci = TXTGT.get(t, 0)                  # chain input: an isolated layer, or a text layer on its own
+        if cin is not None and int(cin.par.index.eval()) != ci: cin.par.index = ci
         iso = P.op('lyr%d' % n)
-        if iso is not None and iso.par.vec9valuew.eval() != LAYER_IDS[t]: iso.par.vec9valuew = LAYER_IDS[t]
+        if t in LAYER_IDS and iso is not None and iso.par.vec9valuew.eval() != LAYER_IDS[t]: iso.par.vec9valuew = LAYER_IDS[t]
         sig = (t, tuple(sorted((k, bool(v[0] and v[1] > 0.001), v[1], v[2]) for k, v in FXT[t].items())))
         if SLOTSIG.get(n) != sig:
             SLOTSIG[n] = sig

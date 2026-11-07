@@ -301,6 +301,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <button class="addlay" id="addLay">＋ ADD LAYER</button>
         <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button><button data-addl="camera">Phone camera</button></div></div></div>
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
+    <div id="scards"></div>
 
     <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
       <div class="cb">
@@ -475,7 +476,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07s';
+const BUILD = '2026-11-07t';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -672,6 +673,16 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
 }
 mediaCardsBuild();
+(() => { const box = $('#scards');                   // every source card lives in one list, sorted like the Layers card
+  ['cardText','cardT2','cardT3','cardStatue'].concat(MS.map(i => 'cardM' + i)).concat(['cardDraw','cardCam','cardClips']).forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); }); })();
+let CARDSIG = '';
+function sortCards(){
+  const p = S.pars, ids = [];
+  [['Texton','cardText'],['T2on','cardT2'],['T3on','cardT3']].forEach(([o, id]) => { if (p[o]) ids.push(id); });
+  layerOrder().forEach(k => { if (k === 'model') ids.push('cardStatue'); else if (k === 'camera') ids.push('cardCam', 'cardClips'); else if (/^m\d$/.test(k)) ids.push('cardM' + k.slice(1)); });
+  const sig = ids.join(','); if (sig === CARDSIG) return; CARDSIG = sig;
+  const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
+}
 function mediaCardsUI(p){
   MS.forEach(i => { const m = 'M' + i, c = $('#cardM' + i); if (!c) return;
     c.classList.toggle('hide', !p[m + 'on']);
@@ -721,11 +732,11 @@ function layerMove(k, dir){                  // dir -1 = towards the front (up),
   const o = layerOrder(), vis = o.filter(x => layerInfo(x).on), i = vis.indexOf(k), j = i + dir;
   if (i < 0 || j < 0 || j >= vis.length) return;
   const a = o.indexOf(k), b = o.indexOf(vis[j]); o[a] = vis[j]; o[b] = k;
-  S.pars.Layerorder = o.join(','); send({t:'set', p:'Layerorder', v:S.pars.Layerorder}); layerStack(); fxTargets();
+  S.pars.Layerorder = o.join(','); send({t:'set', p:'Layerorder', v:S.pars.Layerorder}); layerStack(); fxTargets(); sortCards();
 }
 /* which layer FX and VIEW edit */
 const TGTNAME = {all:'All layers', model:'3D models', camera:'Phone camera', draw:'Drawing'};
-const tgtName = k => /^m\d$/.test(k) ? mediaName(+k.slice(1)) : TGTNAME[k];
+const tgtName = k => /^m\d$/.test(k) ? mediaName(+k.slice(1)) : ({text:'Text', text2:'Text 2', text3:'Text 3'}[k] || TGTNAME[k]);
 function applyTarget(){
   const cur = {}; (FXT_SEL === 'all' ? (S.allL || []) : ((S.tfx || {})[FXT_SEL] || [])).forEach(([k, on, amt, p1]) => cur[k] = [on, amt, p1]);
   const base = {}; (S.allL || []).forEach(([k, on, amt, p1]) => base[k] = [on, amt, p1]);
@@ -735,7 +746,7 @@ function applyTarget(){
   airSig = null; applyLayers(); fxTargets();
 }
 function fxAvail(){                       // layers that can carry their own effects: ON and flat (3D objects ride with 3D models)
-  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.hid && (k === 'model' || k === 'camera' || /^m\d$/.test(k)); });
+  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.hid && (k === 'model' || k === 'camera' || /^m\d$/.test(k)); }).concat([['Texton', 'text'], ['T2on', 'text2'], ['T3on', 'text3']].filter(([o]) => S.pars[o]).map(([, k]) => k));
 }
 function fxTargets(){
   if (!S) return; const av = fxAvail();
@@ -766,7 +777,7 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const x = k => src ? `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
   [['Texton', 'text', 'cardText', 'Textstr'], ['T2on', 'text2', 'cardT2', 'T2str'], ['T3on', 'text3', 'cardT3', 'T3str']].forEach(([on, k, card, str], j) => { if (p[on])
-    h += `<div class="lrow on pin${src ? '' : ' dim'}"><button class="lname" ${src ? `data-jump="${card}"` : ''}><b>Text${j ? ' ' + (j + 1) : ''}</b><span>${esc(p[str] || '')} · always on top</span></button>${x(k)}</div>`; });
+    h += `<div class="lrow on pin${vw ? ' dim' : ''}${sel(k)}"><button class="lname" ${src ? `data-jump="${card}"` : fx ? `data-fxt="${k}"` : ''}><b>Text${j ? ' ' + (j + 1) : ''}</b><span>${esc(p[str] || '')} · always on top${tag(k)}</span></button>${x(k)}</div>`; });
   h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
     const sub = esc(L.sub) + (vw && !flat(k) ? ' · 3D camera' : '') + tag(k);
     return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}"><button class="lname" ${a || ''}><b>${L.name}</b><span>${sub}</span></button>`
@@ -793,7 +804,7 @@ function cards(){
   MS.forEach(i => cardOpen('cardM' + i, !!p['M' + i + 'on'] && !!p['M' + i + 'vis']));
   cardOpen('cardText', !!p.Texton);
   cardOpen('cardLayers', true); cardOpen('cardFxLayers', true); cardOpen('cardVwLayers', true);
-  layerStack(); fxTargets();
+  layerStack(); fxTargets(); sortCards();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !camOn);
   $('#cliprec').disabled = !CAMF.on && p.Clipstate !== 'rec';
