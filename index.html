@@ -115,6 +115,8 @@ label.tg{cursor:pointer}
 .apmore i{font-style:normal;transition:transform .2s}.apmore[aria-expanded="true"]{color:var(--ink);border-color:var(--ink)}.apmore[aria-expanded="true"] i{transform:rotate(180deg)}
 .appanel{margin-top:6px;padding:10px 10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}.appanel[hidden]{display:none}
 .appanel h4{margin:2px 2px 6px;font:700 10px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}.appanel h4+.seg{margin-bottom:10px}.appanel .seg:last-child{margin-bottom:0}
+#qk .ctl{border:0;background:none;border-radius:0;padding:9px 2px;margin:0;border-bottom:1px solid var(--line)}#qk .ctl:last-child{border-bottom:0;padding-bottom:2px}#qk .ctl:first-child{padding-top:2px}
+.qa,.qb{font-weight:500;opacity:.5}.qa.live,.qb.live{opacity:1;color:var(--lime)}.lsw.on{color:var(--lime)}.chip .mv{font:700 9px var(--mono);color:var(--cyan);margin-left:4px}
 .qly{font-style:normal;color:var(--lime);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}.qrow .top{align-items:center}.qtog{margin-left:auto}
 [data-qp],[data-qfx]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lrow.copied{border-style:dashed;border-color:var(--cyan)}
@@ -494,7 +496,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-08e';
+const BUILD = '2026-11-09a';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -561,7 +563,7 @@ function onMsg(m){
   else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
     if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(renderMedia, 80); } }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
-  else if (m.t === 'presets') { S.presets = m.presets; buildCam(); }
+  else if (m.t === 'presets') { S.presets = m.presets; if (m.presetmov) S.presetmov = m.presetmov; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
   else if (m.t === 'saved') savedAck(m);
   else if (m.t === 'animloop') { const md = (S.models || []).find(x => x.name === m.name); if (md) md.loop = m.v; applyPars(S.pars); }
@@ -785,22 +787,39 @@ function viewTargets(){
   $('#view2d').hidden = VW_SEL === '3d'; $('#view3d').hidden = VW_SEL !== '3d';
   $$('#view2d [data-fr]').forEach(e => e.hidden = e.dataset.fr !== VW_SEL);
 }
+const SWAPPABLE = k => /^m\d$/.test(k) || ['model', 'text', 'text2', 'text3'].includes(k);
+function linkPairs(){ return String(S.pars.Links || '').split(',').map(x => x.split('-')).filter(x => x.length === 2 && SWAPPABLE(x[0]) && SWAPPABLE(x[1])); }
+function partnerOf(k){ const pr = linkPairs().find(x => x.includes(k)); return pr ? (pr[0] === k ? pr[1] : pr[0]) : null; }
+function visOf(k){ const p = S.pars; return /^m\d$/.test(k) ? !!(p['M' + k.slice(1) + 'on'] && p['M' + k.slice(1) + 'vis']) : !!p[{model:'Statue', text:'Texton', text2:'T2on', text3:'T3on'}[k]] && (k !== 'model' || p.Statue !== false); }
+function lName(k){ return /^m\d$/.test(k) ? mediaName(+k.slice(1)) + mediaFile(+k.slice(1)) : ({model:'3D models', text:'Text', text2:'Text 2', text3:'Text 3'}[k] || k); }
+function setLinks(pairs){ const v = pairs.map(x => x.join('-')).join(','); S.pars.Links = v; send({t:'set', p:'Links', v}); applyPars({}); }
+function doSwap(a, b){ send({t:'swap', a, b}); const va = visOf(a), set = (k, v) => { if (/^m\d$/.test(k)) S.pars['M' + k.slice(1) + 'vis'] = v; else S.pars[{model:'Statue', text:'Texton', text2:'T2on', text3:'T3on'}[k]] = v; };
+  set(a, !va); set(b, va); applyPars({}); buzz(14); }
+function sheetLayer(k){                   // hold a layer in SOURCE -> link it for swapping
+  const pt = partnerOf(k), others = ['model', 'text', 'text2', 'text3'].concat(MS.map(i => 'm' + i)).filter(x => x !== k && (x === 'model' ? S.pars.Statue !== false || partnerOf(x) : /^m\d$/.test(x) ? !!S.pars['M' + x.slice(1) + 'on'] : !!S.pars[{text:'Texton', text2:'T2on', text3:'T3on'}[x]]));
+  $('#shI').style.display = 'none'; $('#shT').textContent = lName(k);
+  $('#shP').textContent = pt ? 'Linked with ' + lName(pt) + ': swapping turns one off and the other on.' : 'Link it with another layer: one swap turns this one off and that one on, and back.';
+  $('#shA').innerHTML = (pt ? `<button class="pri" data-sh="lswapnow">⇄ Swap now</button>` + (S.b ? `<button data-sh="lswappin" data-sc="p">Pin the swap to this preset's quick controls</button>` : '') + `<button data-sh="lswappin" data-sc="a">Pin the swap to every preset</button><button class="dan" data-sh="lunlink">Unlink from ${esc(lName(pt))}</button>`
+    : (others.length ? others.map(o => `<button data-sh="llink" data-o="${o}">⇄ Link with ${esc(lName(o))}</button>`).join('') : '<p class="hint2">Add another picture, video, text or 3D layer first.</p>')) + `<button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.lk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
 function layerRows(mode){                 // one look for SOURCE ('src'), FX ('fx') and VIEW ('view')
   const fx = mode === 'fx', vw = mode === 'view', src = !fx && !vw;
-  const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on);
+  const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on || (src && partnerOf(k)));
   const cnt = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
   const tag = k => (fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '') + (fx && FXCLIP === k ? ' · COPIED' : '');
   const flat = k => (k === 'camera' || /^m\d$/.test(k)) && !layerInfo(k).in3d;
   const vkey = k => flat(k) ? k : '3d';                                   // VIEW: 3D models, 3D objects and the drawing card use the 3D camera
   const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? `data-vwt="${vkey(k)}"` : `data-jump="${layerInfo(k).card}"`;
   const sel = k => ((fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
-  const x = k => src ? `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
+  const x = k => src ? (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
+  const lk = k => partnerOf(k) ? ` · ⇄ ${esc(lName(partnerOf(k)).split(' · ')[0])}${visOf(k) ? '' : ' (off)'}` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
-  [['Texton', 'text', 'cardText', 'Textstr'], ['T2on', 'text2', 'cardT2', 'T2str'], ['T3on', 'text3', 'cardT3', 'T3str']].forEach(([on, k, card, str], j) => { if (p[on])
-    h += `<div class="lrow on pin${vw ? ' dim' : ''}${sel(k)}"><button class="lname" ${src ? `data-jump="${card}"` : fx ? `data-fxt="${k}"` : ''}><b>Text${j ? ' ' + (j + 1) : ''}</b><span>${esc(p[str] || '')} · always on top${tag(k)}</span></button>${x(k)}</div>`; });
+  [['Texton', 'text', 'cardText', 'Textstr'], ['T2on', 'text2', 'cardT2', 'T2str'], ['T3on', 'text3', 'cardT3', 'T3str']].forEach(([on, k, card, str], j) => { if (p[on] || (src && partnerOf(k)))
+    h += `<div class="lrow on pin${vw || (src && !p[on]) ? ' dim' : ''}${sel(k)}"><button class="lname" ${src ? `data-jump="${card}"` : fx ? `data-fxt="${k}"` : ''} data-lay="${k}"><b>Text${j ? ' ' + (j + 1) : ''}</b><span>${esc(p[str] || '')} · always on top${tag(k)}${src ? lk(k) : ''}</span></button>${x(k)}</div>`; });
   h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
-    const sub = esc(L.sub) + (vw && !flat(k) ? ' · 3D camera' : '') + tag(k);
-    return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}"><button class="lname" ${a || ''}><b>${L.name}</b><span>${sub}</span></button>`
+    const sub = esc(L.sub) + (vw && !flat(k) ? ' · 3D camera' : '') + tag(k) + (src ? lk(k) : '');
+    return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}${src && !visOf(k) && partnerOf(k) ? ' dim' : ''}"><button class="lname" ${a || ''} data-lay="${k}"><b>${L.name}</b><span>${sub}</span></button>`
       + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button>${x(k)}</div>`; }).join('');
   return h || '<p class="hint2" style="margin:2px">No layers yet.</p>';
 }
@@ -1051,7 +1070,7 @@ function showText(){
   send({t:'set', p:'Textstr', v}); send({t:'set', p:'Texton', v:true}); $('#tin')._dirty = false;
   const r = [v].concat(store.get('recent', []).filter(x => x !== v)).slice(0, 8); store.set('recent', r); renderRecent(); toast('Text on screen'); buzz(12);
 }
-function buildCam(){ $('#presets').innerHTML = S.presets.slice(0, 8).map((n, i) => `<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}</div><div class="t">${n}</div></button>`).join(''); }
+function buildCam(){ $('#presets').innerHTML = S.presets.slice(0, 8).map((n, i) => `<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}${(S.presetmov || [])[i] ? ' <span class="mv">↻ camera moves</span>' : ''}</div><div class="t">${n}</div></button>`).join(''); }
 const paint = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
 const fmt = (v, step) => step >= 1 ? Math.round(v) : v.toFixed(2);
 function bindSlider(el, id, onv){
@@ -1204,7 +1223,7 @@ function renderPads(){
 }
 const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
 /* ---------------- quick controls: pinned sliders / switches / effect settings on LIVE ---------------- */
-const qid = it => [it.k, it.p || it.t || '', it.e || '', it.f || ''].join(':');
+const qid = it => [it.k, it.p || it.t || it.a || '', it.e || it.b || '', it.f || ''].join(':');
 function mediaFile(i){                   // " · clip-name" so Video 1 and Video 2 can't be mixed up
   const f = S.pars['M' + i + 'file']; if (!f || S.pars['M' + i + 'kind'] === 'draw') return '';
   const n = f.split('/').pop().replace(/\.[^.]+$/, ''); return ' · ' + (n.length > 22 ? n.slice(0, 21) + '…' : n);
@@ -1222,6 +1241,7 @@ function qLayer(p){                       // which layer a control belongs to (s
   return 'Whole picture';
 }
 function qLabel(it){
+  if (it.k === 'swap') return ['Swap', lName(it.a).split(' · ')[0] + ' ⇄ ' + lName(it.b).split(' · ')[0]];
   if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
     return [it.t === 'all' ? 'All layers' : tgtName(it.t) + (/^m\d$/.test(it.t) ? mediaFile(+it.t.slice(1)) : ''), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
   const sd = (S.sliders || []).find(x => x.p === it.p);
@@ -1248,6 +1268,7 @@ function sheetQk(i){
   $('#sheet').dataset.qitem = JSON.stringify(it); $('#sheet').dataset.qsc = mine ? 'p' : 'a'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function qVal(it){                        // current value of a pinned control
+  if (it.k === 'swap') return visOf(it.a);
   if (it.k !== 'fx') return S.pars[it.p];
   const st = it.t === 'all' ? (S.allL || []) : ((S.tfx || {})[it.t] || []), row = st.find(x => x[0] === it.e), l = S.layers.find(x => x.k === it.e) || {};
   if (it.f === 'on') return !!(row && row[1]);
@@ -1262,6 +1283,7 @@ function renderQuick(){
   const sig = S.b + '|' + L.map(qid).join(',') + '|' + (S.bank || []).map(p => p ? p.name : '').join('/');
   if (sig === QSIG) return quickSync(); QSIG = sig;
   $('#qk').innerHTML = L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output></div>`;
+    if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button></div></div>`;
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow">${lab.replace('<output', '<button class="tg qtog" data-qtog="' + i + '">OFF</button><output hidden')}</div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
       const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
@@ -1277,6 +1299,7 @@ function quickSync(){                     // follow changes made elsewhere (othe
   const L = qList();
   $$('#qk input[data-qki]').forEach(el => { const i = +el.dataset.qki; if ((touching['qk_' + i] || 0) > performance.now()) return;
     const v = qVal(L[i]); if (v != null && +el.value !== +v) { el.value = +v; el._show && el._show(); } });
+  $$('#qk [data-qa]').forEach(e => { const it = L[+e.dataset.qa]; e.classList.toggle('live', visOf(it.a)); $('[data-qb="' + e.dataset.qa + '"]').classList.toggle('live', visOf(it.b)); });
   $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]); b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
 }
 function presetGroups(){                 // group names in the order their first preset appears
@@ -1470,11 +1493,18 @@ function sheetFx(k){
     + (n ? `<button class="dan" data-sh="fxclear">Remove all its effects</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.fxk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const closeSheet = () => { delete $('#sheet').dataset.qitem; delete $('#sheet').dataset.qsc; delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.grp; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+const closeSheet = () => { delete $('#sheet').dataset.lk; delete $('#sheet').dataset.qitem; delete $('#sheet').dataset.qsc; delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.grp; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   const qi = +$('#sheet').dataset.qi, fk = $('#sheet').dataset.fxk;
-  if (b.dataset.sh === 'qkpin' || b.dataset.sh === 'qkun' || b.dataset.sh === 'qkmv') {
+  if (b.dataset.sh === 'llink') { const k = $('#sheet').dataset.lk, o = b.dataset.o; setLinks(linkPairs().filter(x => !x.includes(k) && !x.includes(o)).concat([[k, o]]));
+    if (visOf(k) && visOf(o)) doSwap(o, k);                       // linked pair: only one of them on
+    toast('Linked · ⇄ swaps them'); }
+  else if (b.dataset.sh === 'lunlink') { const k = $('#sheet').dataset.lk; setLinks(linkPairs().filter(x => !x.includes(k))); }
+  else if (b.dataset.sh === 'lswapnow') { const k = $('#sheet').dataset.lk; doSwap(k, partnerOf(k)); }
+  else if (b.dataset.sh === 'lswappin') { const k = $('#sheet').dataset.lk, it = {k:'swap', a:k, b:partnerOf(k)};
+    send({t:'quick', do:'pin', scope:b.dataset.sc === 'a' ? 'all' : 'preset', slot:S.b, item:it}); toast('Swap pinned · LIVE → Quick controls'); }
+  else if (b.dataset.sh === 'qkpin' || b.dataset.sh === 'qkun' || b.dataset.sh === 'qkmv') {
     const it = JSON.parse($('#sheet').dataset.qitem || '{}'), sc = b.dataset.sc || $('#sheet').dataset.qsc;
     send({t:'quick', do:b.dataset.sh === 'qkpin' ? 'pin' : b.dataset.sh === 'qkun' ? 'unpin' : 'move', scope:sc === 'a' ? 'all' : 'preset', slot:S.b, item:it, d:+(b.dataset.d || 0)});
     if (b.dataset.sh === 'qkpin') toast('Pinned · LIVE → Quick controls'); }
@@ -1505,10 +1535,12 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog],[data-qp],[data-qfx],[data-tog],[data-qk]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog],[data-qp],[data-qfx],[data-tog],[data-qk],[data-jump]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
     if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }
+    if (c.dataset.jump && c.dataset.lay && SWAPPABLE(c.dataset.lay)) { FXHOLD = performance.now(); return sheetLayer(c.dataset.lay); }
+    if (c.dataset.jump) return;
     if (c.dataset.qk !== undefined) { FXHOLD = performance.now(); return sheetQk(+c.dataset.qk); }
     if (c.dataset.qp || c.dataset.qfx || c.dataset.tog) { FXHOLD = performance.now();
       return sheetPin(c.dataset.qfx ? {k:'fx', t:FXT_SEL, e:c.dataset.qfx, f:c.dataset.qf} : c.dataset.tog ? {k:'tog', p:c.dataset.tog} : {k:'par', p:c.dataset.qp}); }
@@ -1579,6 +1611,8 @@ document.addEventListener('click', e => {
   else if (d.mfit) { send({t:'media', do:'fit', slot:+d.mfit}); buzz(); }
   else if (d.mcrop) { ['l','r','t','b'].forEach(n => { const k = 'M' + d.mcrop + 'crop' + n; S.pars[k] = 0; send({t:'set', p:k, v:0}); }); build(); buzz(); }
   else if (d.addl) { addLayer(d.addl); buzz(); }
+  else if (d.swapk) { const pt = partnerOf(d.swapk); if (pt) doSwap(d.swapk, pt); }
+  else if (d.qswap !== undefined) { const it = qList()[+d.qswap]; if (it) { doSwap(it.a, it.b); setTimeout(quickSync, 60); } }
   else if (d.loff) { const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false], text2:['T2on', false], text3:['T3on', false]}[k];
     if (/^m\d$/.test(k)) { send({t:'media', do:'remove', slot:+k.slice(1)}); S.pars['M' + k.slice(1) + 'on'] = false; }
     if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
@@ -1591,7 +1625,7 @@ document.addEventListener('click', e => {
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.act === 'frreset') { const pre = {camera:'Fcam', draw:'Fdraw'}[VW_SEL] || (/^m\d$/.test(VW_SEL) ? 'M' + VW_SEL.slice(1) + 'f' : null); if (pre) { (pre.endsWith('f') ? [['zoom',1],['x',0],['y',0],['rot',0]] : [['zoom',1],['x',0],['y',0],['rot',0]]).forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
   else if (d.lmove) { layerMove(d.lmove, +d.dir); buzz(); }
-  else if (d.jump) { const c = $('#' + d.jump); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }
+  else if (d.jump) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const c = $('#' + d.jump); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }
   else if (d.act === 'reset') { send({t:'preset', v:1}); buzz(); }
   else if (d.tp) { send({t:'set', p:d.tp, v:d.tv}); S.pars[d.tp] = d.tv;
     if (d.tp === 'Motion' && d.tv === 'spin' && !S.pars.Autospin) { S.pars.Autospin = true; send({t:'set', p:'Autospin', v:true}); }

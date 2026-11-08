@@ -94,7 +94,12 @@ others, **✕** removes it, tap a name to jump to its card. **＋ ADD LAYER** ad
 a Drawing or the Phone camera. A source's card only shows once it is added. Images, videos and drawings can be added
 again and again: up to **6 picture / video / drawing layers** at once (e.g. three videos stacked, a background picture
 under a green-screen clip, two drawings). Up to **3 text layers**, each with its own words, style, font and colour. Example: Text on top, a 3D model in the
-middle, a picture at the back. The order is saved in presets. Pictures / videos in **3D OBJECT** mode are drawn by their
+middle, a picture at the back. The order is saved in presets.
+**Linked layers (hot-switch):** hold a layer's name → **⇄ Link with…** and pick another layer. Only one of the pair is
+on at a time; the **⇄** button on the row (or **Swap now** in the hold menu) turns one off and the other on. The
+switched-off partner stays in the list, dimmed, marked *(off)*. **Pin swap to Quick controls** puts a one-tap swap button
+on LIVE. **Unlink** in the same menu. Links are saved in presets. Works for images, videos, drawings, text and 3D models
+(not the phone camera). Pictures / videos in **3D OBJECT** mode are drawn by their
 own 3D pass with the shared 3D camera, so they stay separate layers too (own order, effects and brightness). **Text** is always on top (drawn after the effects).
 
 - **3D models:** shows or hides the statues and animations.
@@ -124,7 +129,9 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
 - **Layers** card at the top, same as in SOURCE. Tap a flat layer (Phone camera, Images, Videos) to frame it; tap
   3D models (or anything in the 3D scene) for the 3D camera.
 - 3D camera (models and 3D objects): saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan,
-  handheld shake. On the preview: drag = orbit, pinch = zoom, two fingers = pan, flick = keep spinning.
+  handheld shake. A saved view stores only the camera. Views marked **↻ camera moves** (e.g. Slow Orbit, Top Spiral,
+  Chaos Club) keep the camera circling or swaying, which can look like the object spinning; that is the camera, not
+  Object motion. **Camera circles the scene** / **Camera sways around** are the sliders that do it. On the preview: drag = orbit, pinch = zoom, two fingers = pan, flick = keep spinning.
   Object movement (spin, bob…) lives in SOURCE → 3D models.
 - Flat layer: **zoom, left/right, up/down, rotate** just for that layer, **RESET FRAMING**. Saved in presets.
 

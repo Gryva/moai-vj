@@ -1108,7 +1108,7 @@ def srcData():
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
     return {'camsrc': C.par.Camsrc.eval(), 'cammix': round(float(C.par.Cammix.eval()), 3), 'camfit': C.par.Camfit.eval(),
             'mslots': {str(i): mediaSlotData(C, i) for i in MSLOTS if mp(C, i, 'on').eval()},
-            'layers': layerOrder(C),
+            'layers': layerOrder(C), 'links': C.par.Links.eval(),
             'frame': {n: round(float(C.par[n].eval()), 4) for n in FRAMEPARS},
             'opacity': {n: round(float(C.par[n].eval()), 4) for n in OPPARS},
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
@@ -1168,6 +1168,7 @@ def applySrc(d, slot=None):
         order = list(LAYER_DEFAULT)
         if s.get('camsrc') == 'behind': order.remove('camera'); order.append('camera')
     C.par.Layerorder = ','.join(_LEGACY.get(k, k) for k in order)
+    C.par.Links = s.get('links', '')
     fr = s.get('frame') or {}
     for n in FRAMEPARS: C.par[n] = fr.get(n, C.par[n].default)
     opd = s.get('opacity') or {}
@@ -1337,7 +1338,20 @@ def bankRenameGroup(old, new):
 QUICK_FILE = STORE_DIR + '/quick.json'                         # pins shown with every preset
 QUICK_MAX = 12
 
-def _qid(it): return '%s:%s:%s:%s' % (it.get('k'), it.get('p', it.get('t', '')), it.get('e', ''), it.get('f', ''))
+# ------------------------------------------------------------------ linked layers (swap one off, the other on)
+def visPar(k):
+    """The ON/OFF switch of a layer that can be swapped: picture / video / drawing layers, 3D models, text layers."""
+    if k[:1] == 'm' and k[1:].isdigit() and 1 <= int(k[1:]) <= 6: return 'M%svis' % k[1:]
+    return {'model': 'Statue', 'text': 'Texton', 'text2': 'T2on', 'text3': 'T3on'}.get(k)
+
+def layerSwap(a, b):
+    C = op('/project1/CONTROLS'); pa, pb = visPar(a), visPar(b)
+    if not pa or not pb or pa == pb: return False
+    on = bool(C.par[pa].eval())
+    C.par[pa] = not on; C.par[pb] = on                            # a was showing -> b shows instead, and back
+    return True
+
+def _qid(it): return '%s:%s:%s:%s' % (it.get('k'), it.get('p', it.get('t', it.get('a', ''))), it.get('e', it.get('b', '')), it.get('f', ''))
 
 def _qclean(it):
     """A pinned item: a slider ('par'), a switch ('tog') or one setting of one effect on one layer ('fx')."""
@@ -1345,6 +1359,9 @@ def _qclean(it):
     if k in ('par', 'tog'):
         p = str(it.get('p', ''))
         if p in R.ALLOWED: return {'k': k, 'p': p}
+    elif k == 'swap':
+        a, b = str(it.get('a', '')), str(it.get('b', ''))
+        if visPar(a) and visPar(b) and a != b: return {'k': 'swap', 'a': a, 'b': b}
     elif k == 'fx':
         t, e, f = str(it.get('t', '')), str(it.get('e', '')), str(it.get('f', ''))
         if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and f in ('amt', 'p1', 'on'):
@@ -1583,7 +1600,7 @@ def cleanSlate():
     for i in MSLOTS: mediaSlotClear(C, i); R.DRAWS[i] = {'img': None, 'new': True}
     C.par.Spinaxis = 'y'; C.par.Spinrev = False
     if C.par.Clipstate.eval() == 'loop': C.par.Clipstate = 'off'
-    C.par.Layerorder = ','.join(LAYER_DEFAULT)
+    C.par.Layerorder = ','.join(LAYER_DEFAULT); C.par.Links = ''
     for n in FRAMEPARS + OPPARS: C.par[n] = C.par[n].default
     for k in CAMKEYS + ['Pan']:
         try: C.par[k] = C.par[k].default

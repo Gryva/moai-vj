@@ -53,11 +53,11 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Angle', 'Model angle', -180, 180, 1, 'motion'),
     ('Distance', 'Distance', 0.5, 15, 0.05, 'camera'),
     ('Elevation', 'Elevation', -85, 85, 1, 'camera'),
-    ('Orbitspeed', 'Orbit speed', -120, 120, 1, 'camera'),
+    ('Orbitspeed', 'Camera circles the scene (°/s)', -120, 120, 1, 'camera'),
     ('Fov', 'Lens (FOV)', 10, 120, 1, 'camera'),
     ('Roll', 'Roll', -180, 180, 1, 'camera'),
     ('Shake', 'Handheld shake', 0, 2, 0.01, 'camera'),
-    ('Orbitsway', 'Orbit sway', 0, 90, 1, 'move'),
+    ('Orbitsway', 'Camera sways around', 0, 90, 1, 'move'),
     ('Elevsway', 'Elevation sway', 0, 60, 1, 'move'),
     ('Distsway', 'Push / pull', 0, 5, 0.05, 'move'),
     ('Rollsway', 'Roll sway', 0, 45, 1, 'move'),
@@ -65,7 +65,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Audiocam', 'Audio > camera', 0, 3, 0.01, 'kick'),
     ('Punch', 'Kick push-in', 0, 1.5, 0.01, 'kick'),
     ('Kickjolt', 'Kick jolt', 0, 30, 0.5, 'kick'),
-    ('Transition', 'Preset glide (s)', 0, 5, 0.05, 'move'),
+    ('Transition', 'Saved view glide (s)', 0, 5, 0.05, 'move'),
     ('Response', 'Response (s)', 0, 1, 0.01, 'move'),
     ('Inertia', 'Flick inertia', 0, 0.99, 0.01, 'move'),
     ('Gridcount', 'Copies per side', 1, 9, 1, 'grid'),
@@ -87,7 +87,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -518,6 +518,14 @@ def _presets():
     t = op('/project1/CAM_PRESETS')
     return [t[r, 'name'].val for r in range(1, t.numRows)]
 
+def _presetsMoving():
+    """Saved views whose camera keeps moving (circles / sways) - marked on the phone so they aren't mistaken for object spin."""
+    t = op('/project1/CAM_PRESETS'); out = []
+    for r in range(1, t.numRows):
+        try: out.append(any(abs(float(t[r, k].val or 0)) > 0.01 for k in ('Orbitspeed', 'Orbitsway', 'Elevsway', 'Distsway', 'Rollsway')))
+        except Exception: out.append(False)
+    return out
+
 def _layers():
     out = []
     for r in _E().layers():
@@ -532,7 +540,7 @@ def _layersLive():
 
 def state():
     C = _C()
-    return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'layers': _layers(), 'looks': _E().lookNames(),
+    return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
@@ -752,7 +760,7 @@ def handle(msg, reply):
             E.loadPreset(int(msg['v']))
         elif t == 'save':
             E.savePreset(int(msg['v']), msg.get('name') or None)
-            _all({'t': 'presets', 'presets': _presets()})
+            _all({'t': 'presets', 'presets': _presets(), 'presetmov': _presetsMoving()})
             _publish(state())
         elif t == 'orbit':
             E.navOrbit(float(msg['dx']), float(msg['dy']))
@@ -789,6 +797,8 @@ def handle(msg, reply):
             else:
                 c = E.tColSet(tg, k, cv)
                 if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
+        elif t == 'swap':                                          # linked layers: one goes off, the other comes on
+            E.layerSwap(str(msg.get('a', '')), str(msg.get('b', '')))
         elif t == 'quick':                                         # pinned controls for LIVE
             ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))
             _all({'t': 'quick', 'v': E.quickAll()})
