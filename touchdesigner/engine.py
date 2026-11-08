@@ -1914,7 +1914,7 @@ def autopilotUpdate(C, T):
     avoid = set(AP['recent'][-min(5, len(pool) - 1):]) | {b}
     cand = [x for x in pool if x not in avoid] or [x for x in pool if x != b]
     slot = random.choice(cand)
-    if bankLoad(slot, fade=1.5, cam=True, model=True, text=True):
+    if bankLoad(slot, fade=max(0.0, min(10.0, float(op('/project1/CONTROLS').par.Autofade.eval()))), cam=True, model=True, text=True):   # the phone's transition time
         try:
             if qSync(slot): op('/project1/remote_cb').module._all(qMsg())
         except Exception: pass

@@ -58,6 +58,8 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
   those, for changing a visual during the show. Each one only moves the layer it came from (Video 2's speed = Video 2
   only; an effect pinned while **All layers** is selected = the whole picture). Hold a quick control to move or unpin it.
   Live tweaks are not saved into the preset unless you Update it. Up to 12 per list.
+- **Autopilot:** the AUTOPILOT button only turns it on / off. The small button next to it (e.g. "1s fade · 10s") opens the
+  settings: **transition between presets** (used by your taps and by autopilot) and **change every** (10s–5m).
 - **Groups:** hold a preset → **Group ▸** to put it in a group (or make a new one). On LIVE each group is a
   list you tap to fold / unfold; hold a group's header to rename or ungroup it. Every preset still plays with one tap,
   whatever group it is in. Groups are stored with the presets on the computer.

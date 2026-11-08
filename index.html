@@ -110,7 +110,11 @@ label.tg{cursor:pointer}
 .mlib{margin-top:8px}.dhost[hidden],.mlib[hidden],.mplay[hidden],.mfile[hidden],.mkey[hidden],.dpick[hidden]{display:none}
 .addlay{width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px dashed #3d4a1c;color:var(--lime);font:700 11px var(--sans);letter-spacing:.14em}
 .addmenu[hidden]{display:none}.addmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.addmenu button{padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase}
-body:not(.editing) #fades,body:not(.editing) #apTimes{display:none}body:not(.editing) .aptog{flex:1;flex-direction:row;gap:10px;padding:10px}
+.aprow{margin-top:12px}.aprow .aptog{flex:1;flex-direction:row;gap:10px;padding:11px}
+.apmore{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 10px var(--mono)}
+.apmore i{font-style:normal;transition:transform .2s}.apmore[aria-expanded="true"]{color:var(--ink);border-color:var(--ink)}.apmore[aria-expanded="true"] i{transform:rotate(180deg)}
+.appanel{margin-top:6px;padding:10px 10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}.appanel[hidden]{display:none}
+.appanel h4{margin:2px 2px 6px;font:700 10px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}.appanel h4+.seg{margin-bottom:10px}.appanel .seg:last-child{margin-bottom:0}
 .qly{font-style:normal;color:var(--lime);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}.qrow .top{align-items:center}.qtog{margin-left:auto}
 [data-qp],[data-qfx]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lrow.copied{border-style:dashed;border-color:var(--cyan)}
@@ -283,8 +287,12 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 <main>
   <section class="view" id="v-live">
-    <div class="seg sm" id="fades" style="margin-top:12px"></div>
-    <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div></div>
+    <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button>
+      <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
+    <div class="appanel" id="apPanel" hidden>
+      <h4>Transition between presets</h4><div class="seg sm" id="fades"></div>
+      <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
+    </div>
     <div class="card open hide" id="cardQuick" style="margin-top:12px"><div class="ch"><b>Quick controls</b><em id="qkn"></em></div><div class="cb" id="qk"></div></div>
     <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
@@ -486,7 +494,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-08c';
+const BUILD = '2026-11-08e';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1064,7 +1072,7 @@ function setEdit(on){
 }
 function uiPrefs(){
   if (ui.tab === 'text') ui.tab = 'source';                       // TEXT moved into SOURCE
-  $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade));
+  $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade)); apSummary();
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab));
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
@@ -1085,7 +1093,7 @@ function applyPars(p){
   { const cur = (S.models || []).find(m => m.name === p.Model), a = !!cur && String(cur.name).startsWith('anim_');
     $('#sum-static').textContent = cur && !a ? cur.label : ''; $('#sum-anim').textContent = cur && a ? cur.label : '';
     { const at = Math.round(p.Autotime || 30); $('#apBtn').classList.toggle('on', !!p.Autopilot);
-      $('#apState').textContent = p.Autopilot ? 'ON · ' + (at >= 60 ? (at / 60) + ' min' : at + ' s') : 'OFF';
+      $('#apState').textContent = p.Autopilot ? 'ON' : 'OFF'; apSummary();
       $$('[data-apt]').forEach(b => b.classList.toggle('on', +b.dataset.apt === at)); }
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
@@ -1409,6 +1417,11 @@ function sheetBackups(){
     + `<button data-sh="cancel">Close</button>`;
   $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
+function apSummary(){                    // "1s fade · 10s" on the small settings button
+  if (!S) return; const at = +S.pars.Autotime || 30, f = (FADES.find(([, v]) => +v === ui.fade) || ['CUT'])[0];
+  $('#apSum').textContent = (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
+}
+$('#apMore').addEventListener('click', () => { const open = $('#apPanel').hidden; $('#apPanel').hidden = !open; $('#apMore').setAttribute('aria-expanded', open); buzz(); });   // only opens / closes the settings
 $('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on' : 'Autopilot off'); buzz(); });
 $('#apTimes').addEventListener('click', e => { const b = e.target.closest('[data-apt]'); if (!b || !S) return; const v = +b.dataset.apt;
   S.pars.Autotime = v; applyPars(S.pars); send({t:'set', p:'Autotime', v}); toast('Each preset stays ' + b.textContent); buzz(); });
@@ -1537,7 +1550,7 @@ document.addEventListener('click', e => {
   if (d.csw) { ccPick(d.csw, d.v); return; }
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
-  else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); buzz(); }
+  else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); send({t:'set', p:'Autofade', v:ui.fade}); buzz(); }   // autopilot uses the same transition
   else if (d.aloop) { const md = (S.models || []).find(x => x.name === S.pars.Model); if (md) { md.loop = d.aloop; applyPars(S.pars); } send({t:'animloop', v:d.aloop}); buzz(); }
   else if (d.step) step(+d.step);
   else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }

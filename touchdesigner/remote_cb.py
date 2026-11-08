@@ -29,6 +29,7 @@ for _i in range(1, 7):
 SLIDERS = MSLOT_SLIDERS + [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
+    ('Autofade', 'Autopilot transition', 0, 4, 0.1, 'apfade'),     # set by the phone's transition buttons
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
     ('Gain', 'Input gain', 0, 4, 0.01, 'audio'),
