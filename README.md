@@ -53,6 +53,11 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 | CUT / 0.5s / 1s / 2s / 4s | How long switching to a preset takes. |
 | Preset tile, tap | Loads it: effects, text, model, camera, source, colours. The number is its slot. **ON AIR** = on screen. |
 | Preset tile, hold | Friends: add to set list or play. Edit mode: **Update** (save what's on screen), rename, delete, add to set list, copy its effects. |
+- **Quick controls:** hold the name of any slider, switch (ON/OFF) or effect setting (Amount / its setting in FX) and
+  pin it **to the preset on air** or **to every preset**. LIVE then shows a foldable **Quick controls** card with just
+  those, for changing a visual during the show. Each one only moves the layer it came from (Video 2's speed = Video 2
+  only; an effect pinned while **All layers** is selected = the whole picture). Hold a quick control to move or unpin it.
+  Live tweaks are not saved into the preset unless you Update it. Up to 12 per list.
 - **Groups:** hold a preset → **Group ▸** to put it in a group (or make a new one). On LIVE each group is a
   list you tap to fold / unfold; hold a group's header to rename or ungroup it. Every preset still plays with one tap,
   whatever group it is in. Groups are stored with the presets on the computer.

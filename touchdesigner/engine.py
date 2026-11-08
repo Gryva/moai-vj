@@ -1274,6 +1274,9 @@ def bankSave(slot, name=None):
     try: g0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('group', '') if t[slot, 1].val else ''
     except Exception: g0 = ''
     if g0: meta['group'] = g0                                   # updating a preset keeps its group
+    try: q0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('quick') if t[slot, 1].val else None
+    except Exception: q0 = None
+    if q0: meta['quick'] = q0                                    # ... and its quick controls
     try:
         R = op('/project1/remote_cb').module; C_ = op('/project1/CONTROLS'); draws = {}
         for i in MSLOTS:
@@ -1329,6 +1332,56 @@ def bankRenameGroup(old, new):
         else: m.pop('group', None)
         d['_meta'] = m; t[i, 1] = json.dumps(d); n += 1
     return storeSave('group rename') if n else True
+
+# ------------------------------------------------------------------ quick controls (LIVE): pinned sliders / switches / effect settings
+QUICK_FILE = STORE_DIR + '/quick.json'                         # pins shown with every preset
+QUICK_MAX = 12
+
+def _qid(it): return '%s:%s:%s:%s' % (it.get('k'), it.get('p', it.get('t', '')), it.get('e', ''), it.get('f', ''))
+
+def _qclean(it):
+    """A pinned item: a slider ('par'), a switch ('tog') or one setting of one effect on one layer ('fx')."""
+    R = op('/project1/remote_cb').module; k = it.get('k')
+    if k in ('par', 'tog'):
+        p = str(it.get('p', ''))
+        if p in R.ALLOWED: return {'k': k, 'p': p}
+    elif k == 'fx':
+        t, e, f = str(it.get('t', '')), str(it.get('e', '')), str(it.get('f', ''))
+        if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and f in ('amt', 'p1', 'on'):
+            return {'k': 'fx', 't': t, 'e': e, 'f': f}
+    return None
+
+def quickAll():
+    t = _bankTable(); per = {}
+    for i in range(1, BANK_SLOTS + 1):
+        if not t[i, 1].val: continue
+        try: q = (json.loads(t[i, 1].val).get('_meta') or {}).get('quick')
+        except Exception: q = None
+        if q: per[str(i)] = q
+    return {'all': readJsonSafe(QUICK_FILE, []) or [], 'p': per}
+
+def quickEdit(do, scope, item, slot=None, d=0):
+    """Pin / unpin / move a quick control, for one preset (scope 'preset') or for every preset ('all')."""
+    it = _qclean(item or {})
+    if it is None: return False
+    if scope == 'all': cur = list(readJsonSafe(QUICK_FILE, []) or [])
+    else:
+        t = _bankTable(); slot = int(slot or 0)
+        if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+        dd = json.loads(t[slot, 1].val); m = dict(dd.get('_meta') or {}); cur = list(m.get('quick') or [])
+    ids = [_qid(x) for x in cur]; i = ids.index(_qid(it)) if _qid(it) in ids else -1
+    if do == 'pin' and i < 0 and len(cur) < QUICK_MAX: cur.append(it)
+    elif do == 'unpin' and i >= 0: cur.pop(i)
+    elif do == 'move' and i >= 0:
+        j = max(0, min(len(cur) - 1, i + (1 if d > 0 else -1))); cur.insert(j, cur.pop(i))
+    else: return True
+    if scope == 'all':
+        try: return writeJsonSafe(QUICK_FILE, cur)
+        except Exception as er: storeLog('quick controls not saved: %s' % er); return False
+    if cur: m['quick'] = cur
+    else: m.pop('quick', None)
+    dd['_meta'] = m; t[slot, 1] = json.dumps(dd)
+    return storeSave('quick %d' % slot)
 
 def bankExport():                                              # old name, kept for anything that still calls it
     return storeSave('export')

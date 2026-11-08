@@ -110,6 +110,8 @@ label.tg{cursor:pointer}
 .mlib{margin-top:8px}.mlib[hidden],.mplay[hidden],.mfile[hidden],.mkey[hidden],.dpick[hidden]{display:none}
 .addlay{width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px dashed #3d4a1c;color:var(--lime);font:700 11px var(--sans);letter-spacing:.14em}
 .addmenu[hidden]{display:none}.addmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.addmenu button{padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.qly{font-style:normal;color:var(--lime);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}.qrow .top{align-items:center}.qtog{margin-left:auto}
+[data-qp],[data-qfx]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lrow.copied{border-style:dashed;border-color:var(--cyan)}
 .lrow.sel{background:#1d2a0c;border-color:var(--lime);box-shadow:inset 3px 0 0 var(--lime)}.lrow.sel .lname b{color:var(--lime)}.lrow.dim .lname{opacity:.45}
 .card .ch .chev{font-size:12px;color:var(--mute);transition:transform .2s;margin-left:2px}.card.open .ch .chev{transform:rotate(180deg)}.card.shut .ch .chev{transform:none}
@@ -282,6 +284,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   <section class="view" id="v-live">
     <div class="seg sm" id="fades" style="margin-top:12px"></div>
     <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div></div>
+    <div class="card open hide" id="cardQuick" style="margin-top:12px"><div class="ch"><b>Quick controls</b><em id="qkn"></em></div><div class="cb" id="qk"></div></div>
     <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
     <div class="setlist" id="setlist">
@@ -482,7 +485,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-08a';
+const BUILD = '2026-11-08b';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -530,7 +533,7 @@ function onMsg(m){
     S.allL = S.layers.map(l => [l.k, l.on ? 1 : 0, l.amt, l.p1]); S.tfx = S.tfx || {};
     build(); applyPars(m.pars); applyTarget(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
   else if (!S) return;
-  else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); }
+  else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); } if ((m.L || m.LT) && S.quick) quickSync();
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
   else if (m.t === 'clips') {
@@ -542,6 +545,7 @@ function onMsg(m){
   else if (m.t === 'queue') { if (!(QD.on)) { S.queue = {v:m.v, pos:m.pos}; renderQueue(); } }
   else if (m.t === 'lcols') { Object.assign(S.lcols, m.v); if (FXT_SEL === 'all') for (const k in m.v) colUI(k); }
   else if (m.t === 'added') { delete SHUT['cardM' + m.slot]; setTimeout(() => { const c = $('#cardM' + m.slot); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 400); }
+  else if (m.t === 'quick') { S.quick = m.v; renderQuick(); }
   else if (m.t === 'tcols') { S.tcol = S.tcol || {}; Object.assign(S.tcol[m.tgt] = S.tcol[m.tgt] || {}, m.v); if (FXT_SEL === m.tgt) for (const k in m.v) colUI(k); }
   else if (m.t === 'media') { const old = {}; (S.media || []).forEach(x => { if (x.thumb) old[x.id] = x.thumb; });
     S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); renderMedia(); cards(); }
@@ -810,7 +814,7 @@ function cards(){
   MS.forEach(i => cardOpen('cardM' + i, !!p['M' + i + 'on'] && !!p['M' + i + 'vis']));
   cardOpen('cardText', !!p.Texton);
   cardOpen('cardLayers', true); cardOpen('cardFxLayers', true); cardOpen('cardVwLayers', true);
-  layerStack(); fxTargets(); sortCards();
+  layerStack(); fxTargets(); sortCards(); renderQuick();
   $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
   $('#cardClips').classList.toggle('hide', !camOn);
   $('#cliprec').disabled = !CAMF.on && p.Clipstate !== 'rec';
@@ -973,6 +977,7 @@ function buildDraw(){
 
 /* ---------------- build ---------------- */
 const EL = {};
+var ACC = {};
 function build(){
   $('#fades').innerHTML = FADES.map(([n, v]) => `<button data-fade="${v}">${n}</button>`).join('');
   ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
@@ -985,9 +990,9 @@ function build(){
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
   ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
-  const ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
+  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
-    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
+    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
   EL.layerBtns = [...$$('[data-layer]')]; EL.models = [...$$('[data-model]')]; EL.scene = [...$$('[data-scene]')];
   airSig = null; uiPrefs();
@@ -1110,9 +1115,9 @@ function onAir(){
     const sw = SWATCH[l.k];
     const p1 = !l.p1label ? '' : sw ? `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
-      : `<div class="sub"><span>${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
+      : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
-      <div class="sub"><span>Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
+      <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', tgt:FXT_SEL, k:el.dataset.lk, [el.dataset.f]: v})));
   ccBind($('#onair'));
@@ -1185,9 +1190,80 @@ function renderPads(){
       + `<div class="pads">${closed ? '' : list.map(([p, sl]) => pad(p, sl)).join('')}</div></div>`; };
   $('#pads').classList.add('grouped');
   $('#pads').innerHTML = groups.map(g => sec(g, g)).join('') + sec('', 'No group') + `<div class="pads">${adds}</div>`;
-  header();
+  header(); renderQuick();
 }
 const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
+/* ---------------- quick controls: pinned sliders / switches / effect settings on LIVE ---------------- */
+const qid = it => [it.k, it.p || it.t || '', it.e || '', it.f || ''].join(':');
+function qLayer(p){                       // which layer a control belongs to (shown in its label)
+  let m;
+  if ((m = /^M(\d)/.exec(p))) return mediaName(+m[1]);
+  if ((m = /^T([23])/.exec(p))) return 'Text ' + m[1];
+  if (/^Text/.test(p)) return 'Text';
+  if (/^(Fcam|Opcamera|Cam)/.test(p)) return 'Phone camera';
+  if (/^(Fdraw|Opdraw|Draw)/.test(p)) return 'Drawing';
+  const sd = (S.sliders || []).find(x => x.p === p), g = sd && sd.group;
+  if (/^Opmodel$/.test(p) || ['motion','model','anim','grid','motion2'].includes(g) || ['Statue','Autospin','Spinrev'].includes(p)) return '3D models';
+  if (['camera','move'].includes(g)) return '3D camera';
+  return 'Whole picture';
+}
+function qLabel(it){
+  if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
+    return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
+  const sd = (S.sliders || []).find(x => x.p === it.p);
+  const raw = it.p.replace(/^(M\d|T\d(?=on|str)|Text(?=on))/, '');
+  const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor'};
+  return [qLayer(it.p), sd ? sd.label : (TL[raw] || TL[it.p] || raw || it.p)];
+}
+function qList(){ const Q = S.quick || {all:[], p:{}}; return [].concat((Q.p || {})[S.b] || [], Q.all || []); }
+function sheetPin(it){
+  const pre = S.b && S.bank[S.b - 1], Q = S.quick || {all:[], p:{}};
+  const inP = pre && ((Q.p || {})[S.b] || []).some(x => qid(x) === qid(it)), inA = (Q.all || []).some(x => qid(x) === qid(it));
+  $('#shI').style.display = 'none'; $('#shT').textContent = qLabel(it).join(' · ');
+  $('#shP').textContent = 'Pin it to LIVE → Quick controls, to change it during the show. It only moves this ' + (it.k === 'fx' && it.t === 'all' ? 'effect on the whole picture.' : 'setting of ' + qLabel(it)[0] + '.');
+  $('#shA').innerHTML = (pre ? (inP ? `<button class="dan" data-sh="qkun" data-sc="p">Unpin from “${esc(pre.name)}”</button>` : `<button class="pri" data-sh="qkpin" data-sc="p">Pin to “${esc(pre.name)}”</button>`) : '')
+    + (inA ? `<button class="dan" data-sh="qkun" data-sc="a">Unpin from every preset</button>` : `<button class="${pre ? '' : 'pri'}" data-sh="qkpin" data-sc="a">Pin to every preset</button>`)
+    + `<button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.qitem = JSON.stringify(it); $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
+function sheetQk(i){
+  const it = qList()[i]; if (!it) return; const Q = S.quick || {all:[], p:{}}, mine = ((Q.p || {})[S.b] || []).some(x => qid(x) === qid(it));
+  $('#shI').style.display = 'none'; $('#shT').textContent = qLabel(it).join(' · ');
+  $('#shP').textContent = mine ? 'Pinned to this preset.' : 'Pinned to every preset.';
+  $('#shA').innerHTML = `<button data-sh="qkmv" data-d="-1">▲ Move up</button><button data-sh="qkmv" data-d="1">▼ Move down</button><button class="dan" data-sh="qkun" data-sc="${mine ? 'p' : 'a'}">Unpin</button><button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.qitem = JSON.stringify(it); $('#sheet').dataset.qsc = mine ? 'p' : 'a'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
+function qVal(it){                        // current value of a pinned control
+  if (it.k !== 'fx') return S.pars[it.p];
+  const st = it.t === 'all' ? (S.allL || []) : ((S.tfx || {})[it.t] || []), row = st.find(x => x[0] === it.e), l = S.layers.find(x => x.k === it.e) || {};
+  if (it.f === 'on') return !!(row && row[1]);
+  return row ? (it.f === 'amt' ? row[2] : row[3]) : (it.f === 'amt' ? 1 : l.p1);
+}
+let QSIG = '';
+function renderQuick(){
+  if (!S) return; const L = qList(), card = $('#cardQuick');
+  card.classList.toggle('hide', !L.length); $('#qkn').textContent = L.length ? L.length + '' : '';
+  cardOpen('cardQuick', !!L.length);
+  const sig = S.b + '|' + L.map(qid).join(',') + '|' + (S.bank || []).map(p => p ? p.name : '').join('/');
+  if (sig === QSIG) return quickSync(); QSIG = sig;
+  $('#qk').innerHTML = L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output></div>`;
+    if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow">${lab.replace('<output', '<button class="tg qtog" data-qtog="' + i + '">OFF</button><output hidden')}</div>`;
+    if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
+      const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
+      return `<div class="ctl">${lab}<input type="range" id="s-qk_${i}" data-qki="${i}" min="${mn}" max="${mx}" step="${st}" style="--acc:${GC[l.g] || '#c7ff3d'}"></div>`; }
+    const sd = (S.sliders || []).find(x => x.p === it.p); if (!sd) return '';
+    return `<div class="ctl">${lab}<input type="range" id="s-qk_${i}" data-qki="${i}" min="${sd.min}" max="${sd.max}" step="${sd.step}" style="--acc:${ACC[sd.group] || '#c7ff3d'}"></div>`; }).join('');
+  $$('#qk input[data-qki]').forEach(el => { const it = L[+el.dataset.qki]; el.value = +qVal(it) || 0;
+    bindSlider(el, 'qk_' + el.dataset.qki, v => { if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, [it.f]:v}); }
+      else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); } }); });
+  quickSync();
+}
+function quickSync(){                     // follow changes made elsewhere (other phones, presets, autopilot)
+  const L = qList();
+  $$('#qk input[data-qki]').forEach(el => { const i = +el.dataset.qki; if ((touching['qk_' + i] || 0) > performance.now()) return;
+    const v = qVal(L[i]); if (v != null && +el.value !== +v) { el.value = +v; el._show && el._show(); } });
+  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]); b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
+}
 function presetGroups(){                 // group names in the order their first preset appears
   const out = []; (S.bank || []).forEach(p => { if (p && p.group && !out.includes(p.group)) out.push(p.group); }); return out;
 }
@@ -1374,11 +1450,15 @@ function sheetFx(k){
     + (n ? `<button class="dan" data-sh="fxclear">Remove all its effects</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.fxk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const closeSheet = () => { delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.grp; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+const closeSheet = () => { delete $('#sheet').dataset.qitem; delete $('#sheet').dataset.qsc; delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.grp; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   const qi = +$('#sheet').dataset.qi, fk = $('#sheet').dataset.fxk;
-  if (b.dataset.sh === 'fxedit') { FXT_SEL = fk; applyTarget(); }
+  if (b.dataset.sh === 'qkpin' || b.dataset.sh === 'qkun' || b.dataset.sh === 'qkmv') {
+    const it = JSON.parse($('#sheet').dataset.qitem || '{}'), sc = b.dataset.sc || $('#sheet').dataset.qsc;
+    send({t:'quick', do:b.dataset.sh === 'qkpin' ? 'pin' : b.dataset.sh === 'qkun' ? 'unpin' : 'move', scope:sc === 'a' ? 'all' : 'preset', slot:S.b, item:it, d:+(b.dataset.d || 0)});
+    if (b.dataset.sh === 'qkpin') toast('Pinned · LIVE → Quick controls'); }
+  else if (b.dataset.sh === 'fxedit') { FXT_SEL = fk; applyTarget(); }
   else if (b.dataset.sh === 'fxcopy') { FXCLIP = fk; fxTargets(); toast('Effects of ' + tgtName(fk) + ' copied · hold another layer to paste'); }
   else if (b.dataset.sh === 'fxpaste') { send({t:'fxcopy', from:FXCLIP, to:fk}); toast('Effects of ' + tgtName(FXCLIP) + ' pasted on ' + tgtName(fk)); FXT_SEL = fk; applyTarget(); }
   else if (b.dataset.sh === 'fxclear') { send({t:'clear', tgt:fk}); if (FXT_SEL === fk) { S.layers.forEach(l => l.on = false); applyLayers(); } toast('Effects removed from ' + tgtName(fk)); }
@@ -1405,10 +1485,13 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog],[data-qp],[data-qfx],[data-tog],[data-qk]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
     if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }
+    if (c.dataset.qk !== undefined) { FXHOLD = performance.now(); return sheetQk(+c.dataset.qk); }
+    if (c.dataset.qp || c.dataset.qfx || c.dataset.tog) { FXHOLD = performance.now();
+      return sheetPin(c.dataset.qfx ? {k:'fx', t:FXT_SEL, e:c.dataset.qfx, f:c.dataset.qf} : c.dataset.tog ? {k:'tog', p:c.dataset.tog} : {k:'par', p:c.dataset.qp}); }
     if (c.dataset.gtog !== undefined) { FXHOLD = performance.now(); if (c.dataset.gtog) sheetGroupHdr(c.dataset.gtog); return; }   // hold a layer = its menu (copy / paste / clear)
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
       const nn = prompt('Rename this FX preset (leave empty to delete it):', cur.name);
@@ -1466,7 +1549,7 @@ document.addEventListener('click', e => {
   else if (d.scene) { send({t:'scene', v:d.scene}); buzz(); }
   else if (d.model) { send({t:'model', v:d.model}); buzz(); }
   else if (d.mstyle) { send({t:'set', p:'Modelstyle', v:d.mstyle}); S.pars.Modelstyle = d.mstyle; applyPars({}); buzz(); }
-  else if (d.tog) { const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
+  else if (d.tog) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const v = !S.pars[d.tog]; send({t:'set', p:d.tog, v}); S.pars[d.tog] = v; applyPars({}); if (d.tog === 'Drawon' && v) setTimeout(drawSend, 150); buzz(); }
   else if (d.act === 'clear') { S.layers.forEach(l => l.on = false); send({t:'clear', tgt:FXT_SEL}); applyLayers(); fxTargets(); buzz(); }
   else if (d.act === 'center') { send({t:'center'}); buzz(); }
   else if (d.mlib) { const i = +d.mlib; MLIB[i] = !( !$('#mlist' + i).hidden ); mediaCardsUI(S.pars); buzz(); }
@@ -1481,6 +1564,8 @@ document.addEventListener('click', e => {
     if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
     else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }
     applyPars({}); buzz(); }
+  else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; const v = !qVal(it);
+    if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, on:v}); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; if (GSHUT[d.gtog]) delete GSHUT[d.gtog]; else GSHUT[d.gtog] = 1; store.set('gshut', GSHUT); renderPads(); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }

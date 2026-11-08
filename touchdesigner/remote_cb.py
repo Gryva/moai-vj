@@ -534,7 +534,7 @@ def state():
     return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
-            'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'store': _E().storeInfo(), 'local': localLink(),
+            'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
                        for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
             'sliders': [dict(zip(('p', 'label', 'min', 'max', 'step', 'group'), s)) for s in SLIDERS]}
@@ -788,6 +788,10 @@ def handle(msg, reply):
             else:
                 c = E.tColSet(tg, k, cv)
                 if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
+        elif t == 'quick':                                         # pinned controls for LIVE
+            ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))
+            _all({'t': 'quick', 'v': E.quickAll()})
+            if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
         elif t == 'bankgroupren':                                  # rename a group / take presets out of it
             ok = E.bankRenameGroup(msg.get('old', ''), msg.get('name', ''))
             reply({'t': 'saved', 'n': msg.get('n'), 'ok': bool(ok), 'v': {}})
