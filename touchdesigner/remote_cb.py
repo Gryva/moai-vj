@@ -788,15 +788,20 @@ def handle(msg, reply):
             else:
                 c = E.tColSet(tg, k, cv)
                 if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
-        elif t in ('banksave', 'bankclear', 'bankrename'):
+        elif t == 'bankgroupren':                                  # rename a group / take presets out of it
+            ok = E.bankRenameGroup(msg.get('old', ''), msg.get('name', ''))
+            reply({'t': 'saved', 'n': msg.get('n'), 'ok': bool(ok), 'v': {}})
+            _all({'t': 'bank', 'bank': E.bankList()})
+        elif t in ('banksave', 'bankclear', 'bankrename', 'bankgroup'):
             n = int(msg['v'])
             if t == 'banksave': ok = E.bankSave(n, msg.get('name') or None)
             elif t == 'bankclear': ok = E.bankClear(n)
+            elif t == 'bankgroup': ok = E.bankSetGroup(n, msg.get('name') or '')
             else: ok = E.bankRename(n, msg.get('name') or ('Preset %d' % n))
             _all({'t': 'bank', 'bank': E.bankList()})
             _all(E.qMsg())
             _publish(state())
-            if t != 'bankrename':
+            if t not in ('bankrename', 'bankgroup'):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}
                 _all(th)
             _all({'t': 'saved', 's': n, 'do': t, 'ok': bool(ok), 'n': msg.get('n'), 'v': E.storeInfo()})   # the phone only says "saved" after this

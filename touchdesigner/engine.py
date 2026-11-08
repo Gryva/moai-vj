@@ -1259,7 +1259,8 @@ def bankList():
         if not data: out.append(None); continue
         try: d = json.loads(data)
         except Exception: out.append(None); continue
-        out.append({'name': nm, 'on': [k for k, v in d.get('layers', {}).items() if v[0]], 'scene': d.get('scene', 'solid'), 'model': d.get('model', '')})
+        out.append({'name': nm, 'on': [k for k, v in d.get('layers', {}).items() if v[0]], 'scene': d.get('scene', 'solid'), 'model': d.get('model', ''),
+                    'group': (d.get('_meta') or {}).get('group', '')})
     return out
 
 def bankSave(slot, name=None):
@@ -1270,6 +1271,9 @@ def bankSave(slot, name=None):
     d = snapshot()
     stamp = time.strftime('%Y%m%d_%H%M%S') + '%03d' % (int(time.time() * 1000) % 1000)
     meta = {'saved': _now(), 'thumb': 'p%d_%s.jpg' % (slot, stamp)}   # own picture file per save: a restore point keeps its picture
+    try: g0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('group', '') if t[slot, 1].val else ''
+    except Exception: g0 = ''
+    if g0: meta['group'] = g0                                   # updating a preset keeps its group
     try:
         R = op('/project1/remote_cb').module; C_ = op('/project1/CONTROLS'); draws = {}
         for i in MSLOTS:
@@ -1301,6 +1305,30 @@ def bankRename(slot, name):
     t = _bankTable()
     if t[slot, 1].val: t[slot, 0] = str(name)[:60]; return storeSave('rename %d' % slot)
     return False
+
+def _groupName(g): return ' '.join(str(g or '').split())[:30]
+
+def bankSetGroup(slot, group):
+    """Put a preset in a group (empty = no group). Stored with the preset on disk."""
+    t = _bankTable(); slot = int(slot)
+    if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+    d = json.loads(t[slot, 1].val); m = dict(d.get('_meta') or {}); g = _groupName(group)
+    if g: m['group'] = g
+    else: m.pop('group', None)
+    d['_meta'] = m; t[slot, 1] = json.dumps(d)
+    return storeSave('group %d' % slot)
+
+def bankRenameGroup(old, new):
+    """Rename a group (new = '' takes every preset out of it)."""
+    t = _bankTable(); old = _groupName(old); new = _groupName(new); n = 0
+    for i in range(1, BANK_SLOTS + 1):
+        if not t[i, 1].val: continue
+        d = json.loads(t[i, 1].val); m = dict(d.get('_meta') or {})
+        if m.get('group', '') != old: continue
+        if new: m['group'] = new
+        else: m.pop('group', None)
+        d['_meta'] = m; t[i, 1] = json.dumps(d); n += 1
+    return storeSave('group rename') if n else True
 
 def bankExport():                                              # old name, kept for anything that still calls it
     return storeSave('export')

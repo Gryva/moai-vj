@@ -53,6 +53,9 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 | CUT / 0.5s / 1s / 2s / 4s | How long switching to a preset takes. |
 | Preset tile, tap | Loads it: effects, text, model, camera, source, colours. The number is its slot. **ON AIR** = on screen. |
 | Preset tile, hold | Friends: add to set list or play. Edit mode: **Update** (save what's on screen), rename, delete, add to set list, copy its effects. |
+- **Groups:** hold a preset → **Group ▸** to put it in a group (or make a new one). On LIVE each group is a
+  list you tap to fold / unfold; hold a group's header to rename or ungroup it. Every preset still plays with one tap,
+  whatever group it is in. Groups are stored with the presets on the computer.
 | ＋ tile, hold (edit) | Save what's on screen as a new preset. |
 | ◻ tile (edit) | New clean preset (no effects, no text). |
 | **AUTOPILOT** + 10s…5m | Under the fade buttons. Tap AUTOPILOT to switch on/off; tap a time for how long each preset stays. Random, but never the one on screen or the last 5. Uses the set list if it has 2+ presets, otherwise all presets. Tapping a preset restarts the timer. |

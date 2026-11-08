@@ -150,6 +150,11 @@ body.arranging .pad.full{touch-action:none}
 .cstrip .cpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .cab{display:flex;gap:6px;margin-bottom:2px}.cab button{flex:1;display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;border:1px solid var(--line);font:600 11px var(--mono);color:var(--mute)}
 .cab button i{width:18px;height:18px;border-radius:50%;border:1px solid #fff4}.cab button.on{border-color:var(--ink);color:var(--ink)}
+.pads.grouped{display:block}.pgroup{margin-bottom:10px}
+.pgh{width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);text-align:left}
+.pgh b{font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase}.pgh i{font:700 10px var(--mono);font-style:normal;color:var(--mute)}
+.pgh em{font:700 9px var(--mono);font-style:normal;color:#0b0a0f;background:var(--lime);padding:2px 6px;border-radius:9px}
+.pgh span{margin-left:auto;color:var(--mute);transition:transform .2s}.pgroup.shut .pgh span{transform:rotate(-90deg)}.pgroup.shut .pads{display:none}
 .pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .pad{position:relative;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(160deg,#241b30,#13111a);border:1px solid var(--line);overflow:hidden;text-align:left;transition:transform .07s}
 .pad:active{transform:scale(.96)}
@@ -477,7 +482,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-07v';
+const BUILD = '2026-11-08a';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1163,15 +1168,42 @@ function renderPads(){
   if (!S) return; S.layers.forEach(l => GROUP[l.k] = l.g);
   const ic = {solid:'●', particles:'⁘', grid:'▦'};
   let n = 0;
-  const pads = S.bank.map((p, i) => { if (!p) return ''; const slot = i + 1; n++;
+  const pad = (p, slot) => { n++;
     const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
     const img = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : '';
-    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`;
-  }).join('');
+    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`; };
   const free = S.bank.indexOf(null) + 1;
-  $('#pads').innerHTML = pads + (free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE<br>WHAT IS ON SCREEN</small></span></button>`
-    + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN<br>PRESET</small></span></button>` : '');
+  const adds = free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE<br>WHAT IS ON SCREEN</small></span></button>`
+    + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN<br>PRESET</small></span></button>` : '';
+  const groups = presetGroups();
+  if (!groups.length) { $('#pads').classList.remove('grouped');
+    $('#pads').innerHTML = S.bank.map((p, i) => p ? pad(p, i + 1) : '').join('') + adds; header(); return; }
+  const shut = GSHUT;
+  const sec = (g, label) => { const list = S.bank.map((p, i) => p && (p.group || '') === g ? [p, i + 1] : null).filter(Boolean); if (!list.length) return '';
+    const live = list.some(([, sl]) => sl === S.b), closed = !!shut[g];
+    return `<div class="pgroup${closed ? ' shut' : ''}"><button class="pgh" data-gtog="${esc(g)}"><b>${esc(label)}</b><i>${list.length}</i>${live ? '<em>ON AIR</em>' : ''}<span>▾</span></button>`
+      + `<div class="pads">${closed ? '' : list.map(([p, sl]) => pad(p, sl)).join('')}</div></div>`; };
+  $('#pads').classList.add('grouped');
+  $('#pads').innerHTML = groups.map(g => sec(g, g)).join('') + sec('', 'No group') + `<div class="pads">${adds}</div>`;
   header();
+}
+const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
+function presetGroups(){                 // group names in the order their first preset appears
+  const out = []; (S.bank || []).forEach(p => { if (p && p.group && !out.includes(p.group)) out.push(p.group); }); return out;
+}
+function sheetGroup(slot){                // hold a preset -> Move to group…
+  const p = S.bank[slot - 1]; if (!p) return; const gs = presetGroups();
+  $('#shT').textContent = 'Group for ' + p.name; $('#shP').textContent = 'Groups only tidy the list - every preset stays one tap away.';
+  $('#shI').style.display = ''; $('#shI').value = ''; $('#shI').placeholder = 'New group name';
+  $('#shA').innerHTML = gs.map(g => `<button class="${g === p.group ? 'pri' : ''}" data-sh="grp" data-g="${esc(g)}">${g === p.group ? '✓ ' : ''}${esc(g)}</button>`).join('')
+    + `<button data-sh="grpnew">＋ Make the new group above</button>` + (p.group ? `<button data-sh="grp" data-g="">Take it out of “${esc(p.group)}”</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
+function sheetGroupHdr(g){                // hold a group header -> rename / ungroup
+  $('#shT').textContent = 'Group · ' + g; $('#shP').textContent = 'Renaming moves all its presets along. Ungrouping keeps the presets.';
+  $('#shI').style.display = ''; $('#shI').value = g; $('#shI').placeholder = 'Group name';
+  $('#shA').innerHTML = `<button class="pri" data-sh="grpren">Rename group</button><button class="dan" data-sh="grpdel">Ungroup its presets</button><button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.grp = g; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function meters(m){
   const s = (id, v) => $(id).style.transform = 'scaleX(' + Math.min(1, v) + ')';
@@ -1328,7 +1360,7 @@ function sheet(slot, simple){
   $('#shT').textContent = p ? 'Preset ' + slot + ' · ' + p.name : 'Empty pad ' + slot;
   $('#shP').textContent = p ? 'Update replaces it (and its picture) with what is on screen now: effects, statue, text and camera.' : 'Save what is on screen now — layers, scene, model and camera.';
   $('#shI').value = p ? p.name : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Preset ' + slot);
-  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button data-sh="grpmenu">Group: ${esc(p.group || 'none')} ▸</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function sheetFx(k){
@@ -1342,7 +1374,7 @@ function sheetFx(k){
     + (n ? `<button class="dan" data-sh="fxclear">Remove all its effects</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.fxk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const closeSheet = () => { delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
+const closeSheet = () => { delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.grp; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   const qi = +$('#sheet').dataset.qi, fk = $('#sheet').dataset.fxk;
@@ -1358,6 +1390,11 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'qdel') qDel(qi);
   else if (b.dataset.sh === 'save') { bankOp('banksave', slot, name, 'Saved ' + slot + ' · ' + name); S.b = slot; }
   else if (b.dataset.sh === 'rename') bankOp('bankrename', slot, name, 'Renamed');
+  else if (b.dataset.sh === 'grpmenu') { sheetGroup(slot); return; }
+  else if (b.dataset.sh === 'grp') bankOp('bankgroup', slot, b.dataset.g, b.dataset.g ? 'Moved to ' + b.dataset.g : 'Taken out of its group');
+  else if (b.dataset.sh === 'grpnew') { if (!name) { toast('Type a group name first'); return; } bankOp('bankgroup', slot, name, 'Moved to ' + name); }
+  else if (b.dataset.sh === 'grpren') { const g = $('#sheet').dataset.grp; if (name && name !== g) { const nn = Math.random().toString(36).slice(2, 9); send({t:'bankgroupren', old:g, name, n:nn}); toast('Group renamed'); if (GSHUT[g]) { GSHUT[name] = 1; delete GSHUT[g]; store.set('gshut', GSHUT); } } }
+  else if (b.dataset.sh === 'grpdel') { send({t:'bankgroupren', old:$('#sheet').dataset.grp, name:'', n:'x'}); toast('Presets ungrouped'); }
   else if (b.dataset.sh === 'undo') { if (confirm('Undo the last preset change?')) { send({t:'store', do:'undo'}); toast('Undoing…'); } }
   else if (b.dataset.sh === 'rs') { if (confirm('Bring back all presets, the set list and FX presets from ' + b.dataset.w + '?\n(What you have now is kept as a restore point.)')) { send({t:'store', do:'restore', f:b.dataset.f}); toast('Restoring…'); } }
   else if (b.dataset.sh === 'bkn') { send({t:'store', do:'backup'}); }
@@ -1368,10 +1405,11 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
-    if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }   // hold a layer = its menu (copy / paste / clear)
+    if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }
+    if (c.dataset.gtog !== undefined) { FXHOLD = performance.now(); if (c.dataset.gtog) sheetGroupHdr(c.dataset.gtog); return; }   // hold a layer = its menu (copy / paste / clear)
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
       const nn = prompt('Rename this FX preset (leave empty to delete it):', cur.name);
       if (nn === null) return; if (nn.trim()) send({t:'fxp', do:'rename', i, name:nn.trim()}); else if (confirm('Delete "' + cur.name + '"?')) send({t:'fxp', do:'del', i}); return; }
@@ -1443,7 +1481,8 @@ document.addEventListener('click', e => {
     if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
     else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }
     applyPars({}); buzz(); }
-  else if (d.fxt) { if (performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
+  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; if (GSHUT[d.gtog]) delete GSHUT[d.gtog]; else GSHUT[d.gtog] = 1; store.set('gshut', GSHUT); renderPads(); buzz(); }
+  else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.act === 'frreset') { const pre = {camera:'Fcam', draw:'Fdraw'}[VW_SEL] || (/^m\d$/.test(VW_SEL) ? 'M' + VW_SEL.slice(1) + 'f' : null); if (pre) { (pre.endsWith('f') ? [['zoom',1],['x',0],['y',0],['rot',0]] : [['zoom',1],['x',0],['y',0],['rot',0]]).forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
   else if (d.lmove) { layerMove(d.lmove, +d.dir); buzz(); }
