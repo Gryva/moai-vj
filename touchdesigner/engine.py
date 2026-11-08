@@ -1348,8 +1348,25 @@ def layerSwap(a, b):
     C = op('/project1/CONTROLS'); pa, pb = visPar(a), visPar(b)
     if not pa or not pb or pa == pb: return False
     on = bool(C.par[pa].eval())
+    import time as _t
+    SWAPT[a] = SWAPT[b] = _t.perf_counter()                       # this switch uses the chosen fade (0 = instant cut)
     C.par[pa] = not on; C.par[pb] = on                            # a was showing -> b shows instead, and back
     return True
+
+SWAPT = {}
+def swapTc(C, k, tc):
+    """Fade speed for layer k: right after a linked swap, the Swapfade time (0 = cut on the next frame)."""
+    import time as _t
+    t = SWAPT.get(k)
+    if t is None: return tc
+    f = float(C.par.Swapfade.eval()) if hasattr(C.par, 'Swapfade') else 0.0
+    if _t.perf_counter() - t > f + 0.3: SWAPT.pop(k, None); return tc
+    return f / 4.0 if f > 0.001 else 0.0
+
+def unlink(C, k):
+    """A removed layer leaves its link (so no ghost row stays behind)."""
+    v = [x for x in str(C.par.Links.eval() or '').split(',') if x and k not in x.split('-')]
+    C.par.Links = ','.join(v)
 
 def _qid(it): return '%s:%s:%s:%s' % (it.get('k'), it.get('p', it.get('t', it.get('a', ''))), it.get('e', it.get('b', '')), it.get('f', ''))
 
@@ -1648,7 +1665,7 @@ def camfeedUpdate(C, dt, T):
     g = op('/project1/fx_src')
     if g is None: return
     mode = C.par.Camsrc.eval()
-    CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if (C.par.Statue.eval() or S.get('obj')) else 0.0, 0.25, dt)
+    CAMS['stat'] = _ease(CAMS.get('stat', 1.0), 1.0 if (C.par.Statue.eval() or S.get('obj')) else 0.0, swapTc(C, 'model', 0.25), dt)
     flat = C.par.Drawon.eval() and not S.get('drawobj')            # shown as a 3D card instead: no flat overlay
     CAMS['draw'] = _ease(CAMS.get('draw', 0.0), float(C.par.Drawmix.eval()) if flat else 0.0, 0.25, dt)
     R = op('/project1/remote_cb').module; F = R.CAMF
@@ -1662,7 +1679,7 @@ def camfeedUpdate(C, dt, T):
     ma = []
     for i in MSLOTS:
         k = 'm%d' % i
-        CAMS[k] = _ease(CAMS.get(k, 0.0), 1.0 if mediaActive(C, i) else 0.0, 0.2, dt)
+        CAMS[k] = _ease(CAMS.get(k, 0.0), 1.0 if mediaActive(C, i) else 0.0, swapTc(C, k, 0.2), dt)
         ma.append(CAMS[k])
         mf = op('/project1/mf%d' % i)
         if mf is not None:

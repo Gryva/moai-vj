@@ -275,6 +275,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .sheet .acts{display:grid;gap:8px}
 .sheet .acts button{padding:15px;border-radius:8px;font-weight:700;background:var(--panel2)}
 .sheet .acts .pri{background:var(--ink);color:var(--bg)}.sheet .acts .dan{color:var(--hot)}
+.sheet .swf{display:flex;align-items:center;gap:6px}.sheet .swf span{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#888);margin-right:4px}
+.sheet .acts .swf button{flex:1;padding:10px 0;font:700 12px var(--mono)}.sheet .acts .swf button.on{background:var(--ink);color:var(--bg)}
 .toast{position:fixed;left:50%;top:calc(12px + var(--st));transform:translate(-50%,-90px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:8px;z-index:40;transition:transform .25s}.toast.on{transform:translate(-50%,0)}
 .off{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:#09080de8;text-align:center;padding:30px}.off.on{display:grid}
 .off b{display:block;font-size:20px;margin-bottom:8px}.off span{color:var(--mute);font-size:14px;line-height:1.5}
@@ -496,7 +498,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-09a';
+const BUILD = '2026-11-09b';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -799,13 +801,14 @@ function sheetLayer(k){                   // hold a layer in SOURCE -> link it f
   const pt = partnerOf(k), others = ['model', 'text', 'text2', 'text3'].concat(MS.map(i => 'm' + i)).filter(x => x !== k && (x === 'model' ? S.pars.Statue !== false || partnerOf(x) : /^m\d$/.test(x) ? !!S.pars['M' + x.slice(1) + 'on'] : !!S.pars[{text:'Texton', text2:'T2on', text3:'T3on'}[x]]));
   $('#shI').style.display = 'none'; $('#shT').textContent = lName(k);
   $('#shP').textContent = pt ? 'Linked with ' + lName(pt) + ': swapping turns one off and the other on.' : 'Link it with another layer: one swap turns this one off and that one on, and back.';
-  $('#shA').innerHTML = (pt ? `<button class="pri" data-sh="lswapnow">⇄ Swap now</button>` + (S.b ? `<button data-sh="lswappin" data-sc="p">Pin the swap to this preset's quick controls</button>` : '') + `<button data-sh="lswappin" data-sc="a">Pin the swap to every preset</button><button class="dan" data-sh="lunlink">Unlink from ${esc(lName(pt))}</button>`
+  const sf = +(S.pars.Swapfade || 0), fch = pt ? `<div class="swf"><span>Switch</span>` + [[0, 'Cut'], [0.3, '0.3s'], [0.6, '0.6s'], [1, '1s'], [2, '2s']].map(([v, l]) => `<button data-sh="lfade" data-v="${v}" class="${Math.abs(sf - v) < 0.01 ? 'on' : ''}">${l}</button>`).join('') + `</div>` : '';
+  $('#shA').innerHTML = fch + (pt ? `<button class="pri" data-sh="lswapnow">⇄ Swap now</button>` + (S.b ? `<button data-sh="lswappin" data-sc="p">Pin the swap to this preset's quick controls</button>` : '') + `<button data-sh="lswappin" data-sc="a">Pin the swap to every preset</button><button class="dan" data-sh="lunlink">Unlink from ${esc(lName(pt))}</button>`
     : (others.length ? others.map(o => `<button data-sh="llink" data-o="${o}">⇄ Link with ${esc(lName(o))}</button>`).join('') : '<p class="hint2">Add another picture, video, text or 3D layer first.</p>')) + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.lk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function layerRows(mode){                 // one look for SOURCE ('src'), FX ('fx') and VIEW ('view')
   const fx = mode === 'fx', vw = mode === 'view', src = !fx && !vw;
-  const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on || (src && partnerOf(k)));
+  const p = S.pars, vis = layerOrder().filter(k => layerInfo(k).on || (src && partnerOf(k) && (!/^m\d$/.test(k) || !!p['M' + k.slice(1) + 'on'])));
   const cnt = k => k === 'all' ? (S.allL || []).filter(x => x[1]).length : ((S.tfx || {})[k] || []).filter(x => x[1]).length;
   const tag = k => (fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '') + (fx && FXCLIP === k ? ' · COPIED' : '');
   const flat = k => (k === 'camera' || /^m\d$/.test(k)) && !layerInfo(k).in3d;
@@ -1500,6 +1503,7 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   if (b.dataset.sh === 'llink') { const k = $('#sheet').dataset.lk, o = b.dataset.o; setLinks(linkPairs().filter(x => !x.includes(k) && !x.includes(o)).concat([[k, o]]));
     if (visOf(k) && visOf(o)) doSwap(o, k);                       // linked pair: only one of them on
     toast('Linked · ⇄ swaps them'); }
+  else if (b.dataset.sh === 'lfade') { const v = +b.dataset.v; S.pars.Swapfade = v; send({t:'set', p:'Swapfade', v}); $$('#shA .swf button').forEach(x => x.classList.toggle('on', x === b)); buzz(8); return; }
   else if (b.dataset.sh === 'lunlink') { const k = $('#sheet').dataset.lk; setLinks(linkPairs().filter(x => !x.includes(k))); }
   else if (b.dataset.sh === 'lswapnow') { const k = $('#sheet').dataset.lk; doSwap(k, partnerOf(k)); }
   else if (b.dataset.sh === 'lswappin') { const k = $('#sheet').dataset.lk, it = {k:'swap', a:k, b:partnerOf(k)};
@@ -1613,7 +1617,8 @@ document.addEventListener('click', e => {
   else if (d.addl) { addLayer(d.addl); buzz(); }
   else if (d.swapk) { const pt = partnerOf(d.swapk); if (pt) doSwap(d.swapk, pt); }
   else if (d.qswap !== undefined) { const it = qList()[+d.qswap]; if (it) { doSwap(it.a, it.b); setTimeout(quickSync, 60); } }
-  else if (d.loff) { const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false], text2:['T2on', false], text3:['T3on', false]}[k];
+  else if (d.loff) { if (partnerOf(d.loff)) setLinks(linkPairs().filter(x => !x.includes(d.loff)));   // removed = unlinked, no ghost row
+    const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false], text2:['T2on', false], text3:['T3on', false]}[k];
     if (/^m\d$/.test(k)) { send({t:'media', do:'remove', slot:+k.slice(1)}); S.pars['M' + k.slice(1) + 'on'] = false; }
     if (off) { S.pars[off[0]] = off[1]; send({t:'set', p:off[0], v:off[1]}); }
     else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }

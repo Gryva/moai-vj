@@ -98,7 +98,7 @@ middle, a picture at the back. The order is saved in presets.
 **Linked layers (hot-switch):** hold a layer's name → **⇄ Link with…** and pick another layer. Only one of the pair is
 on at a time; the **⇄** button on the row (or **Swap now** in the hold menu) turns one off and the other on. The
 switched-off partner stays in the list, dimmed, marked *(off)*. **Pin swap to Quick controls** puts a one-tap swap button
-on LIVE. **Unlink** in the same menu. Links are saved in presets. Works for images, videos, drawings, text and 3D models
+on LIVE. **Switch** in the same menu picks how it changes: **Cut** (instant, the default) or a fade of 0.3–2 s. **Unlink** in the same menu; removing a linked layer (✕) unlinks it too. Links are saved in presets. Works for images, videos, drawings, text and 3D models
 (not the phone camera). Pictures / videos in **3D OBJECT** mode are drawn by their
 own 3D pass with the shared 3D camera, so they stay separate layers too (own order, effects and brightness). **Text** is always on top (drawn after the effects).
 

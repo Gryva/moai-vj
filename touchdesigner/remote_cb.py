@@ -30,6 +30,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autofade', 'Autopilot transition', 0, 4, 0.1, 'apfade'),     # set by the phone's transition buttons
+    ('Swapfade', 'Linked layer switch', 0, 3, 0.05, 'swapfade'),    # 0 = instant cut; set by the phone's link menu
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
     ('Gain', 'Input gain', 0, 4, 0.01, 'audio'),
@@ -846,7 +847,7 @@ def handle(msg, reply):
                 if n and kd == 'draw': DRAWS[n] = {'img': None, 'new': True}
                 if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
                 else: reply({'t': 'added', 'slot': n})
-            elif a == 'remove' and sl: E.mediaSlotClear(C, sl); E.tClear('m%d' % sl)
+            elif a == 'remove' and sl: E.mediaSlotClear(C, sl); E.tClear('m%d' % sl); E.unlink(C, 'm%d' % sl)
             elif a == 'target': MEDIA_UP['slot'] = sl or None
             elif a == 'play' and sl: mediaPlay(str(msg.get('id', '')), fit=True, slot=sl)
             elif a == 'mode' and sl:
