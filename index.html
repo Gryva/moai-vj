@@ -107,9 +107,10 @@ label.tg{cursor:pointer}
 .lrow .lname b{font-size:12px;letter-spacing:.12em;text-transform:uppercase}.lrow .lname span{font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card:not(.open) .ch label.tg,.card:not(.open) .ch .mup{display:none}.card .ch b+.chev{margin-left:auto}.larr.lx{color:var(--hot);font-size:12px}
 .mfile{width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);text-align:left}.mfile b{flex:1;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mfile span{font:700 10px var(--mono);color:var(--lime)}.mfile.open span{opacity:.5}
-.mlib{margin-top:8px}.mlib[hidden],.mplay[hidden],.mfile[hidden],.mkey[hidden],.dpick[hidden]{display:none}
+.mlib{margin-top:8px}.dhost[hidden],.mlib[hidden],.mplay[hidden],.mfile[hidden],.mkey[hidden],.dpick[hidden]{display:none}
 .addlay{width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px dashed #3d4a1c;color:var(--lime);font:700 11px var(--sans);letter-spacing:.14em}
 .addmenu[hidden]{display:none}.addmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.addmenu button{padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+body:not(.editing) #fades,body:not(.editing) #apTimes{display:none}body:not(.editing) .aptog{flex:1;flex-direction:row;gap:10px;padding:10px}
 .qly{font-style:normal;color:var(--lime);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}.qrow .top{align-items:center}.qtog{margin-left:auto}
 [data-qp],[data-qfx]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lrow.copied{border-style:dashed;border-color:var(--cyan)}
@@ -485,7 +486,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-08b';
+const BUILD = '2026-11-08c';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -711,9 +712,10 @@ function mediaCardsUI(p){
     { const sp = +p[m + 'speed'] || 1, tr = (+p[m + 'trimin'] || 0) > 0.001 || (p[m + 'trimout'] != null && +p[m + 'trimout'] < 0.999);
       $('#sum-m' + i + 'play').textContent = [sp !== 1 ? sp.toFixed(2) + '×' : '', tr ? 'trimmed' : ''].filter(Boolean).join(' · '); }
     c.querySelector('.mkey').hidden = dr; c.querySelector('.mup').hidden = dr;
-    c.querySelector('.dpick').hidden = !dr || DR.slot === i; });
+    c.querySelector('.dpick').hidden = !dr || DR.slot === i; c.querySelector('.dhost').hidden = !dr; });
   const ds = MS.filter(i => p['M' + i + 'on'] && p['M' + i + 'kind'] === 'draw');
   if (ds.length && !ds.includes(DR.slot)) { DR.slot = 0; drawPick(ds[0]); }
+  else if (!ds.length && DR.slot) { drawSave(); DR.slot = 0; $('#cardDraw').appendChild($('#dpadwrap')); }   // no drawing layer: the pad goes back out of sight
 }
 function addLayer(t){
   $('#addMenu').hidden = true; const p = S.pars;
@@ -1195,9 +1197,13 @@ function renderPads(){
 const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
 /* ---------------- quick controls: pinned sliders / switches / effect settings on LIVE ---------------- */
 const qid = it => [it.k, it.p || it.t || '', it.e || '', it.f || ''].join(':');
+function mediaFile(i){                   // " · clip-name" so Video 1 and Video 2 can't be mixed up
+  const f = S.pars['M' + i + 'file']; if (!f || S.pars['M' + i + 'kind'] === 'draw') return '';
+  const n = f.split('/').pop().replace(/\.[^.]+$/, ''); return ' · ' + (n.length > 22 ? n.slice(0, 21) + '…' : n);
+}
 function qLayer(p){                       // which layer a control belongs to (shown in its label)
   let m;
-  if ((m = /^M(\d)/.exec(p))) return mediaName(+m[1]);
+  if ((m = /^M(\d)/.exec(p))) return mediaName(+m[1]) + mediaFile(+m[1]);
   if ((m = /^T([23])/.exec(p))) return 'Text ' + m[1];
   if (/^Text/.test(p)) return 'Text';
   if (/^(Fcam|Opcamera|Cam)/.test(p)) return 'Phone camera';
@@ -1209,7 +1215,7 @@ function qLayer(p){                       // which layer a control belongs to (s
 }
 function qLabel(it){
   if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
-    return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
+    return [it.t === 'all' ? 'All layers' : tgtName(it.t) + (/^m\d$/.test(it.t) ? mediaFile(+it.t.slice(1)) : ''), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
   const sd = (S.sliders || []).find(x => x.p === it.p);
   const raw = it.p.replace(/^(M\d|T\d(?=on|str)|Text(?=on))/, '');
   const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor'};
@@ -1239,11 +1245,12 @@ function qVal(it){                        // current value of a pinned control
   if (it.f === 'on') return !!(row && row[1]);
   return row ? (it.f === 'amt' ? row[2] : row[3]) : (it.f === 'amt' ? 1 : l.p1);
 }
-let QSIG = '';
+let QSIG = '', QB = null;
 function renderQuick(){
   if (!S) return; const L = qList(), card = $('#cardQuick');
   card.classList.toggle('hide', !L.length); $('#qkn').textContent = L.length ? L.length + '' : '';
   cardOpen('cardQuick', !!L.length);
+  if (QB !== S.b) { QB = S.b; SHUT.cardQuick = 1; cardOpen('cardQuick', !!L.length); }      // a new preset starts with them folded
   const sig = S.b + '|' + L.map(qid).join(',') + '|' + (S.bank || []).map(p => p ? p.name : '').join('/');
   if (sig === QSIG) return quickSync(); QSIG = sig;
   $('#qk').innerHTML = L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output></div>`;
