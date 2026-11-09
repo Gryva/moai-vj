@@ -114,8 +114,7 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
   speed, delete (a playing clip is the camera layer).
 - **Image / Video layers** (one card each, named Image 1, Video 2…): ON/OFF, ＋ ADD (upload to this layer), the
   current file (tap **CHANGE** to open the library and pick another), **Playback** for videos (speed 0.1–4×, trim
-  start / end, reset), **FLAT** or **3D OBJECT**, **Crop**, **Green / blue screen**
-  and **Move it in 3D**. Each layer also has its own effects and brightness (FX tab) and framing (VIEW tab). All saved
+  start / end, reset), **FLAT** or **3D OBJECT** (placed in VIEW), **Crop** and **Green / blue screen**. Each layer also has its own effects and brightness (FX tab) and framing (VIEW tab). All saved
   in presets; older presets load their image on layer 1 and their video on layer 2.
 - **Drawing layers:** draw on the phone; pen and shapes, sizes, colours or gradients. Black is see-through. With several
   drawings, **✎ DRAW ON THIS LAYER** moves the pad to that drawing. Like pictures they can be flat or a 3D object and
@@ -129,8 +128,10 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
   one tap away. Text is saved with a preset when you press **Update**.
 
 ### VIEW
-- **Layers** card at the top, same as in SOURCE. Tap a flat layer (Phone camera, Images, Videos) to frame it; tap
-  3D models (or anything in the 3D scene) for the 3D camera.
+- **Layers** card at the top, same as in SOURCE. Tap a flat layer (Phone camera, Images, Videos) to frame it. Tap
+  any 3D layer (3D models, a 3D picture / video / drawing, 3D text) to place just that layer in the scene: left / right,
+  up / down, depth, size, turn, tilt, RESET PLACEMENT (saved in presets). Tap **3D camera** (top row) for the camera
+  that films every 3D layer.
 - 3D camera (models and 3D objects): saved views (F1–F8), orbit, elevation, distance, lens, roll, height and pan,
   handheld shake. A saved view stores only the camera. Views marked **↻ camera moves** (e.g. Slow Orbit, Top Spiral,
   Chaos Club) keep the camera circling or swaying, which can look like the object spinning; that is the camera, not

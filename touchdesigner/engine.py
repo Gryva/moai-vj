@@ -389,7 +389,8 @@ def mediaFit(i=None):
     dist = max((sx / 2.0) / t, (sy / 2.0) * ra / t)                # whole picture visible, centred
     for k, v in (('Distance', round(dist, 4)), ('Orbit', 0.0), ('Elevation', 0.0), ('Height', 0.0), ('Pan', 0.0), ('Roll', 0.0),
                  ('Orbitspeed', 0.0), ('Orbitsway', 0.0), ('Elevsway', 0.0), ('Distsway', 0.0), ('Rollsway', 0.0), ('Shake', 0.0),
-                 ('Audiocam', 0.0), ('Angle', 0.0), ('Tilt', 0.0), ('Motion', 'still'), ('M%dobjx' % i, 0.0), ('M%dobjy' % i, 0.0), ('M%dobjscale' % i, 1.0)):
+                 ('Audiocam', 0.0), ('Angle', 0.0), ('Tilt', 0.0), ('Motion', 'still'), ('M%dobjx' % i, 0.0), ('M%dobjy' % i, 0.0), ('M%dobjscale' % i, 1.0),
+                 ('M%dobjz' % i, 0.0), ('M%dobjturn' % i, 0.0), ('M%dobjtilt' % i, 0.0)):
         try: C.par[k] = v
         except Exception: pass
     S['angle'] = 0.0
@@ -414,8 +415,9 @@ def safetyUpdate(C):
 # ------------------------------------------------------------------ text layer
 TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor',
             'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
-            'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth']
-TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0}   # older presets: these
+            'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt']
+TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
+           'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0}   # older presets: these
 TDIRS = {'h': 0, 'v': 1, 'up': 2, 'down': 3}
 TADIRS = {'left': 0, 'right': 1, 'up': 2, 'down': 3}
 TCOLORS = {'white': (1, 1, 1), 'hot': (1, .3, .18), 'cyan': (.24, .94, 1), 'violet': (.69, .42, 1),
@@ -1112,7 +1114,9 @@ def _bankTable():
         while t.numRows < BANK_SLOTS + 1: t.appendRow(['', ''])
     return t
 
-OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat']
+OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat',
+           'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
+MODEL3D = {'Modelx': 0.0, 'Modely': 0.0, 'Modelz': 0.0, 'Modelscale': 1.0, 'Modelturn': 0.0, 'Modeltilt': 0.0}
 
 def snapshot():
     C = op('/project1/CONTROLS')
@@ -1133,7 +1137,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keytol', 'keysoft', 'keyspill',
-         'keyshrink', 'objx', 'objy', 'objscale', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
+         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
 
 def _mval(par):
     v = par.eval()
@@ -1518,6 +1522,8 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None):
     ob = d.get('obj', {})
     if 'Spinaxis' not in ob: C.par.Spinaxis = 'y'                # older presets: spin turns around Y
     if 'Spinrev' not in ob: C.par.Spinrev = False
+    for k, v in MODEL3D.items():                                 # older presets: the models sit where they always did
+        if k not in ob: C.par[k] = v
     for k, v in ob.items():                                      # statue pose: angle, tilt, spin
         try: C.par[k] = v
         except Exception: pass
@@ -1919,14 +1925,24 @@ def _models(C, dt, T, react, grid):
         applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
         g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
         if o_ty: g.par.ty = g.par.ty.eval() + o_ty
-        if g.name.startswith('mg'):                              # a picture / video card can be moved around the scene
-            q = 'M%sobj' % g.name[2:]
-            g.par.tx = float(C.par[q + 'x'].eval()); g.par.ty = g.par.ty.eval() + float(C.par[q + 'y'].eval())
-            g.par.scale = g.par.scale.eval() * float(C.par[q + 'scale'].eval())
-        elif g.name.startswith('tg'):                            # 3D text: Depth pushes it back / pulls it closer
-            g.par.tz = float(C.par[tpn(int(g.name[2:]), 'Textdepth')].eval())
+        x, y, z, sc, tu, ti = obj3d(C, g.name)                     # each 3D layer's own place in the scene (VIEW tab)
+        g.par.tx = x; g.par.tz = z
+        if y: g.par.ty = g.par.ty.eval() + y
+        if sc != 1.0: g.par.scale = g.par.scale.eval() * sc
+        if tu: g.par.ry = g.par.ry.eval() + tu
+        if ti: g.par.rx = g.par.rx.eval() + ti
     if grid:
         op('/project1/moai_geo/grid_inst').cook(force=True)
+
+def obj3d(C, name):
+    """Left/right, up/down, depth, size, turn, tilt of one 3D layer: the models, a 3D picture / video / drawing, 3D text."""
+    f = lambda p: float(C.par[p].eval()) if hasattr(C.par, p) else 0.0
+    if name.startswith('mg') and name[2:].isdigit():
+        q = 'M%sobj' % name[2:]; return f(q + 'x'), f(q + 'y'), f(q + 'z'), f(q + 'scale') or 1.0, f(q + 'turn'), f(q + 'tilt')
+    if name.startswith('tg') and name[2:].isdigit():
+        n = int(name[2:]); return 0.0, 0.0, f(tpn(n, 'Textdepth')), f(tpn(n, 'Textoscale')) or 1.0, f(tpn(n, 'Textoturn')), f(tpn(n, 'Textotilt'))
+    if name == 'draw_geo': return 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+    return f('Modelx'), f('Modely'), f('Modelz'), f('Modelscale') or 1.0, f('Modelturn'), f('Modeltilt')   # models + animations
 
 def _label(C):
     show = bool(C.par.Showlabel.eval())

@@ -429,6 +429,12 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <div id="g-frcam" data-fr="camera"></div><span id="mfrbox"></span><div id="g-frdraw" data-fr="draw"></div>
       <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="frreset">RESET FRAMING</button></div>
     </div>
+    <div id="view3dl" hidden>
+      <p class="srcnote" id="v3note"></p>
+      <div data-v3="model"><div id="g-mobj"></div></div><span id="m3dbox"></span>
+      <div data-v3="text"><div id="g-tobj1"></div></div><div data-v3="text2"><div id="g-tobj2"></div></div><div data-v3="text3"><div id="g-tobj3"></div></div>
+      <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="o3reset">RESET PLACEMENT</button></div>
+    </div>
     <div id="view3d">
     <h2><span>Saved views</span><em>hold = save current</em></h2><div class="presets" id="presets"></div>
     <div class="tpad" id="tpad" style="margin-top:14px"><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
@@ -511,7 +517,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-09c';
+const BUILD = '2026-11-09d';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -702,11 +708,11 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
         <details class="box mbox mkey" style="margin-top:8px"><summary>Green / blue screen<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
           <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:7px"></div><div id="g-m${i}key"></div></details>
-        <details class="box mbox" id="box-m${i}obj"><summary>Move it in 3D</summary>
-          <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" data-mfit="${i}">⤢ FIT TO SCREEN</button></div><div id="g-m${i}obj"></div></details>
+        <p class="hint2" id="box-m${i}obj" style="margin-top:8px">In 3D: place it (move, depth, size, turn) in VIEW → tap this layer.</p>
       </div></div>`; }).join('');
   $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
+  $('#m3dbox').innerHTML = MS.map(i => `<div data-v3="m${i}"><div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" data-mfit="${i}">⤢ FIT TO SCREEN</button></div><div id="g-m${i}obj"></div></div>`).join('');
 }
 mediaCardsBuild();
 (() => { const box = $('#scards');                   // every source card lives in one list, sorted like the Layers card
@@ -795,13 +801,18 @@ function fxTargets(){
   $$('[data-op]').forEach(e => e.hidden = e.dataset.op !== FXT_SEL);
   viewTargets();
 }
+function is3dLayer(k){ const L = layerInfo(k); return !!L && L.on && (k === 'model' || !!L.in3d); }
 function viewTargets(){
   if (!S || !$('#vwtg')) return;
   const flat = layerOrder().filter(k => k !== 'model' && k !== 'draw' && !/^text/.test(k) && layerInfo(k).on && !layerInfo(k).in3d);
-  if (VW_SEL !== '3d' && !flat.includes(VW_SEL)) VW_SEL = '3d';
+  const d3 = layerOrder().filter(is3dLayer);
+  if (VW_SEL !== '3d' && !flat.includes(VW_SEL) && !d3.includes(VW_SEL)) VW_SEL = '3d';
   $('#vwtg').innerHTML = layerRows('view');
-  $('#view2d').hidden = VW_SEL === '3d'; $('#view3d').hidden = VW_SEL !== '3d';
+  const one3d = d3.includes(VW_SEL);
+  $('#view2d').hidden = !flat.includes(VW_SEL); $('#view3d').hidden = VW_SEL !== '3d'; $('#view3dl').hidden = !one3d;
   $$('#view2d [data-fr]').forEach(e => e.hidden = e.dataset.fr !== VW_SEL);
+  $$('#view3dl [data-v3]').forEach(e => e.hidden = e.dataset.v3 !== VW_SEL);
+  if (one3d) $('#v3note').textContent = 'Places only ' + layerInfo(VW_SEL).name + ' in the 3D scene. The 3D camera (top row) films every 3D layer.';
 }
 const SWAPPABLE = k => /^m\d$/.test(k) || ['model', 'text', 'text2', 'text3'].includes(k);
 function linkPairs(){ return String(S.pars.Links || '').split(',').map(x => x.split('-')).filter(x => x.length === 2 && SWAPPABLE(x[0]) && SWAPPABLE(x[1])); }
@@ -827,13 +838,15 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const tag = k => (fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '') + (fx && FXCLIP === k ? ' · COPIED' : '');
   const flat = k => (k === 'camera' || /^m\d$/.test(k)) && !layerInfo(k).in3d;
   const vkey = k => flat(k) ? k : '3d';                                   // VIEW: 3D models, 3D objects and the drawing card use the 3D camera
-  const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? (/^text/.test(k) && !layerInfo(k).in3d ? null : `data-vwt="${vkey(k)}"`) : `data-jump="${layerInfo(k).card}"`;
-  const sel = k => ((fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
+  const vsel = k => flat(k) || is3dLayer(k) ? k : null;                  // VIEW: flat layers get 2D framing, 3D layers their own placement
+  const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? (vsel(k) ? `data-vwt="${vsel(k)}"` : null) : `data-jump="${layerInfo(k).card}"`;
+  const sel = k => ((fx && FXT_SEL === k) || (vw && vsel(k) === VW_SEL) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
   const x = k => src ? (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   const lk = k => partnerOf(k) ? ` · ⇄ ${esc(lName(partnerOf(k)).split(' · ')[0])}${visOf(k) ? '' : ' (off)'}` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
+  if (vw && layerOrder().some(is3dLayer)) h += `<div class="lrow on pin${VW_SEL === '3d' ? ' sel' : ''}"><button class="lname" data-vwt="3d"><b>3D camera</b><span>films every 3D layer · saved views, orbit, zoom</span></button></div>`;
   h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
-    const sub = esc(L.sub) + (vw && !flat(k) && !(L.text && !L.in3d) ? ' · 3D camera' : '') + tag(k) + (src ? lk(k) : '');
+    const sub = esc(L.sub) + (vw && is3dLayer(k) ? ' · in 3D' : vw && L.text ? ' · placed in SOURCE' : '') + tag(k) + (src ? lk(k) : '');
     return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}${src && !visOf(k) && partnerOf(k) ? ' dim' : ''}"><button class="lname" ${a || ''} data-lay="${k}"><b>${L.name}</b><span>${sub}</span></button>`
       + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button>${x(k)}</div>`; }).join('');
   return h || '<p class="hint2" style="margin:2px">No layers yet.</p>';
@@ -1033,8 +1046,8 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
-  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
+  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', mobj:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -1651,6 +1664,9 @@ document.addEventListener('click', e => {
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; if (GSHUT[d.gtog]) delete GSHUT[d.gtog]; else GSHUT[d.gtog] = 1; store.set('gshut', GSHUT); renderPads(); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
+  else if (d.act === 'o3reset') { const k = VW_SEL, q = k === 'model' ? 'Model' : /^m\d$/.test(k) ? 'M' + k.slice(1) + 'obj' : k === 'text' ? 'Text' : /^text\d$/.test(k) ? 'T' + k.slice(4) : null;
+    if (q) { const ks = k === 'model' || /^m\d$/.test(k) ? [['x',0],['y',0],['z',0],['scale',1],['turn',0],['tilt',0]] : [['depth',0],['oscale',1],['oturn',0],['otilt',0]];
+      ks.forEach(([n, v]) => { S.pars[q + n] = v; send({t:'set', p:q + n, v}); }); applyPars({}); } buzz(); }
   else if (d.act === 'frreset') { const pre = {camera:'Fcam', draw:'Fdraw'}[VW_SEL] || (/^m\d$/.test(VW_SEL) ? 'M' + VW_SEL.slice(1) + 'f' : null); if (pre) { (pre.endsWith('f') ? [['zoom',1],['x',0],['y',0],['rot',0]] : [['zoom',1],['x',0],['y',0],['rot',0]]).forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
   else if (d.lmove) { layerMove(d.lmove, +d.dir); buzz(); }
   else if (d.jump) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const c = $('#' + d.jump); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }
