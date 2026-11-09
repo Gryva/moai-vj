@@ -237,6 +237,15 @@ def objUpdate(C):
         sw = op('/project1/mfeed%d' % i)                             # a 3D object is drawn by its own render pass (mr<n>),
         if sw is not None and int(sw.par.index.eval()) != (1 if on else 0): sw.par.index = 1 if on else 0   # so it stays its own layer
     S['objs'] = objs
+    tobjs = []
+    for n in TEXTN:                                                   # 3D text: the words on a card in the 3D scene
+        g = op('/project1/tg%d' % n); on = bool(C.par[tpn(n, 'Texton')].eval()) and C.par[tpn(n, 'Textspace')].eval() == '3d'
+        if g is None: continue
+        if g.render != on: g.render = on
+        if on: tobjs.append(n); _cardShape(g, op('/project1/txa%d' % n))
+        sw = op('/project1/tl%d' % n)
+        if sw is not None and int(sw.par.index.eval()) != (1 if on else 0): sw.par.index = 1 if on else 0
+    S['tobjs'] = tobjs
     drawing = False                                               # drawings are media layers now (kind 'draw')
     S['drawobj'] = drawing
     dg = op('/project1/draw_geo')
@@ -404,17 +413,39 @@ def safetyUpdate(C):
 
 # ------------------------------------------------------------------ text layer
 TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor',
-            'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang']
+            'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
+            'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth']
+TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0}   # older presets: these
+TDIRS = {'h': 0, 'v': 1, 'up': 2, 'down': 3}
+TADIRS = {'left': 0, 'right': 1, 'up': 2, 'down': 3}
 TCOLORS = {'white': (1, 1, 1), 'hot': (1, .3, .18), 'cyan': (.24, .94, 1), 'violet': (.69, .42, 1),
            'lime': (.78, 1, .24), 'gold': (1, .78, .25)}
 TMODES = ['overlay', 'mask', 'cutout', 'invert', 'outline', 'glitch', 'refract']
-TANIM = {'static': 0, 'pulse': 1, 'wave': 2, 'scroll': 3, 'tile': 4, 'type': 0, 'beat': 1}
+TANIM = {'static': 0, 'pulse': 1, 'wave': 2, 'scroll': 3, 'tile': 4, 'type': 0, 'beat': 1, 'shake': 5, 'flicker': 6, 'breathe': 7, 'bounce': 8}
 TLAYOUT = {  # align x, align y, pos x, pos y, font px, autosize, wrap
     'center': ('center', 'center', 0, 0, 150, 'fitiffat', True),
     'fill':   ('center', 'center', 0, 0, 400, 'alwaysfit', True),
     'stack':  ('center', 'center', 0, 0, 120, 'fitiffat', True),
     'lower':  ('left', 'bottom', 70, 70, 64, 'fitiffat', True),
-    'corner': ('left', 'top', 50, -50, 40, 'fitiffat', True)}
+    'corner': ('left', 'top', 50, -50, 40, 'fitiffat', True),
+    # the nine spots of the frame (font size follows Size)
+    'tl': ('left', 'top', 56, -46, 72, 'fitiffat', True), 'top': ('center', 'top', 0, -46, 72, 'fitiffat', True),
+    'tr': ('right', 'top', -56, -46, 72, 'fitiffat', True), 'left': ('left', 'center', 56, 0, 72, 'fitiffat', True),
+    'right': ('right', 'center', -56, 0, 72, 'fitiffat', True), 'bl': ('left', 'bottom', 56, 46, 72, 'fitiffat', True),
+    'bottom': ('center', 'bottom', 0, 46, 72, 'fitiffat', True), 'br': ('right', 'bottom', -56, 46, 72, 'fitiffat', True)}
+TSMALL = ('lower', 'corner', 'tl', 'top', 'tr', 'left', 'right', 'bl', 'bottom', 'br')
+
+def textKey(n): return 'text' if n == 1 else 'text%d' % n
+
+def textInStack(C, n):
+    """Text is drawn inside the layer stack when it is in 3D or something sits in front of it; otherwise it goes on top
+    after the effects (where Mask / Cutout / Invert / Refract can use the picture under it)."""
+    if C.par[tpn(n, 'Textspace')].eval() == '3d': return True
+    k = textKey(n)
+    for t in layerOrder(C):
+        if t == k: return False
+        if t not in TXTGT and _layerShown(C, t): return True
+    return False
 TX = {'sig': None, 't0': 0.0, 'words': [' '], 'wi': 0, 'lk': None, 'shown': None}
 
 TXN = {1: TX, 2: {'sig': None, 't0': 0.0, 'words': [' '], 'wi': 0, 'lk': None, 'shown': None},
@@ -434,13 +465,15 @@ def textUpdate(C, T, n=1):
     if g is None: return False
     on = bool(tp('Texton').eval()) and float(tp('Textamount').eval()) > 0.001
     own = (('text' if n == 1 else 'text%d' % n) in SLOTS)                # has its own effects: drawn by txcomp instead
-    if g.bypass != ((not on) or own): g.bypass = (not on) or own
+    inst = on and textInStack(C, n); TINST[n] = inst                     # behind a layer / 3D: drawn inside the stack
+    if g.bypass != ((not on) or own or inst): g.bypass = (not on) or own or inst
     if not on: return False
     tt = op('/project1/text_src' + ('' if n == 1 else str(n)))
     full = tp('Textstr').eval() or ' '
     lay, anim, size = tp('Textlayout').eval(), tp('Textanim').eval(), float(tp('Textsize').eval())
-    small = lay in ('lower', 'corner')
-    sig = (full, lay, anim, tp('Textfont').eval(), round(size, 3) if small else 0)
+    small = lay in TSMALL
+    tdir = tp('Textdir').eval()
+    sig = (full, lay, anim, tp('Textfont').eval(), round(size, 3) if small else 0, tdir)
     if sig != TX['sig']:
         TX['sig'] = sig; TX['t0'] = T; TX['words'] = full.split() or [' ']; TX['wi'] = 0; TX['shown'] = None
         ax, ay, px, py, fpx, fit, wrap = TLAYOUT.get(lay, TLAYOUT['center'])
@@ -460,6 +493,8 @@ def textUpdate(C, T, n=1):
         txt = '\n'.join(full.split()) or ' '
     else:
         txt = full
+    if tdir == 'v':                                                  # vertical: one letter under the other
+        txt = '\n'.join(' ' if c == ' ' else c for c in txt.replace('\n', ' ')) or ' '
     if txt != TX['shown']:
         tt.par.text = txt; TX['shown'] = txt
         if anim != 'type' or txt == full: TX['bbat'] = S['frame'] + 2          # measure the words once they're drawn
@@ -502,7 +537,11 @@ def textUpdate(C, T, n=1):
         elif e < 0.5: tm, tv = m0, v0
     pp.vec7valuex, pp.vec7valuey, pp.vec7valuez, pp.vec7valuew = tv[0], tv[1], tv[2], float(tm)
     pp.vec8valuex, pp.vec8valuey, pp.vec8valuez, pp.vec8valuew = tv[3], tv[4], tv[5], math.radians(tv[6])
+    try: pp.vec10valuex, pp.vec10valuey, pp.vec10valuez, pp.vec10valuew = float(tp('Textx').eval()), float(tp('Texty').eval()), TDIRS.get(tdir, 0), TADIRS.get(tp('Textadir').eval(), 0)
+    except Exception: pass
     return True
+
+TINST = {1: False, 2: False, 3: False}
 
 TXM = {'on': False, 't0': 0.0, 'dur': 1.0, 'frm': {}, 'col': (1, 1, 1), 'mode': 'overlay'}
 TNUM = ['Textsize', 'Textglow', 'Textamount', 'Textspeed', 'Textreact']
@@ -734,7 +773,7 @@ def _layerShown(C, t):
 
 def fxTargets(C):
     """Give each visible layer that has effects one of the four chains (front layers first); free the rest."""
-    want = [t for t in ['text', 'text2', 'text3'] + layerOrder(C) if t in FXT and any(v[0] and v[1] > 0.001 for v in FXT[t].values()) and _layerShown(C, t)][:4]
+    want = [t for t in layerOrder(C) if t in FXT and any(v[0] and v[1] > 0.001 for v in FXT[t].values()) and _layerShown(C, t)][:4]
     for t in list(SLOTS):
         if t not in want: del SLOTS[t]
     free = [n for n in (1, 2, 3, 4) if n not in SLOTS.values()]
@@ -746,7 +785,9 @@ def fxTargets(C):
     fx.par.vec15valuex, fx.par.vec15valuey, fx.par.vec15valuez, fx.par.vec15valuew = g('m1'), g('m2'), g('m3'), g('m4')
     fx.par.vec16valuex, fx.par.vec16valuey = g('m5'), g('m6')
     tc = P.op('txcomp')
-    if tc is not None: tc.par.vec0valuex, tc.par.vec0valuey, tc.par.vec0valuez = g('text'), g('text2'), g('text3')
+    gt = lambda n, inst: 0.0 if TINST.get(n) == inst else g(textKey(n))          # text on top -> txcomp, in the stack -> fx_src
+    if tc is not None: tc.par.vec0valuex, tc.par.vec0valuey, tc.par.vec0valuez = gt(1, True), gt(2, True), gt(3, True)
+    fx.par.vec28valuex, fx.par.vec28valuey, fx.par.vec28valuez = gt(1, False), gt(2, False), gt(3, False)
     for n in (1, 2, 3, 4):
         t = next((k for k, v in SLOTS.items() if v == n), None)
         sw = P.op('lfx%d' % n)
@@ -755,7 +796,7 @@ def fxTargets(C):
         cin = P.op('cin%d' % n); ci = TXTGT.get(t, 0)                  # chain input: an isolated layer, or a text layer on its own
         if cin is not None and int(cin.par.index.eval()) != ci: cin.par.index = ci
         iso = P.op('lyr%d' % n)
-        if t in LAYER_IDS and iso is not None and iso.par.vec9valuew.eval() != LAYER_IDS[t]: iso.par.vec9valuew = LAYER_IDS[t]
+        if t in LAYER_IDS and t not in TXTGT and iso is not None and iso.par.vec9valuew.eval() != LAYER_IDS[t]: iso.par.vec9valuew = LAYER_IDS[t]
         sig = (t, tuple(sorted((k, bool(v[0] and v[1] > 0.001), v[1], v[2]) for k, v in FXT[t].items())))
         if SLOTSIG.get(n) != sig:
             SLOTSIG[n] = sig
@@ -809,12 +850,17 @@ def applyLook(d, text=True):
     for k, v in saved.items():
         setLayer(k, on=bool(v[0]), amt=v[1], p1=v[2])
     if text and d.get('text') and 'Textcm' not in d['text']: C.par.Textcm = 0
+    if text and d.get('text'):
+        for p_, v in TEXTNEW.items():
+            if p_ not in d['text']: C.par[p_] = v
     for p, v in list(d.get('grid', {}).items()) + (list(d.get('text', {}).items()) if text else []):
         try: C.par[p] = v
         except Exception: pass
     if d.get('scene'): C.par.Scene = d['scene']
     tx2 = d.get('texts') or {}                                   # text layers 2 and 3 (older presets: off)
     for n in (2, 3):
+        for p_, v in TEXTNEW.items():
+            if str(n) in tx2 and p_ not in tx2[str(n)]: C.par[tpn(n, p_)] = v
         for p_, v in (tx2.get(str(n)) or {'Texton': False}).items():
             try: C.par[tpn(n, p_)] = v
             except Exception: pass
@@ -1645,8 +1691,8 @@ def activeLabel():
 CAMS = {'alive': 0.0}
 CAMMODES = {'cam': 1, 'behind': 2, 'screen': 3, 'mask': 4}
 
-LAYER_IDS = dict({'model': 1, 'camera': 2, 'draw': 5}, **{'m%d' % i: 10 + i for i in MSLOTS})
-LAYER_DEFAULT = ['draw'] + ['m%d' % i for i in MSLOTS] + ['camera', 'model']          # front -> back
+LAYER_IDS = dict({'model': 1, 'camera': 2, 'draw': 5, 'text': 21, 'text2': 22, 'text3': 23}, **{'m%d' % i: 10 + i for i in MSLOTS})
+LAYER_DEFAULT = ['text', 'text2', 'text3', 'draw'] + ['m%d' % i for i in MSLOTS] + ['camera', 'model']          # front -> back
 _LEGACY = {'images': 'm1', 'videos': 'm2'}
 
 def layerOrder(C=None):
@@ -1704,6 +1750,7 @@ def camfeedUpdate(C, dt, T):
     mm = [1.0 if i in S.get('objs', []) else 0.0 for i in MSLOTS]
     p.vec25valuex, p.vec25valuey, p.vec25valuez, p.vec25valuew = mm[0:4]
     p.vec26valuex, p.vec26valuey = mm[4:6]
+    p.vec27valuex, p.vec27valuey, p.vec27valuez = [1.0 if TINST.get(n) else 0.0 for n in TEXTN]
 
 # ------------------------------------------------------------------ thumbnails (preset pictures + effect tiles)
 THUMB_DIR = project.folder + '/td/thumbs'
@@ -1865,7 +1912,7 @@ def _models(C, dt, T, react, grid):
     ag = _safe('animation', animUpdate, C, dt, react)
     o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, react)
     ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
-    for g in [op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/draw_geo'), ag] + [op('/project1/mg%d' % i) for i in S.get('objs', [])]:
+    for g in [op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/draw_geo'), ag] + [op('/project1/mg%d' % i) for i in S.get('objs', [])] + [op('/project1/tg%d' % n) for n in S.get('tobjs', [])]:
         if g is None: continue
         spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle']
         base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
@@ -1876,6 +1923,8 @@ def _models(C, dt, T, react, grid):
             q = 'M%sobj' % g.name[2:]
             g.par.tx = float(C.par[q + 'x'].eval()); g.par.ty = g.par.ty.eval() + float(C.par[q + 'y'].eval())
             g.par.scale = g.par.scale.eval() * float(C.par[q + 'scale'].eval())
+        elif g.name.startswith('tg'):                            # 3D text: Depth pushes it back / pulls it closer
+            g.par.tz = float(C.par[tpn(int(g.name[2:]), 'Textdepth')].eval())
     if grid:
         op('/project1/moai_geo/grid_inst').cook(force=True)
 

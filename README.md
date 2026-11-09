@@ -100,7 +100,7 @@ on at a time; the **⇄** button on the row (or **Swap now** in the hold menu) t
 switched-off partner stays in the list, dimmed, marked *(off)*. **Pin swap to Quick controls** puts a one-tap swap button
 on LIVE. **Switch** in the same menu picks how it changes: **Cut** (instant, the default) or a fade of 0.3–2 s. **Unlink** in the same menu; removing a linked layer (✕) unlinks it too. Links are saved in presets. Works for images, videos, drawings, text and 3D models
 (not the phone camera). Pictures / videos in **3D OBJECT** mode are drawn by their
-own 3D pass with the shared 3D camera, so they stay separate layers too (own order, effects and brightness). **Text** is always on top (drawn after the effects).
+own 3D pass with the shared 3D camera, so they stay separate layers too (own order, effects and brightness). **Text** layers move with ▲ ▼ like the others: on top of everything they are drawn after the effects (all text effects work); behind another layer or in 3D they are drawn inside the stack (Mask, Cut-out, Invert and Refract then show as plain letters).
 
 - **3D models:** shows or hides the statues and animations.
   - Static models / 3D animations: tap to switch. **Scene** (Solid, Particles, Grid) sits under Static models;
@@ -120,9 +120,12 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
 - **Drawing layers:** draw on the phone; pen and shapes, sizes, colours or gradients. Black is see-through. With several
   drawings, **✎ DRAW ON THIS LAYER** moves the pad to that drawing. Like pictures they can be flat or a 3D object and
   have their own effects, brightness and framing. Saved in presets.
-- **Text:** type and press Enter. Layouts (centre, fill, stack, lower third, corner), animations (static, beat, wave,
-  scroll, tile, type, word per beat), modes (overlay, mask, cutout, invert, outline, glitch, refract), font, size,
-  glow, speed, beat reaction, colour (solid, ramp, radial). **Pin** keeps text when presets change. Recent texts are
+- **Text:** type and press Enter. **Position:** nine spots of the frame (corners, edges, centre) plus Fill, Stack and
+  Lower third, and **Left / right**, **Down / up** sliders to nudge it anywhere. **Direction:** horizontal, vertical
+  (letters stacked) or sideways ↑ / ↓. **Animations:** static, beat, breathe, wave, scroll, tile, bounce, shake, flicker,
+  type, word per beat; scroll, wave, tile and bounce also take a direction (left, right, up, down). **Space:** FLAT or
+  **3D** (the words on a card in the 3D scene: 3D camera, Object motion, and a 3D depth slider). Modes (overlay, mask,
+  cutout, invert, outline, glitch, refract), font, size, glow, speed, beat reaction, colour (solid, ramp, radial). **Pin** keeps text when presets change. Recent texts are
   one tap away. Text is saved with a preset when you press **Update**.
 
 ### VIEW

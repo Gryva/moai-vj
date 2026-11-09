@@ -43,16 +43,34 @@ float T(vec2 p){
   float n = texture(sTD2DInputs[1], p - gD * (1.0 - gW)).a;           // new letters drift in from the other side
   return mix(o, n, gW);
 }
+uniform vec4 uX;   // x, y = move (-1..1), z = direction (0 across, 1 stacked letters, 2 sideways up, 3 sideways down), w = animation direction (0 left, 1 right, 2 up, 3 down)
+float gFl = 1.0;                                                      // flicker: letters blink out on the beat
 vec2 textUV(vec2 uv, float t, vec4 a, int anim, float react){
   float sc = max(0.05, uQ.x);
+  int ad = int(uX.w + 0.5); bool vert = ad >= 2; float sg = (ad == 0 || ad == 3) ? 1.0 : -1.0;
+  uv -= uX.xy * 0.5;                                                    // move the words around the frame
   if (anim == 1) sc *= 1.0 + a.w * 0.14 * react;                       // grows on every beat
+  if (anim == 7) sc *= 1.0 + 0.10 * sin(t * 2.2) + a.x * 0.06 * react; // slow breathing zoom
+  if (anim == 5) { float k = floor(uTime * 18.0);                       // shakes, harder on the kick
+    uv += (vec2(hash(vec2(k, 1.3)), hash(vec2(2.1, k))) - 0.5) * (0.006 + a.w * 0.03 * react); }
+  if (anim == 8) { float b = abs(sin(t * 3.0)) * (0.05 + a.w * 0.04 * react);   // bounces in the chosen direction
+    uv += (vert ? vec2(0.0, b) : vec2(b, 0.0)) * -sg; }
+  if (anim == 6) gFl = step(0.35 - a.w * 0.3 * react, hash(vec2(floor(uTime * 10.0 * max(0.2, uP.z)), 7.7)));
   vec2 q = (uv - 0.5) / sc + 0.5;
-  if (anim == 2) q.y += sin(q.x * 9.0 + t * 3.0) * (0.015 + 0.03 * a.x * react);
-  if (anim == 3) q.x = fract(q.x + t * 0.12);                          // marquee
-  if (anim == 4) {                                                      // tiled wall, rows drift opposite ways
+  int dr = int(uX.z + 0.5);
+  if (dr >= 2) {                                                        // sideways: turn the words a quarter, keep them on screen
+    vec2 rs = RES(); float as = rs.x / max(1.0, rs.y);
+    vec2 c = (q - 0.5) * vec2(as, 1.0); c = dr == 2 ? vec2(c.y, -c.x) : vec2(-c.y, c.x); c *= as;
+    q = c / vec2(as, 1.0) + 0.5;
+  }
+  if (anim == 2) { if (vert) q.x += sin(q.y * 9.0 + t * 3.0 * sg) * (0.012 + 0.025 * a.x * react);
+                   else q.y += sin(q.x * 9.0 + t * 3.0 * sg) * (0.015 + 0.03 * a.x * react); }
+  if (anim == 3) { if (vert) q.y = fract(q.y + t * 0.12 * sg); else q.x = fract(q.x + t * 0.12 * sg); }   // marquee
+  if (anim == 4) {                                                      // tiled wall, rows (or columns) drift opposite ways
     vec2 g = vec2(2.0, 4.0) * max(0.5, uQ.y);
-    vec2 c = uv * g; float row = floor(c.y);
-    c.x += t * 0.15 * (mod(row, 2.0) * 2.0 - 1.0) + row * 0.5;
+    vec2 c = uv * g;
+    if (vert) { float col = floor(c.x); c.y += t * 0.15 * sg * (mod(col, 2.0) * 2.0 - 1.0) + col * 0.5; }
+    else { float row = floor(c.y); c.x += t * 0.15 * sg * (mod(row, 2.0) * 2.0 - 1.0) + row * 0.5; }
     q = fract(c);
   }
   return q;
@@ -75,12 +93,12 @@ void main(){
     front = smoothstep(0.0, 1.0, 1.0 - abs(gW * 2.0 - 1.0));
   }
   bool inside = q.x >= 0.0 && q.x <= 1.0 && q.y >= 0.0 && q.y <= 1.0;
-  float m = inside ? T(q) : 0.0;
+  float m = inside ? T(q) * gFl : 0.0;
   vec2 px = PX() / max(0.05, uQ.x);
   // soft glow around the letters
   float gl = 0.0;
   for (int i = 0; i < 8; i++) { float an = float(i) * 0.785398; gl += T(q + vec2(cos(an), sin(an)) * px * 6.0) + T(q + vec2(cos(an), sin(an)) * px * 14.0) * 0.6; }
-  gl = inside ? gl / 12.8 : 0.0;
+  gl = inside ? gl / 12.8 * gFl : 0.0;
   vec3 col = (uTA.w > 0.5 ? tTint(q) : uC.rgb) * (1.0 + a.w * 0.35 * react);
   vec3 sc = tex(uv), o = sc;
   if (mode == 0) o = mix(sc + col * gl * uC.w * 0.8, col, m);

@@ -275,6 +275,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .sheet .acts{display:grid;gap:8px}
 .sheet .acts button{padding:15px;border-radius:8px;font-weight:700;background:var(--panel2)}
 .sheet .acts .pri{background:var(--ink);color:var(--bg)}.sheet .acts .dan{color:var(--hot)}
+.tpos{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px}.tpos button{margin:0!important;font-size:15px}
+.tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
+.tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
+.tsph{margin:6px 2px 0}
 .sheet .swf{display:flex;align-items:center;gap:6px}.sheet .swf span{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#888);margin-right:4px}
 .sheet .acts .swf button{flex:1;padding:10px 0;font:700 12px var(--mono)}.sheet .acts .swf button.on{background:var(--ink);color:var(--bg)}
 .toast{position:fixed;left:50%;top:calc(12px + var(--st));transform:translate(-50%,-90px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:8px;z-index:40;transition:transform .25s}.toast.on{transform:translate(-50%,0)}
@@ -331,10 +335,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="trow"><button class="go" id="tsend">SHOW TEXT</button></div>
     <div class="recent" id="recent"></div>
     <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
-    <h2>Layout</h2><div class="opts" id="o-Textlayout"></div>
+    <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-Textlayout"></div><div class="tmv" id="g-textpos"></div></div>
+    <h2>Direction</h2><div class="opts" id="o-Textdir"></div>
     <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
+    <div class="tadir" data-tadir="Text"><span>Moves</span><div class="opts" id="o-Textadir"></div></div>
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
     <h2>Colour</h2><div id="tcolbox"></div>
+    <h2>Space</h2><div class="opts" id="o-Textspace"></div><p class="hint2 tsph" data-tsph="Text"></p>
     <h2>Adjust</h2><div id="g-text"></div>
       </div></div>
     <div class="card hide" id="cardT2"><div class="ch"><b>Text 2</b><button class="tg" id="t-T2on" data-tog="T2on">OFF</button></div>
@@ -342,10 +349,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <textarea class="tin" id="tin2" maxlength="120" placeholder="Type your text…"></textarea>
     <div class="trow"><button class="go" data-tsend="2">SHOW TEXT</button></div>
     <h2>Effect</h2><div class="opts" id="o-T2mode"></div>
-    <h2>Layout</h2><div class="opts" id="o-T2layout"></div>
+    <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-T2layout"></div><div class="tmv" id="g-text2pos"></div></div>
+    <h2>Direction</h2><div class="opts" id="o-T2dir"></div>
     <h2>Animation</h2><div class="opts" id="o-T2anim"></div>
+    <div class="tadir" data-tadir="T2"><span>Moves</span><div class="opts" id="o-T2adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T2font"></div>
     <h2>Colour</h2><div id="tcolbox2"></div>
+    <h2>Space</h2><div class="opts" id="o-T2space"></div><p class="hint2 tsph" data-tsph="T2"></p>
     <h2>Adjust</h2><div id="g-text2"></div>
       </div></div>
     <div class="card hide" id="cardT3"><div class="ch"><b>Text 3</b><button class="tg" id="t-T3on" data-tog="T3on">OFF</button></div>
@@ -353,10 +363,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <textarea class="tin" id="tin3" maxlength="120" placeholder="Type your text…"></textarea>
     <div class="trow"><button class="go" data-tsend="3">SHOW TEXT</button></div>
     <h2>Effect</h2><div class="opts" id="o-T3mode"></div>
-    <h2>Layout</h2><div class="opts" id="o-T3layout"></div>
+    <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-T3layout"></div><div class="tmv" id="g-text3pos"></div></div>
+    <h2>Direction</h2><div class="opts" id="o-T3dir"></div>
     <h2>Animation</h2><div class="opts" id="o-T3anim"></div>
+    <div class="tadir" data-tadir="T3"><span>Moves</span><div class="opts" id="o-T3adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T3font"></div>
     <h2>Colour</h2><div id="tcolbox3"></div>
+    <h2>Space</h2><div class="opts" id="o-T3space"></div><p class="hint2 tsph" data-tsph="T3"></p>
     <h2>Adjust</h2><div id="g-text3"></div>
       </div></div>
 
@@ -498,7 +511,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-09b';
+const BUILD = '2026-11-09c';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -669,7 +682,7 @@ function clipUI(p){
   renderClips();
 }
 const MS = [1,2,3,4,5,6], MLIB = {};          // MLIB[i] = file list of layer i is unfolded
-const LDEF = ['draw','m1','m2','m3','m4','m5','m6','camera','model'];
+const LDEF = ['text','text2','text3','draw','m1','m2','m3','m4','m5','m6','camera','model'];
 const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op', 'm' + i + 'play']));
 function mediaName(i){                    // "Video 2" = the 2nd video layer
   const p = S.pars, kd = j => ['image', 'draw'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
@@ -701,8 +714,7 @@ mediaCardsBuild();
 let CARDSIG = '';
 function sortCards(){
   const p = S.pars, ids = [];
-  [['Texton','cardText'],['T2on','cardT2'],['T3on','cardT3']].forEach(([o, id]) => { if (p[o]) ids.push(id); });
-  layerOrder().forEach(k => { if (k === 'model') ids.push('cardStatue'); else if (k === 'camera') ids.push('cardCam', 'cardClips'); else if (/^m\d$/.test(k)) ids.push('cardM' + k.slice(1)); });
+  layerOrder().forEach(k => { if (/^text/.test(k)) { if (layerInfo(k).on) ids.push(layerInfo(k).card); } else if (k === 'model') ids.push('cardStatue'); else if (k === 'camera') ids.push('cardCam', 'cardClips'); else if (/^m\d$/.test(k)) ids.push('cardM' + k.slice(1)); });
   const sig = ids.join(','); if (sig === CARDSIG) return; CARDSIG = sig;
   const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
 }
@@ -751,6 +763,8 @@ function layerInfo(k){
   if (/^m\d$/.test(k)) { const m = 'M' + k.slice(1), obj = p[m + 'mode'] === 'object';
     return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
   if (k === 'draw') return {on: !!p.Drawon, name: 'Drawing', sub: 'drawn on the phone', card: 'cardDraw'};
+  if (/^text\d?$/.test(k)) { const q = k === 'text' ? 'Text' : 'T' + k.slice(4), d3 = p[q + 'space'] === '3d';
+    return {on: !!p[q + 'on'], name: k === 'text' ? 'Text' : 'Text ' + k.slice(4), sub: (d3 ? '3D · ' : '') + (p[q + 'str'] || ''), card: k === 'text' ? 'cardText' : 'cardT' + k.slice(4), in3d: d3, text: true}; }
 }
 function layerMove(k, dir){                  // dir -1 = towards the front (up), +1 = towards the back
   const o = layerOrder(), vis = o.filter(x => layerInfo(x).on), i = vis.indexOf(k), j = i + dir;
@@ -770,7 +784,7 @@ function applyTarget(){
   airSig = null; applyLayers(); fxTargets();
 }
 function fxAvail(){                       // layers that can carry their own effects: ON and flat (3D objects ride with 3D models)
-  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.hid && (k === 'model' || k === 'camera' || /^m\d$/.test(k)); }).concat([['Texton', 'text'], ['T2on', 'text2'], ['T3on', 'text3']].filter(([o]) => S.pars[o]).map(([, k]) => k));
+  if (!S) return []; return layerOrder().filter(k => { const L = layerInfo(k); return L.on && !L.hid && (k === 'model' || k === 'camera' || /^m\d$/.test(k) || L.text); });
 }
 function fxTargets(){
   if (!S) return; const av = fxAvail();
@@ -783,7 +797,7 @@ function fxTargets(){
 }
 function viewTargets(){
   if (!S || !$('#vwtg')) return;
-  const flat = layerOrder().filter(k => k !== 'model' && k !== 'draw' && layerInfo(k).on && !layerInfo(k).in3d);
+  const flat = layerOrder().filter(k => k !== 'model' && k !== 'draw' && !/^text/.test(k) && layerInfo(k).on && !layerInfo(k).in3d);
   if (VW_SEL !== '3d' && !flat.includes(VW_SEL)) VW_SEL = '3d';
   $('#vwtg').innerHTML = layerRows('view');
   $('#view2d').hidden = VW_SEL === '3d'; $('#view3d').hidden = VW_SEL !== '3d';
@@ -813,15 +827,13 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const tag = k => (fx && cnt(k) ? ` · ${cnt(k)} effect${cnt(k) > 1 ? 's' : ''}` : '') + (fx && FXCLIP === k ? ' · COPIED' : '');
   const flat = k => (k === 'camera' || /^m\d$/.test(k)) && !layerInfo(k).in3d;
   const vkey = k => flat(k) ? k : '3d';                                   // VIEW: 3D models, 3D objects and the drawing card use the 3D camera
-  const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? `data-vwt="${vkey(k)}"` : `data-jump="${layerInfo(k).card}"`;
+  const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? (/^text/.test(k) && !layerInfo(k).in3d ? null : `data-vwt="${vkey(k)}"`) : `data-jump="${layerInfo(k).card}"`;
   const sel = k => ((fx && FXT_SEL === k) || (vw && vkey(k) === VW_SEL) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
   const x = k => src ? (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   const lk = k => partnerOf(k) ? ` · ⇄ ${esc(lName(partnerOf(k)).split(' · ')[0])}${visOf(k) ? '' : ' (off)'}` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
-  [['Texton', 'text', 'cardText', 'Textstr'], ['T2on', 'text2', 'cardT2', 'T2str'], ['T3on', 'text3', 'cardT3', 'T3str']].forEach(([on, k, card, str], j) => { if (p[on] || (src && partnerOf(k)))
-    h += `<div class="lrow on pin${vw || (src && !p[on]) ? ' dim' : ''}${sel(k)}"><button class="lname" ${src ? `data-jump="${card}"` : fx ? `data-fxt="${k}"` : ''} data-lay="${k}"><b>Text${j ? ' ' + (j + 1) : ''}</b><span>${esc(p[str] || '')} · always on top${tag(k)}${src ? lk(k) : ''}</span></button>${x(k)}</div>`; });
   h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
-    const sub = esc(L.sub) + (vw && !flat(k) ? ' · 3D camera' : '') + tag(k) + (src ? lk(k) : '');
+    const sub = esc(L.sub) + (vw && !flat(k) && !(L.text && !L.in3d) ? ' · 3D camera' : '') + tag(k) + (src ? lk(k) : '');
     return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}${src && !visOf(k) && partnerOf(k) ? ' dim' : ''}"><button class="lname" ${a || ''} data-lay="${k}"><b>${L.name}</b><span>${sub}</span></button>`
       + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button>${x(k)}</div>`; }).join('');
   return h || '<p class="hint2" style="margin:2px">No layers yet.</p>';
@@ -1021,8 +1033,8 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
-  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
+  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -1035,10 +1047,13 @@ const TOPTS = {
   Camfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
   Motion: [['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']],
   Textmode: [['overlay','OVERLAY'],['mask','MASK'],['cutout','CUT-OUT'],['invert','INVERT'],['outline','OUTLINE'],['glitch','GLITCH'],['refract','REFRACT']],
-  Textlayout: [['center','CENTER'],['fill','FILL'],['stack','STACK'],['lower','LOWER'],['corner','CORNER']],
-  Textanim: [['static','STATIC'],['pulse','BEAT'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['type','TYPE'],['beat','WORD/BEAT']],
+  Textlayout: [['tl','↖'],['top','↑'],['tr','↗'],['left','←'],['center','●'],['right','→'],['bl','↙'],['bottom','↓'],['br','↘'],['fill','FILL'],['stack','STACK'],['lower','LOWER ⅓']],
+  Textanim: [['static','STATIC'],['pulse','BEAT'],['breathe','BREATHE'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['bounce','BOUNCE'],['shake','SHAKE'],['flicker','FLICKER'],['type','TYPE'],['beat','WORD/BEAT']],
+  Textdir: [['h','HORIZONTAL'],['v','VERTICAL'],['up','SIDEWAYS ↑'],['down','SIDEWAYS ↓']],
+  Textadir: [['left','← LEFT'],['right','RIGHT →'],['up','↑ UP'],['down','DOWN ↓']],
+  Textspace: [['flat','FLAT'],['3d','3D']],
   Textfont: [['Bebas Neue','BEBAS'],['Impact','IMPACT'],['Bahnschrift','BAHN'],['Agency FB','AGENCY'],['Cascadia Mono','MONO'],['Georgia','SERIF'],['Algerian','DECO'],['Blackadder ITC','GOTHIC']]};
-[2,3].forEach(n => ['mode','layout','anim','font'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
+[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
@@ -1057,8 +1072,16 @@ function buildText(){
   renderRecent();
 }
 function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); }
+const TADIR_ANIMS = ['scroll', 'wave', 'tile', 'bounce'];
+function textBehind(n){ const k = n === 1 ? 'text' : 'text' + n, o = layerOrder(); for (const t of o) { if (t === k) return false; if (!/^text/.test(t) && layerInfo(t) && layerInfo(t).on && !layerInfo(t).hid) return true; } return false; }
 function syncText(p){
   $$('[data-tp]').forEach(b => b.classList.toggle('on', p[b.dataset.tp] === b.dataset.tv));
+  [['Text', 1], ['T2', 2], ['T3', 3]].forEach(([q, n]) => {
+    const ad = $(`[data-tadir="${q}"]`); if (ad) ad.hidden = !TADIR_ANIMS.includes(p[q + 'anim']);
+    const d = $('#s-' + q + 'depth'); if (d) d.closest('.ctl').hidden = p[q + 'space'] !== '3d';
+    const h = $(`[data-tsph="${q}"]`), b3 = p[q + 'space'] === '3d', bh = textBehind(n);
+    if (h) { h.textContent = b3 ? 'In the 3D scene: moves with the 3D camera and Object motion. ' + (['mask','cutout','invert','refract'].includes(p[q + 'mode']) ? 'Mask, Cut-out, Invert and Refract show as plain letters here.' : '')
+                       : bh ? 'Behind another layer (see Layers). ' + (['mask','cutout','invert','refract'].includes(p[q + 'mode']) ? 'Mask, Cut-out, Invert and Refract show as plain letters there.' : '') : ''; h.hidden = !h.textContent; } });
   const t = $('#t-Texton'); t.textContent = p.Texton ? 'ON' : 'OFF';
   if (document.activeElement !== $('#tin') && !$('#tin')._dirty) $('#tin').value = p.Textstr || '';
   [2,3].forEach(n => { const b = $('#t-T' + n + 'on'), ti = $('#tin' + n); if (b) { b.textContent = p['T' + n + 'on'] ? 'ON' : 'OFF'; b.classList.toggle('on', !!p['T' + n + 'on']); }

@@ -47,6 +47,9 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Textspeed', 'Speed', 0, 3, 0.01, 'text'),
     ('Textreact', 'Beat reaction', 0, 2, 0.01, 'text'),
     ('T2amount', 'Amount', 0, 1, 0.01, 'text2'), ('T2size', 'Size', 0.3, 2.5, 0.01, 'text2'), ('T2glow', 'Glow', 0, 1.5, 0.01, 'text2'), ('T2speed', 'Speed', 0, 3, 0.01, 'text2'), ('T2react', 'Beat reaction', 0, 2, 0.01, 'text2'),
+    ('Textx', 'Left / right', -1, 1, 0.01, 'textpos'), ('Texty', 'Down / up', -1, 1, 0.01, 'textpos'), ('Textdepth', '3D depth (back / front)', -4, 4, 0.05, 'textpos'),
+    ('T2x', 'Left / right', -1, 1, 0.01, 'text2pos'), ('T2y', 'Down / up', -1, 1, 0.01, 'text2pos'), ('T2depth', '3D depth (back / front)', -4, 4, 0.05, 'text2pos'),
+    ('T3x', 'Left / right', -1, 1, 0.01, 'text3pos'), ('T3y', 'Down / up', -1, 1, 0.01, 'text3pos'), ('T3depth', '3D depth (back / front)', -4, 4, 0.05, 'text3pos'),
     ('T3amount', 'Amount', 0, 1, 0.01, 'text3'), ('T3size', 'Size', 0.3, 2.5, 0.01, 'text3'), ('T3glow', 'Glow', 0, 1.5, 0.01, 'text3'), ('T3speed', 'Speed', 0, 3, 0.01, 'text3'), ('T3react', 'Beat reaction', 0, 2, 0.01, 'text3'),
     ('Speed', 'Spin speed', -180, 180, 1, 'motion'),
     ('Spinboost', 'Bass spin boost', 0, 300, 1, 'motion'),
@@ -88,7 +91,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')

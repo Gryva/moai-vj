@@ -13,6 +13,7 @@ uniform vec4 uMS1; uniform vec4 uMS2;                   // media layers 1-6: eff
 uniform vec4 uMO1; uniform vec4 uMO2;                   // media layers 1-6: brightness
 uniform vec4 uMM1; uniform vec4 uMM2;                   // media layers 1-6: 1 = 3D object (input is its own render, premultiplied)
 uniform vec4 uMF1; uniform vec4 uMF2; uniform vec4 uMF3; uniform vec4 uMF4; uniform vec4 uMF5; uniform vec4 uMF6;   // media framing
+uniform vec4 uTX; uniform vec4 uTS;                     // text layers 1-3 drawn inside the stack (behind something, or in 3D): on, effect chain
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -26,7 +27,7 @@ vec2 RES(){ return uTD2DInfos[0].res.zw; }
 
 
 // LAYERED SOURCE  inputs: 0 3D render (premultiplied), 1 phone camera / clip, 2 drawing, 3-8 media layers 1-6 (keyed, straight alpha),
-// 9-12 the four per-layer effect chains (premultiplied RGBA)
+// 9-12 the four per-layer effect chains (premultiplied RGBA), 13-15 text layers 1-3 (premultiplied; ids 21-23)
 // uP.x camera blend: 1/2 normal, 3 blend (screen), 4 mask   uP.y mirror (+1, camera only) + whole image (+2)
 vec2 frame(vec2 uv, vec4 f){
   vec2 res = uTD2DInfos[0].res.zw; float asp = res.x / res.y;
@@ -65,9 +66,11 @@ vec4 layerPM(int id, vec2 uv){                 // one layer on its own, premulti
   if (id >= 11 && id <= 16) { int j = id - 11; float k = clamp(pick4(uMA1, uMA2, j), 0.0, 1.0); if (k < 0.002) return vec4(0.0);
                  if (pick4(uMM1, uMM2, j) > 0.5) return tin(3 + j, uv) * k;
                  vec4 c = fitTex(3 + j, frame(uv, mframe(j)), false); float a = c.a * k; return vec4(c.rgb * a, a); }
+  if (id >= 21 && id <= 23) { int j = id - 21; float k = j == 0 ? uTX.x : j == 1 ? uTX.y : uTX.z; if (k < 0.5) return vec4(0.0);
+                 return j == 0 ? texture(sTD2DInputs[13], uv) : j == 1 ? texture(sTD2DInputs[14], uv) : texture(sTD2DInputs[15], uv); }
   return vec4(0.0);
 }
-int slotOf(int id){ return int(floor((id == 1 ? uS.x : id == 2 ? uS.y : id == 5 ? uS.z : (id >= 11 && id <= 16) ? pick4(uMS1, uMS2, id - 11) : 0.0) + 0.5)); }
+int slotOf(int id){ return int(floor((id == 1 ? uS.x : id == 2 ? uS.y : id == 5 ? uS.z : (id >= 11 && id <= 16) ? pick4(uMS1, uMS2, id - 11) : id == 21 ? uTS.x : id == 22 ? uTS.y : id == 23 ? uTS.z : 0.0) + 0.5)); }
 float opOf(int id){ return id == 1 ? uOp.x : id == 2 ? uOp.y : id == 5 ? uOp.z : (id >= 11 && id <= 16) ? pick4(uMO1, uMO2, id - 11) : 1.0; }
 vec4 slotTex(int s, vec2 uv){
   return s == 1 ? texture(sTD2DInputs[9], uv) : s == 2 ? texture(sTD2DInputs[10], uv) : s == 3 ? texture(sTD2DInputs[11], uv) : texture(sTD2DInputs[12], uv);
