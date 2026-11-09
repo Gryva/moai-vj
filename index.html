@@ -517,7 +517,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-09d';
+const BUILD = '2026-11-09e';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1101,13 +1101,13 @@ function syncText(p){
     if (ti && document.activeElement !== ti && !ti._dirty) ti.value = p['T' + n + 'str'] || ''; });
 }
 function showTextN(n){
-  const ti = $('#tin' + n), v = ti.value.trim(); if (!v) return;
+  const ti = $('#tin' + n), v = ti.value.replace(/\n+$/, ''); if (!v.length) return;          // spaces count: '   ' blanks the words, keeps the layer
   send({t:'set', p:'T' + n + 'str', v}); send({t:'set', p:'T' + n + 'on', v:true}); ti._dirty = false; toast('Text ' + n + ' on screen'); buzz(12);
 }
 function showText(){
-  const v = $('#tin').value.trim(); if (!v) return;
+  const v = $('#tin').value.replace(/\n+$/, ''); if (!v.length) return;                            // spaces are allowed (leading, trailing, or only spaces)
   send({t:'set', p:'Textstr', v}); send({t:'set', p:'Texton', v:true}); $('#tin')._dirty = false;
-  const r = [v].concat(store.get('recent', []).filter(x => x !== v)).slice(0, 8); store.set('recent', r); renderRecent(); toast('Text on screen'); buzz(12);
+  if (v.trim()) { const r = [v].concat(store.get('recent', []).filter(x => x !== v)).slice(0, 8); store.set('recent', r); renderRecent(); } toast('Text on screen'); buzz(12);
 }
 function buildCam(){ $('#presets').innerHTML = S.presets.slice(0, 8).map((n, i) => `<button class="chip" data-preset="${i+1}"><div class="n">F${i+1}${(S.presetmov || [])[i] ? ' <span class="mv">↻ camera moves</span>' : ''}</div><div class="t">${n}</div></button>`).join(''); }
 const paint = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
