@@ -1382,6 +1382,19 @@ def bankSetGroup(slot, group):
     d['_meta'] = m; t[slot, 1] = json.dumps(d)
     return storeSave('group %d' % slot)
 
+def bankSetText(slot, n, v):
+    """Quick-control text: the new words also go into the preset on air, so coming back to it keeps them."""
+    t = _bankTable(); slot = int(slot or 0)
+    if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+    d = json.loads(t[slot, 1].val)
+    if n == 1: d.setdefault('text', {})['Textstr'] = v
+    else:
+        tx = d.setdefault('texts', {})
+        if str(n) not in tx: return False
+        tx[str(n)]['Textstr'] = v
+    t[slot, 1] = json.dumps(d)
+    return storeSave('text %d' % slot)
+
 def bankRenameGroup(old, new):
     """Rename a group (new = '' takes every preset out of it)."""
     t = _bankTable(); old = _groupName(old); new = _groupName(new); n = 0

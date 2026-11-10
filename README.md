@@ -185,6 +185,12 @@ columns to resize them (double-tap it to reset; remembered on that device). Phon
 show circling, swinging, rising / falling, pushing in / out, tilting or shaking. New: Dolly Zoom, Pendulum, Crane,
 Bird's Eye, Worm's Eye, Fast Orbit, Close-up, Dutch Tilt. F1–F8 on the keyboard still load the first eight.
 
+### Quick text
+
+Every preset with text gets a **Words** box per text layer at the top of Quick controls (automatic, nothing to pin).
+Type, then **SHOW** (or Enter): the words go on screen and are saved into the preset on air, so coming back to it keeps
+the new words. CAPS applies here too.
+
 ### Text fonts and caps
 
 Fonts: Bebas, Impact, Bahn, Deco, plus shipped ones that need no install: Bangers, Marker, Brush, Scrawl, Pacifico,
@@ -207,7 +213,7 @@ preset on air doesn't have are hidden.
 ### Tablets and wide screens
 
 From 900 px wide (a tablet held sideways, a laptop) SOURCE, FX, VIEW and OUTPUT use two columns: the Layers list stays
-on the left while the settings scroll on the right (in FX the effect library stays visible on the right). A **scroll
+on the left while the settings scroll on the right (in FX the effect library stays visible on the right). A divider between the columns can be dragged to resize them (double-tap resets, remembered per tab). A **scroll
 rail** runs down the screen edge: drag it to scroll without touching any slider. TUNE → **Scroll rail**: left, right
 or off (remembered on that device).
 

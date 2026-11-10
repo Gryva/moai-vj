@@ -914,6 +914,11 @@ def handle(msg, reply):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
         elif t == 'ping':
             pass
+        elif t == 'qtext':                                # quick-control text: show it, and keep it in the preset on air
+            n = int(msg.get('n', 1)); v = str(msg.get('v', ''))[:120]
+            if n in (1, 2, 3):
+                C.par[E.tpn(n, 'Textstr')] = v; C.par[E.tpn(n, 'Texton')] = True
+                if E.S.get('bank'): E.bankSetText(E.S['bank'], n, v)
         elif t == 'hello':
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())
