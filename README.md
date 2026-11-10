@@ -184,6 +184,12 @@ columns to resize them (double-tap it to reset; remembered on that device). Phon
 show circling, swinging, rising / falling, pushing in / out, tilting or shaking. New: Dolly Zoom, Pendulum, Crane,
 Bird's Eye, Worm's Eye, Fast Orbit, Close-up, Dutch Tilt. F1–F8 on the keyboard still load the first eight.
 
+### Layer names
+
+Hold a layer in SOURCE → type a name → **✎ Save name** (or **Default name** to go back to "Video 2" etc.). The name is
+used everywhere: Layers lists, FX, VIEW, quick controls, link menus. Saved in presets. Quick controls of a layer the
+preset on air doesn't have are hidden.
+
 ### Saving
 
 - In edit mode the header has **SAVE**: what is on screen goes into the preset that is on air (same name). With no preset

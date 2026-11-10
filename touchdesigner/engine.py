@@ -417,10 +417,10 @@ def safetyUpdate(C):
 TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor',
             'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
             'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt',
-            'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev']
+            'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev', 'Textname']
 TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
            'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
-           'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False}   # older presets: these
+           'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': ''}   # older presets: these
 TDIRS = {'h': 0, 'v': 1, 'up': 2, 'down': 3}
 TADIRS = {'left': 0, 'right': 1, 'up': 2, 'down': 3}
 TCOLORS = {'white': (1, 1, 1), 'hot': (1, .3, .18), 'cyan': (.24, .94, 1), 'violet': (.69, .42, 1),
@@ -1140,7 +1140,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keytol', 'keysoft', 'keyspill',
-         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
+         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
 
 def _mval(par):
     v = par.eval()
@@ -1161,7 +1161,7 @@ def srcData():
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
     return {'camsrc': C.par.Camsrc.eval(), 'cammix': round(float(C.par.Cammix.eval()), 3), 'camfit': C.par.Camfit.eval(),
             'mslots': {str(i): mediaSlotData(C, i) for i in MSLOTS if mp(C, i, 'on').eval()},
-            'layers': layerOrder(C), 'links': C.par.Links.eval(),
+            'layers': layerOrder(C), 'links': C.par.Links.eval(), 'modelname': C.par.Modelname.eval() if hasattr(C.par, 'Modelname') else '',
             'frame': {n: round(float(C.par[n].eval()), 4) for n in FRAMEPARS},
             'opacity': {n: round(float(C.par[n].eval()), 4) for n in OPPARS},
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
@@ -1222,6 +1222,7 @@ def applySrc(d, slot=None):
         if s.get('camsrc') == 'behind': order.remove('camera'); order.append('camera')
     C.par.Layerorder = ','.join(_LEGACY.get(k, k) for k in order)
     C.par.Links = s.get('links', '')
+    if hasattr(C.par, 'Modelname'): C.par.Modelname = s.get('modelname', '')
     fr = s.get('frame') or {}
     for n in FRAMEPARS: C.par[n] = fr.get(n, C.par[n].default)
     opd = s.get('opacity') or {}
@@ -1675,6 +1676,8 @@ def cleanSlate():
     C.par.Spinaxis = 'y'; C.par.Spinrev = False
     if C.par.Clipstate.eval() == 'loop': C.par.Clipstate = 'off'
     C.par.Layerorder = ','.join(LAYER_DEFAULT); C.par.Links = ''
+    for n_ in ('Textname', 'T2name', 'T3name', 'Modelname'):
+        if hasattr(C.par, n_): C.par[n_] = ''
     for n in FRAMEPARS + OPPARS: C.par[n] = C.par[n].default
     for k in CAMKEYS + ['Pan']:
         try: C.par[k] = C.par[k].default

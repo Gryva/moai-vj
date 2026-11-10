@@ -361,6 +361,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .mmot{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#ffffff05}.mmot h4{margin:0 0 4px;font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--cyan)}
 .mmot .ksrow .opts{display:flex;flex-wrap:wrap;gap:5px}.mmot .ksrow .opts button{flex:1 1 auto;margin:0}
 .mrev{flex:none;padding:9px 10px;font-size:11px;margin:0}.mrev.on{background:var(--ink);color:var(--bg)}
+.sheet .lren{display:flex;gap:6px;margin-bottom:6px}.sheet .lren button{flex:1}
 .sheet .swf{display:flex;align-items:center;gap:6px}.sheet .swf span{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#888);margin-right:4px}
 .sheet .acts .swf button{flex:1;padding:10px 0;font:700 12px var(--mono)}.sheet .acts .swf button.on{background:var(--ink);color:var(--bg)}
 .toast{position:fixed;left:50%;top:calc(12px + var(--st));transform:translate(-50%,-90px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:8px;z-index:40;transition:transform .25s}.toast.on{transform:translate(-50%,0)}
@@ -651,7 +652,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10j';
+const BUILD = '2026-11-10k';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -824,9 +825,12 @@ function clipUI(p){
 const MS = [1,2,3,4,5,6], MLIB = {};          // MLIB[i] = file list of layer i is unfolded
 const LDEF = ['text','text2','text3','draw','m1','m2','m3','m4','m5','m6','camera','model'];
 const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op', 'm' + i + 'play', 'm' + i + 'mot']));
-function mediaName(i){                    // "Video 2" = the 2nd video layer
+const NAMEPAR = k => /^m\d$/.test(k) ? 'M' + k.slice(1) + 'name' : ({text:'Textname', text2:'T2name', text3:'T3name', model:'Modelname'}[k]);
+const custName = k => { const n = NAMEPAR(k); return n && S && S.pars[n] ? String(S.pars[n]) : ''; };
+function mediaName(i){                    // "Video 2" = the 2nd video layer (or the name the user gave it)
+  const c = custName('m' + i); if (c) return c;
   const p = S.pars, kd = j => ['image', 'draw'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
-  const n = MS.filter(j => j <= i && p['M' + j + 'on'] && kd(j) === kind).length;
+  const n = Math.max(1, MS.filter(j => j <= i && (p['M' + j + 'on'] || j === i) && kd(j) === kind).length);
   return ({image:'Image', video:'Video', draw:'Drawing'}[kind]) + ' ' + n;
 }
 function mediaCardsBuild(){               // 6 cards exist once; only added layers show
@@ -902,13 +906,13 @@ function layerOrder(){
 }
 function layerInfo(k){
   const p = S.pars, file = f => f ? f.split('/').pop() : 'no file picked';
-  if (k === 'model') return {on: p.Statue !== false, name: '3D models', sub: (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', card: 'cardStatue'};
+  if (k === 'model') return {on: p.Statue !== false, name: custName('model') || '3D models', sub: (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', card: 'cardStatue'};
   if (k === 'camera') return {on: !!p.Camsrc && p.Camsrc !== 'off', name: 'Phone camera', sub: (p.Clipstate === 'loop' ? 'clip · ' : '') + ({cam:'normal', behind:'normal', screen:'blend', mask:'mask'}[p.Camsrc] || ''), card: 'cardCam'};
   if (/^m\d$/.test(k)) { const m = 'M' + k.slice(1), obj = p[m + 'mode'] === 'object';
     return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
   if (k === 'draw') return {on: !!p.Drawon, name: 'Drawing', sub: 'drawn on the phone', card: 'cardDraw'};
   if (/^text\d?$/.test(k)) { const q = k === 'text' ? 'Text' : 'T' + k.slice(4), d3 = p[q + 'space'] === '3d';
-    return {on: !!p[q + 'on'], name: k === 'text' ? 'Text' : 'Text ' + k.slice(4), sub: (d3 ? '3D · ' : '') + (p[q + 'str'] || ''), card: k === 'text' ? 'cardText' : 'cardT' + k.slice(4), in3d: d3, text: true}; }
+    return {on: !!p[q + 'on'], name: custName(k) || (k === 'text' ? 'Text' : 'Text ' + k.slice(4)), sub: (d3 ? '3D · ' : '') + (p[q + 'str'] || ''), card: k === 'text' ? 'cardText' : 'cardT' + k.slice(4), in3d: d3, text: true}; }
 }
 function layerMove(k, dir){                  // dir -1 = towards the front (up), +1 = towards the back
   const o = layerOrder(), vis = o.filter(x => layerInfo(x).on), i = vis.indexOf(k), j = i + dir;
@@ -918,7 +922,7 @@ function layerMove(k, dir){                  // dir -1 = towards the front (up),
 }
 /* which layer FX and VIEW edit */
 const TGTNAME = {all:'All layers', model:'3D models', camera:'Phone camera', draw:'Drawing'};
-const tgtName = k => /^m\d$/.test(k) ? mediaName(+k.slice(1)) : ({text:'Text', text2:'Text 2', text3:'Text 3'}[k] || TGTNAME[k]);
+const tgtName = k => /^m\d$/.test(k) ? mediaName(+k.slice(1)) : (custName(k) || {text:'Text', text2:'Text 2', text3:'Text 3'}[k] || TGTNAME[k]);
 function applyTarget(){
   const cur = {}; (FXT_SEL === 'all' ? (S.allL || []) : ((S.tfx || {})[FXT_SEL] || [])).forEach(([k, on, amt, p1]) => cur[k] = [on, amt, p1]);
   const base = {}; (S.allL || []).forEach(([k, on, amt, p1]) => base[k] = [on, amt, p1]);
@@ -956,16 +960,18 @@ const SWAPPABLE = k => /^m\d$/.test(k) || ['model', 'text', 'text2', 'text3'].in
 function linkPairs(){ return String(S.pars.Links || '').split(',').map(x => x.split('-')).filter(x => x.length === 2 && SWAPPABLE(x[0]) && SWAPPABLE(x[1])); }
 function partnerOf(k){ const pr = linkPairs().find(x => x.includes(k)); return pr ? (pr[0] === k ? pr[1] : pr[0]) : null; }
 function visOf(k){ const p = S.pars; return /^m\d$/.test(k) ? !!(p['M' + k.slice(1) + 'on'] && p['M' + k.slice(1) + 'vis']) : !!p[{model:'Statue', text:'Texton', text2:'T2on', text3:'T3on'}[k]] && (k !== 'model' || p.Statue !== false); }
-function lName(k){ return /^m\d$/.test(k) ? mediaName(+k.slice(1)) + mediaFile(+k.slice(1)) : ({model:'3D models', text:'Text', text2:'Text 2', text3:'Text 3'}[k] || k); }
+function lName(k){ return /^m\d$/.test(k) ? mediaName(+k.slice(1)) + mediaFile(+k.slice(1)) : (custName(k) || {model:'3D models', text:'Text', text2:'Text 2', text3:'Text 3'}[k] || k); }
 function setLinks(pairs){ const v = pairs.map(x => x.join('-')).join(','); S.pars.Links = v; send({t:'set', p:'Links', v}); applyPars({}); }
 function doSwap(a, b){ send({t:'swap', a, b}); const va = visOf(a), set = (k, v) => { if (/^m\d$/.test(k)) S.pars['M' + k.slice(1) + 'vis'] = v; else S.pars[{model:'Statue', text:'Texton', text2:'T2on', text3:'T3on'}[k]] = v; };
   set(a, !va); set(b, va); applyPars({}); buzz(14); }
 function sheetLayer(k){                   // hold a layer in SOURCE -> link it for swapping
   const pt = partnerOf(k), others = ['model', 'text', 'text2', 'text3'].concat(MS.map(i => 'm' + i)).filter(x => x !== k && (x === 'model' ? S.pars.Statue !== false || partnerOf(x) : /^m\d$/.test(x) ? !!S.pars['M' + x.slice(1) + 'on'] : !!S.pars[{text:'Texton', text2:'T2on', text3:'T3on'}[x]]));
-  $('#shI').style.display = 'none'; $('#shT').textContent = lName(k);
+  const nmIn = $('#shI'); nmIn.style.display = ''; nmIn.value = custName(k); nmIn.placeholder = 'Layer name (' + layerInfo(k).name + ')';
+  $('#shT').textContent = lName(k);
   $('#shP').textContent = pt ? 'Linked with ' + lName(pt) + ': swapping turns one off and the other on.' : 'Link it with another layer: one swap turns this one off and that one on, and back.';
   const sf = +(S.pars.Swapfade || 0), fch = pt ? `<div class="swf"><span>Switch</span>` + [[0, 'Cut'], [0.3, '0.3s'], [0.6, '0.6s'], [1, '1s'], [2, '2s']].map(([v, l]) => `<button data-sh="lfade" data-v="${v}" class="${Math.abs(sf - v) < 0.01 ? 'on' : ''}">${l}</button>`).join('') + `</div>` : '';
-  $('#shA').innerHTML = fch + (pt ? `<button class="pri" data-sh="lswapnow">⇄ Swap now</button>` + (S.b ? `<button data-sh="lswappin" data-sc="p">Pin the swap to this preset's quick controls</button>` : '') + `<button data-sh="lswappin" data-sc="a">Pin the swap to every preset</button><button class="dan" data-sh="lunlink">Unlink from ${esc(lName(pt))}</button>`
+  const ren = `<div class="lren"><button class="pri" data-sh="lrename">✎ Save name</button>${custName(k) ? '<button data-sh="lrenreset">Default name</button>' : ''}</div>`;
+  $('#shA').innerHTML = ren + fch + (pt ? `<button class="pri" data-sh="lswapnow">⇄ Swap now</button>` + (S.b ? `<button data-sh="lswappin" data-sc="p">Pin the swap to this preset's quick controls</button>` : '') + `<button data-sh="lswappin" data-sc="a">Pin the swap to every preset</button><button class="dan" data-sh="lunlink">Unlink from ${esc(lName(pt))}</button>`
     : (others.length ? others.map(o => `<button data-sh="llink" data-o="${o}">⇄ Link with ${esc(lName(o))}</button>`).join('') : '<p class="hint2">Add another picture, video, text or 3D layer first.</p>')) + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.lk = k; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
@@ -1510,12 +1516,12 @@ function mediaFile(i){                   // " · clip-name" so Video 1 and Video
 function qLayer(p){                       // which layer a control belongs to (shown in its label)
   let m;
   if ((m = /^M(\d)/.exec(p))) return mediaName(+m[1]) + mediaFile(+m[1]);
-  if ((m = /^T([23])/.exec(p))) return 'Text ' + m[1];
-  if (/^Text/.test(p)) return 'Text';
+  if ((m = /^T([23])/.exec(p))) return custName('text' + m[1]) || 'Text ' + m[1];
+  if (/^Text/.test(p)) return custName('text') || 'Text';
   if (/^(Fcam|Opcamera|Cam)/.test(p)) return 'Phone camera';
   if (/^(Fdraw|Opdraw|Draw)/.test(p)) return 'Drawing';
   const sd = (S.sliders || []).find(x => x.p === p), g = sd && sd.group;
-  if (/^Opmodel$/.test(p) || ['motion','model','anim','grid','motion2'].includes(g) || ['Statue','Autospin','Spinrev'].includes(p)) return '3D models';
+  if (/^Opmodel$/.test(p) || ['motion','model','anim','grid','motion2'].includes(g) || ['Statue','Autospin','Spinrev'].includes(p)) return custName('model') || '3D models';
   if (['camera','move'].includes(g)) return '3D camera';
   return 'Whole picture';
 }
@@ -1528,7 +1534,13 @@ function qLabel(it){
   const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor'};
   return [qLayer(it.p), sd ? sd.label : (TL[raw] || TL[it.p] || raw || it.p)];
 }
-function qList(){ const Q = S.quick || {all:[], p:{}}; return [].concat((Q.p || {})[S.b] || [], Q.all || []); }
+function qAlive(it){                     // a control for a layer this preset doesn't have is left out
+  const slotOn = i => !!S.pars['M' + i + 'on'];
+  if (it.k === 'swap') return [it.a, it.b].every(k => !/^m\d$/.test(k) || slotOn(+k.slice(1)));
+  if (it.k === 'fx') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
+  const m = /^M(\d)/.exec(it.p || ''); return !m || slotOn(+m[1]);
+}
+function qList(){ const Q = S.quick || {all:[], p:{}}; return [].concat((Q.p || {})[S.b] || [], Q.all || []).filter(qAlive); }
 function sheetPin(it){
   const pre = S.b && S.bank[S.b - 1], Q = S.quick || {all:[], p:{}};
   const inP = pre && ((Q.p || {})[S.b] || []).some(x => qid(x) === qid(it)), inA = (Q.all || []).some(x => qid(x) === qid(it));
@@ -1559,7 +1571,7 @@ function renderQuick(){
   card.classList.toggle('hide', !L.length); $('#qkn').textContent = L.length ? L.length + '' : '';
   cardOpen('cardQuick', !!L.length);
   if (QB !== S.b) { QB = S.b; SHUT.cardQuick = 1; cardOpen('cardQuick', !!L.length); }      // a new preset starts with them folded
-  const sig = S.b + '|' + L.map(qid).join(',') + '|' + (S.bank || []).map(p => p ? p.name : '').join('/');
+  const sig = S.b + '|' + L.map(qid).join(',') + '|' + (S.bank || []).map(p => p ? p.name : '').join('/') + '|' + ['Textname','T2name','T3name','Modelname'].concat(MS.map(i => 'M' + i + 'name'), MS.map(i => 'M' + i + 'file'), MS.map(i => 'M' + i + 'kind')).map(n => S.pars[n] || '').join('/');
   if (sig === QSIG) return quickSync(); QSIG = sig;
   $('#qk').innerHTML = L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output></div>`;
     if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button></div></div>`;
@@ -1776,6 +1788,10 @@ const closeSheet = () => { delete $('#sheet').dataset.lk; delete $('#sheet').dat
 $('#scrim').addEventListener('click', closeSheet);
 $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   const qi = +$('#sheet').dataset.qi, fk = $('#sheet').dataset.fxk;
+  if (b.dataset.sh === 'lrename' || b.dataset.sh === 'lrenreset') { const k = $('#sheet').dataset.lk, n = NAMEPAR(k);
+    const v = b.dataset.sh === 'lrenreset' ? '' : $('#shI').value.trim().slice(0, 24);
+    if (n) { S.pars[n] = v; send({t:'set', p:n, v}); applyPars({}); renderQuick(); toast(v ? 'Renamed: ' + v : 'Default name'); }
+    $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); buzz(10); return; }
   if (b.dataset.sh === 'llink') { const k = $('#sheet').dataset.lk, o = b.dataset.o; setLinks(linkPairs().filter(x => !x.includes(k) && !x.includes(o)).concat([[k, o]]));
     if (visOf(k) && visOf(o)) doSwap(o, k);                       // linked pair: only one of them on
     toast('Linked · ⇄ swaps them'); }
