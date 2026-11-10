@@ -156,6 +156,15 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
 
 ---
 
+### SOURCE tidy-ups
+
+- Tap a layer in the Layers list: it lights up green, its card opens and every other card folds, so there is no scrolling
+  past settings you don't need. Cards can still be opened by tapping their header.
+- In the 3D models card, Static models and 3D animations start folded.
+- **Drawing:** tools Pen, Line, Circle, Box, Triangle, Star, Heart, Arrow; sizes S / M / L / XL; shapes Outline or Filled;
+  pen colour; Undo / Clear all. **⛶ FULL SCREEN** on the pad gives the whole screen to the drawing (tools beside it on
+  a tablet held sideways, under it when upright); **✓ DONE** goes back to the card.
+
 ### Saving
 
 - In edit mode the header has **SAVE**: what is on screen goes into the preset that is on air (same name). With no preset

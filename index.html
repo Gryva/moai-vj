@@ -89,7 +89,20 @@ h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
 .swr{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin:6px 0}.swr button{aspect-ratio:1;border-radius:50%;border:2px solid transparent}.swr button.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg) inset}
 .drawpad{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;touch-action:none}
 .tools{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;margin-top:7px}.tools button{padding:10px 0;border-radius:4px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:14px;color:var(--mute)}.tools button.on{background:var(--ink);color:var(--bg)}
-.tools button[data-du],.tools button[data-dc]{font-size:11px;letter-spacing:.06em}
+.tools button[data-du],.tools button[data-dc],.tools button[data-df],.tools .dfsx{font-size:11px;letter-spacing:.06em}
+.tools button small{display:block;font-size:8px;letter-spacing:.06em;margin-top:2px;opacity:.75}
+.dpadbox{position:relative}.dfsbtn{position:absolute;right:8px;top:8px;padding:7px 10px;border-radius:6px;background:#000a;border:1px solid #ffffff33;color:var(--ink);font:700 10px var(--mono);letter-spacing:.06em}
+.drow{display:flex;align-items:center;gap:8px;margin-top:8px}.drow>span{flex:none;width:52px;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}.drow .tools{flex:1;margin:0}
+#dtools{grid-auto-flow:row;grid-template-columns:repeat(4,1fr)}
+.dacts{margin-top:10px}.dfsx{display:none}
+#dpadwrap.dfs{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;gap:14px;padding:calc(10px + var(--st)) 12px calc(10px + var(--sb));overflow:hidden}
+#dpadwrap.dfs .dpadbox{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center}
+#dpadwrap.dfs .drawpad{flex:none}
+#dpadwrap.dfs .dfsbtn{display:none}#dpadwrap.dfs .dfsx{display:block;background:var(--lime);color:#0b0a0f;border-color:transparent}
+#dpadwrap.dfs .dpanel{flex:none;overflow-y:auto}
+@media (orientation:landscape){#dpadwrap.dfs .dpanel{width:300px}#dpadwrap.dfs #dtools{grid-template-columns:repeat(4,1fr)}}
+@media (orientation:portrait){#dpadwrap.dfs{flex-direction:column}#dpadwrap.dfs .dpanel{max-height:46vh}}
+body.dfsopen{overflow:hidden}
 .camv.mir{transform:scaleX(-1)}
 .camb{display:grid;gap:6px;align-content:stretch}.camb .big{padding:10px;font-size:12px}.camb .big.on{background:var(--hot);color:#000;border-color:var(--hot)}
 .camst{font:500 11px var(--mono);letter-spacing:0;text-transform:none;color:var(--lime)}
@@ -431,10 +444,14 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
     <div class="card hide" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
       <div class="cb" id="dpadwrap">
-        <canvas class="drawpad" id="drawpad" width="640" height="360"></canvas>
-        <div class="tools" id="dtools"><button data-dt="pen" class="on">✎</button><button data-dt="line">／</button><button data-dt="circle">○</button><button data-dt="square">□</button><button data-dt="triangle">△</button><button data-dt="star">☆</button></div>
+        <div class="dpadbox"><canvas class="drawpad" id="drawpad" width="640" height="360"></canvas><button class="dfsbtn" data-dfs="1" aria-label="Draw full screen">⛶ FULL SCREEN</button></div>
+        <div class="dpanel">
+        <div class="drow"><span>Tool</span><div class="tools" id="dtools"><button data-dt="pen" class="on">✎<small>PEN</small></button><button data-dt="line">／<small>LINE</small></button><button data-dt="circle">○<small>CIRCLE</small></button><button data-dt="square">□<small>BOX</small></button><button data-dt="triangle">△<small>TRIANGLE</small></button><button data-dt="star">☆<small>STAR</small></button><button data-dt="heart">♡<small>HEART</small></button><button data-dt="arrow">➜<small>ARROW</small></button></div></div>
+        <div class="drow"><span>Size</span><div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-ds="32">XL</button></div></div>
+        <div class="drow"><span>Shapes</span><div class="tools" id="dfill"><button data-df="0" class="on">OUTLINE</button><button data-df="1">FILLED</button></div></div>
         <div id="dcolbox"></div>
-        <div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR</button></div>
+        <div class="tools dacts"><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR ALL</button><button class="dfsx" data-dfs="0">✓ DONE</button></div>
+        </div>
         <div id="g-draw" style="margin-top:7px" hidden></div>
       </div></div>
 
@@ -579,7 +596,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10e';
+const BUILD = '2026-11-10f';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -902,7 +919,7 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const vkey = k => flat(k) ? k : '3d';                                   // VIEW: 3D models, 3D objects and the drawing card use the 3D camera
   const vsel = k => flat(k) || is3dLayer(k) ? k : null;                  // VIEW: flat layers get 2D framing, 3D layers their own placement
   const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? (vsel(k) ? `data-vwt="${vsel(k)}"` : null) : `data-jump="${layerInfo(k).card}"`;
-  const sel = k => ((fx && FXT_SEL === k) || (vw && vsel(k) === VW_SEL) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
+  const sel = k => ((fx && FXT_SEL === k) || (vw && vsel(k) === VW_SEL) || (src && SRC_SEL === k) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
   const x = k => src ? (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   const lk = k => partnerOf(k) ? ` · ⇄ ${esc(lName(partnerOf(k)).split(' · ')[0])}${visOf(k) ? '' : ' (off)'}` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
@@ -914,6 +931,7 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   return h || '<p class="hint2" style="margin:2px">No layers yet.</p>';
 }
 function layerStack(){ $('#lstack').innerHTML = layerRows('src'); }
+let SRC_SEL = null;
 const SHUT = (() => { try { return JSON.parse(localStorage.getItem('shut') || '{}'); } catch (e) { return {}; } })();
 function shutSave(){ try { localStorage.setItem('shut', JSON.stringify(SHUT)); } catch (e) {} }
 function cardOpen(id, on){                // ON opens the card; tapping its header can fold it away again
@@ -1058,8 +1076,13 @@ function drawShape(o){
     else if (o.t === 'circle') dcx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
     else if (o.t === 'square') dcx.rect(x0, y0, w, h);
     else if (o.t === 'triangle') { dcx.moveTo(cx, y0); dcx.lineTo(x0 + w, y0 + h); dcx.lineTo(x0, y0 + h); dcx.closePath(); }
+    else if (o.t === 'heart') { const tx = t => cx + 16 * Math.pow(Math.sin(t), 3) / 17 * w / 2, ty = t => cy - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 17 * h / 2 - h * 0.05;
+      for (let i = 0; i <= 48; i++) { const t = i / 48 * Math.PI * 2; i ? dcx.lineTo(tx(t), ty(t)) : dcx.moveTo(tx(t), ty(t)); } dcx.closePath(); }
+    else if (o.t === 'arrow') { const ang = Math.atan2(o.y1 - o.y0, o.x1 - o.x0), L = Math.hypot(o.x1 - o.x0, o.y1 - o.y0), hd = Math.min(L * 0.35, 18 + o.w * 2);
+      dcx.moveTo(o.x0, o.y0); dcx.lineTo(o.x1, o.y1); dcx.moveTo(o.x1 - Math.cos(ang - 0.5) * hd, o.y1 - Math.sin(ang - 0.5) * hd); dcx.lineTo(o.x1, o.y1); dcx.lineTo(o.x1 - Math.cos(ang + 0.5) * hd, o.y1 - Math.sin(ang + 0.5) * hd); }
     else if (o.t === 'star') { for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.42 : 1, a = -Math.PI / 2 + i * Math.PI / 5;
       const x = cx + Math.cos(a) * w / 2 * r, y = cy + Math.sin(a) * h / 2 * r; i ? dcx.lineTo(x, y) : dcx.moveTo(x, y); } dcx.closePath(); } }
+  if (o.f && o.t !== 'pen' && o.t !== 'line' && o.t !== 'arrow') { dcx.fillStyle = drawStyle(o.c); dcx.fill(); }
   dcx.stroke();
 }
 function drawRender(){ dcx.fillStyle = '#000'; dcx.fillRect(0, 0, 640, 360); DR.ops.forEach(drawShape); if (DR.cur) drawShape(DR.cur); }
@@ -1081,13 +1104,28 @@ function drawPick(i){                     // which drawing layer the pad is draw
 const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
 dcv.addEventListener('pointerdown', e => { dcv.setPointerCapture(e.pointerId); const [x, y] = dpos(e);
   const cc = Object.assign({}, DR.cc);
-  DR.cur = DR.tool === 'pen' ? {t:'pen', p:[[x, y]], c:cc, w:DR.size} : {t:DR.tool, x0:x, y0:y, x1:x, y1:y, c:cc, w:DR.size};
+  DR.cur = DR.tool === 'pen' ? {t:'pen', p:[[x, y]], c:cc, w:DR.size} : {t:DR.tool, x0:x, y0:y, x1:x, y1:y, c:cc, w:DR.size, f:DR.fill ? 1 : 0};
   if (S && !S.pars.Drawon) { send({t:'set', p:'Drawon', v:true}); S.pars.Drawon = true; applyPars({}); }
   drawRender(); drawSend(); });
 dcv.addEventListener('pointermove', e => { if (!DR.cur) return; const [x, y] = dpos(e);
   if (DR.cur.t === 'pen') DR.cur.p.push([x, y]); else { DR.cur.x1 = x; DR.cur.y1 = y; } drawRender(); drawSend(); });
 const dEnd = () => { if (!DR.cur) return; DR.ops.push(DR.cur); DR.cur = null; drawRender(); drawSend(); drawSave(); };
 dcv.addEventListener('pointerup', dEnd); dcv.addEventListener('pointercancel', dEnd);
+function drawFull(on){                   // the pad full screen: draw precisely, then DONE puts it back in its card
+  const w = $('#dpadwrap'); w.classList.toggle('dfs', on); document.body.classList.toggle('dfsopen', on);
+  const el = document.documentElement, d = document;
+  try { if (on && !(d.fullscreenElement || d.webkitFullscreenElement)) { const go = el.requestFullscreen || el.webkitRequestFullscreen; if (go) { const r = go.call(el); if (r && r.catch) r.catch(() => {}); DR.fsOwn = true; } }
+        else if (!on && DR.fsOwn) { DR.fsOwn = false; (d.exitFullscreen || d.webkitExitFullscreen).call(d); } } catch (e) {}
+  if (!on) { dcv.style.width = dcv.style.height = ''; const c = w.closest('.card'); if (c) setTimeout(() => c.scrollIntoView({block:'start'}), 60); }
+  else drawFit();
+}
+function drawFit(){                       // biggest 16:9 pad that fits the free space
+  if (!$('#dpadwrap').classList.contains('dfs')) return;
+  const r = dcv.parentElement.getBoundingClientRect(), w = Math.min(r.width, r.height * 16 / 9);
+  dcv.style.width = Math.floor(w) + 'px'; dcv.style.height = Math.floor(w * 9 / 16) + 'px';
+}
+addEventListener('resize', () => setTimeout(drawFit, 50));
+document.addEventListener('fullscreenchange', () => setTimeout(drawFit, 80));
 function buildDraw(){
   ccDef('draw', () => Object.assign({}, DR.cc), c => { DR.cc = c; store.set('dcc', c); }, GMODES);
   $('#dcolbox').innerHTML = ccBox('draw', 'Pen colour', true); ccBind($('#dcolbox')); ccUI('draw');
@@ -1106,7 +1144,7 @@ function build(){
   $('#models').innerHTML = S.models.filter(m => !isA(m)).map(mb).join('');
   $('#models-anim').innerHTML = S.models.filter(isA).map(mb).join('');
   $('#box-anim').hidden = !S.models.some(isA);
-  if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
+  if (!ui.boxDone) { ui.boxDone = true; $('#box-static').open = false; $('#box-anim').open = false; }     // both folded to start
   buildCam(); buildText(); buildDraw();
   ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3','proj','projlook'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
   ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', mobj:'var(--cyan)', proj:'var(--cyan)', projlook:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
@@ -1722,6 +1760,8 @@ document.addEventListener('click', e => {
   else if (d.dt) { DR.tool = d.dt; $$('[data-dt]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.ds) { DR.size = +d.ds; $$('[data-ds]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.dcol) { DR.color = d.dcol; $$('[data-dcol]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
+  else if (d.df !== undefined) { DR.fill = d.df === '1'; $$('[data-df]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
+  else if (d.dfs !== undefined) { drawFull(d.dfs === '1'); buzz(8); }
   else if (d.du) { DR.ops.pop(); drawRender(); drawSend(); drawSave(); buzz(); }
   else if (d.dc) { DR.ops = []; drawRender(); drawSend(); drawSave(); buzz(15); }
 
@@ -1766,7 +1806,11 @@ document.addEventListener('click', e => {
       ks.forEach(([n, v]) => { S.pars[q + n] = v; send({t:'set', p:q + n, v}); }); applyPars({}); } buzz(); }
   else if (d.act === 'frreset') { const pre = {camera:'Fcam', draw:'Fdraw'}[VW_SEL] || (/^m\d$/.test(VW_SEL) ? 'M' + VW_SEL.slice(1) + 'f' : null); if (pre) { (pre.endsWith('f') ? [['zoom',1],['x',0],['y',0],['rot',0]] : [['zoom',1],['x',0],['y',0],['rot',0]]).forEach(([n, v]) => { S.pars[pre + n] = v; send({t:'set', p:pre + n, v}); }); build(); } buzz(); }
   else if (d.lmove) { layerMove(d.lmove, +d.dir); buzz(); }
-  else if (d.jump) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const c = $('#' + d.jump); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }
+  else if (d.jump) { if (FXHOLD && performance.now() - FXHOLD < 700) return;
+    SRC_SEL = d.lay || null;                                    // the tapped layer lights up; only its card stays open
+    $$('#scards > .card').forEach(c => { if (c.id === d.jump) delete SHUT[c.id]; else if (!c.classList.contains('hide')) SHUT[c.id] = 1; });
+    shutSave(); cards(); buzz(6);
+    const c = $('#' + d.jump); if (c) setTimeout(() => c.scrollIntoView({behavior:'smooth', block:'start'}), 30); }
   else if (d.act === 'reset') { send({t:'preset', v:1}); buzz(); }
   else if (d.tp) { send({t:'set', p:d.tp, v:d.tv}); S.pars[d.tp] = d.tv;
     if (d.tp === 'Motion' && d.tv === 'spin' && !S.pars.Autospin) { S.pars.Autospin = true; send({t:'set', p:'Autospin', v:true}); }
