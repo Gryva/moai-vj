@@ -642,7 +642,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10h';
+const BUILD = '2026-11-10i';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -708,7 +708,6 @@ function onMsg(m){
     S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); renderMedia(); cards(); }
   else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
     if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(renderMedia, 80); } }
-  else if (m.t === 'pv') { if (m.img) { PVT = performance.now(); $('#nowimg').src = 'data:image/jpeg;base64,' + m.img; } }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
   else if (m.t === 'presets') { S.presets = m.presets; if (m.presetmov) S.presetmov = m.presetmov; if (m.presetdata) S.presetdata = m.presetdata; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
@@ -1449,15 +1448,12 @@ function setLay(k, f, v){
   if (f === 'p1') $$(`[data-mode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === Math.round(v)));
 }
 const GROUP = {};
-// LIVE side column: the picture on screen now (live while a tablet shows it), and the preset on air
-let PVT = 0;
+// LIVE side column: the preset on air, with its own thumbnail (no live video: saves bandwidth)
 function nowCard(){
   if (!S || !$('#nowcard')) return; const b = S.bank || [], p = S.b && b[S.b - 1];
   $('#nowname').textContent = p ? p.name : 'No preset on air'; $('#nowsub').textContent = p ? 'Preset ' + S.b + (p.group ? ' · ' + p.group : '') : '';
-  if (performance.now() - PVT > 3000) { const t = S.b && THUMBS[S.b]; const im = $('#nowimg'); if (t && im.src !== t) im.src = t; else if (!t) im.removeAttribute('src'); }
+  const t = S.b && THUMBS[S.b], im = $('#nowimg'); if (t && im.src !== t) im.src = t; else if (!t) im.removeAttribute('src');
 }
-setInterval(() => { if (!S || ui.tab !== 'live' || document.visibilityState !== 'visible' || !matchMedia('(min-width:900px)').matches) return;
-  send({t:'pv', relay: location.protocol === 'https:'}); nowCard(); }, 2000);
 function renderPads(){
   nowCard();
   if (!S) return; S.layers.forEach(l => GROUP[l.k] = l.g);

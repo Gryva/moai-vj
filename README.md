@@ -174,8 +174,8 @@ When a picture, video or drawing is set to **3D OBJECT** (or a text layer to **3
 
 ### LIVE on a tablet
 
-From 900 px wide the presets take three quarters of the screen; the right quarter shows the **picture on air** (a live
-preview, about one frame a second, while LIVE is open), the preset's name, **Quick controls**, **Autopilot** and the
+From 900 px wide the presets take three quarters of the screen; the right quarter shows the **preset on air** (its thumbnail
+and name), **Quick controls**, **Autopilot** and the
 **Set list**. Phones keep the single column.
 
 ### Saved views (VIEW)

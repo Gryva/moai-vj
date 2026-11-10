@@ -656,15 +656,6 @@ def broadcastMeters():
     dat = op('/project1/remote_server')
     for c in list(CLIENTS): _send(dat, c, msg)
     _publish(msg, active_only=True)
-    if now - PV['t'] < 4.0 and LAST['n'] % 3 == 0:          # live preview for a tablet's LIVE side panel, only while one asks
-        try:
-            import base64
-            pv = {'t': 'pv', 'img': base64.b64encode(_E().thumbBytes(q=62)).decode('ascii')}
-            for c in list(CLIENTS): _send(dat, c, pv)
-            if PV.get('relay'): _publish(pv, active_only=True)
-        except Exception as e: print('preview failed', e)
-
-PV = {'t': -1e9, 'relay': False}
 
 # ---------------------------------------------------------------- HTTP
 def onHTTPRequest(dat, request, response):
@@ -923,8 +914,6 @@ def handle(msg, reply):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
         elif t == 'ping':
             pass
-        elif t == 'pv':                                   # a phone shows the live picture: keep frames coming for a few seconds
-            PV['t'] = time.perf_counter(); PV['relay'] = bool(msg.get('relay'))
         elif t == 'hello':
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())
