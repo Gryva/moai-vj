@@ -45,6 +45,23 @@ body:not(.editing) .pad.add,body:not(.editing) .edonly{display:none}
 
 main{flex:1;overflow-y:auto;padding:2px 16px calc(96px + var(--sb));-webkit-overflow-scrolling:touch}
 .view{display:none}.view.on{display:block;animation:in .2s ease}
+.wideonly{display:none}#rail{display:none}
+@media (min-width:900px){
+  .wideonly{display:block}
+  .view.two.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;align-items:start}
+  .view.two>.colA,.view.two>.colB{min-width:0}
+  .view.two>.stick{position:sticky;top:0;max-height:var(--colh,calc(100dvh - 190px));overflow-y:auto;overscroll-behavior:contain;padding-bottom:16px}
+  #v-layers .lt{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+  #v-audio,#v-tune{max-width:760px;margin:0 auto}
+  body.rail-r #rail,body.rail-l #rail{display:block;position:fixed;width:58px;z-index:4;touch-action:none;top:var(--railt,120px);bottom:var(--railb,70px)}
+  body.rail-r #rail{right:0}body.rail-l #rail{left:0}
+  body.rail-r main{padding-right:76px}body.rail-l main{padding-left:76px}
+  #rail::before{content:"";position:absolute;top:6px;bottom:6px;left:50%;width:2px;margin-left:-1px;background:var(--line);border-radius:2px}
+  #rail i{position:absolute;left:11px;right:11px;min-height:56px;border-radius:18px;background:var(--panel2);border:1px solid var(--line);box-shadow:inset 0 0 0 1px #ffffff08}
+  #rail i::after{content:"⋮";position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:18px}
+  #rail.drag i{background:var(--ink);border-color:var(--ink)}#rail.drag i::after{color:var(--bg)}
+  #rail.none i{opacity:.25}
+}
 @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin:20px 2px 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
 h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:#5f596c}
@@ -322,22 +339,25 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     </div>
   </section>
 
-  <section class="view" id="v-layers">
+  <section class="view two" id="v-layers"><div class="colA">
     <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="fxtg"></div></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
     <div id="g-opmodel" data-op="model"></div><div id="g-opcamera" data-op="camera"></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div>
     <div class="onair" id="onair"></div>
+    </div><div class="colB stick">
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
     <h2>Post</h2><div class="lt" id="lt-post"></div>
+  </div>
   </section>
 
-  <section class="view" id="v-source">
+  <section class="view two" id="v-source"><div class="colA stick">
     <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="lstack"></div>
         <button class="addlay" id="addLay">＋ ADD LAYER</button>
         <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button><button data-addl="camera">Phone camera</button></div></div></div>
+    </div><div class="colB">
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
     <div id="scards"></div>
 
@@ -431,12 +451,14 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
         <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
       </div></div>
 
+  </div>
   </section>
 
 
-  <section class="view" id="v-cam">
+  <section class="view two" id="v-cam"><div class="colA stick">
     <div class="card open" id="cardVwLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="vwtg"></div></div></div>
+    </div><div class="colB">
     <div id="view2d" hidden>
       <div id="g-frcam" data-fr="camera"></div><span id="mfrbox"></span><div id="g-frdraw" data-fr="draw"></div>
       <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="frreset">RESET FRAMING</button></div>
@@ -456,6 +478,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Camera</h2><div id="g-camera"></div>
     <details class="box"><summary>Movement + kick</summary><div id="g-move"></div><div id="g-kick"></div></details>
     </div>
+  </div>
   </section>
 
   <section class="view" id="v-audio">
@@ -471,9 +494,11 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   <section class="view" id="v-tune">
     <h2>Master</h2><div id="g-master"></div>
     <h2>Statue motion</h2><div id="g-motion"></div>
+    <div class="wideonly"><h2>Scroll rail <em>tablet / wide screens</em></h2><div class="seg sm" id="railopt"><button data-rail="l">LEFT</button><button data-rail="r">RIGHT</button><button data-rail="off">OFF</button></div>
+      <p class="hint2">A strip at the edge of the screen with nothing to hit: drag it to scroll without touching any control.</p></div>
     <div class="btns" style="grid-template-columns:1fr 1fr 1fr"><button class="btn" id="t-Showlabel" data-tog="Showlabel">INFO LABEL</button><button class="btn" id="chpass">PASSWORD</button><button class="btn" id="logout">LOCK PHONE</button></div>
   </section>
-  <section class="view" id="v-out">
+  <section class="view two" id="v-out"><div class="colA">
     <h2>Projector</h2>
     <div class="btns" style="grid-template-columns:1fr"><button class="btn big" id="t-Projwin" data-tog="Projwin">⛶ FULL SCREEN OUTPUT</button></div>
     <div class="ksrow"><span>Screen</span><div class="opts" id="o-Projmon"></div></div>
@@ -487,13 +512,16 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <button data-ksstep class="kstep">FINE</button></div>
     <div class="ksrow"><span>Test</span><div class="opts" id="o-Kstest"></div></div>
     <div class="btns" style="grid-template-columns:1fr 1fr 1fr"><button class="btn" id="t-Ksflipx" data-tog="Ksflipx">FLIP ↔</button><button class="btn" id="t-Ksflipy" data-tog="Ksflipy">FLIP ↕</button><button class="btn" data-act="ksreset">RESET CORNERS</button></div>
+    </div><div class="colB">
     <h2>Position</h2><div id="g-proj"></div>
     <h2>Picture</h2><div id="g-projlook"></div>
     <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="ksall">RESET ALL OUTPUT SETTINGS</button></div>
     <p class="hint2">Saved on the computer, not in presets: the setup stays the same when you change looks.</p>
+  </div>
   </section>
 </main>
 
+<div id="rail" aria-hidden="true"><i></i></div>
 <nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
@@ -548,7 +576,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10c';
+const BUILD = '2026-11-10d';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1781,6 +1809,34 @@ tp.addEventListener('pointerup', up); tp.addEventListener('pointercancel', up);
 async function wake(){ try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){} }
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && wake());
 $('#lockgo').addEventListener('click', unlockTry);
+// scroll rail for tablets / wide screens: a safe strip to drag-scroll without hitting controls
+(function(){
+  const rail = $('#rail'), th = rail.querySelector('i'), m = $('main');
+  let RAIL = store.get('rail', 'r');
+  const apply = () => { document.body.classList.toggle('rail-r', RAIL === 'r'); document.body.classList.toggle('rail-l', RAIL === 'l');
+    $$('#railopt [data-rail]').forEach(b => b.classList.toggle('on', b.dataset.rail === RAIL)); size(); };
+  const geo = () => { const r = rail.getBoundingClientRect(), H = r.height, sh = m.scrollHeight, ch = m.clientHeight;
+    const tH = Math.max(56, H * Math.min(1, ch / Math.max(1, sh))); return {r, H, tH, max: Math.max(0, sh - ch)}; };
+  const draw = () => { if (getComputedStyle(rail).display === 'none') return; const g = geo();
+    th.style.height = g.tH + 'px'; th.style.top = (g.max ? m.scrollTop / g.max * (g.H - g.tH) : 0) + 'px'; rail.classList.toggle('none', !g.max); };
+  function size(){
+    const h = $('header').getBoundingClientRect().bottom, nv = $('#nav'), nb = nv && getComputedStyle(nv).display !== 'none' ? nv.getBoundingClientRect().height : 0;
+    const root = document.documentElement.style; root.setProperty('--railt', (h + 4) + 'px'); root.setProperty('--railb', (nb + 4) + 'px');
+    root.setProperty('--colh', (innerHeight - h - nb - 8) + 'px'); draw(); }
+  let d = null;
+  rail.addEventListener('pointerdown', e => { e.preventDefault(); const g = geo(); rail.setPointerCapture(e.pointerId); rail.classList.add('drag');
+    const y = e.clientY - g.r.top, t0 = parseFloat(th.style.top) || 0;
+    if (y < t0 || y > t0 + g.tH) { const nt = Math.max(0, Math.min(g.H - g.tH, y - g.tH / 2)); m.scrollTop = g.max * nt / Math.max(1, g.H - g.tH); }
+    d = {y: e.clientY, s: m.scrollTop}; });
+  rail.addEventListener('pointermove', e => { if (!d) return; const g = geo(); m.scrollTop = d.s + (e.clientY - d.y) * g.max / Math.max(1, g.H - g.tH); });
+  const end = () => { d = null; rail.classList.remove('drag'); };
+  rail.addEventListener('pointerup', end); rail.addEventListener('pointercancel', end);
+  m.addEventListener('scroll', draw, {passive: true}); addEventListener('resize', size);
+  new MutationObserver(() => requestAnimationFrame(size)).observe(document.body, {attributes: true, attributeFilter: ['class']});
+  new ResizeObserver(() => draw()).observe(m);
+  document.addEventListener('click', e => { const b = e.target.closest('[data-rail]'); if (!b) return; RAIL = b.dataset.rail; store.set('rail', RAIL); apply(); buzz(6); });
+  window.railSize = size; apply(); setInterval(draw, 1000);
+})();
 // full screen for the phone page (iPhone Safari has none: there it runs full screen from the home-screen icon)
 (function(){
   const b = $('#fsbtn'), d = document, el = d.documentElement;

@@ -151,6 +151,13 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
 
 ---
 
+### Tablets and wide screens
+
+From 900 px wide (a tablet held sideways, a laptop) SOURCE, FX, VIEW and OUTPUT use two columns: the Layers list stays
+on the left while the settings scroll on the right (in FX the effect library stays visible on the right). A **scroll
+rail** runs down the screen edge: drag it to scroll without touching any slider. TUNE → **Scroll rail**: left, right
+or off (remembered on that device).
+
 ### OUTPUT (projector)
 
 - **⛶ FULL SCREEN OUTPUT** opens the picture full screen, borderless, on the chosen **Screen** (1 = the computer's main
