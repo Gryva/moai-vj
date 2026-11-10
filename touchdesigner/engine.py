@@ -636,7 +636,7 @@ def pushUniforms(T):
         if k in COLFX: _colPush(k, p, T)
 
 # ------------------------------------------------------------------ effect colours (own colour / solid / linear / radial gradient)
-COLFX = ['hologram', 'neon', 'lines', 'halftone', 'ascii', 'thermal', 'palette', 'glow', 'glitch', 'matte', 'strobe', 'kaleido', 'tunnel']
+COLFX = ['hologram', 'neon', 'lines', 'halftone', 'ascii', 'thermal', 'palette', 'glow', 'glitch', 'matte', 'strobe', 'kaleido', 'tunnel', 'duotone', 'sketch', 'nightvis', 'flash']
 LCOL_FILE = project.folder + '/td/lcols.json'
 LCOL = readJsonSafe(LCOL_FILE, {})                           # key -> {'m', 'a', 'b', 'ang'}
 if not isinstance(LCOL, dict): LCOL = {}
@@ -1661,7 +1661,9 @@ def xfadeUpdate(T):
 def cleanSlate():
     """Empty look (no effects, no text, statue centred) saved straight into a new preset, ready to build."""
     C = op('/project1/CONTROLS'); t = _bankTable()
-    slot = next((i for i in range(1, BANK_SLOTS + 1) if not t[i, 1].val), None)
+    used = [i for i in range(1, BANK_SLOTS + 1) if t[i, 1].val]
+    slot = (max(used) + 1) if used and max(used) < BANK_SLOTS else None            # always the last preset
+    if slot is None: slot = next((i for i in range(1, BANK_SLOTS + 1) if not t[i, 1].val), None)
     clearLayers(); S['fades'].clear(); tClear()
     R = op('/project1/remote_cb').module                         # a clean preset is EMPTY: every source off
     C.par.Texton = False; C.par.T2on = False; C.par.T3on = False; C.par.Statue = False; C.par.Scene = 'solid'

@@ -81,7 +81,12 @@ Friends see the simple view (presets, set list, blackout). **✎ EDIT** unlocks 
 - **Hold a layer** in the FX Layers card for its menu: **Edit its effects**, **Copy its effects**, **Paste effects of …
   here** (once something is copied) and **Remove all its effects**. Works with All layers too.
 - **On air:** the chosen layer's effects, with amount, setting and colour. **CLEAR** clears only that layer.
-- **Warp / Style / Post:** tap an effect to add it to the chosen layer.
+- **Warp / Style / Post:** tap an effect to add it to the chosen layer. 15 in each group:
+  - Warp: Melt, Liquid, Mirror, Kaleido, Tunnel, Zoom, Tile, Pixels, Pulse, Swirl, Ripple, Bulge, Wave, Polar, Shards.
+  - Style: Thermal, Holo, Neon, Lines, Dots, ASCII, Hue, Matte, Colour, Toon, Duotone, Sketch, Emboss, Night vision, Oil paint.
+  - Post: Glitch, Sort, Trails, Glow, VHS, RGB split, Film, CRT, Blocks, Flash, Cinema, Static, Punch, Shake, Strobe.
+  - The tiles show the same statue (Antinous), same pose, whole statue in frame. To redo them after adding an effect, run
+    `tools/fx_thumbs.py` inside TouchDesigner (it puts every setting back afterwards).
 - **Colour** (supported effects): Own, Solid, Ramp or Radial. Colour A/B from 10 swatches or any colour; angle for gradients.
 - Presets save every layer's effects. Older presets keep their effects on ALL, so they look the same.
 
@@ -150,6 +155,12 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
 **Updates:** when a new version is published, the phone shows **New version ready · tap to update**.
 
 ---
+
+### Saving
+
+- In edit mode the header has **SAVE**: what is on screen goes into the preset that is on air (same name). With no preset
+  on air it becomes a new preset at the end. Holding a preset → Update still works.
+- **NEW CLEAN PRESET** always lands at the end of the list.
 
 ### Tablets and wide screens
 

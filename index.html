@@ -28,7 +28,10 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute)}
 .fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
-@media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo{padding:0 9px}}
+@media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
+@media (max-width:440px){body.editing .fps,body.editing .r1>.logo{display:none}body.editing .r1>.fsb{margin-left:auto}}
+.savebtn{display:none;height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--lime);color:var(--lime);font-weight:700;letter-spacing:.1em;font-size:11px;white-space:nowrap;flex:none}
+body.editing .savebtn{display:block}.savebtn.ok{background:var(--lime);color:#0b0a0f}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
 body.editing .edit{background:var(--lime);color:#0b0a0f;border-color:transparent}
 body:not(.editing) nav{display:none}
@@ -317,7 +320,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -572,11 +575,11 @@ const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); ret
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
 const SWATCH = {palette:['#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3']};
-const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
+const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'], mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10d';
+const BUILD = '2026-11-10e';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -584,7 +587,7 @@ setTimeout(async () => {
       b.onclick = () => location.replace(location.pathname + '?v=' + encodeURIComponent(m[1]) + location.hash); document.body.appendChild(b); } } catch (e) {}
 }, 1500);
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
-const THUMBS = {}; const FXV = 'v1';
+const THUMBS = {}; const FXV = 'v2';
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
 let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam2', true), model: store.get('model', true), text: store.get('text', false), setlist: store.get('setlist', true)};
 const touching = {};
@@ -1692,7 +1695,7 @@ const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad
       else { send({t:'fxp', do:'apply', i:+c.dataset.fxp, fade:ui.fade}); buzz(); } }
     else if (c.dataset.media) { { const i = +c.dataset.mslot; if (c.dataset.media === S.pars['M' + i + 'file']) send({t:'media', do:'stop', slot:i}); else { send({t:'media', do:'play', slot:i, id:c.dataset.media}); MLIB[i] = false; S.pars['M' + i + 'file'] = c.dataset.media; mediaCardsUI(S.pars); } }; buzz(); }
     else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
-    else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added · build it, then hold it → Update'); buzz(20); }
+    else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added at the end · build it, then tap SAVE'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
     else if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
     else { send({t:'preset', v:+c.dataset.preset}); buzz(); } } };
@@ -1837,6 +1840,16 @@ $('#lockgo').addEventListener('click', unlockTry);
   document.addEventListener('click', e => { const b = e.target.closest('[data-rail]'); if (!b) return; RAIL = b.dataset.rail; store.set('rail', RAIL); apply(); buzz(6); });
   window.railSize = size; apply(); setInterval(draw, 1000);
 })();
+// SAVE (edit mode): what is on screen goes into the preset that is on air (or a new last preset if none is)
+$('#savebtn').addEventListener('click', () => {
+  if (!S) return;
+  const bank = S.bank || [], cur = S.b && bank[S.b - 1] ? S.b : 0;
+  let slot = cur, name = cur ? bank[cur - 1].name : null;
+  if (!slot) { let last = 0; bank.forEach((p, i) => { if (p) last = i + 1; }); slot = last + 1; name = 'New look ' + (bank.filter(Boolean).length + 1); S.b = slot; }
+  bankOp('banksave', slot, name, 'Saved ' + slot + ' · ' + name);
+  const b = $('#savebtn'); b.classList.add('ok'); b.textContent = '✓ SAVED'; buzz(15);
+  setTimeout(() => { b.classList.remove('ok'); b.textContent = 'SAVE'; }, 1400);
+});
 // full screen for the phone page (iPhone Safari has none: there it runs full screen from the home-screen icon)
 (function(){
   const b = $('#fsbtn'), d = document, el = d.documentElement;
