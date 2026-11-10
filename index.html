@@ -309,10 +309,12 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 #v-live.on{display:flex;flex-direction:column}.liveside{display:contents}.livemain{order:4}
 #v-live .aprow{order:1}#v-live .appanel{order:2}#cardQuick{order:3}#setlist{order:5}.nowcard{display:none}.livesplit{display:none}
 @media (min-width:900px){
-  #v-live.on{display:grid;grid-template-columns:minmax(0,1fr) 22px var(--sidew,25%);gap:0;align-items:stretch}
+  #v-live.on{display:grid;grid-template-columns:minmax(0,1fr) 40px var(--sidew,25%);gap:0;align-items:stretch}
   .livemain{grid-column:1;grid-row:1;min-width:0;align-self:start}
   .livesplit{display:block;grid-column:2;grid-row:1;position:relative;cursor:col-resize;touch-action:none}
-  .livesplit i{position:sticky;top:30%;display:block;width:6px;height:64px;margin:0 auto;border-radius:3px;background:var(--line)}
+  .livesplit i{position:sticky;top:30%;display:grid;place-items:center;width:20px;height:96px;margin:0 auto;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+  .livesplit i::after{content:"⋮";color:var(--mute);font-size:18px;font-style:normal}
+  .livesplit.drag i::after{color:#0b0a0f}
   .livesplit::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:#ffffff10}
   .livesplit.drag i{background:var(--lime)}
   .liveside{display:flex;flex-direction:column;gap:12px;grid-column:3;grid-row:1;align-self:start;min-width:0;position:sticky;top:0;max-height:var(--colh,calc(100dvh - 190px));overflow-y:auto;overscroll-behavior:contain;padding:14px 0 16px}
@@ -1463,7 +1465,7 @@ const GROUP = {};
   let on = false;
   sp.addEventListener('pointerdown', e => { e.preventDefault(); on = true; sp.setPointerCapture(e.pointerId); sp.classList.add('drag'); });
   sp.addEventListener('pointermove', e => { if (!on) return; const r = sec.getBoundingClientRect();
-    const w = Math.round(Math.max(220, Math.min(r.width * 0.6, r.right - e.clientX - 11))); set(w); store.set('sidew', w); });
+    const w = Math.round(Math.max(220, Math.min(r.width * 0.6, r.right - e.clientX - 20))); set(w); store.set('sidew', w); });
   const end = () => { on = false; sp.classList.remove('drag'); };
   sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
   sp.addEventListener('dblclick', () => { sec.style.removeProperty('--sidew'); store.set('sidew', 0); });
