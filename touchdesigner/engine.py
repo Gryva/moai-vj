@@ -183,9 +183,10 @@ def modelUpdate(C, T):
     MT['s'] = s
     return s
 
-def motionOffsets(C, T, react=1.0):
+def motionOffsets(C, T, react=1.0, m=None, a=None):
     """Extra statue movement on top of the pose: (yaw, nod, roll, lift)."""
-    m = C.par.Motion.eval(); a = float(C.par.Motionamt.eval()); k = S['kick'] * react; lo = S['low'] * react
+    m = C.par.Motion.eval() if m is None else m; a = float(C.par.Motionamt.eval()) if a is None else float(a)
+    k = S['kick'] * react; lo = S['low'] * react
     if m == 'bob':   return (0.0, -k * 22.0 * a - math.sin(T * 2.2) * 3.0 * a, math.sin(T * 1.1) * 4.0 * a, k * 0.12 * a)
     if m == 'sway':  return (math.sin(T * 0.9) * 28.0 * a, 0.0, math.sin(T * 0.9 + 1.0) * 10.0 * a * (1.0 + lo), math.sin(T * 1.8) * 0.05 * a)
     if m == 'float': return (math.sin(T * 0.21) * 40.0 * a, math.sin(T * 0.29) * 6.0 * a, math.sin(T * 0.37) * 8.0 * a, math.sin(T * 0.5) * 0.3 * a)
@@ -415,9 +416,11 @@ def safetyUpdate(C):
 # ------------------------------------------------------------------ text layer
 TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor',
             'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
-            'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt']
+            'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt',
+            'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev']
 TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
-           'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0}   # older presets: these
+           'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
+           'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False}   # older presets: these
 TDIRS = {'h': 0, 'v': 1, 'up': 2, 'down': 3}
 TADIRS = {'left': 0, 'right': 1, 'up': 2, 'down': 3}
 TCOLORS = {'white': (1, 1, 1), 'hot': (1, .3, .18), 'cyan': (.24, .94, 1), 'violet': (.69, .42, 1),
@@ -1137,7 +1140,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keytol', 'keysoft', 'keyspill',
-         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
+         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
 
 def _mval(par):
     v = par.eval()
@@ -1922,11 +1925,22 @@ def _models(C, dt, T, react, grid):
     ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
     for g in [op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/draw_geo'), ag] + [op('/project1/mg%d' % i) for i in S.get('objs', [])] + [op('/project1/tg%d' % n) for n in S.get('tobjs', [])]:
         if g is None: continue
-        spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle']
-        base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
-        applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
-        g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
-        if o_ty: g.par.ty = g.par.ty.eval() + o_ty
+        own = ownMotion(C, g.name)                                # a 3D picture / video / drawing / text with its own motion
+        if own:
+            m_, spd, ax_, amt, rev = own
+            if m_ == 'spin': OANG[g.name] = (OANG.get(g.name, 0.0) + (-1.0 if rev else 1.0) * (spd + C.par.Spinboost.eval() * S['low'] * react) * dt) % 360.0
+            spin = OANG.get(g.name, 0.0) if m_ == 'spin' else 0.0
+            if m_ == 'still': OANG[g.name] = 0.0
+            b_ry, b_rx, b_rz, b_ty = motionOffsets(C, T, react, m_, amt)
+            applyModelXform(C, g, ms, (spin if ax_ == 'y' else 0.0) + b_ry)
+            g.par.rx = b_rx + (spin if ax_ == 'x' else 0.0); g.par.rz = b_rz + (spin if ax_ == 'z' else 0.0)
+            if b_ty: g.par.ty = g.par.ty.eval() + b_ty
+        else:
+            spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle']
+            base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
+            applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
+            g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
+            if o_ty: g.par.ty = g.par.ty.eval() + o_ty
         x, y, z, sc, tu, ti = obj3d(C, g.name)                     # each 3D layer's own place in the scene (VIEW tab)
         g.par.tx = x; g.par.tz = z
         if y: g.par.ty = g.par.ty.eval() + y
@@ -1935,6 +1949,17 @@ def _models(C, dt, T, react, grid):
         if ti: g.par.rx = g.par.rx.eval() + ti
     if grid:
         op('/project1/moai_geo/grid_inst').cook(force=True)
+
+OANG = {}                                                       # own spin angle per 3D layer
+def ownMotion(C, name):
+    """(motion, spin speed, axis, amount, reverse) for a 3D layer that moves on its own; None = it follows the 3D models."""
+    if name.startswith('mg') and name[2:].isdigit(): q = 'M%s' % name[2:]
+    elif name.startswith('tg') and name[2:].isdigit(): n = int(name[2:]); q = 'Text' if n == 1 else 'T%d' % n
+    else: return None
+    if not hasattr(C.par, q + 'motion'): return None
+    m = C.par[q + 'motion'].eval()
+    if m == 'models': return None
+    return (m, float(C.par[q + 'mspeed'].eval()), C.par[q + 'maxis'].eval(), float(C.par[q + 'mamt'].eval()), bool(C.par[q + 'mrev'].eval()))
 
 def obj3d(C, name):
     """Left/right, up/down, depth, size, turn, tilt of one 3D layer: the models, a 3D picture / video / drawing, 3D text."""

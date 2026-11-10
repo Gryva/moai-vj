@@ -22,6 +22,7 @@ for _i in range(1, 7):
                       (_m + 'objx', 'Left / right', -3, 3, 0.01, 'm%dobj' % _i), (_m + 'objy', 'Up / down', -2, 2, 0.01, 'm%dobj' % _i),
                       (_m + 'objz', 'Depth (back / front)', -4, 4, 0.05, 'm%dobj' % _i), (_m + 'objscale', 'Size', 0.2, 3, 0.01, 'm%dobj' % _i),
                       (_m + 'objturn', 'Turn', -180, 180, 1, 'm%dobj' % _i), (_m + 'objtilt', 'Tilt', -90, 90, 1, 'm%dobj' % _i),
+                      (_m + 'mspeed', 'Spin speed (°/s)', 0, 180, 1, 'm%dmot' % _i), (_m + 'mamt', 'Amount', 0, 2, 0.01, 'm%dmot' % _i),
                       (_m + 'fzoom', 'Zoom', 0.2, 4, 0.01, 'm%dfr' % _i), (_m + 'fx', 'Left / right', -1, 1, 0.005, 'm%dfr' % _i),
                       (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
                       (_m + 'op', 'Brightness', 0, 1.5, 0.01, 'm%dop' % _i),
@@ -62,6 +63,9 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Textdepth', 'Depth (back / front)', -4, 4, 0.05, 'tobj1'), ('Textoscale', 'Size', 0.2, 3, 0.01, 'tobj1'), ('Textoturn', 'Turn', -180, 180, 1, 'tobj1'), ('Textotilt', 'Tilt', -90, 90, 1, 'tobj1'),
     ('T2depth', 'Depth (back / front)', -4, 4, 0.05, 'tobj2'), ('T2oscale', 'Size', 0.2, 3, 0.01, 'tobj2'), ('T2oturn', 'Turn', -180, 180, 1, 'tobj2'), ('T2otilt', 'Tilt', -90, 90, 1, 'tobj2'),
     ('T3depth', 'Depth (back / front)', -4, 4, 0.05, 'tobj3'), ('T3oscale', 'Size', 0.2, 3, 0.01, 'tobj3'), ('T3oturn', 'Turn', -180, 180, 1, 'tobj3'), ('T3otilt', 'Tilt', -90, 90, 1, 'tobj3'),
+    ('Textmspeed', 'Spin speed (°/s)', 0, 180, 1, 'tmot1'), ('Textmamt', 'Amount', 0, 2, 0.01, 'tmot1'),
+    ('T2mspeed', 'Spin speed (°/s)', 0, 180, 1, 'tmot2'), ('T2mamt', 'Amount', 0, 2, 0.01, 'tmot2'),
+    ('T3mspeed', 'Spin speed (°/s)', 0, 180, 1, 'tmot3'), ('T3mamt', 'Amount', 0, 2, 0.01, 'tmot3'),
     ('Modelx', 'Left / right', -3, 3, 0.01, 'mobj'), ('Modely', 'Up / down', -2, 2, 0.01, 'mobj'), ('Modelz', 'Depth (back / front)', -4, 4, 0.05, 'mobj'),
     ('Modelscale', 'Size', 0.2, 3, 0.01, 'mobj'), ('Modelturn', 'Turn', -180, 180, 1, 'mobj'), ('Modeltilt', 'Tilt', -90, 90, 1, 'mobj'),
     ('T3amount', 'Amount', 0, 1, 0.01, 'text3'), ('T3size', 'Size', 0.3, 2.5, 0.01, 'text3'), ('T3glow', 'Glow', 0, 1.5, 0.01, 'text3'), ('T3speed', 'Speed', 0, 3, 0.01, 'text3'), ('T3react', 'Beat reaction', 0, 2, 0.01, 'text3'),
@@ -104,8 +108,8 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'motion', 'maxis')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')

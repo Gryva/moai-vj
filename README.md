@@ -165,6 +165,12 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
   pen colour; Undo / Clear all. **⛶ FULL SCREEN** on the pad gives the whole screen to the drawing (tools beside it on
   a tablet held sideways, under it when upright); **✓ DONE** goes back to the card.
 
+### Object motion for 3D pictures, videos, drawings and text
+
+When a picture, video or drawing is set to **3D OBJECT** (or a text layer to **3D**), its card shows **Object motion**:
+**LIKE 3D MODELS** (follows the models' motion, the default), or its own **SPIN** (axis Y / X / Z, ⟲ REV, spin speed),
+**BOB**, **SWAY**, **FLOAT** (amount) or **STILL**. Saved in presets; older presets keep following the models.
+
 ### Saving
 
 - In edit mode the header has **SAVE**: what is on screen goes into the preset that is on air (same name). With no preset

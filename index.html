@@ -324,6 +324,9 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
 .tsph{margin:6px 2px 0}
+.mmot{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#ffffff05}.mmot h4{margin:0 0 4px;font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--cyan)}
+.mmot .ksrow .opts{display:flex;flex-wrap:wrap;gap:5px}.mmot .ksrow .opts button{flex:1 1 auto;margin:0}
+.mrev{flex:none;padding:9px 10px;font-size:11px;margin:0}.mrev.on{background:var(--ink);color:var(--bg)}
 .sheet .swf{display:flex;align-items:center;gap:6px}.sheet .swf span{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#888);margin-right:4px}
 .sheet .acts .swf button{flex:1;padding:10px 0;font:700 12px var(--mono)}.sheet .acts .swf button.on{background:var(--ink);color:var(--bg)}
 .toast{position:fixed;left:50%;top:calc(12px + var(--st));transform:translate(-50%,-90px);background:var(--ink);color:var(--bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:8px;z-index:40;transition:transform .25s}.toast.on{transform:translate(-50%,0)}
@@ -390,6 +393,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
     <h2>Colour</h2><div id="tcolbox"></div>
     <h2>Space</h2><div class="opts" id="o-Textspace"></div><p class="hint2 tsph" data-tsph="Text"></p>
+    <div class="mmot" data-tmot="Text"><h4>Object motion</h4>
+      <div class="ksrow"><span>Moves</span><div class="opts" id="o-Textmotion"></div></div>
+      <div class="ksrow" data-mspin="Text"><span>Axis</span><div class="opts" id="o-Textmaxis"></div><button class="btn mrev" id="t-Textmrev" data-tog="Textmrev">⟲ REV</button></div>
+      <div id="g-tmot1"></div></div>
     <h2>Adjust</h2><div id="g-text"></div>
       </div></div>
     <div class="card hide" id="cardT2"><div class="ch"><b>Text 2</b><button class="tg" id="t-T2on" data-tog="T2on">OFF</button></div>
@@ -404,6 +411,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Font</h2><div class="opts" id="o-T2font"></div>
     <h2>Colour</h2><div id="tcolbox2"></div>
     <h2>Space</h2><div class="opts" id="o-T2space"></div><p class="hint2 tsph" data-tsph="T2"></p>
+    <div class="mmot" data-tmot="T2"><h4>Object motion</h4>
+      <div class="ksrow"><span>Moves</span><div class="opts" id="o-T2motion"></div></div>
+      <div class="ksrow" data-mspin="T2"><span>Axis</span><div class="opts" id="o-T2maxis"></div><button class="btn mrev" id="t-T2mrev" data-tog="T2mrev">⟲ REV</button></div>
+      <div id="g-tmot2"></div></div>
     <h2>Adjust</h2><div id="g-text2"></div>
       </div></div>
     <div class="card hide" id="cardT3"><div class="ch"><b>Text 3</b><button class="tg" id="t-T3on" data-tog="T3on">OFF</button></div>
@@ -418,6 +429,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Font</h2><div class="opts" id="o-T3font"></div>
     <h2>Colour</h2><div id="tcolbox3"></div>
     <h2>Space</h2><div class="opts" id="o-T3space"></div><p class="hint2 tsph" data-tsph="T3"></p>
+    <div class="mmot" data-tmot="T3"><h4>Object motion</h4>
+      <div class="ksrow"><span>Moves</span><div class="opts" id="o-T3motion"></div></div>
+      <div class="ksrow" data-mspin="T3"><span>Axis</span><div class="opts" id="o-T3maxis"></div><button class="btn mrev" id="t-T3mrev" data-tog="T3mrev">⟲ REV</button></div>
+      <div id="g-tmot3"></div></div>
     <h2>Adjust</h2><div id="g-text3"></div>
       </div></div>
 
@@ -596,7 +611,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10f';
+const BUILD = '2026-11-10g';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -768,7 +783,7 @@ function clipUI(p){
 }
 const MS = [1,2,3,4,5,6], MLIB = {};          // MLIB[i] = file list of layer i is unfolded
 const LDEF = ['text','text2','text3','draw','m1','m2','m3','m4','m5','m6','camera','model'];
-const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op', 'm' + i + 'play']));
+const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op', 'm' + i + 'play', 'm' + i + 'mot']));
 function mediaName(i){                    // "Video 2" = the 2nd video layer
   const p = S.pars, kd = j => ['image', 'draw'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
   const n = MS.filter(j => j <= i && p['M' + j + 'on'] && kd(j) === kind).length;
@@ -787,7 +802,11 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
         <details class="box mbox mkey" style="margin-top:8px"><summary>Green / blue screen<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
           <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:7px"></div><div id="g-m${i}key"></div></details>
-        <p class="hint2" id="box-m${i}obj" style="margin-top:8px">In 3D: place it (move, depth, size, turn) in VIEW → tap this layer.</p>
+        <div class="mmot" id="box-m${i}obj"><h4>Object motion</h4>
+          <div class="ksrow"><span>Moves</span><div class="opts" id="o-M${i}motion"></div></div>
+          <div class="ksrow" data-mspin="M${i}"><span>Axis</span><div class="opts" id="o-M${i}maxis"></div><button class="btn mrev" id="t-M${i}mrev" data-tog="M${i}mrev">⟲ REV</button></div>
+          <div id="g-m${i}mot"></div>
+          <p class="hint2">Place it (move, depth, size, turn) in VIEW → tap this layer.</p></div>
       </div></div>`; }).join('');
   $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
@@ -1146,8 +1165,9 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; $('#box-static').open = false; $('#box-anim').open = false; }     // both folded to start
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3','proj','projlook'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
-  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', mobj:'var(--cyan)', proj:'var(--cyan)', projlook:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3','proj','projlook','tmot1','tmot2','tmot3'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
+  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', tmot1:'var(--cyan)', tmot2:'var(--cyan)', tmot3:'var(--cyan)', mobj:'var(--cyan)', proj:'var(--cyan)', projlook:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
+  MS.forEach(i => ACC['m' + i + 'mot'] = 'var(--cyan)');
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -1168,7 +1188,10 @@ const TOPTS = {
   Kstest: [['off','OFF'],['over','GRID OVER'],['grid','GRID ONLY']],
   Projmon: [['1','1'],['2','2'],['3','3'],['4','4']],
   Textfont: [['Bebas Neue','BEBAS'],['Impact','IMPACT'],['Bahnschrift','BAHN'],['Agency FB','AGENCY'],['Cascadia Mono','MONO'],['Georgia','SERIF'],['Algerian','DECO'],['Blackadder ITC','GOTHIC']]};
-[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
+TOPTS.Textmotion = [['models','LIKE 3D MODELS'],['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']];
+TOPTS.Textmaxis = [['y','↻ Y'],['x','TUMBLE X'],['z','ROLL Z']];
+[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
+MS.forEach(i => { TOPTS['M' + i + 'motion'] = TOPTS.Textmotion; TOPTS['M' + i + 'maxis'] = TOPTS.Textmaxis; });
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
@@ -1216,9 +1239,15 @@ function ksSet(k, x, y, force){
   const end = e => { if (!drag) return; const [x, y] = at(e); ksSet(drag, x, y, true); drag = null; };
   pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
 })();
+function motUI(q, p, show){                  // object motion rows: axis + speed only for spin, amount for bob / sway / float
+  const m = p[q + 'motion'] || 'models', sp = $(`[data-mspin="${q}"]`), s1 = $('#s-' + q + 'mspeed'), s2 = $('#s-' + q + 'mamt');
+  if (sp) sp.hidden = m !== 'spin'; if (s1) s1.closest('.ctl').hidden = m !== 'spin'; if (s2) s2.closest('.ctl').hidden = !['bob','sway','float'].includes(m);
+  const r = $('#t-' + q + 'mrev'); if (r) r.classList.toggle('on', !!p[q + 'mrev']);
+}
 function syncText(p){
   $$('[data-tp]').forEach(b => b.classList.toggle('on', p[b.dataset.tp] === b.dataset.tv));
-  [['Text', 1], ['T2', 2], ['T3', 3]].forEach(([q, n]) => {
+  MS.forEach(i => motUI('M' + i, p));
+  [['Text', 1], ['T2', 2], ['T3', 3]].forEach(([q, n]) => { const tm = $(`[data-tmot="${q}"]`); if (tm) tm.hidden = p[q + 'space'] !== '3d'; motUI(q, p);
     const ad = $(`[data-tadir="${q}"]`); if (ad) ad.hidden = !TADIR_ANIMS.includes(p[q + 'anim']);
     const d = $('#s-' + q + 'depth'); if (d) d.closest('.ctl').hidden = p[q + 'space'] !== '3d';
     const h = $(`[data-tsph="${q}"]`), b3 = p[q + 'space'] === '3d', bh = textBehind(n);
