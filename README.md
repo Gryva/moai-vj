@@ -146,7 +146,9 @@ own 3D pass with the shared 3D camera, so they stay separate layers too (own ord
 
 ### AUDIO
 Input gain, noise gate, dynamic range, smoothing, beat sensitivity, beat feel (punchy ↔ smooth), flash safety,
-headphone monitor and volume. Meters show low, mid, high, kick.
+headphone monitor and volume. Meters show low, mid, high, kick. The settings are vertical faders, like a mixing desk (Beat group and
+Input group side by side on a tablet). TUNE uses two columns on a tablet: Master on the left, statue motion and the
+rest on the right.
 
 ### TUNE
 Camera sway (orbit, elevation, push/pull, roll, sway speed), audio → camera, kick push-in, kick jolt, preset glide

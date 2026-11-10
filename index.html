@@ -56,7 +56,11 @@ main{flex:1;overflow-y:auto;padding:2px 16px calc(96px + var(--sb));-webkit-over
   .view.two>.colA,.view.two>.colB{min-width:0}
   .view.two>.stick{position:sticky;top:0;max-height:var(--colh,calc(100dvh - 190px));overflow-y:auto;overscroll-behavior:contain;padding-bottom:16px}
   #v-layers .lt{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
-  #v-audio,#v-tune{max-width:760px;margin:0 auto}
+  .amix{display:flex;gap:18px;align-items:flex-start}.amix .agrp{flex:3}.amix .agrp.wide{flex:6}
+  #v-audio .bars{height:150px}
+  .amix .vmix{grid-auto-flow:column;grid-auto-columns:1fr;grid-template-columns:none}
+  .amix .vmix .ctl{height:350px}.amix .vmix .ctl input[type=range]{top:166px;width:262px}
+  .amix .vmix .ctl .top span{font-size:11.5px}
   body.rail-r #rail,body.rail-l #rail{display:block;position:fixed;width:58px;z-index:4;touch-action:none;top:var(--railt,120px);bottom:var(--railb,70px)}
   body.rail-r #rail{right:0}body.rail-l #rail{left:0}
   body.rail-r main{padding-right:76px}body.rail-l main{padding-left:76px}
@@ -349,6 +353,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Shrikhand';src:url(fonts/Shrikhand-Regular.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Rock Salt';src:url(fonts/RockSalt-Regular.ttf) format('truetype');font-display:swap}
 .opts .fch{font-size:14px;font-weight:400;letter-spacing:0;text-transform:none}
+/* AUDIO: a mixing desk - vertical faders, value on top, name underneath */
+.vmix{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.vmix .ctl{position:relative;height:280px;margin:0;padding:10px 6px 8px;display:flex;flex-direction:column;justify-content:space-between;align-items:center}
+.vmix .ctl .top{display:contents}
+.vmix .ctl .top output{order:0;font-size:12px;color:var(--ink)}
+.vmix .ctl .top span{order:2;font-size:10.5px;line-height:1.2;text-align:center;color:var(--mute);min-height:26px;display:flex;align-items:flex-end}
+.vmix .ctl input[type=range]{position:absolute;left:50%;top:132px;width:196px;height:40px;transform:translate(-50%,-50%) rotate(-90deg);touch-action:none}
 /* lock */
 .lock{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:var(--bg);padding:28px}
 .lock.on{display:grid}
@@ -585,17 +596,21 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div><div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
       <div class="bar" style="--c:var(--cyan)"><div id="bH"></div><span>HIGH</span></div><div class="bar" style="--c:var(--lime)"><div id="bK"></div><span>KICK</span></div>
     </div>
-    <h2>Beat</h2><div id="g-beat"></div>
-    <h2>Input</h2><div id="g-audio"></div>
+    <div class="amix">
+      <div class="agrp"><h2>Beat</h2><div class="vmix" id="g-beat"></div></div>
+      <div class="agrp wide"><h2>Input</h2><div class="vmix" id="g-audio"></div></div>
+    </div>
     <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="t-Monitor" data-tog="Monitor">🎧 HEADPHONE MONITOR</button></div>
   </section>
 
-  <section class="view" id="v-tune">
+  <section class="view two" id="v-tune"><div class="colA">
     <h2>Master</h2><div id="g-master"></div>
+    </div><div class="colB">
     <h2>Statue motion</h2><div id="g-motion"></div>
     <div class="wideonly"><h2>Scroll rail <em>tablet / wide screens</em></h2><div class="seg sm" id="railopt"><button data-rail="l">LEFT</button><button data-rail="r">RIGHT</button><button data-rail="off">OFF</button></div>
       <p class="hint2">A strip at the edge of the screen with nothing to hit: drag it to scroll without touching any control.</p></div>
     <div class="btns" style="grid-template-columns:1fr 1fr 1fr"><button class="btn" id="t-Showlabel" data-tog="Showlabel">INFO LABEL</button><button class="btn" id="chpass">PASSWORD</button><button class="btn" id="logout">LOCK PHONE</button></div>
+</div>
   </section>
   <section class="view two" id="v-out"><div class="colA">
     <h2>Projector</h2>
@@ -675,7 +690,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10m';
+const BUILD = '2026-11-10n';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
