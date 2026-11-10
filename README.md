@@ -193,6 +193,14 @@ Every preset with text gets a **Words** box per text layer at the top of Quick c
 Type, then **SHOW** (or Enter): the words go on screen and are saved into the preset on air, so coming back to it keeps
 the new words. CAPS applies here too.
 
+### Play mode details
+
+- Draggable dividers only show in edit mode (the widths you set still apply in play mode).
+- No scroll rail on LIVE (its presets and set list scroll on their own).
+- Quick controls are always open in play mode.
+- Hold the **MOAI//VJ** logo for the About page. (Moai = the stone heads of Rapa Nui / Easter Island - the first statue
+  this rig spun. Not an acronym.)
+
 ### Text fonts and caps
 
 Fonts: Bebas, Impact, Bahn, Deco, plus shipped ones that need no install: Bangers, Marker, Brush, Scrawl, Pacifico,

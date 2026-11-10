@@ -360,6 +360,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .vmix .ctl .top output{order:0;font-size:12px;color:var(--ink)}
 .vmix .ctl .top span{order:2;font-size:10.5px;line-height:1.2;text-align:center;color:var(--mute);min-height:26px;display:flex;align-items:flex-end}
 .vmix .ctl input[type=range]{position:absolute;left:50%;top:132px;width:196px;height:40px;transform:translate(-50%,-50%) rotate(-90deg);touch-action:none}
+body:not(.editing) .livesplit{display:none!important}
+body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-right:16px}body.tab-live.rail-l main{padding-left:16px}
+.logo{cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.about{font-size:13px;line-height:1.55;color:var(--mute)}.about b{color:var(--ink)}.about p{margin:0 0 10px}.about .ver{font:600 11px var(--mono);color:var(--cyan)}
 /* lock */
 .lock{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:var(--bg);padding:28px}
 .lock.on{display:grid}
@@ -403,7 +407,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -439,7 +443,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
     <div id="g-opmodel" data-op="model"></div><div id="g-opcamera" data-op="camera"></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div>
     <div class="onair" id="onair"></div>
-    </div><div class="colB stick">
+    </div><div class="colB">
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
     <h2>Post</h2><div class="lt" id="lt-post"></div>
@@ -690,7 +694,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10n';
+const BUILD = '2026-11-10o';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1400,7 +1404,7 @@ function uiPrefs(){
   if (ui.tab === 'text') ui.tab = 'source';                       // TEXT moved into SOURCE
   $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade)); apSummary();
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
-  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab));
+  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab)); document.body.classList.toggle('tab-live', ui.tab === 'live');
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
   const sl = $('#setlist'), tg = $('#slTog');
   if (sl) sl.classList.toggle('off', !ui.setlist);
@@ -1623,7 +1627,8 @@ function renderQuick(){
   if (!S) return; const L = qList(), card = $('#cardQuick'), TX = qTexts(), any = L.length + TX.length;
   card.classList.toggle('hide', !any); $('#qkn').textContent = any ? any + '' : '';
   cardOpen('cardQuick', !!any);
-  if (QB !== S.b) { QB = S.b; SHUT.cardQuick = 1; cardOpen('cardQuick', !!any); }      // a new preset starts with them folded
+  if (!EDIT) { delete SHUT.cardQuick; cardOpen('cardQuick', !!any); }                // play mode: always open
+  else if (QB !== S.b) { QB = S.b; SHUT.cardQuick = 1; cardOpen('cardQuick', !!any); }      // edit mode: a new preset starts with them folded
   const sig = S.b + '|' + L.map(qid).join(',') + '|' + (S.bank || []).map(p => p ? p.name : '').join('/') + '|' + ['Textname','T2name','T3name','Modelname'].concat(MS.map(i => 'M' + i + 'name'), MS.map(i => 'M' + i + 'file'), MS.map(i => 'M' + i + 'kind')).map(n => S.pars[n] || '').join('/');
   const sig2 = sig + '|' + TX.join(',') + '|' + TX.map(n => qtName(n)).join('/');
   if (sig2 === QSIG) return quickSync(); QSIG = sig2;
@@ -1933,7 +1938,7 @@ document.addEventListener('pointerup', endHold); document.addEventListener('poin
 
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
-  const h = e.target.closest('.card .ch');
+  const h = e.target.closest('.card .ch'); if (h && !EDIT && h.parentElement.id === 'cardQuick') return;
   if (h && S && !e.target.closest('button, label, input')) { const c = h.parentElement;
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
@@ -2084,6 +2089,21 @@ if (window.visualViewport) { const vv = visualViewport, fit = () => { const sh =
     sh.style.bottom = kb + 'px'; sh.style.maxHeight = Math.max(160, vv.height - 16) + 'px'; sh.style.overflowY = 'auto';
     if (kb > 0 && document.activeElement && sh.contains(document.activeElement)) document.activeElement.scrollIntoView({block:'nearest'}); };
   vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+// hold the MOAI//VJ logo -> About
+(function(){ const lg = $('#logo'); let t = null;
+  const open = () => { buzz(15); $('#shI').style.display = 'none'; $('#shT').textContent = 'MOAI//VJ';
+    $('#shP').innerHTML = `<div class="about"><p class="ver">Remote build ${BUILD}</p>
+      <p><b>MOAI//VJ</b> is a live, audio-reactive visual rig: TouchDesigner draws the picture, this page is its remote.
+      Presets, effects, layers, text, drawings, cameras and the projector are all set from here, on any phone or tablet.</p>
+      <p><b>Why "Moai"?</b> It isn't an acronym: the Moai are the giant stone heads of Rapa Nui (Easter Island). A Moai was
+      the first statue this rig ever spun, and the name stuck.</p>
+      <p><b>Fonts</b> Bangers, Permanent Marker, Caveat Brush, Rock Salt, Pacifico, Shrikhand, Monoton, Bungee Shade, Rubik Glitch,
+      Press Start 2P (Google Fonts, SIL Open Font / Apache licences).</p></div>`;
+    $('#shA').innerHTML = '<button data-sh="cancel">Close</button>'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); };
+  lg.addEventListener('pointerdown', () => { clearTimeout(t); t = setTimeout(open, 550); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => lg.addEventListener(ev, () => clearTimeout(t)));
+  lg.addEventListener('contextmenu', e => e.preventDefault());
+})();
 // SAVE (edit mode): what is on screen goes into the preset that is on air (or a new last preset if none is)
 $('#savebtn').addEventListener('click', () => {
   if (!S) return;
