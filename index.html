@@ -179,6 +179,11 @@ label.tg{cursor:pointer}
 .sheet{max-height:82vh;overflow-y:auto}.acts .hist{text-align:left;font:600 12px var(--mono)}
 .offlocal{display:block;margin-top:12px;padding:10px 12px;border:1px solid var(--lime);border-radius:8px;color:var(--lime);font-weight:700;text-decoration:none;word-break:break-all}
 .sl-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.sl-hd b{font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.sl-add{flex:none;font:700 10px var(--mono);letter-spacing:.08em;padding:7px 10px;border-radius:6px;border:1px solid #c6ff3d88;color:var(--lime);background:none}
+.sl-add.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+body.sladding .pad.full{outline:2px dashed #c6ff3d66;outline-offset:-2px}body.sladding .pad.full .live{display:none}
+body.sladding .pad.full::after{content:"＋";position:absolute;right:8px;bottom:6px;font:700 20px var(--sans);color:var(--lime);z-index:3}
+.pad.sladded{transform:scale(.95);outline-color:var(--lime)!important;transition:transform .15s}
 .sl-next{flex:1;min-width:0;font:600 11px var(--mono);color:var(--lime);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
 .setlist.arr .sl-arrange{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
@@ -433,7 +438,7 @@ body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-rig
     <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div></div>
     <div class="setlist" id="setlist">
-      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
+      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span><button class="sl-add" id="slAdd" aria-pressed="false">＋ ADD PRESETS</button></div>
       <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     </div>
     </div>
@@ -696,7 +701,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10p';
+const BUILD = '2026-11-10q';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1410,6 +1415,7 @@ function uiPrefs(){
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
   const sl = $('#setlist'), tg = $('#slTog');
   if (sl) sl.classList.toggle('off', !ui.setlist);
+  if (!ui.setlist && typeof SLADD !== 'undefined' && SLADD) slAddMode(false);
   if (tg) { tg.classList.toggle('on', ui.setlist); tg.setAttribute('aria-pressed', ui.setlist); const st = $('#slState'); if (st) st.textContent = ui.setlist ? 'ON' : 'OFF'; }
   store.set('setlist', ui.setlist);
 }
@@ -1711,6 +1717,11 @@ function qGo(i){
   i = (i + list.length) % list.length; S.queue.pos = i;
   send({t:'queue', do:'go', i, fade:ui.fade}); S.b = list[i]; renderPads(); renderQueue(); buzz(14);
 }
+// ＋ ADD PRESETS: while on, tapping a preset adds it to the set list instead of playing it
+let SLADD = false;
+function slAddMode(on){ SLADD = on; document.body.classList.toggle('sladding', on); const b = $('#slAdd'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  b.textContent = on ? '✓ DONE ADDING' : '＋ ADD PRESETS'; if (on) toast('Tap presets to add them to the set list · the picture stays as it is'); }
+$('#slAdd').addEventListener('click', () => { slAddMode(!SLADD); buzz(8); });
 function qAdd(slot){ const v = (S.queue.v || []).slice(); if (v.length >= 64) { toast('Set list is full'); return; } v.push(slot); S.queue.v = v; qSend(); toast('Added to the set list (#' + v.length + ')'); }
 function qMove(i, d){ const v = S.queue.v.slice(), j = i + d; if (j < 0 || j >= v.length) return; const cur = v[S.queue.pos];
   [v[i], v[j]] = [v[j], v[i]]; S.queue.v = v; S.queue.pos = S.queue.pos === i ? j : S.queue.pos === j ? i : S.queue.pos; qSend(); }
@@ -1939,6 +1950,7 @@ const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad
     else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
     else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added at the end · build it, then tap SAVE'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
+    else if (c.dataset.pad && SLADD) { const slot = +c.dataset.pad; if (S.bank[slot - 1]) { qAdd(slot); c.classList.add('sladded'); setTimeout(() => c.classList.remove('sladded'), 350); buzz(10); } }   // adding mode: a tap adds, the picture stays
     else if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
     else { send({t:'preset', v:+c.dataset.preset}); buzz(); } } };
 document.addEventListener('pointerup', endHold); document.addEventListener('pointercancel', endHold);

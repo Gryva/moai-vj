@@ -193,6 +193,12 @@ Every preset with text gets a **Words** box per text layer at the top of Quick c
 Type, then **SHOW** (or Enter): the words go on screen and are saved into the preset on air, so coming back to it keeps
 the new words. CAPS applies here too.
 
+### Adding many presets to the set list
+
+With the set list on, tap **＋ ADD PRESETS** in its header: every tap on a preset now adds it to the end of the set list
+(the picture doesn't change; tiles get a dashed outline and a ＋). Tap **✓ DONE ADDING** to go back to playing presets
+by tapping them. Holding a preset → Add to set list still works too.
+
 ### Autopilot: random or set list
 
 Autopilot settings (the small button next to AUTOPILOT) → **Autopilot plays**: **RANDOM** (any preset, or the set
