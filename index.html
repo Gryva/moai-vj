@@ -376,6 +376,7 @@ body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-rig
 .logo{cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .about{font-size:13px;line-height:1.55;color:var(--mute)}.about b{color:var(--ink)}.about p{margin:0 0 10px}.about .ver{font:600 11px var(--mono);color:var(--cyan)}
 header .now{display:none}   /* the preset on air shows on its tile and the LIVE strip */
+#weak{position:fixed;left:50%;top:calc(8px + var(--st));transform:translate(-50%,-140%);z-index:30;padding:7px 14px;border-radius:20px;background:#3a2a10;border:1px solid #ffb02e66;color:#ffcf7a;font:600 11px var(--sans);transition:transform .25s;pointer-events:none}#weak.on{transform:translate(-50%,0)}
 /* lock */
 .lock{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:var(--bg);padding:28px}
 .lock.on{display:grid}
@@ -652,6 +653,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
   </section>
 </main>
 
+<div id="weak">Signal weak · reconnecting… (controls still work when it comes back)</div>
 <div id="rail" aria-hidden="true"><i></i></div>
 <nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
@@ -707,7 +709,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10u';
+const BUILD = '2026-11-10v';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -789,8 +791,13 @@ function onMsg(m){
 }
 function status(){
   if (!KEY && location.protocol === 'https:') return;
-  const ok = linkUp && performance.now() - lastM < 3000;
-  $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', !ok);
+  const gap = performance.now() - lastM, ok = linkUp && gap < 3000;
+  // short hiccups (public relays stutter) only dim the dot and show a small strip; the full cover needs a real outage
+  const down = KEY ? (!linkUp && gap > 6000) || gap > 20000 : !ok;
+  $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', down);
+  $('#weak').classList.toggle('on', !ok && !down && !!S);
+  if (KEY && linkUp && gap > 9000 && performance.now() - RELAYSW > 14000 && typeof mqtt !== 'undefined') relaySwitch('relay went quiet, switched');
+  if (KEY && linkUp && gap > 4000 && gap < 9000 && performance.now() - (status.h || 0) > 3000) { status.h = performance.now(); send({t:'ping'}); }
   $('#offT').textContent = !linkUp ? 'Connecting…' : 'Waiting for TouchDesigner…';
   $('#offS').innerHTML = KEY ? 'Relay ' + BROKERS[bi].url.split('/')[2] + (lastErr ? '<br><small>' + esc(lastErr) + '</small>' : '') + '<br>TouchDesigner must be open and online.'
                              : 'Phone and computer must be on the same Wi-Fi.';
@@ -807,9 +814,14 @@ function connectWS(){
   T.send = o => ws.readyState === 1 && ws.send(JSON.stringify(o));
   T.draw = (buf, done) => { if (ws.readyState === 1) ws.send(buf); done(); };
 }
+let RELAYC = null, RELAYSW = 0;
+function relaySwitch(why){                 // a relay that went quiet: move to the next one on our own
+  RELAYSW = performance.now(); lastErr = why; try { RELAYC && RELAYC.end(true); } catch (e) {}
+  bi = (bi + 1) % BROKERS.length; connectRelay();
+}
 function connectRelay(){
   const base = 'moaivj/' + KEY, B = BROKERS[bi];
-  const c = mqtt.connect(B.url, {username:B.user, password:B.pass, clientId:'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive:20, reconnectPeriod:1500, connectTimeout:6000, clean:true});
+  const c = RELAYC = mqtt.connect(B.url, {username:B.user, password:B.pass, clientId:'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive:20, reconnectPeriod:1500, connectTimeout:6000, clean:true});
   let ever = false;
   const fail = setTimeout(() => { if (!ever) { lastErr = 'no answer from ' + B.url.split('/')[2] + ', trying next'; c.end(true); bi = (bi + 1) % BROKERS.length; connectRelay(); } }, 7000);
   c.on('connect', () => { ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; store.set('broker', bi);
@@ -819,8 +831,8 @@ function connectRelay(){
   T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
   T.cam = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/cam', buf, {qos:0}, () => done()); } catch(e){ done(); } };
   T.draw = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/draw', buf, {qos:0}, () => done()); } catch(e){ done(); } };
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && c.connected) send({t:'hello'}); });
 }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkUp) send({t:'hello'}); });
 function connect(){
   if (location.protocol === 'http:') { connectWS(); return; }
   if (KEY) { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js'; sc.onload = connectRelay;
