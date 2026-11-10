@@ -540,6 +540,18 @@ def _presets():
     t = op('/project1/CAM_PRESETS')
     return [t[r, 'name'].val for r in range(1, t.numRows)]
 
+def _presetData():
+    """Each saved view's camera numbers, for the little movement icons on the phone."""
+    t = op('/project1/CAM_PRESETS'); out = []
+    keys = ('Orbit', 'Orbitspeed', 'Orbitsway', 'Elevation', 'Elevsway', 'Distance', 'Distsway', 'Roll', 'Rollsway', 'Shake', 'Fov')
+    for r in range(1, t.numRows):
+        d = {}
+        for k in keys:
+            try: d[k] = round(float(t[r, k].val or 0), 2)
+            except Exception: d[k] = 0.0
+        out.append(d)
+    return out
+
 def _presetsMoving():
     """Saved views whose camera keeps moving (circles / sways) - marked on the phone so they aren't mistaken for object spin."""
     t = op('/project1/CAM_PRESETS'); out = []
@@ -562,7 +574,7 @@ def _layersLive():
 
 def state():
     C = _C()
-    return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'layers': _layers(), 'looks': _E().lookNames(),
+    return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
@@ -644,6 +656,15 @@ def broadcastMeters():
     dat = op('/project1/remote_server')
     for c in list(CLIENTS): _send(dat, c, msg)
     _publish(msg, active_only=True)
+    if now - PV['t'] < 4.0 and LAST['n'] % 3 == 0:          # live preview for a tablet's LIVE side panel, only while one asks
+        try:
+            import base64
+            pv = {'t': 'pv', 'img': base64.b64encode(_E().thumbBytes(q=62)).decode('ascii')}
+            for c in list(CLIENTS): _send(dat, c, pv)
+            if PV.get('relay'): _publish(pv, active_only=True)
+        except Exception as e: print('preview failed', e)
+
+PV = {'t': -1e9, 'relay': False}
 
 # ---------------------------------------------------------------- HTTP
 def onHTTPRequest(dat, request, response):
@@ -782,7 +803,7 @@ def handle(msg, reply):
             E.loadPreset(int(msg['v']))
         elif t == 'save':
             E.savePreset(int(msg['v']), msg.get('name') or None)
-            _all({'t': 'presets', 'presets': _presets(), 'presetmov': _presetsMoving()})
+            _all({'t': 'presets', 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData()})
             _publish(state())
         elif t == 'orbit':
             E.navOrbit(float(msg['dx']), float(msg['dy']))
@@ -902,6 +923,8 @@ def handle(msg, reply):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
         elif t == 'ping':
             pass
+        elif t == 'pv':                                   # a phone shows the live picture: keep frames coming for a few seconds
+            PV['t'] = time.perf_counter(); PV['relay'] = bool(msg.get('relay'))
         elif t == 'hello':
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())

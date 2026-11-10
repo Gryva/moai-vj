@@ -163,13 +163,26 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
 - In the 3D models card, Static models and 3D animations start folded.
 - **Drawing:** tools Pen, Line, Circle, Box, Triangle, Star, Heart, Arrow; sizes S / M / L / XL; shapes Outline or Filled;
   pen colour; Undo / Clear all. **⛶ FULL SCREEN** on the pad gives the whole screen to the drawing (tools beside it on
-  a tablet held sideways, under it when upright); **✓ DONE** goes back to the card.
+  a tablet held sideways, under it when upright; **☰ TOOLS** hides them for the full width); **✓ DONE** goes back to
+  the card. The pad draws at twice the old resolution, so edges are smooth.
 
 ### Object motion for 3D pictures, videos, drawings and text
 
 When a picture, video or drawing is set to **3D OBJECT** (or a text layer to **3D**), its card shows **Object motion**:
 **LIKE 3D MODELS** (follows the models' motion, the default), or its own **SPIN** (axis Y / X / Z, ⟲ REV, spin speed),
 **BOB**, **SWAY**, **FLOAT** (amount) or **STILL**. Saved in presets; older presets keep following the models.
+
+### LIVE on a tablet
+
+From 900 px wide the presets take three quarters of the screen; the right quarter shows the **picture on air** (a live
+preview, about one frame a second, while LIVE is open), the preset's name, **Quick controls**, **Autopilot** and the
+**Set list**. Phones keep the single column.
+
+### Saved views (VIEW)
+
+16 views, each with a small drawing of how the camera moves: the ring is the orbit, the green dot is the camera, arrows
+show circling, swinging, rising / falling, pushing in / out, tilting or shaking. New: Dolly Zoom, Pendulum, Crane,
+Bird's Eye, Worm's Eye, Fast Orbit, Close-up, Dutch Tilt. F1–F8 on the keyboard still load the first eight.
 
 ### Saving
 
