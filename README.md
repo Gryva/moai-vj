@@ -201,9 +201,9 @@ by tapping them. Holding a preset → Add to set list still works too.
 
 ### Autopilot: random or set list
 
-Autopilot settings (the small button next to AUTOPILOT) → **Autopilot plays**: **RANDOM** (any preset, or the set
-list's presets in random order, never repeating the last few) or **SET LIST, IN ORDER** (steps through the set list,
-looping, like pressing ▶ every interval).
+Autopilot settings (the small button next to AUTOPILOT) → **Autopilot plays**: **RANDOM** (any preset), **SET LIST · IN ORDER**
+(steps through the set list, looping, like pressing ▶ every interval) or **SET LIST · RANDOM** (only the set list's
+presets, shuffled). Random modes never repeat the last few.
 
 ### Play mode details
 

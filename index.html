@@ -426,7 +426,7 @@ body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-rig
       <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
     <div class="appanel" id="apPanel" hidden>
       <h4>Transition between presets</h4><div class="seg sm" id="fades"></div>
-      <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST, IN ORDER</button></div>
+      <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button></div>
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
     </div>
     <button class="sltog" id="slTog" aria-pressed="true"><b>☰ SET LIST</b><span id="slState">ON</span></button>
@@ -701,7 +701,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10q';
+const BUILD = '2026-11-10r';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1816,14 +1816,14 @@ function sheetBackups(){
 }
 function apSummary(){                    // "1s fade · 10s" on the small settings button
   if (!S) return; const at = +S.pars.Autotime || 30, f = (FADES.find(([, v]) => +v === ui.fade) || ['CUT'])[0];
-  const sl = S.pars.Automode === 'setlist';
-  $('#apSum').textContent = (sl ? 'set list · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
+  const am = S.pars.Automode;
+  $('#apSum').textContent = (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
   $$('#apMode [data-apm]').forEach(b => b.classList.toggle('on', b.dataset.apm === (S.pars.Automode || 'random')));
 }
 $('#apMore').addEventListener('click', () => { const open = $('#apPanel').hidden; $('#apPanel').hidden = !open; $('#apMore').setAttribute('aria-expanded', open); buzz(); });   // only opens / closes the settings
 $('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on' : 'Autopilot off'); buzz(); });
 $('#apMode').addEventListener('click', e => { const b = e.target.closest('[data-apm]'); if (!b || !S) return; const v = b.dataset.apm;
-  if (v === 'setlist' && !(S.queue && S.queue.v && S.queue.v.length)) toast('The set list is empty: hold a preset → Add to set list');
+  if (v !== 'random' && !(S.queue && S.queue.v && S.queue.v.length)) toast('The set list is empty: turn it on → ＋ ADD PRESETS');
   S.pars.Automode = v; send({t:'set', p:'Automode', v}); apSummary(); buzz(); });
 $('#apTimes').addEventListener('click', e => { const b = e.target.closest('[data-apt]'); if (!b || !S) return; const v = +b.dataset.apt;
   S.pars.Autotime = v; applyPars(S.pars); send({t:'set', p:'Autotime', v}); toast('Each preset stays ' + b.textContent); buzz(); });

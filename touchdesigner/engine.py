@@ -2167,7 +2167,9 @@ def autopilotUpdate(C, T):
         except Exception: pass
         return
     q = [x for x in qState()['v'] if _bankTable()[x, 1].val]
-    pool = sorted(set(q)) if len(set(q)) >= 2 else [i for i in range(1, BANK_SLOTS + 1) if _bankTable()[i, 1].val]
+    mode = C.par.Automode.eval() if hasattr(C.par, 'Automode') else 'random'
+    allp = [i for i in range(1, BANK_SLOTS + 1) if _bankTable()[i, 1].val]
+    pool = sorted(set(q)) if (mode == 'setrand' and len(set(q)) >= 2) else allp   # set list - random / every preset
     if len(pool) < 2: return
     avoid = set(AP['recent'][-min(5, len(pool) - 1):]) | {b}
     cand = [x for x in pool if x not in avoid] or [x for x in pool if x != b]
