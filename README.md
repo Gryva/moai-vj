@@ -174,9 +174,9 @@ When a picture, video or drawing is set to **3D OBJECT** (or a text layer to **3
 
 ### LIVE on a tablet
 
-From 900 px wide the presets take three quarters of the screen; the right quarter shows the **preset on air** (its thumbnail
-and name), **Quick controls**, **Autopilot** and the
-**Set list**. Phones keep the single column.
+From 900 px wide the presets take three quarters of the screen; the right quarter shows, top to bottom, the **Set list**,
+**Autopilot** + fade, a slim **on air** strip (thumbnail + name) and **Quick controls**. Drag the divider between the
+columns to resize them (double-tap it to reset; remembered on that device). Phones keep the single column.
 
 ### Saved views (VIEW)
 

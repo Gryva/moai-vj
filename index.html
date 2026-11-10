@@ -307,16 +307,22 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 
 /* LIVE: on tablets / wide screens the presets get 3/4 and a side column holds the live picture, quick controls, autopilot and set list */
 #v-live.on{display:flex;flex-direction:column}.liveside{display:contents}.livemain{order:4}
-#v-live .aprow{order:1}#v-live .appanel{order:2}#cardQuick{order:3}#setlist{order:5}.nowcard{display:none}
+#v-live .aprow{order:1}#v-live .appanel{order:2}#cardQuick{order:3}#setlist{order:5}.nowcard{display:none}.livesplit{display:none}
 @media (min-width:900px){
-  #v-live.on{display:grid;grid-template-columns:minmax(0,3fr) minmax(250px,1fr);gap:0 22px;align-items:start}
-  .livemain{grid-column:1;grid-row:1;min-width:0}
-  .liveside{display:flex;flex-direction:column;gap:12px;grid-column:2;grid-row:1;position:sticky;top:0;max-height:var(--colh,calc(100dvh - 190px));overflow-y:auto;overscroll-behavior:contain;padding:14px 0 16px}
-  .liveside>*{order:0!important;margin-top:0!important}
-  .nowcard{display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
-  .nowimg{position:relative;aspect-ratio:16/9;background:#000}.nowimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .nowtag{position:absolute;left:8px;top:8px;font:700 9px var(--mono);letter-spacing:.1em;color:#fff;background:var(--hot);padding:3px 6px;border-radius:3px}
-  .nowtxt{padding:9px 11px}.nowtxt b{display:block;font-size:15px}.nowtxt em{display:block;font-style:normal;font-size:11px;color:var(--mute);margin-top:2px}
+  #v-live.on{display:grid;grid-template-columns:minmax(0,1fr) 22px var(--sidew,25%);gap:0;align-items:stretch}
+  .livemain{grid-column:1;grid-row:1;min-width:0;align-self:start}
+  .livesplit{display:block;grid-column:2;grid-row:1;position:relative;cursor:col-resize;touch-action:none}
+  .livesplit i{position:sticky;top:30%;display:block;width:6px;height:64px;margin:0 auto;border-radius:3px;background:var(--line)}
+  .livesplit::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:#ffffff10}
+  .livesplit.drag i{background:var(--lime)}
+  .liveside{display:flex;flex-direction:column;gap:12px;grid-column:3;grid-row:1;align-self:start;min-width:0;position:sticky;top:0;max-height:var(--colh,calc(100dvh - 190px));overflow-y:auto;overscroll-behavior:contain;padding:14px 0 16px}
+  .liveside>*{margin-top:0!important}
+  #v-live .liveside>#setlist{order:1!important;margin:0!important}#v-live .liveside>.aprow{order:2!important}#v-live .liveside>.appanel{order:3!important}
+  #v-live .liveside>.nowcard{order:4!important}#v-live .liveside>#cardQuick{order:5!important}
+  .nowcard{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);height:64px}
+  .nowimg{position:relative;flex:none;width:100px;height:100%;background:#000}.nowimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .nowtag{position:absolute;left:5px;top:5px;font:700 8px var(--mono);letter-spacing:.08em;color:#fff;background:var(--hot);padding:2px 5px;border-radius:3px}
+  .nowtxt{padding:0 11px;min-width:0}.nowtxt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nowtxt b{display:block;font-size:15px}.nowtxt em{display:block;font-style:normal;font-size:11px;color:var(--mute);margin-top:2px}
   .liveside .aprow{flex-wrap:wrap}.liveside .setlist .sl-track{min-width:0}
   #v-live .pads{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
@@ -383,6 +389,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous">◀</button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next">▶</button></div>
     </div>
     </aside>
+    <div class="livesplit" id="livesplit" aria-hidden="true"><i></i></div>
     <div class="livemain">
     <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div>
@@ -642,7 +649,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10i';
+const BUILD = '2026-11-10j';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1448,6 +1455,19 @@ function setLay(k, f, v){
   if (f === 'p1') $$(`[data-mode="${k}"]`).forEach(b => b.classList.toggle('on', +b.dataset.v === Math.round(v)));
 }
 const GROUP = {};
+// LIVE: drag the divider to give the presets or the side column more room (remembered on this device)
+(function(){
+  const sp = $('#livesplit'), sec = $('#v-live'); if (!sp) return;
+  const set = w => { sec.style.setProperty('--sidew', w + 'px'); };
+  const saved = +store.get('sidew', 0); if (saved) set(saved);
+  let on = false;
+  sp.addEventListener('pointerdown', e => { e.preventDefault(); on = true; sp.setPointerCapture(e.pointerId); sp.classList.add('drag'); });
+  sp.addEventListener('pointermove', e => { if (!on) return; const r = sec.getBoundingClientRect();
+    const w = Math.round(Math.max(220, Math.min(r.width * 0.6, r.right - e.clientX - 11))); set(w); store.set('sidew', w); });
+  const end = () => { on = false; sp.classList.remove('drag'); };
+  sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+  sp.addEventListener('dblclick', () => { sec.style.removeProperty('--sidew'); store.set('sidew', 0); });
+})();
 // LIVE side column: the preset on air, with its own thumbnail (no live video: saves bandwidth)
 function nowCard(){
   if (!S || !$('#nowcard')) return; const b = S.bank || [], p = S.b && b[S.b - 1];
