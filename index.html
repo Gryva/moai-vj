@@ -710,7 +710,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10w';
+const BUILD = '2026-11-10x';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -821,9 +821,23 @@ function wsCands(){ const port = location.port || '80', c = [location.host];
   (HOSTS || []).forEach(h => { const x = h.ip + ':' + port; if (!c.includes(x)) c.push(x); }); return c; }
 function hostKind(h){ const ip = String(h || '').split(':')[0], f = (HOSTS || []).find(x => x.ip === ip); return f ? f.k : 'LAN'; }
 function linkBadge(){ const b = $('#lk'); if (!b) return; const show = LOCAL && linkUp && wsCands().length > 1;
-  b.classList.toggle('on', show); b.classList.toggle('bk', show && WSH !== location.host); b.textContent = hostKind(WSH); }
+  b.classList.toggle('on', show); b.classList.toggle('bk', show && (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2))); b.textContent = hostKind(WSH); }
 function wsNext(){ const c = wsCands(), i = c.indexOf(WSH); WSFAIL++;
   setTimeout(() => connectWS(c[(i + 1) % c.length]), WSFAIL > c.length ? Math.min(400 * WSFAIL, 3000) : 150); }
+const LINKRANK = {USB:0, LAN:1, WIFI:2, BT:3};      // the cable is the most solid: go back to it whenever it answers
+function wsPrefer(){
+  if (!LOCAL || !linkUp || wsPrefer.busy) return;
+  const port = location.port || '80', cur = LINKRANK[hostKind(WSH)] ?? 2;
+  const best = (HOSTS || []).filter(h => (LINKRANK[h.k] ?? 2) < cur && h.ip + ':' + port !== WSH).sort((a, b) => (LINKRANK[a.k] ?? 2) - (LINKRANK[b.k] ?? 2))[0];
+  if (!best) return;
+  const host = best.ip + ':' + port; let pr; wsPrefer.busy = true;
+  try { pr = new WebSocket('ws://' + host + '/ws'); } catch (e) { wsPrefer.busy = false; return; }
+  const done = ok => { if (!wsPrefer.busy) return; wsPrefer.busy = false; clearTimeout(t); try { pr.close(); } catch (e) {}
+    if (ok && linkUp && WSH !== host) { const old = WS; WSN++; try { old && old.close(); } catch (e) {} WSFAIL = 0; connectWS(host); } };
+  const t = setTimeout(() => done(false), 2500);
+  pr.onopen = () => done(true); pr.onerror = () => done(false);
+}
+setInterval(wsPrefer, 6000);
 function wsSwitch(){ const old = WS; WSN++; linkUp = false; linkBadge(); try { old && old.close(); } catch (e) {} wsNext(); }
 function connectWS(host){
   WSH = host || WSH; const my = ++WSN; let opened = false, ws;
