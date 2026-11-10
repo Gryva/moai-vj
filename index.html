@@ -710,7 +710,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10y';
+const BUILD = '2026-11-10z';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -793,6 +793,7 @@ function onMsg(m){
   else if ((m.t === 'vmiss' || m.t === 'vbusy' || m.t === 'vdone') && VW[m.u]) { const r = VW[m.u]; delete VW[m.u]; r(m); }
 }
 function status(){
+  try { linkBadge(); } catch (e) {}
   if (!KEY && location.protocol === 'https:') return;
   const gap = performance.now() - lastM, ok = linkUp && gap < 3000;
   // short hiccups (public relays stutter) only dim the dot and show a small strip; the full cover needs a real outage
@@ -820,9 +821,11 @@ const LOCAL = location.protocol === 'http:';
 let HOSTS = store.get('hosts', []), WSH = location.host, WS = null, WSN = 0, WSSW = 0, WSFAIL = 0;
 function wsCands(){ const port = location.port || '80', c = [location.host];
   (HOSTS || []).forEach(h => { const x = h.ip + ':' + port; if (!c.includes(x)) c.push(x); }); return c; }
-function hostKind(h){ const ip = String(h || '').split(':')[0], f = (HOSTS || []).find(x => x.ip === ip); return f ? f.k : 'LAN'; }
-function linkBadge(){ const b = $('#lk'); if (!b) return; const show = LOCAL && linkUp && wsCands().length > 1;
-  b.classList.toggle('on', show); b.classList.toggle('bk', show && (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2))); b.textContent = hostKind(WSH); }
+function hostKind(h){ const ip = String(h || '').split(':')[0], f = (HOSTS || []).find(x => x.ip === ip); return f ? f.k : 'DIRECT'; }
+function linkBadge(){ const b = $('#lk'); if (!b) return;
+  const t = !linkUp ? 'NO LINK' : LOCAL ? hostKind(WSH) : 'INTERNET';
+  if (b.textContent !== t) b.textContent = t; b.classList.add('on');
+  b.classList.toggle('bk', !linkUp || !LOCAL || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2))); }
 function wsNext(){ const c = wsCands(), i = c.indexOf(WSH); WSFAIL++;
   setTimeout(() => connectWS(c[(i + 1) % c.length]), WSFAIL > c.length ? Math.min(400 * WSFAIL, 3000) : 150); }
 const LINKRANK = {USB:0, LAN:1, WIFI:2, BT:3};      // the cable is the most solid: go back to it whenever it answers
