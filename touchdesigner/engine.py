@@ -1958,6 +1958,105 @@ def _colsave(T):
     if S.get('lcolsave') and T - STORE['colt'] > 0.5:           # colour drags: at most 2 writes a second
         S.pop('lcolsave', None); STORE['colt'] = T; colSave()
 
+
+# ---------------------------------------------------------------- projector output (keystone) ---------------
+# Venue setup, not part of presets: kept in td/projector.json and restored at start.
+PROJ_FILE = 'td/projector.json'
+PROJ_KEYS = ['Kstlx', 'Kstly', 'Kstrx', 'Kstry', 'Ksblx', 'Ksbly', 'Ksbrx', 'Ksbry', 'Kszoom', 'Ksx', 'Ksy', 'Ksrot',
+             'Ksfeather', 'Ksbright', 'Kslift', 'Ksgamma', 'Ksflipx', 'Ksflipy', 'Kstest', 'Projmon']
+PROJ = {'sig': None, 'loaded': False, 'dirty': 0.0, 'win': None}
+
+def _projLoad(C):
+    PROJ['loaded'] = True
+    try:
+        d = json.load(open(PROJ_FILE))
+        for k in PROJ_KEYS:
+            if k in d and hasattr(C.par, k): C.par[k] = d[k]
+    except Exception: pass
+
+def _projSave(C):
+    try:
+        d = {k: C.par[k].eval() for k in PROJ_KEYS if hasattr(C.par, k)}
+        tmp = PROJ_FILE + '.tmp'
+        with open(tmp, 'w') as f: json.dump(d, f, indent=1)
+        os.replace(tmp, PROJ_FILE)
+    except Exception as e: ERRS['projsave'] = str(e)
+
+def _homography(src, dst):
+    """3x3 matrix taking the four src points onto the four dst points."""
+    import numpy as np
+    A, b = [], []
+    for (x, y), (u, v) in zip(src, dst):
+        A.append([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.append(u)
+        A.append([0, 0, 0, x, y, 1, -v * x, -v * y]); b.append(v)
+    h = np.linalg.solve(np.array(A, float), np.array(b, float))
+    return np.append(h, 1.0).reshape(3, 3)
+
+def projQuad(C):
+    """Where the picture's corners land on the projector (0-1, y up): corner drags, then zoom, rotate, move."""
+    f = lambda k: float(C.par[k].eval())
+    q = [(0.0 + f('Ksblx'), 0.0 + f('Ksbly')), (1.0 + f('Ksbrx'), 0.0 + f('Ksbry')),
+         (1.0 + f('Kstrx'), 1.0 + f('Kstry')), (0.0 + f('Kstlx'), 1.0 + f('Kstly'))]
+    z, a = max(0.05, f('Kszoom')), math.radians(f('Ksrot'))
+    kw = op('/project1/kst_warp'); asp = (kw.width / max(1.0, kw.height)) if kw is not None else 16.0 / 9.0
+    ca, sa, out = math.cos(a), math.sin(a), []
+    for x, y in q:
+        x, y = (x - 0.5) * asp * z, (y - 0.5) * z
+        x, y = x * ca - y * sa, x * sa + y * ca
+        out.append((x / asp + 0.5 + f('Ksx') * 0.5, y + 0.5 + f('Ksy') * 0.5))
+    return out
+
+def projUpdate(C):
+    if not hasattr(C.par, 'Kszoom'): return
+    if not PROJ['loaded']: _projLoad(C)
+    sig = tuple(C.par[k].eval() for k in PROJ_KEYS)
+    kw = op('/project1/kst_warp')
+    if sig != PROJ['sig'] and kw is not None:
+        import numpy as np
+        first = PROJ['sig'] is None
+        PROJ['sig'] = sig
+        try:
+            Hi = np.linalg.inv(_homography([(0, 0), (1, 0), (1, 1), (0, 1)], projQuad(C)))   # projector pixel -> picture
+            p = kw.par
+            for r in range(3):
+                p['vec%dvaluex' % r], p['vec%dvaluey' % r], p['vec%dvaluez' % r] = [float(v) for v in Hi[r]]
+        except Exception as e: ERRS['keystone'] = str(e)
+        p = kw.par
+        p.vec3valuex = 1.0 if C.par.Ksflipx.eval() else 0.0; p.vec3valuey = 1.0 if C.par.Ksflipy.eval() else 0.0
+        p.vec3valuez = float(C.par.Ksfeather.eval()); p.vec3valuew = {'off': 0, 'over': 1, 'grid': 2}.get(C.par.Kstest.eval(), 0)
+        p.vec4valuex, p.vec4valuey, p.vec4valuez = float(C.par.Ksbright.eval()), float(C.par.Kslift.eval()), float(C.par.Ksgamma.eval())
+        if not first: PROJ['dirty'] = absTime.seconds
+    if PROJ['dirty'] and absTime.seconds - PROJ['dirty'] > 1.0:       # saved a second after the last change
+        PROJ['dirty'] = 0.0; _projSave(C)
+    projWindow(C)
+
+def projMonitors():
+    try: return [(m.width, m.height) for m in monitors]
+    except Exception: return []
+
+def projWindow(C):
+    """Open / close the full-screen projector window on the chosen screen."""
+    w = op('/project1/proj_window')
+    if w is None: return
+    want = bool(C.par.Projwin.eval())
+    mons = projMonitors()
+    mi = min(max(0, int(C.par.Projmon.eval()) - 1), max(0, len(mons) - 1))
+    key = (want, mi)
+    if key == PROJ['win'] and (w.isOpen == want or absTime.seconds - PROJ.get('wt', 0) < 3.0): return
+    PROJ['win'] = key; PROJ['wt'] = absTime.seconds
+    if want:
+        mw, mh = mons[mi] if mons else (1920, 1080)
+        kw = op('/project1/kst_warp'); c = op('/project1/PROJECTOR')
+        rw = min(1280, mw); rh = int(round(rw * mh / max(1, mw)))      # the window scales it up (licence caps textures at 1280)
+        if kw is not None and (kw.par.resolutionw.eval(), kw.par.resolutionh.eval()) != (rw, rh):
+            kw.par.resolutionw, kw.par.resolutionh = rw, rh; PROJ['sig'] = None     # re-fit the warp to the screen's shape
+        if c is not None: c.par.w, c.par.h = mw, mh
+        w.par.monitor = mi; w.par.size = 'fill'; w.par.borders = False
+        if w.isOpen: w.par.winclose.pulse()
+        w.par.winopen.pulse()
+    elif w.isOpen:
+        w.par.winclose.pulse()
+
 def onFrameStart(frame):
     C = op('/project1/CONTROLS')
     dt = 1.0 / max(1.0, float(project.cookRate))
@@ -1973,6 +2072,7 @@ def onFrameStart(frame):
     if sc != S['scene']:
         _safe('scene', applyScene, sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'
     _safe('models', _models, C, dt, T, react, sc == 'grid')
+    _safe('projector', projUpdate, C)
     _safe('render', renderGeo, C)
     _safe('layers', applyLayers, T)
     _safe('uniforms', pushUniforms, T)

@@ -32,6 +32,14 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autofade', 'Autopilot transition', 0, 4, 0.1, 'apfade'),     # set by the phone's transition buttons
     ('Swapfade', 'Linked layer switch', 0, 3, 0.05, 'swapfade'),    # 0 = instant cut; set by the phone's link menu
+    # projector output (OUTPUT tab); corners are dragged on the phone's keystone pad
+    ('Kstlx', 'Top-left x', -0.5, 0.5, 0.001, 'kscorner'), ('Kstly', 'Top-left y', -0.5, 0.5, 0.001, 'kscorner'),
+    ('Kstrx', 'Top-right x', -0.5, 0.5, 0.001, 'kscorner'), ('Kstry', 'Top-right y', -0.5, 0.5, 0.001, 'kscorner'),
+    ('Ksblx', 'Bottom-left x', -0.5, 0.5, 0.001, 'kscorner'), ('Ksbly', 'Bottom-left y', -0.5, 0.5, 0.001, 'kscorner'),
+    ('Ksbrx', 'Bottom-right x', -0.5, 0.5, 0.001, 'kscorner'), ('Ksbry', 'Bottom-right y', -0.5, 0.5, 0.001, 'kscorner'),
+    ('Kszoom', 'Size', 0.3, 2, 0.005, 'proj'), ('Ksx', 'Move left / right', -1, 1, 0.002, 'proj'), ('Ksy', 'Move down / up', -1, 1, 0.002, 'proj'),
+    ('Ksrot', 'Rotate (°)', -45, 45, 0.1, 'proj'), ('Ksfeather', 'Soft edges', 0, 0.2, 0.002, 'proj'),
+    ('Ksbright', 'Brightness', 0, 2, 0.01, 'projlook'), ('Kslift', 'Black level', 0, 0.2, 0.002, 'projlook'), ('Ksgamma', 'Gamma', 0.5, 2, 0.01, 'projlook'),
     ('Autotime', 'Autopilot: new preset every (s)', 5, 300, 5, 'master'),
     ('Reactivity', 'Reactivity', 0, 2, 0.01, 'audio'),
     ('Gain', 'Input gain', 0, 4, 0.01, 'audio'),
@@ -96,8 +104,8 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon')] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor')] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -553,7 +561,7 @@ def state():
     return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
-            'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
+            'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
                        for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
             'sliders': [dict(zip(('p', 'label', 'min', 'max', 'step', 'group'), s)) for s in SLIDERS]}

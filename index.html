@@ -240,7 +240,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radiu
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
 .bar div{width:100%;border-radius:6px;background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(7,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:6px}nav button.on{color:var(--ink);background:var(--panel2)}
 
 /* text tab */
@@ -275,6 +275,14 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .sheet .acts{display:grid;gap:8px}
 .sheet .acts button{padding:15px;border-radius:8px;font-weight:700;background:var(--panel2)}
 .sheet .acts .pri{background:var(--ink);color:var(--bg)}.sheet .acts .dan{color:var(--hot)}
+.kspad{position:relative;margin:16px 14% 20px;aspect-ratio:16/9;touch-action:none}
+.kspad svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.kspad .ksframe{fill:none;stroke:var(--line);stroke-width:.6;stroke-dasharray:2 2;vector-effect:non-scaling-stroke}
+.kspad polygon{fill:#ffffff14;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.ksh{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--c);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--c);touch-action:none}
+.ksh.sel{box-shadow:0 0 0 3px var(--ink)}
+.ksnudge{display:grid;grid-template-columns:1.6fr repeat(4,1fr) 1.2fr;gap:6px;align-items:center;margin-top:8px}.ksnudge span{font:600 11px var(--mono);color:var(--mute);text-transform:uppercase}
+.ksnudge button{padding:11px 0;border-radius:8px;background:var(--panel2);font-weight:700}.ksnudge .kstep{font:700 10px var(--mono)}
+.ksrow{display:flex;align-items:center;gap:8px;margin-top:8px}.ksrow>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none;width:50px}.ksrow .opts{flex:1;margin:0}
 .tpos{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px}.tpos button{margin:0!important;font-size:15px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -461,9 +469,28 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <h2>Statue motion</h2><div id="g-motion"></div>
     <div class="btns" style="grid-template-columns:1fr 1fr 1fr"><button class="btn" id="t-Showlabel" data-tog="Showlabel">INFO LABEL</button><button class="btn" id="chpass">PASSWORD</button><button class="btn" id="logout">LOCK PHONE</button></div>
   </section>
+  <section class="view" id="v-out">
+    <h2>Projector</h2>
+    <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="t-Projwin" data-tog="Projwin">PROJECTOR WINDOW</button></div>
+    <div class="ksrow"><span>Screen</span><div class="opts" id="o-Projmon"></div></div>
+    <p class="hint2">Opens the picture full screen on that screen. Screen 1 is the computer's main screen; the projector is usually 2.</p>
+    <h2>Keystone</h2>
+    <div class="kspad" id="kspad"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="ksframe" x="0" y="0" width="100" height="100"/><polygon id="kspoly" points=""/></svg>
+      <button class="ksh" data-ksc="Kstl" style="--c:#ff4b4b"></button><button class="ksh" data-ksc="Kstr" style="--c:#3ddc6a"></button>
+      <button class="ksh" data-ksc="Ksbl" style="--c:#5a86ff"></button><button class="ksh" data-ksc="Ksbr" style="--c:#ffd84a"></button></div>
+    <p class="hint2">Drag the corners until the picture sits square on the wall. Tap a corner, then nudge it below for fine steps. The test grid shows the same coloured corners.</p>
+    <div class="ksnudge"><span id="kscur">Top-left</span><button data-ksn="-1,0">◀</button><button data-ksn="0,1">▲</button><button data-ksn="0,-1">▼</button><button data-ksn="1,0">▶</button>
+      <button data-ksstep class="kstep">FINE</button></div>
+    <div class="ksrow"><span>Test</span><div class="opts" id="o-Kstest"></div></div>
+    <div class="btns" style="grid-template-columns:1fr 1fr 1fr"><button class="btn" id="t-Ksflipx" data-tog="Ksflipx">FLIP ↔</button><button class="btn" id="t-Ksflipy" data-tog="Ksflipy">FLIP ↕</button><button class="btn" data-act="ksreset">RESET CORNERS</button></div>
+    <h2>Position</h2><div id="g-proj"></div>
+    <h2>Picture</h2><div id="g-projlook"></div>
+    <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="ksall">RESET ALL OUTPUT SETTINGS</button></div>
+    <p class="hint2">Saved on the computer, not in presets: the setup stays the same when you change looks.</p>
+  </section>
 </main>
 
-<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button></nav>
+<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
@@ -517,7 +544,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-09e';
+const BUILD = '2026-11-10a';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1046,8 +1073,8 @@ function build(){
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; const a = String(S.pars.Model || '').startsWith('anim_'); $('#box-static').open = !a; $('#box-anim').open = a; }
   buildCam(); buildText(); buildDraw();
-  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
-  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', mobj:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
+  ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3','proj','projlook'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
+  ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', mobj:'var(--cyan)', proj:'var(--cyan)', projlook:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
     host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
@@ -1065,6 +1092,8 @@ const TOPTS = {
   Textdir: [['h','HORIZONTAL'],['v','VERTICAL'],['up','SIDEWAYS ↑'],['down','SIDEWAYS ↓']],
   Textadir: [['left','← LEFT'],['right','RIGHT →'],['up','↑ UP'],['down','DOWN ↓']],
   Textspace: [['flat','FLAT'],['3d','3D']],
+  Kstest: [['off','OFF'],['over','GRID OVER'],['grid','GRID ONLY']],
+  Projmon: [['1','1'],['2','2'],['3','3'],['4','4']],
   Textfont: [['Bebas Neue','BEBAS'],['Impact','IMPACT'],['Bahnschrift','BAHN'],['Agency FB','AGENCY'],['Cascadia Mono','MONO'],['Georgia','SERIF'],['Algerian','DECO'],['Blackadder ITC','GOTHIC']]};
 [2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE']]; });
@@ -1087,6 +1116,33 @@ function buildText(){
 function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); }
 const TADIR_ANIMS = ['scroll', 'wave', 'tile', 'bounce'];
 function textBehind(n){ const k = n === 1 ? 'text' : 'text' + n, o = layerOrder(); for (const t of o) { if (t === k) return false; if (!/^text/.test(t) && layerInfo(t) && layerInfo(t).on && !layerInfo(t).hid) return true; } return false; }
+// ---- OUTPUT tab: keystone pad -------------------------------------------------------------------------
+const KSC = {Kstl: [0, 1, 'Top-left'], Kstr: [1, 1, 'Top-right'], Ksbl: [0, 0, 'Bottom-left'], Ksbr: [1, 0, 'Bottom-right']};
+let KS_SEL = 'Kstl', KS_FINE = true, KS_T = 0;
+function ksPos(k){ const [bx, by] = KSC[k], p = S.pars; return [bx + (+p[k + 'x'] || 0), by + (+p[k + 'y'] || 0)]; }
+function ksDraw(){
+  const pad = $('#kspad'); if (!pad || !S) return;
+  $('#kspoly').setAttribute('points', ['Kstl', 'Kstr', 'Ksbr', 'Ksbl'].map(k => { const [x, y] = ksPos(k); return (x * 100) + ',' + ((1 - y) * 100); }).join(' '));
+  $$('#kspad .ksh').forEach(h => { const [x, y] = ksPos(h.dataset.ksc); h.style.left = (x * 100) + '%'; h.style.top = ((1 - y) * 100) + '%'; h.classList.toggle('sel', h.dataset.ksc === KS_SEL); });
+  $('#kscur').textContent = KSC[KS_SEL][2];
+  $('[data-ksstep]').textContent = KS_FINE ? 'FINE' : 'BIG';
+  const n = (S.mons || []).length || 2;
+  $$('#o-Projmon button').forEach((b, i) => b.hidden = i >= Math.max(n, +(S.pars.Projmon || 1)));
+}
+function ksSet(k, x, y, force){
+  const cl = v => Math.max(-0.5, Math.min(0.5, v)), [bx, by] = KSC[k];
+  S.pars[k + 'x'] = +cl(x - bx).toFixed(4); S.pars[k + 'y'] = +cl(y - by).toFixed(4); ksDraw();
+  const now = performance.now(); if (!force && now - KS_T < 45) return; KS_T = now;
+  send({t:'set', p:k + 'x', v:S.pars[k + 'x']}); send({t:'set', p:k + 'y', v:S.pars[k + 'y']});
+}
+(function(){
+  const pad = $('#kspad'); if (!pad) return; let drag = null;
+  const at = e => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height]; };
+  pad.addEventListener('pointerdown', e => { const h = e.target.closest('.ksh'); if (!h) return; e.preventDefault(); drag = h.dataset.ksc; KS_SEL = drag; h.setPointerCapture(e.pointerId); ksDraw(); buzz(6); });
+  pad.addEventListener('pointermove', e => { if (!drag) return; const [x, y] = at(e); ksSet(drag, x, y); });
+  const end = e => { if (!drag) return; const [x, y] = at(e); ksSet(drag, x, y, true); drag = null; };
+  pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
+})();
 function syncText(p){
   $$('[data-tp]').forEach(b => b.classList.toggle('on', p[b.dataset.tp] === b.dataset.tv));
   [['Text', 1], ['T2', 2], ['T3', 3]].forEach(([q, n]) => {
@@ -1158,7 +1214,7 @@ function applyPars(p){
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
   ['Autospin','Spinrev','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
   $('#spinrow').hidden = p.Motion !== 'spin';
-  syncText(p); clipUI(p); ccUI('text');
+  syncText(p); clipUI(p); ccUI('text'); ksDraw();
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';
   $('#t-Drawon').textContent = p.Drawon ? 'ON' : 'OFF';
   cards();
@@ -1664,6 +1720,12 @@ document.addEventListener('click', e => {
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; if (GSHUT[d.gtog]) delete GSHUT[d.gtog]; else GSHUT[d.gtog] = 1; store.set('gshut', GSHUT); renderPads(); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
+  else if (d.ksn !== undefined) { const [dx, dy] = d.ksn.split(',').map(Number), st = KS_FINE ? 0.002 : 0.02, [x, y] = ksPos(KS_SEL); ksSet(KS_SEL, x + dx * st, y + dy * st, true); buzz(5); }
+  else if (d.ksstep !== undefined) { KS_FINE = !KS_FINE; ksDraw(); }
+  else if (d.act === 'ksreset' || d.act === 'ksall') {
+    const ks = ['Kstl','Kstr','Ksbl','Ksbr'].flatMap(k => [[k + 'x', 0], [k + 'y', 0]]);
+    if (d.act === 'ksall') ks.push(['Kszoom', 1], ['Ksx', 0], ['Ksy', 0], ['Ksrot', 0], ['Ksfeather', 0], ['Ksbright', 1], ['Kslift', 0], ['Ksgamma', 1], ['Ksflipx', false], ['Ksflipy', false]);
+    ks.forEach(([p_, v]) => { S.pars[p_] = v; send({t:'set', p:p_, v}); }); applyPars({}); ksDraw(); buzz(); }
   else if (d.act === 'o3reset') { const k = VW_SEL, q = k === 'model' ? 'Model' : /^m\d$/.test(k) ? 'M' + k.slice(1) + 'obj' : k === 'text' ? 'Text' : /^text\d$/.test(k) ? 'T' + k.slice(4) : null;
     if (q) { const ks = k === 'model' || /^m\d$/.test(k) ? [['x',0],['y',0],['z',0],['scale',1],['turn',0],['tilt',0]] : [['depth',0],['oscale',1],['oturn',0],['otilt',0]];
       ks.forEach(([n, v]) => { S.pars[q + n] = v; send({t:'set', p:q + n, v}); }); applyPars({}); } buzz(); }

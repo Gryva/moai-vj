@@ -151,6 +151,20 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
 
 ---
 
+### OUTPUT (projector)
+
+- **PROJECTOR WINDOW** opens the picture full screen, borderless, on the chosen **Screen** (1 = the computer's main
+  screen, 2 = usually the projector). Tap again to close it.
+- **Keystone:** drag the four coloured corners on the pad until the picture sits square on the wall; tap a corner and
+  use ◀ ▲ ▼ ▶ to nudge it (**FINE** / **BIG** steps). **Test: GRID OVER / GRID ONLY** projects an alignment grid with
+  a circle (round when the shape is right) and the same coloured corners.
+- **FLIP ↔** for rear projection, **FLIP ↕** for a ceiling mount (both = upside down), **RESET CORNERS**.
+- **Position:** size, move, rotate, soft edges. **Picture:** brightness, black level, gamma (for the projector only;
+  the phone thumbnails stay unwarped).
+- Saved on the computer in `td/projector.json`, not in presets, so the setup stays put when you change looks.
+- The warp runs after OUT (`kst_warp`, `td/fx/keystone.glsl`) and feeds `out1` and the projector window. With the
+  non-commercial licence the warped picture is 1280 px wide and the window scales it to the screen.
+
 ## 3. Computer controls (failsafes)
 
 Work with the TouchDesigner window focused, no phone needed.
