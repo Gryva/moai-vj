@@ -2046,13 +2046,16 @@ def projWindow(C):
     PROJ['win'] = key; PROJ['wt'] = absTime.seconds
     if want:
         mw, mh = mons[mi] if mons else (1920, 1080)
-        kw = op('/project1/kst_warp'); c = op('/project1/PROJECTOR')
+        kw = op('/project1/kst_warp'); c = op('/PROJECTOR') or op('/project1/PROJECTOR')
         rw = min(1280, mw); rh = int(round(rw * mh / max(1, mw)))      # the window scales it up (licence caps textures at 1280)
         if kw is not None and (kw.par.resolutionw.eval(), kw.par.resolutionh.eval()) != (rw, rh):
             kw.par.resolutionw, kw.par.resolutionh = rw, rh; PROJ['sig'] = None     # re-fit the warp to the screen's shape
         if c is not None: c.par.w, c.par.h = mw, mh
         w.par.monitor = mi; w.par.size = 'fill'; w.par.borders = False
         if w.isOpen: w.par.winclose.pulse()
+        try:
+            if ui.performMode: ui.performMode = False      # one output only: the perform window would show it a second time
+        except Exception: pass
         w.par.winopen.pulse()
     elif w.isOpen:
         w.par.winclose.pulse()

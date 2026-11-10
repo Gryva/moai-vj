@@ -275,6 +275,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .sheet .acts{display:grid;gap:8px}
 .sheet .acts button{padding:15px;border-radius:8px;font-weight:700;background:var(--panel2)}
 .sheet .acts .pri{background:var(--ink);color:var(--bg)}.sheet .acts .dan{color:var(--hot)}
+.btn.big{padding:17px 0;font-size:14px;letter-spacing:.06em}
 .kspad{position:relative;margin:16px 14% 20px;aspect-ratio:16/9;touch-action:none}
 .kspad svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.kspad .ksframe{fill:none;stroke:var(--line);stroke-width:.6;stroke-dasharray:2 2;vector-effect:non-scaling-stroke}
 .kspad polygon{fill:#ffffff14;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
@@ -471,9 +472,9 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   </section>
   <section class="view" id="v-out">
     <h2>Projector</h2>
-    <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="t-Projwin" data-tog="Projwin">PROJECTOR WINDOW</button></div>
+    <div class="btns" style="grid-template-columns:1fr"><button class="btn big" id="t-Projwin" data-tog="Projwin">⛶ FULL SCREEN OUTPUT</button></div>
     <div class="ksrow"><span>Screen</span><div class="opts" id="o-Projmon"></div></div>
-    <p class="hint2">Opens the picture full screen on that screen. Screen 1 is the computer's main screen; the projector is usually 2.</p>
+    <p class="hint2">Shows the picture full screen, no borders, on that screen (1 = the computer's main screen, 2 = usually the projector). Tap again to close. TouchDesigner's own perform window closes so the picture is never shown twice.</p>
     <h2>Keystone</h2>
     <div class="kspad" id="kspad"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="ksframe" x="0" y="0" width="100" height="100"/><polygon id="kspoly" points=""/></svg>
       <button class="ksh" data-ksc="Kstl" style="--c:#ff4b4b"></button><button class="ksh" data-ksc="Kstr" style="--c:#3ddc6a"></button>
@@ -544,7 +545,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10a';
+const BUILD = '2026-11-10b';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);

@@ -153,8 +153,9 @@ time, response, flick inertia, brightness, blackout fade, and **Autopilot: new p
 
 ### OUTPUT (projector)
 
-- **PROJECTOR WINDOW** opens the picture full screen, borderless, on the chosen **Screen** (1 = the computer's main
-  screen, 2 = usually the projector). Tap again to close it.
+- **⛶ FULL SCREEN OUTPUT** opens the picture full screen, borderless, on the chosen **Screen** (1 = the computer's main
+  screen, 2 = usually the projector). Tap again to close it. TouchDesigner's perform window closes when it opens, so the
+  picture is never shown twice.
 - **Keystone:** drag the four coloured corners on the pad until the picture sits square on the wall; tap a corner and
   use ◀ ▲ ▼ ▶ to nudge it (**FINE** / **BIG** steps). **Test: GRID OVER / GRID ONLY** projects an alignment grid with
   a circle (round when the shape is right) and the same coloured corners.
