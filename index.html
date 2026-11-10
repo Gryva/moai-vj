@@ -26,6 +26,9 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
 .fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute)}
+.fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}
+.r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
+@media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo{padding:0 9px}}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
 body.editing .edit{background:var(--lime);color:#0b0a0f;border-color:transparent}
 body:not(.editing) nav{display:none}
@@ -297,7 +300,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -545,7 +548,7 @@ const MODES = {mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], 
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10b';
+const BUILD = '2026-11-10c';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1778,6 +1781,22 @@ tp.addEventListener('pointerup', up); tp.addEventListener('pointercancel', up);
 async function wake(){ try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){} }
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && wake());
 $('#lockgo').addEventListener('click', unlockTry);
+// full screen for the phone page (iPhone Safari has none: there it runs full screen from the home-screen icon)
+(function(){
+  const b = $('#fsbtn'), d = document, el = d.documentElement;
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  if (standalone) { b.hidden = true; return; }
+  const isFs = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
+  const sync = () => { b.classList.toggle('on', isFs()); b.textContent = isFs() ? '✕' : '⛶'; b.setAttribute('aria-label', isFs() ? 'Leave full screen' : 'Full screen'); };
+  b.addEventListener('click', () => {
+    if (isFs()) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); return; }
+    const go = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (go) { try { const r = go.call(el, {navigationUI: 'hide'}); if (r && r.catch) r.catch(() => toast('Full screen was blocked by the browser')); } catch (e) { toast('Full screen was blocked by the browser'); } }
+    else toast('On iPhone: Share → Add to Home Screen, then open it from the icon for full screen');
+    buzz(8);
+  });
+  d.addEventListener('fullscreenchange', sync); d.addEventListener('webkitfullscreenchange', sync);
+})();
 $('#lockpw').addEventListener('keydown', e => { if (e.key === 'Enter') unlockTry(); });
 $('#tin').addEventListener('input', () => $('#tin')._dirty = true);
 [2,3].forEach(n => { const ti = $('#tin' + n); ti.addEventListener('input', () => ti._dirty = true); ti.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); showTextN(n); } }); });
