@@ -634,6 +634,12 @@ def _all(obj, skip=None, retain=False):
 def _allMedia():
     _all(mediaMsg()); mediaThumbs(_all)
 
+def _thumbsPaced(reply, items, gap=3):
+    """Send preset pictures a few frames apart instead of all at once."""
+    for idx, (s_, img_) in enumerate(list(items.items())):
+        try: run("args[0]({'t': 'thumb', 's': args[1], 'img': args[2]})", reply, int(s_), img_, delayFrames=2 + idx * gap)
+        except Exception as e: print('thumb send failed', e)
+
 def _phones():
     now = time.perf_counter()
     return bool(CLIENTS) or any(now - t < 30 for t in SEEN.values())
@@ -914,6 +920,9 @@ def handle(msg, reply):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
         elif t == 'ping':
             pass
+        elif t == 'thumbs':                               # the phone is missing some preset pictures: send just those
+            need = {str(int(x)) for x in (msg.get('need') or [])[:128]}
+            _thumbsPaced(reply, {k: v for k, v in E.thumbAll().items() if str(k) in need})
         elif t == 'qtext':                                # quick-control text: show it, and keep it in the preset on air
             n = int(msg.get('n', 1)); v = str(msg.get('v', ''))[:120]
             if n in (1, 2, 3):
@@ -923,7 +932,7 @@ def handle(msg, reply):
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())
             if not E.STORE['ok']: reply({'t': 'store', 'v': E.storeInfo(), 'alert': 'PRESETS NOT SAVED: ' + E.STORE['err']})
-            for s_, img_ in E.thumbAll().items(): reply({'t': 'thumb', 's': int(s_), 'img': img_})   # one small message per picture
+            _thumbsPaced(reply, E.thumbAll())                 # one small message per picture, spaced out (public relays drop bursts)
             reply(clipsMsg())
             reply(mediaMsg()); mediaThumbs(reply)
             reply(fxpMsg())

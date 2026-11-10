@@ -707,7 +707,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10t';
+const BUILD = '2026-11-10u';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -715,7 +715,11 @@ setTimeout(async () => {
       b.onclick = () => location.replace(location.pathname + '?v=' + encodeURIComponent(m[1]) + location.hash); document.body.appendChild(b); } } catch (e) {}
 }, 1500);
 const BROKERS = [{url:'wss://public.cloud.shiftr.io', user:'public', pass:'public'}, {url:'wss://broker.hivemq.com:8884/mqtt'}, {url:'wss://broker.emqx.io:8084/mqtt'}];
-const THUMBS = {}; const FXV = 'v2';
+const THUMBS = (() => { try { return JSON.parse(localStorage.getItem('thumbcache') || '{}') || {}; } catch (e) { return {}; } })(); const FXV = 'v2';
+let thumbSaveT = 0; function thumbCache(){ clearTimeout(thumbSaveT); thumbSaveT = setTimeout(() => { try { localStorage.setItem('thumbcache', JSON.stringify(THUMBS)); } catch (e) {} }, 800); }
+function thumbsCheck(){                   // pictures still missing a few seconds after connecting: ask again for just those
+  if (!S || !S.bank) return; const need = []; S.bank.forEach((p, i) => { if (p && !THUMBS[i + 1]) need.push(i + 1); });
+  if (need.length) send({t:'thumbs', need}); }
 let S = null, T = {send(){}}, linkUp = false, lastM = 0, lastErr = '', bi = store.get('broker', 0) % BROKERS.length;
 let ui = {tab: store.get('tab', 'live'), bank: store.get('bank', 0), fade: store.get('fade', 1), cam: store.get('cam2', true), model: store.get('model', true), text: store.get('text', false), setlist: store.get('setlist', true)};
 const touching = {};
@@ -748,7 +752,7 @@ function onMsg(m){
     else lock(TOKEN ? 'Wrong password' : '');
     return;
   }
-  if (m.t === 'state') {
+  if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
     if (m.local) store.set('local', m.local); if (m.store) storeState(m.store);
@@ -773,7 +777,7 @@ function onMsg(m){
     S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); renderMedia(); cards(); }
   else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
     if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(renderMedia, 80); } }
-  else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
+  else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; thumbCache(); renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
   else if (m.t === 'presets') { S.presets = m.presets; if (m.presetmov) S.presetmov = m.presetmov; if (m.presetdata) S.presetdata = m.presetdata; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);
   else if (m.t === 'saved') savedAck(m);
