@@ -989,6 +989,9 @@ def localLink():
         ip = '127.0.0.1'
     finally:
         s.close()
+    _hostsRefresh()                                   # a USB cable to the tablet is the most solid route: point the link there
+    usb = [h['ip'] for h in HOSTS['v'] if h['k'] == 'USB']
+    if usb: ip = usb[0]
     LOCAL['link'] = 'http://%s:%d/#k=%s' % (ip, int(op('/project1/remote_server').par.port.eval()), relayKey()); LOCAL['t'] = now
     try:
         if hasattr(_C().par, 'Locallink') and _C().par.Locallink.eval() != LOCAL['link']: _C().par.Locallink = LOCAL['link']

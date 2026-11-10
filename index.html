@@ -26,7 +26,7 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
 .fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute)}
-.lk{font:700 9px var(--mono);letter-spacing:.08em;padding:3px 6px;border-radius:5px;border:1px solid #ffffff22;color:var(--mute);flex:none;display:none}.lk.on{display:block}.lk.bk{color:#ffcf7a;border-color:#ffb02e66}
+.lk{font:700 9px var(--mono);letter-spacing:.08em;padding:3px 6px;border-radius:5px;border:1px solid #ffffff22;color:var(--mute);flex:none;display:none}.lk.on{display:block}.lk.bk{color:#ffcf7a;border-color:#ffb02e66}.golocal{color:var(--lime);border-color:var(--lime);text-decoration:none;cursor:pointer;font-size:10px;padding:5px 8px}
 .fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
@@ -421,7 +421,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><div class="lk" id="lk" title="Which link the remote is using"></div><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><div class="lk" id="lk" title="Which link the remote is using"></div><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -710,7 +710,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10x';
+const BUILD = '2026-11-10y';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -809,6 +809,7 @@ function status(){
   $('#offS').innerHTML = KEY ? 'Relay ' + BROKERS[bi].url.split('/')[2] + (lastErr ? '<br><small>' + esc(lastErr) + '</small>' : '') + '<br>TouchDesigner must be open and online.'
                              : 'Phone and computer must be on the same Wi-Fi.';
   const loc = store.get('local', ''), L = $('#offL');
+  const G = $('#golocal'); if (G) { const on = !!loc && location.protocol === 'https:'; G.classList.toggle('on', on); if (on) G.href = loc; }
   if (loc && location.protocol === 'https:' && !ok) { L.style.display = 'block'; L.href = loc; L.textContent = 'No internet? On the same Wi-Fi as the computer, tap here: ' + loc.split('#')[0]; }
   else L.style.display = 'none';
 }
