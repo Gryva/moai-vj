@@ -339,7 +339,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   #v-live .liveside #apBtn{order:1;grid-column:1;margin:0}#v-live .liveside>#slTog{order:2!important;grid-column:2;margin:0}
   #v-live .liveside #apMore{order:3;grid-column:1 / -1;margin:0}#v-live .liveside>.appanel{order:4!important;grid-column:1 / -1}
   #v-live .liveside>.nowcard{order:5!important;grid-column:1 / -1}#v-live .liveside>#cardQuick{order:6!important;grid-column:1 / -1}
-  #v-live .liveside #apBtn,#v-live .liveside>#slTog{min-height:52px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center}
+  #v-live .liveside #apBtn,#v-live .liveside>#slTog{min-height:0;height:32px;padding:0 10px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;text-align:center}
+  #v-live .liveside #apBtn b,#v-live .liveside>#slTog b{font-size:11px}#v-live .liveside #apBtn span,#v-live .liveside>#slTog span{font-size:9px}
   #v-live .liveside>#slTog b{font-size:12px}
   .livemain{display:flex;flex-direction:column;height:var(--colh,calc(100dvh - 190px));position:sticky;top:0}
   .presetsbox{flex:1 1 55%;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:10px}
@@ -374,6 +375,7 @@ body:not(.editing) .livesplit{display:none!important}
 body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-right:16px}body.tab-live.rail-l main{padding-left:16px}
 .logo{cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .about{font-size:13px;line-height:1.55;color:var(--mute)}.about b{color:var(--ink)}.about p{margin:0 0 10px}.about .ver{font:600 11px var(--mono);color:var(--cyan)}
+header .now{display:none}   /* the preset on air shows on its tile and the LIVE strip */
 /* lock */
 .lock{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:var(--bg);padding:28px}
 .lock.on{display:grid}
@@ -705,7 +707,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10s';
+const BUILD = '2026-11-10t';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
