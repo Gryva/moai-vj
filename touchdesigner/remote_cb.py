@@ -4,7 +4,7 @@ import json, os, time
 
 WEB = os.path.join(project.folder, 'web')
 MIME = {'.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css',
-        '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json',
+        '.jpg': 'image/jpeg', '.ttf': 'font/ttf', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json',
         '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'}
 CLIENTS = set()
 SEEN = {}            # relay DAT name -> last time a phone talked through it

@@ -421,6 +421,10 @@ TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont
 TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
            'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
            'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': ''}   # older presets: these
+TFONTFILES = {'Bangers': 'Bangers-Regular.ttf', 'Permanent Marker': 'PermanentMarker-Regular.ttf', 'Caveat Brush': 'CaveatBrush-Regular.ttf',
+              'Monoton': 'Monoton-Regular.ttf', 'Pacifico': 'Pacifico-Regular.ttf', 'Press Start 2P': 'PressStart2P-Regular.ttf',
+              'Rubik Glitch': 'RubikGlitch-Regular.ttf', 'Bungee Shade': 'BungeeShade-Regular.ttf', 'Shrikhand': 'Shrikhand-Regular.ttf',
+              'Rock Salt': 'RockSalt-Regular.ttf'}                # shipped in td/fonts (open licences), no install needed
 TDIRS = {'h': 0, 'v': 1, 'up': 2, 'down': 3}
 TADIRS = {'left': 0, 'right': 1, 'up': 2, 'down': 3}
 TCOLORS = {'white': (1, 1, 1), 'hot': (1, .3, .18), 'cyan': (.24, .94, 1), 'violet': (.69, .42, 1),
@@ -484,7 +488,9 @@ def textUpdate(C, T, n=1):
         ax, ay, px, py, fpx, fit, wrap = TLAYOUT.get(lay, TLAYOUT['center'])
         if anim == 'scroll': wrap = False
         p = tt.par
-        p.font = tp('Textfont').eval(); p.alignx = ax; p.aligny = ay
+        fnt = tp('Textfont').eval(); ff = TFONTFILES.get(fnt, '')
+        p.fontfile = (project.folder + '/td/fonts/' + ff) if ff else ''; p.font = fnt if not ff else p.font.eval()
+        p.alignx = ax; p.aligny = ay
         p.positionx = px; p.positiony = py
         p.fontsizex = fpx * (size if small else 1.0); p.fontautosize = fit; p.wordwrap = wrap
     if anim == 'type':

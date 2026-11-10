@@ -174,8 +174,9 @@ When a picture, video or drawing is set to **3D OBJECT** (or a text layer to **3
 
 ### LIVE on a tablet
 
-From 900 px wide the presets take three quarters of the screen; the right quarter shows, top to bottom, the **Set list**,
-**Autopilot** + fade, a slim **on air** strip (thumbnail + name) and **Quick controls**. Drag the divider between the
+From 900 px wide the presets take three quarters of the screen; the right quarter shows, top to bottom, **Autopilot** + fade,
+the **☰ SET LIST** switch, a slim **on air** strip (thumbnail + name) and **Quick controls**. With the set list on, it
+fills the lower part of the left side under the presets. Drag the divider between the
 columns to resize them (double-tap it to reset; remembered on that device). Phones keep the single column.
 
 ### Saved views (VIEW)
@@ -183,6 +184,13 @@ columns to resize them (double-tap it to reset; remembered on that device). Phon
 16 views, each with a small drawing of how the camera moves: the ring is the orbit, the green dot is the camera, arrows
 show circling, swinging, rising / falling, pushing in / out, tilting or shaking. New: Dolly Zoom, Pendulum, Crane,
 Bird's Eye, Worm's Eye, Fast Orbit, Close-up, Dutch Tilt. F1–F8 on the keyboard still load the first eight.
+
+### Text fonts and caps
+
+Fonts: Bebas, Impact, Bahn, Deco, plus shipped ones that need no install: Bangers, Marker, Brush, Scrawl, Pacifico,
+Shrikhand, Monoton, Shade, Glitch, Pixel (Google Fonts, SIL Open Font / Apache licences; files in `td/fonts` for
+TouchDesigner and `fonts/` for the phone, where each button shows its own font). **⇪ CAPS** beside SHOW TEXT turns what
+you type into capitals (per text layer, remembered on that device).
 
 ### Layer names
 

@@ -142,6 +142,8 @@ label.tg{cursor:pointer}
 .h2r{display:flex;align-items:center;gap:10px}
 .sl-tog{font:700 10px var(--mono);letter-spacing:.1em;padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
 .sl-tog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.sltog{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:10px;padding:13px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 12px var(--sans);letter-spacing:.1em}
+.sltog span{font:700 10px var(--mono);letter-spacing:.1em}.sltog.on{border-color:#c6ff3d66;color:var(--ink)}.sltog.on span{color:var(--lime)}
 .lstack{display:flex;flex-direction:column;gap:5px}
 .lrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 10px;background:#0c0b11}
 .lrow.on{border-color:#3d4a1c}.lrow .lname{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -292,7 +294,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 /* text tab */
 .tin{width:100%;min-height:84px;resize:vertical;padding:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 22px var(--sans);letter-spacing:.02em;outline:none}
 .tin:focus{border-color:var(--hot)}
-.trow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.trow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
+.capsb{padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 12px var(--sans);letter-spacing:.08em}.capsb.on{background:var(--ink);color:var(--bg)}
 .go{border-radius:8px;padding:15px;font-weight:700;letter-spacing:.1em;background:var(--hot);color:#fff}
 .tog{border-radius:8px;padding:15px;font-weight:700;letter-spacing:.1em;background:var(--panel);border:1px solid var(--line);color:var(--mute)}
 .tog.on{background:var(--lime);color:#0b0a0f;border-color:transparent}
@@ -306,8 +309,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .sw button.on{border-color:var(--ink);box-shadow:0 0 0 3px var(--bg) inset}
 
 /* LIVE: on tablets / wide screens the presets get 3/4 and a side column holds the live picture, quick controls, autopilot and set list */
-#v-live.on{display:flex;flex-direction:column}.liveside{display:contents}.livemain{order:4}
-#v-live .aprow{order:1}#v-live .appanel{order:2}#cardQuick{order:3}#setlist{order:5}.nowcard{display:none}.livesplit{display:none}
+#v-live.on{display:flex;flex-direction:column}.liveside{display:contents}.livemain{order:5}
+#v-live .aprow{order:1}#v-live .appanel{order:2}#slTog{order:3}#cardQuick{order:4}.nowcard{display:none}.livesplit{display:none}
 @media (min-width:900px){
   #v-live.on{display:grid;grid-template-columns:minmax(0,1fr) 40px var(--sidew,25%);gap:0;align-items:stretch}
   .livemain{grid-column:1;grid-row:1;min-width:0;align-self:start}
@@ -319,8 +322,12 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   .livesplit.drag i{background:var(--lime)}
   .liveside{display:flex;flex-direction:column;gap:12px;grid-column:3;grid-row:1;align-self:start;min-width:0;position:sticky;top:0;max-height:var(--colh,calc(100dvh - 190px));overflow-y:auto;overscroll-behavior:contain;padding:14px 0 16px}
   .liveside>*{margin-top:0!important}
-  #v-live .liveside>#setlist{order:1!important;margin:0!important}#v-live .liveside>.aprow{order:2!important}#v-live .liveside>.appanel{order:3!important}
+  #v-live .liveside>.aprow{order:1!important}#v-live .liveside>.appanel{order:2!important}#v-live .liveside>#slTog{order:3!important}
   #v-live .liveside>.nowcard{order:4!important}#v-live .liveside>#cardQuick{order:5!important}
+  .livemain{display:flex;flex-direction:column;height:var(--colh,calc(100dvh - 190px));position:sticky;top:0}
+  .presetsbox{flex:1 1 55%;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:10px}
+  .livemain>.setlist{flex:0 0 42%;min-height:0;display:flex;flex-direction:column;margin:10px 0 12px}.livemain>.setlist.off{display:none}
+  .livemain>.setlist .sl-row{flex:1;min-height:0}.livemain>.setlist .sl-arr{align-self:center;height:64px}.livemain>.setlist .sl-track{flex-wrap:wrap;align-content:flex-start;overflow-y:auto;overflow-x:hidden;touch-action:pan-y}
   .nowcard{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);height:64px}
   .nowimg{position:relative;flex:none;width:100px;height:100%;background:#000}.nowimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .nowtag{position:absolute;left:5px;top:5px;font:700 8px var(--mono);letter-spacing:.08em;color:#fff;background:var(--hot);padding:2px 5px;border-radius:3px}
@@ -328,6 +335,17 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   .liveside .aprow{flex-wrap:wrap}.liveside .setlist .sl-track{min-width:0}
   #v-live .pads{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
+@font-face{font-family:'Bangers';src:url(fonts/Bangers-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Permanent Marker';src:url(fonts/PermanentMarker-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Caveat Brush';src:url(fonts/CaveatBrush-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Monoton';src:url(fonts/Monoton-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Pacifico';src:url(fonts/Pacifico-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Press Start 2P';src:url(fonts/PressStart2P-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Rubik Glitch';src:url(fonts/RubikGlitch-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Bungee Shade';src:url(fonts/BungeeShade-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Shrikhand';src:url(fonts/Shrikhand-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Rock Salt';src:url(fonts/RockSalt-Regular.ttf) format('truetype');font-display:swap}
+.opts .fch{font-size:14px;font-weight:400;letter-spacing:0;text-transform:none}
 /* lock */
 .lock{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:var(--bg);padding:28px}
 .lock.on{display:grid}
@@ -386,16 +404,18 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
       <h4>Transition between presets</h4><div class="seg sm" id="fades"></div>
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
     </div>
+    <button class="sltog" id="slTog" aria-pressed="true"><b>☰ SET LIST</b><span id="slState">ON</span></button>
     <div class="card open hide" id="cardQuick" style="margin-top:12px"><div class="ch"><b>Quick controls</b><em id="qkn"></em></div><div class="cb" id="qk"></div></div>
+
+    </aside>
+    <div class="livesplit" id="livesplit" aria-hidden="true"><i></i></div>
+    <div class="livemain"><div class="presetsbox">
+    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><em class="edonly">hold = edit</em></span></h2>
+    <div class="pads" id="pads"></div></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
       <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous">◀</button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next">▶</button></div>
     </div>
-    </aside>
-    <div class="livesplit" id="livesplit" aria-hidden="true"><i></i></div>
-    <div class="livemain">
-    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><button class="sl-tog" id="slTog" aria-pressed="true">Set list</button><em class="edonly">hold = edit</em></span></h2>
-    <div class="pads" id="pads"></div>
     </div>
   </section>
 
@@ -424,7 +444,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
       <div class="cb">
             <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
-    <div class="trow"><button class="go" id="tsend">SHOW TEXT</button></div>
+    <div class="trow"><button class="go" id="tsend">SHOW TEXT</button><button class="capsb" data-caps="1">⇪ CAPS</button></div>
     <div class="recent" id="recent"></div>
     <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
     <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-Textlayout"></div><div class="tmv" id="g-textpos"></div></div>
@@ -443,7 +463,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="card hide" id="cardT2"><div class="ch"><b>Text 2</b><button class="tg" id="t-T2on" data-tog="T2on">OFF</button></div>
       <div class="cb">
     <textarea class="tin" id="tin2" maxlength="120" placeholder="Type your text…"></textarea>
-    <div class="trow"><button class="go" data-tsend="2">SHOW TEXT</button></div>
+    <div class="trow"><button class="go" data-tsend="2">SHOW TEXT</button><button class="capsb" data-caps="2">⇪ CAPS</button></div>
     <h2>Effect</h2><div class="opts" id="o-T2mode"></div>
     <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-T2layout"></div><div class="tmv" id="g-text2pos"></div></div>
     <h2>Direction</h2><div class="opts" id="o-T2dir"></div>
@@ -461,7 +481,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
     <div class="card hide" id="cardT3"><div class="ch"><b>Text 3</b><button class="tg" id="t-T3on" data-tog="T3on">OFF</button></div>
       <div class="cb">
     <textarea class="tin" id="tin3" maxlength="120" placeholder="Type your text…"></textarea>
-    <div class="trow"><button class="go" data-tsend="3">SHOW TEXT</button></div>
+    <div class="trow"><button class="go" data-tsend="3">SHOW TEXT</button><button class="capsb" data-caps="3">⇪ CAPS</button></div>
     <h2>Effect</h2><div class="opts" id="o-T3mode"></div>
     <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-T3layout"></div><div class="tmv" id="g-text3pos"></div></div>
     <h2>Direction</h2><div class="opts" id="o-T3dir"></div>
@@ -652,7 +672,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10k';
+const BUILD = '2026-11-10l';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1211,7 +1231,7 @@ function build(){
   $('#models-anim').innerHTML = S.models.filter(isA).map(mb).join('');
   $('#box-anim').hidden = !S.models.some(isA);
   if (!ui.boxDone) { ui.boxDone = true; $('#box-static').open = false; $('#box-anim').open = false; }     // both folded to start
-  buildCam(); buildText(); buildDraw();
+  buildCam(); buildText(); buildDraw(); capsUI();
   ['master','audio','kick','camera','move','motion','grid','beat','model','text','camfeed','clip','draw','motion2','anim','frcam','frdraw','opmodel','opcamera','opdraw','text2','text3','textpos','text2pos','text3pos','mobj','tobj1','tobj2','tobj3','proj','projlook','tmot1','tmot2','tmot3'].concat(MGROUPS).forEach(g => { const h = $('#g-' + g); if (h) h.innerHTML = ''; });
   ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', tmot1:'var(--cyan)', tmot2:'var(--cyan)', tmot3:'var(--cyan)', mobj:'var(--cyan)', proj:'var(--cyan)', projlook:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   MS.forEach(i => ACC['m' + i + 'mot'] = 'var(--cyan)');
@@ -1234,7 +1254,7 @@ const TOPTS = {
   Textspace: [['flat','FLAT'],['3d','3D']],
   Kstest: [['off','OFF'],['over','GRID OVER'],['grid','GRID ONLY']],
   Projmon: [['1','1'],['2','2'],['3','3'],['4','4']],
-  Textfont: [['Bebas Neue','BEBAS'],['Impact','IMPACT'],['Bahnschrift','BAHN'],['Agency FB','AGENCY'],['Cascadia Mono','MONO'],['Georgia','SERIF'],['Algerian','DECO'],['Blackadder ITC','GOTHIC']]};
+  Textfont: [['Bebas Neue','Bebas'],['Impact','Impact'],['Bahnschrift','Bahn'],['Algerian','Deco'],['Bangers','Bangers'],['Permanent Marker','Marker'],['Caveat Brush','Brush'],['Rock Salt','Scrawl'],['Pacifico','Pacifico'],['Shrikhand','Shrikhand'],['Monoton','MONOTON'],['Bungee Shade','SHADE'],['Rubik Glitch','GLITCH'],['Press Start 2P','PIXEL']]};
 TOPTS.Textmotion = [['models','LIKE 3D MODELS'],['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']];
 TOPTS.Textmaxis = [['y','↻ Y'],['x','TUMBLE X'],['z','ROLL Z']];
 [2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
@@ -1242,7 +1262,7 @@ MS.forEach(i => { TOPTS['M' + i + 'motion'] = TOPTS.Textmotion; TOPTS['M' + i + 
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
-  for (const p in TOPTS) $('#o-' + p).innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}">${l}</button>`).join('');
+  for (const p in TOPTS) { const h = $('#o-' + p); if (h) h.innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}"${/font$/.test(p) ? ` class="fch" style="font-family:'${v}',var(--sans)"` : ''}>${l}</button>`).join(''); }
   ccDef('text', () => { const p = S.pars; return +p.Textcm > 0 ? {m:+p.Textcm, a:p.Textca || '#ffffff', b:p.Textcb || '#ff3da8', ang:+p.Textcang || 0}
                                                    : {m:1, a:TCOL[p.Textcolor] || '#ffffff', b:p.Textcb || '#ff3da8', ang:+p.Textcang || 0}; },
     c => { Object.assign(S.pars, {Textcm:c.m, Textca:c.a, Textcb:c.b, Textcang:c.ang}); clearTimeout(ccDef._t);
@@ -1305,12 +1325,16 @@ function syncText(p){
   [2,3].forEach(n => { const b = $('#t-T' + n + 'on'), ti = $('#tin' + n); if (b) { b.textContent = p['T' + n + 'on'] ? 'ON' : 'OFF'; b.classList.toggle('on', !!p['T' + n + 'on']); }
     if (ti && document.activeElement !== ti && !ti._dirty) ti.value = p['T' + n + 'str'] || ''; });
 }
+// ⇪ CAPS per text layer (this device): what you type becomes capitals
+const CAPS = store.get('caps', {});
+function capsUI(){ $$('[data-caps]').forEach(b => { const on = !!CAPS[b.dataset.caps]; b.classList.toggle('on', on); const ti = $(b.dataset.caps === '1' ? '#tin' : '#tin' + b.dataset.caps); if (ti) ti.style.textTransform = on ? 'uppercase' : ''; }); }
+const capsOf = (n, v) => CAPS[n] ? v.toUpperCase() : v;
 function showTextN(n){
-  const ti = $('#tin' + n), v = ti.value.replace(/\n+$/, ''); if (!v.length) return;          // spaces count: '   ' blanks the words, keeps the layer
+  const ti = $('#tin' + n), v = capsOf(String(n), ti.value.replace(/\n+$/, '')); if (!v.length) return;          // spaces count: '   ' blanks the words, keeps the layer
   send({t:'set', p:'T' + n + 'str', v}); send({t:'set', p:'T' + n + 'on', v:true}); ti._dirty = false; toast('Text ' + n + ' on screen'); buzz(12);
 }
 function showText(){
-  const v = $('#tin').value.replace(/\n+$/, ''); if (!v.length) return;                            // spaces are allowed (leading, trailing, or only spaces)
+  const v = capsOf('1', $('#tin').value.replace(/\n+$/, '')); if (!v.length) return;                            // spaces are allowed (leading, trailing, or only spaces)
   send({t:'set', p:'Textstr', v}); send({t:'set', p:'Texton', v:true}); $('#tin')._dirty = false;
   if (v.trim()) { const r = [v].concat(store.get('recent', []).filter(x => x !== v)).slice(0, 8); store.set('recent', r); renderRecent(); } toast('Text on screen'); buzz(12);
 }
@@ -1362,7 +1386,7 @@ function uiPrefs(){
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
   const sl = $('#setlist'), tg = $('#slTog');
   if (sl) sl.classList.toggle('off', !ui.setlist);
-  if (tg) { tg.classList.toggle('on', ui.setlist); tg.setAttribute('aria-pressed', ui.setlist); }
+  if (tg) { tg.classList.toggle('on', ui.setlist); tg.setAttribute('aria-pressed', ui.setlist); const st = $('#slState'); if (st) st.textContent = ui.setlist ? 'ON' : 'OFF'; }
   store.set('setlist', ui.setlist);
 }
 $('#slTog').addEventListener('click', () => { ui.setlist = !ui.setlist; uiPrefs(); buzz(); });
@@ -1479,7 +1503,7 @@ const GROUP = {};
 // LIVE side column: the preset on air, with its own thumbnail (no live video: saves bandwidth)
 function nowCard(){
   if (!S || !$('#nowcard')) return; const b = S.bank || [], p = S.b && b[S.b - 1];
-  $('#nowname').textContent = p ? p.name : 'No preset on air'; $('#nowsub').textContent = p ? 'Preset ' + S.b + (p.group ? ' · ' + p.group : '') : '';
+  $('#nowname').textContent = p ? p.name : 'No preset on air'; $('#nowsub').textContent = p && p.group ? p.group : '';
   const t = S.b && THUMBS[S.b], im = $('#nowimg'); if (t && im.src !== t) im.src = t; else if (!t) im.removeAttribute('src');
 }
 function renderPads(){
@@ -1515,7 +1539,7 @@ function mediaFile(i){                   // " · clip-name" so Video 1 and Video
 }
 function qLayer(p){                       // which layer a control belongs to (shown in its label)
   let m;
-  if ((m = /^M(\d)/.exec(p))) return mediaName(+m[1]) + mediaFile(+m[1]);
+  if ((m = /^M(\d)/.exec(p))) return mediaName(+m[1]);
   if ((m = /^T([23])/.exec(p))) return custName('text' + m[1]) || 'Text ' + m[1];
   if (/^Text/.test(p)) return custName('text') || 'Text';
   if (/^(Fcam|Opcamera|Cam)/.test(p)) return 'Phone camera';
@@ -1526,9 +1550,9 @@ function qLayer(p){                       // which layer a control belongs to (s
   return 'Whole picture';
 }
 function qLabel(it){
-  if (it.k === 'swap') return ['Swap', lName(it.a).split(' · ')[0] + ' ⇄ ' + lName(it.b).split(' · ')[0]];
+  if (it.k === 'swap') return ['Swap', tgtName(it.a) + ' ⇄ ' + tgtName(it.b)];
   if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
-    return [it.t === 'all' ? 'All layers' : tgtName(it.t) + (/^m\d$/.test(it.t) ? mediaFile(+it.t.slice(1)) : ''), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
+    return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
   const sd = (S.sliders || []).find(x => x.p === it.p);
   const raw = it.p.replace(/^(M\d|T\d(?=on|str)|Text(?=on))/, '');
   const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor'};
@@ -1888,6 +1912,7 @@ document.addEventListener('click', e => {
   else if (d.ds) { DR.size = +d.ds; $$('[data-ds]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.dcol) { DR.color = d.dcol; $$('[data-dcol]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.df !== undefined) { DR.fill = d.df === '1'; $$('[data-df]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
+  else if (d.caps) { CAPS[d.caps] = !CAPS[d.caps]; store.set('caps', CAPS); capsUI(); buzz(6); }
   else if (d.dfs !== undefined) { drawFull(d.dfs === '1'); buzz(8); }
   else if (d.dtools) { const w = $('#dpadwrap'); w.classList.toggle('notools'); store.set('dnotools', w.classList.contains('notools') ? 1 : 0); setTimeout(drawFit, 30); buzz(6); }
   else if (d.du) { DR.ops.pop(); drawRender(); drawSend(); drawSave(); buzz(); }
@@ -2012,6 +2037,11 @@ $('#lockgo').addEventListener('click', unlockTry);
   document.addEventListener('click', e => { const b = e.target.closest('[data-rail]'); if (!b) return; RAIL = b.dataset.rail; store.set('rail', RAIL); apply(); buzz(6); });
   window.railSize = size; apply(); setInterval(draw, 1000);
 })();
+// tablet / phone keyboard: the hold menus sit above it instead of underneath
+if (window.visualViewport) { const vv = visualViewport, fit = () => { const sh = $('#sheet'), kb = Math.max(0, innerHeight - vv.height - vv.offsetTop);
+    sh.style.bottom = kb + 'px'; sh.style.maxHeight = Math.max(160, vv.height - 16) + 'px'; sh.style.overflowY = 'auto';
+    if (kb > 0 && document.activeElement && sh.contains(document.activeElement)) document.activeElement.scrollIntoView({block:'nearest'}); };
+  vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 // SAVE (edit mode): what is on screen goes into the preset that is on air (or a new last preset if none is)
 $('#savebtn').addEventListener('click', () => {
   if (!S) return;
