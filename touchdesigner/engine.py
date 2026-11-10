@@ -2159,6 +2159,13 @@ def autopilotUpdate(C, T):
     if not C.par.Autopilot.eval(): AP['t'] = T; return
     if T - AP['t'] < max(5.0, float(C.par.Autotime.eval())): return
     AP['t'] = T
+    fd = max(0.0, min(10.0, float(op('/project1/CONTROLS').par.Autofade.eval())))
+    if hasattr(C.par, 'Automode') and C.par.Automode.eval() == 'setlist' and qState()['v']:     # play the set list in order
+        if len(qState()['v']) == 1 and qState()['v'][0] == b: return          # one preset only: nothing to change to
+        qGo(qState()['pos'] + 1, fade=fd)
+        try: op('/project1/remote_cb').module._all(qMsg())
+        except Exception: pass
+        return
     q = [x for x in qState()['v'] if _bankTable()[x, 1].val]
     pool = sorted(set(q)) if len(set(q)) >= 2 else [i for i in range(1, BANK_SLOTS + 1) if _bankTable()[i, 1].val]
     if len(pool) < 2: return

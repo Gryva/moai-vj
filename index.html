@@ -183,7 +183,8 @@ label.tg{cursor:pointer}
 .sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
 .setlist.arr .sl-arrange{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 .sl-row{display:flex;align-items:stretch;gap:6px}
-.sl-arr{flex:0 0 46px;border-radius:8px;background:var(--panel2);font-size:18px;color:var(--ink);border:1px solid var(--line)}.sl-arr:active{background:var(--ink);color:var(--bg)}
+.sl-arr{flex:0 0 52px;height:52px;align-self:center;display:grid;place-items:center;border-radius:50%;background:var(--panel2);color:var(--ink);border:1px solid #ffffff1f;box-shadow:0 2px 10px #0006}
+.sl-arr#slNx{background:var(--lime);color:#0b0a0f;border-color:transparent}.sl-arr:active{transform:scale(.94);filter:brightness(1.2)}
 .sl-track{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:2px;min-height:54px;align-items:center;border-radius:6px;touch-action:pan-x;scrollbar-width:none}.sl-track::-webkit-scrollbar{display:none}
 .setlist.arr .sl-track{outline:1.5px dashed #c6ff3d55;outline-offset:1px}.sl-track.over{background:#c6ff3d14}
 .sl-it{position:relative;flex:0 0 84px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#1d1826;text-align:left}
@@ -333,13 +334,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   #v-live .liveside>.nowcard{order:4!important}#v-live .liveside>#cardQuick{order:5!important}
   .livemain{display:flex;flex-direction:column;height:var(--colh,calc(100dvh - 190px));position:sticky;top:0}
   .presetsbox{flex:1 1 55%;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:10px}
-  .livemain>.setlist{flex:0 0 42%;min-height:0;display:flex;flex-direction:column;margin:10px 0 12px}.livemain>.setlist.off{display:none}
-  .livemain>.setlist .sl-row{flex:1;min-height:0}.livemain>.setlist .sl-arr{align-self:center;height:64px}.livemain>.setlist .sl-track{flex-wrap:wrap;align-content:flex-start;overflow-y:auto;overflow-x:hidden;touch-action:pan-y}
+  .livemain>.setlist{flex:0 0 21%;min-height:150px;min-height:0;display:flex;flex-direction:column;margin:10px 0 12px}.livemain>.setlist.off{display:none}
+  .livemain>.setlist .sl-row{flex:1;min-height:0}.livemain>.setlist .sl-arr{align-self:center}
   .nowcard{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);height:64px}
   .nowimg{position:relative;flex:none;width:100px;height:100%;background:#000}.nowimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .nowtag{position:absolute;left:5px;top:5px;font:700 8px var(--mono);letter-spacing:.08em;color:#fff;background:var(--hot);padding:2px 5px;border-radius:3px}
   .nowtxt{padding:0 11px;min-width:0}.nowtxt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nowtxt b{display:block;font-size:15px}.nowtxt em{display:block;font-style:normal;font-size:11px;color:var(--mute);margin-top:2px}
-  .liveside .aprow{flex-wrap:wrap}.liveside .setlist .sl-track{min-width:0}
+  .liveside .aprow{flex-wrap:wrap;gap:6px}.liveside .aprow>*{flex:1 1 100%;margin:0}.liveside .apmore{justify-content:center;padding:9px}.liveside .setlist .sl-track{min-width:0}
   #v-live .pads{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
 @font-face{font-family:'Bangers';src:url(fonts/Bangers-Regular.ttf) format('truetype');font-display:swap}
@@ -420,6 +421,7 @@ body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-rig
       <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
     <div class="appanel" id="apPanel" hidden>
       <h4>Transition between presets</h4><div class="seg sm" id="fades"></div>
+      <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST, IN ORDER</button></div>
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
     </div>
     <button class="sltog" id="slTog" aria-pressed="true"><b>☰ SET LIST</b><span id="slState">ON</span></button>
@@ -432,7 +434,7 @@ body.tab-live #rail{display:none!important}body.tab-live.rail-r main{padding-rig
     <div class="pads" id="pads"></div></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span></div>
-      <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous">◀</button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next">▶</button></div>
+      <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     </div>
     </div>
   </section>
@@ -694,7 +696,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10o';
+const BUILD = '2026-11-10p';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1803,10 +1805,15 @@ function sheetBackups(){
 }
 function apSummary(){                    // "1s fade · 10s" on the small settings button
   if (!S) return; const at = +S.pars.Autotime || 30, f = (FADES.find(([, v]) => +v === ui.fade) || ['CUT'])[0];
-  $('#apSum').textContent = (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
+  const sl = S.pars.Automode === 'setlist';
+  $('#apSum').textContent = (sl ? 'set list · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
+  $$('#apMode [data-apm]').forEach(b => b.classList.toggle('on', b.dataset.apm === (S.pars.Automode || 'random')));
 }
 $('#apMore').addEventListener('click', () => { const open = $('#apPanel').hidden; $('#apPanel').hidden = !open; $('#apMore').setAttribute('aria-expanded', open); buzz(); });   // only opens / closes the settings
 $('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on' : 'Autopilot off'); buzz(); });
+$('#apMode').addEventListener('click', e => { const b = e.target.closest('[data-apm]'); if (!b || !S) return; const v = b.dataset.apm;
+  if (v === 'setlist' && !(S.queue && S.queue.v && S.queue.v.length)) toast('The set list is empty: hold a preset → Add to set list');
+  S.pars.Automode = v; send({t:'set', p:'Automode', v}); apSummary(); buzz(); });
 $('#apTimes').addEventListener('click', e => { const b = e.target.closest('[data-apt]'); if (!b || !S) return; const v = +b.dataset.apt;
   S.pars.Autotime = v; applyPars(S.pars); send({t:'set', p:'Autotime', v}); toast('Each preset stays ' + b.textContent); buzz(); });
 $('#bkBtn').addEventListener('click', () => { HIST = null; sheetBackups(); send({t:'store', do:'history'}); buzz(); });

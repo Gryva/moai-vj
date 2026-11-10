@@ -193,6 +193,12 @@ Every preset with text gets a **Words** box per text layer at the top of Quick c
 Type, then **SHOW** (or Enter): the words go on screen and are saved into the preset on air, so coming back to it keeps
 the new words. CAPS applies here too.
 
+### Autopilot: random or set list
+
+Autopilot settings (the small button next to AUTOPILOT) → **Autopilot plays**: **RANDOM** (any preset, or the set
+list's presets in random order, never repeating the last few) or **SET LIST, IN ORDER** (steps through the set list,
+looping, like pressing ▶ every interval).
+
 ### Play mode details
 
 - Draggable dividers only show in edit mode (the widths you set still apply in play mode).
