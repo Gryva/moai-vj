@@ -690,7 +690,38 @@ def onWebSocketClose(dat, client):
 def onWebSocketReceiveText(dat, client, data):
     try: msg = json.loads(data)
     except Exception: return
-    handle(msg, lambda o: _send(dat, client, o))
+    r = lambda o: _send(dat, client, o)
+    r.local = True                                    # direct link: may be told the computer's addresses (never sent to the public relays)
+    handle(msg, r)
+
+# ---------------------------------------------------------------- addresses for the direct link
+# The phone keeps every address of this computer (Wi-Fi, USB cable, Bluetooth) and moves to another when one goes quiet.
+HOSTS = {'v': [], 't': 0, 'busy': False}
+
+def _hostsRefresh():
+    if HOSTS['busy'] or time.time() - HOSTS['t'] < 15: return
+    HOSTS['busy'] = True
+    import threading
+    def job():
+        try:
+            import subprocess
+            cmd = ("Get-NetIPAddress -AddressFamily IPv4 | ForEach-Object { $a = Get-NetAdapter -InterfaceIndex $_.InterfaceIndex -ErrorAction SilentlyContinue; "
+                   "if ($a -and $a.Status -eq 'Up') { $_.IPAddress + '|' + $a.InterfaceDescription } }")
+            r = subprocess.run(['powershell', '-NoProfile', '-Command', cmd], capture_output=True, text=True, timeout=15, creationflags=0x08000000)
+            out = []
+            for ln in r.stdout.splitlines():
+                ip, _, d = ln.strip().partition('|'); dl = d.lower()
+                if not ip or ip.startswith(('127.', '169.254.')) or any(w in dl for w in ('hyper-v', 'virtual', 'loopback', 'vpn', 'tap-', 'wintun')): continue
+                k = 'USB' if ('ndis' in dl or 'usb' in dl) else 'BT' if 'bluetooth' in dl else 'WIFI' if any(w in dl for w in ('wi-fi', 'wireless', 'wlan', '802.11')) else 'LAN'
+                out.append({'ip': ip, 'k': k})
+            if out: HOSTS['v'] = out
+        except Exception: pass
+        HOSTS['t'] = time.time(); HOSTS['busy'] = False
+    threading.Thread(target=job, daemon=True).start()
+
+def hostsMsg():
+    _hostsRefresh()
+    return {'t': 'hosts', 'v': HOSTS['v']}
 
 def authToken():
     import hashlib
@@ -919,7 +950,7 @@ def handle(msg, reply):
             if n:
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
         elif t == 'ping':
-            pass
+            if getattr(reply, 'local', False): reply({'t': 'pong'}); reply(hostsMsg())
         elif t == 'thumbs':                               # the phone is missing some preset pictures: send just those
             need = {str(int(x)) for x in (msg.get('need') or [])[:128]}
             _thumbsPaced(reply, {k: v for k, v in E.thumbAll().items() if str(k) in need})
@@ -931,6 +962,7 @@ def handle(msg, reply):
         elif t == 'hello':
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())
+            if getattr(reply, 'local', False): reply(hostsMsg())
             if not E.STORE['ok']: reply({'t': 'store', 'v': E.storeInfo(), 'alert': 'PRESETS NOT SAVED: ' + E.STORE['err']})
             _thumbsPaced(reply, E.thumbAll())                 # one small message per picture, spaced out (public relays drop bursts)
             reply(clipsMsg())
