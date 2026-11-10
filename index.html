@@ -710,7 +710,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-10z';
+const BUILD = '2026-11-11a';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -756,7 +756,7 @@ function onMsg(m){
     return;
   }
   if (m.t === 'pong') { lastM = performance.now(); return; }
-  if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { HOSTS = m.v; store.set('hosts', HOSTS); } linkBadge(); return; }
+  if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { const nw = JSON.stringify(m.v) !== JSON.stringify(HOSTS); HOSTS = m.v; if (nw) { store.set('hosts', HOSTS); setTimeout(wsPrefer, 50); } } linkBadge(); return; }
   if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
@@ -800,8 +800,8 @@ function status(){
   const down = KEY ? (!linkUp && gap > 6000) || gap > 20000 : !ok;
   $('#dot').classList.toggle('on', ok); $('#off').classList.toggle('on', down);
   $('#weak').classList.toggle('on', !ok && !down && !!S);
-  if (KEY && linkUp && gap > 9000 && performance.now() - RELAYSW > 14000 && typeof mqtt !== 'undefined') relaySwitch('relay went quiet, switched');
-  if (LOCAL) {                              // direct link: nudge after 1.5 s of silence, move to the other cable / network after 4 s
+  if ((!LOCAL || MODE === 'relay') && KEY && linkUp && gap > 9000 && performance.now() - RELAYSW > 14000 && typeof mqtt !== 'undefined') relaySwitch('relay went quiet, switched');
+  if (LOCAL && MODE === 'ws') {                              // direct link: nudge after 1.5 s of silence, move to the other cable / network after 4 s
     if (linkUp && gap > 1500 && performance.now() - (status.lp || 0) > 1000) { status.lp = performance.now(); send({t:'ping'}); }
     if (linkUp && gap > 4000 && performance.now() - WSSW > 6000) { WSSW = performance.now(); lastErr = 'link went quiet, switched'; wsSwitch(); }
   }
@@ -815,33 +815,52 @@ function status(){
   else L.style.display = 'none';
 }
 setInterval(status, 500);
-setInterval(() => linkUp && send({t:'ping'}), 10000);               // lets TD know a phone is listening
+setInterval(() => linkUp && send({t:'ping'}), location.protocol === 'http:' ? 3000 : 10000);   // lets TD know a phone is listening (direct: also fresh addresses)
 /* direct links: TD tells us every address it has (Wi-Fi, USB cable, Bluetooth); if one goes quiet we try the next */
 const LOCAL = location.protocol === 'http:';
-let HOSTS = store.get('hosts', []), WSH = location.host, WS = null, WSN = 0, WSSW = 0, WSFAIL = 0;
+let HOSTS = store.get('hosts', []), WSH = location.host, WS = null, WSN = 0, WSSW = 0, WSFAIL = 0, MODE = 'ws';   // MODE: ws = direct, relay = internet as last resort
 function wsCands(){ const port = location.port || '80', c = [location.host];
   (HOSTS || []).forEach(h => { const x = h.ip + ':' + port; if (!c.includes(x)) c.push(x); }); return c; }
 function hostKind(h){ const ip = String(h || '').split(':')[0], f = (HOSTS || []).find(x => x.ip === ip); return f ? f.k : 'DIRECT'; }
 function linkBadge(){ const b = $('#lk'); if (!b) return;
-  const t = !linkUp ? 'NO LINK' : LOCAL ? hostKind(WSH) : 'INTERNET';
+  const t = !linkUp ? 'NO LINK' : LOCAL && MODE === 'ws' ? hostKind(WSH) : 'INTERNET';
   if (b.textContent !== t) b.textContent = t; b.classList.add('on');
-  b.classList.toggle('bk', !linkUp || !LOCAL || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2))); }
+  b.classList.toggle('bk', !linkUp || !LOCAL || MODE === 'relay' || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2))); }
 function wsNext(){ const c = wsCands(), i = c.indexOf(WSH); WSFAIL++;
+  if (KEY && WSFAIL >= 2 * c.length + 1) return goRelay();          // every direct route failed twice: use the internet while we keep checking
   setTimeout(() => connectWS(c[(i + 1) % c.length]), WSFAIL > c.length ? Math.min(400 * WSFAIL, 3000) : 150); }
 const LINKRANK = {USB:0, LAN:1, WIFI:2, BT:3};      // the cable is the most solid: go back to it whenever it answers
 function wsPrefer(){
-  if (!LOCAL || !linkUp || wsPrefer.busy) return;
-  const port = location.port || '80', cur = LINKRANK[hostKind(WSH)] ?? 2;
-  const best = (HOSTS || []).filter(h => (LINKRANK[h.k] ?? 2) < cur && h.ip + ':' + port !== WSH).sort((a, b) => (LINKRANK[a.k] ?? 2) - (LINKRANK[b.k] ?? 2))[0];
-  if (!best) return;
-  const host = best.ip + ':' + port; let pr; wsPrefer.busy = true;
+  if (!LOCAL || wsPrefer.busy) return;
+  const relay = MODE === 'relay'; if (!relay && !linkUp) return;
+  const port = location.port || '80', cur = relay ? 9 : (LINKRANK[hostKind(WSH)] ?? 2);
+  const list = (HOSTS || []).map(h => ({host: h.ip + ':' + port, r: LINKRANK[h.k] ?? 2}));
+  if (!list.some(x => x.host === location.host)) list.push({host: location.host, r: 2});
+  const better = list.filter(x => x.r < cur && (relay || x.host !== WSH)).sort((a, b) => a.r - b.r);
+  if (!better.length) return;
+  const host = (relay ? better[(wsPrefer.i = ((wsPrefer.i || 0) + 1)) % better.length] : better[0]).host;   // on the internet: try each direct route in turn
+  let pr; wsPrefer.busy = true;
   try { pr = new WebSocket('ws://' + host + '/ws'); } catch (e) { wsPrefer.busy = false; return; }
   const done = ok => { if (!wsPrefer.busy) return; wsPrefer.busy = false; clearTimeout(t); try { pr.close(); } catch (e) {}
-    if (ok && linkUp && WSH !== host) { const old = WS; WSN++; try { old && old.close(); } catch (e) {} WSFAIL = 0; connectWS(host); } };
+    if (!ok) return;
+    if (MODE === 'relay') leaveRelay(host);
+    else if (linkUp && WSH !== host) { const old = WS; WSN++; try { old && old.close(); } catch (e) {} WSFAIL = 0; connectWS(host); } };
   const t = setTimeout(() => done(false), 2500);
   pr.onopen = () => done(true); pr.onerror = () => done(false);
 }
-setInterval(wsPrefer, 6000);
+setInterval(wsPrefer, 4000);
+function relayLib(cb){ if (typeof mqtt !== 'undefined') return cb(true);
+  const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js';
+  sc.onload = () => cb(true); sc.onerror = () => { sc.remove(); cb(false); }; document.head.appendChild(sc); }
+function goRelay(){
+  if (MODE === 'relay') return; MODE = 'relay'; WSN++; linkUp = false; lastErr = 'direct links down, using the internet'; linkBadge();
+  relayLib(ok => { if (MODE !== 'relay') return;
+    if (ok) connectRelay(); else { MODE = 'ws'; WSFAIL = 0; setTimeout(() => connectWS(location.host), 1500); } });   // no internet either: keep trying direct
+}
+function leaveRelay(host){
+  MODE = 'ws'; const c = RELAYC; RELAYC = null; try { c && c.end(true); } catch (e) {}
+  linkUp = false; WSFAIL = 0; connectWS(host);
+}
 function wsSwitch(){ const old = WS; WSN++; linkUp = false; linkBadge(); try { old && old.close(); } catch (e) {} wsNext(); }
 function connectWS(host){
   WSH = host || WSH; const my = ++WSN; let opened = false, ws;
@@ -864,18 +883,18 @@ function connectRelay(){
   const base = 'moaivj/' + KEY, B = BROKERS[bi];
   const c = RELAYC = mqtt.connect(B.url, {username:B.user, password:B.pass, clientId:'moaivj-ph-' + Math.random().toString(16).slice(2, 10), keepalive:20, reconnectPeriod:1500, connectTimeout:6000, clean:true});
   let ever = false;
-  const fail = setTimeout(() => { if (!ever) { lastErr = 'no answer from ' + B.url.split('/')[2] + ', trying next'; c.end(true); bi = (bi + 1) % BROKERS.length; connectRelay(); } }, 7000);
-  c.on('connect', () => { ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; store.set('broker', bi);
+  const fail = setTimeout(() => { if (!ever && c === RELAYC) { lastErr = 'no answer from ' + B.url.split('/')[2] + ', trying next'; c.end(true); bi = (bi + 1) % BROKERS.length; connectRelay(); } }, 7000);
+  c.on('connect', () => { if (c !== RELAYC) return c.end(true); ever = true; clearTimeout(fail); linkUp = true; lastErr = ''; store.set('broker', bi);
     c.subscribe(base + '/+'); send({t:'hello'}); });
-  c.on('error', e => lastErr = (e && e.message) || String(e)); c.on('close', () => linkUp = false); c.on('offline', () => linkUp = false);
-  c.on('message', (topic, payload) => { if (topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
-  T.send = o => c.connected && c.publish(base + '/cmd', JSON.stringify(o));
+  c.on('error', e => lastErr = (e && e.message) || String(e)); c.on('close', () => { if (c === RELAYC) linkUp = false; }); c.on('offline', () => { if (c === RELAYC) linkUp = false; });
+  c.on('message', (topic, payload) => { if (c !== RELAYC || topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
+  T.send = o => c === RELAYC && c.connected && c.publish(base + '/cmd', JSON.stringify(o));
   T.cam = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/cam', buf, {qos:0}, () => done()); } catch(e){ done(); } };
   T.draw = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/draw', buf, {qos:0}, () => done()); } catch(e){ done(); } };
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkUp) send({t:'hello'}); });
 function connect(){
-  if (location.protocol === 'http:') { connectWS(); return; }
+  if (location.protocol === 'http:') { connectWS(); if (KEY) relayLib(() => {}); return; }   // have the relay ready in case every direct route dies
   if (KEY) { const sc = document.createElement('script'); sc.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js'; sc.onload = connectRelay;
     sc.onerror = () => { $('#offT').textContent = 'Could not load relay library'; }; document.head.appendChild(sc); }
   else if (location.protocol === 'https:') { $('#offT').textContent = 'Pairing key missing'; $('#offS').textContent = 'Open the link or QR from TouchDesigner: CONTROLS → Master → Phone link.'; }

@@ -699,7 +699,7 @@ def onWebSocketReceiveText(dat, client, data):
 HOSTS = {'v': [], 't': 0, 'busy': False}
 
 def _hostsRefresh():
-    if HOSTS['busy'] or time.time() - HOSTS['t'] < 15: return
+    if HOSTS['busy'] or time.time() - HOSTS['t'] < 4: return
     HOSTS['busy'] = True
     import threading
     def job():
