@@ -320,6 +320,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .tin:focus{border-color:var(--hot)}
 .trow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
 .qtxt .qtrow{display:flex;gap:6px;margin-top:6px}.qtxt input{flex:1;min-width:0;padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 15px var(--sans)}
+.qrec{margin:8px 0 0;padding:0}.qrec[hidden]{display:none}
 .qtxt .qtrow button{padding:0 16px;border-radius:8px;background:var(--hot);color:#fff;font:700 12px var(--sans);letter-spacing:.08em}
 .capsb{padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 12px var(--sans);letter-spacing:.08em}.capsb.on{background:var(--ink);color:var(--bg)}
 .go{border-radius:8px;padding:15px;font-weight:700;letter-spacing:.1em;background:var(--hot);color:#fff}
@@ -405,6 +406,14 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .sheet h3{margin:0 0 4px;font-size:18px}.sheet p{margin:0 0 12px;color:var(--mute);font-size:13px}
 .sheet input{width:100%;padding:13px 14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px;margin-bottom:10px;outline:none}
 .sheet .acts{display:grid;gap:8px}
+@media (min-width:700px){
+  .sheet{left:calc(50% - 300px);right:calc(50% - 300px);border-radius:16px 16px 0 0;border:1px solid var(--line);border-bottom:0}
+  .sheet .acts{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .sheet .acts>button{min-height:72px;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25}
+  .sheet .acts>button[data-sh="cancel"]{grid-column:1/-1;min-height:48px;background:transparent;border:1px solid var(--line);color:var(--mute)}
+  .sheet .acts>button.hist{min-height:0;justify-content:flex-start;text-align:left}
+  .sheet .acts>.swf,.sheet .acts>.lren,.sheet .acts>.hist,.sheet .acts>div,.sheet .acts>p,.sheet .acts>h4{grid-column:1/-1}
+}
 .sheet .acts button{padding:15px;border-radius:8px;font-weight:700;background:var(--panel2)}
 .sheet .acts .pri{background:var(--ink);color:var(--bg)}.sheet .acts .dan{color:var(--hot)}
 .btn.big{padding:17px 0;font-size:14px;letter-spacing:.06em}
@@ -710,7 +719,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11e';
+const BUILD = '2026-11-11f';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1311,7 +1320,10 @@ function buildText(){
     $('#tcolbox' + n).innerHTML = ccBox('text' + n, 'Text colour', true); ccBind($('#tcolbox' + n)); ccUI('text' + n); });
   renderRecent();
 }
-function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); }
+function renderRecent(){ $('#recent').innerHTML = store.get('recent', []).map(t => `<button data-recent="${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); qRecent(); }
+function qRecent(){ const r = store.get('recent', []); $$('#qk [data-qrec]').forEach(el => { const n = el.dataset.qrec, cur = S && S.pars[QTP(+n) + 'str'];
+  el.innerHTML = r.filter(t => t !== cur).map(t => `<button data-qrecent="${n}|${encodeURIComponent(t)}">${esc(t)}</button>`).join(''); el.hidden = !el.innerHTML; }); }
+function recentAdd(v){ if (!v.trim()) return; store.set('recent', [v].concat(store.get('recent', []).filter(x => x !== v)).slice(0, 10)); renderRecent(); }
 const TADIR_ANIMS = ['scroll', 'wave', 'tile', 'bounce'];
 function textBehind(n){ const k = n === 1 ? 'text' : 'text' + n, o = layerOrder(); for (const t of o) { if (t === k) return false; if (!/^text/.test(t) && layerInfo(t) && layerInfo(t).on && !layerInfo(t).hid) return true; } return false; }
 // ---- OUTPUT tab: keystone pad -------------------------------------------------------------------------
@@ -1699,7 +1711,7 @@ function renderQuick(){
   const sig2 = sig + '|' + TX.join(',') + '|' + TX.map(n => qtName(n)).join('/');
   if (sig2 === QSIG) return quickSync(); QSIG = sig2;
   $('#qk').innerHTML = TX.map(n => `<div class="ctl qtxt"><div class="top"><span><i class="qly">${esc(qtName(n))}</i> Words</span></div>
-      <div class="qtrow"><input type="text" maxlength="120" data-qtxt="${n}" autocomplete="off"><button data-qtsend="${n}">SHOW</button></div></div>`).join('') + L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
+      <div class="qtrow"><input type="text" maxlength="120" data-qtxt="${n}" autocomplete="off"><button data-qtsend="${n}">SHOW</button></div><div class="recent qrec" data-qrec="${n}"></div></div>`).join('') + L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div></div>`;
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow">${lab.replace('<output', '<button class="tg qtog" data-qtog="' + i + '">OFF</button><output hidden')}</div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
@@ -1710,7 +1722,7 @@ function renderQuick(){
   $$('#qk input[data-qki]').forEach(el => { const it = L[+el.dataset.qki]; el.value = +qVal(it) || 0;
     bindSlider(el, 'qk_' + el.dataset.qki, v => { if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, [it.f]:v}); }
       else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); } }); });
-  quickSync();
+  quickSync(); qRecent();
 }
 // every preset with text gets its words in Quick controls; SHOW also updates the words saved in that preset
 const QTP = n => n === 1 ? 'Text' : 'T' + n;
@@ -1718,7 +1730,7 @@ function qTexts(){ return S ? [1, 2, 3].filter(n => S.pars[QTP(n) + 'on']) : [];
 function qtName(n){ return custName(n === 1 ? 'text' : 'text' + n) || (n === 1 ? 'Text' : 'Text ' + n); }
 function qtSend(n){
   const el = $(`#qk [data-qtxt="${n}"]`); if (!el) return; const v = capsOf(String(n), el.value.replace(/\n+$/, '')); if (!v.length) return;
-  S.pars[QTP(n) + 'str'] = v; send({t:'qtext', n, v}); el.blur(); toast('Text updated' + (S.b ? ' · saved in this preset' : '')); buzz(12);
+  S.pars[QTP(n) + 'str'] = v; send({t:'qtext', n, v}); el.blur(); recentAdd(v); toast('Text updated' + (S.b ? ' · saved in this preset' : '')); buzz(12);
 }
 // typing words in Quick controls: keep the box above the on-screen keyboard
 document.addEventListener('focusin', e => { if (!e.target.matches || !e.target.matches('[data-qtxt]')) return; const el = e.target;
@@ -2053,6 +2065,7 @@ document.addEventListener('click', e => {
   else if (d.dcol) { DR.color = d.dcol; $$('[data-dcol]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.df !== undefined) { DR.fill = d.df === '1'; $$('[data-df]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.qtsend) { qtSend(+d.qtsend); }
+  else if (d.qrecent) { const [n, t] = d.qrecent.split('|'), el = $(`#qk [data-qtxt="${n}"]`); if (el) { el.value = decodeURIComponent(t); qtSend(+n); } }
   else if (d.caps) { CAPS[d.caps] = !CAPS[d.caps]; store.set('caps', CAPS); capsUI(); buzz(6); }
   else if (d.dfs !== undefined) { drawFull(d.dfs === '1'); buzz(8); }
   else if (d.dtools) { const w = $('#dpadwrap'); w.classList.toggle('notools'); store.set('dnotools', w.classList.contains('notools') ? 1 : 0); setTimeout(drawFit, 30); buzz(6); }
