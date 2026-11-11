@@ -456,7 +456,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="fxtg"></div></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
-    <div id="g-opmodel" data-op="model"></div><div id="g-opcamera" data-op="camera"></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div>
+    <div id="g-opmodel" data-op="model"></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div>
     <div class="onair" id="onair"></div>
     </div><div class="colB">
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
@@ -469,7 +469,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="lstack"></div>
         <button class="addlay" id="addLay">＋ ADD LAYER</button>
-        <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button><button data-addl="camera">Phone camera</button></div></div></div>
+        <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button></div></div></div>
     </div><div class="colB">
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
     <div id="scards"></div>
@@ -564,21 +564,6 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
         <div id="g-draw" style="margin-top:7px" hidden></div>
       </div></div>
 
-    <div class="card" id="cardCam"><div class="ch"><b>Phone camera</b><span class="camst" id="camst"></span><button class="tg" id="camgo">OFF</button></div>
-      <div class="cb">
-        <div class="camwrap"><div class="camv" id="camvw"><video id="camv" playsinline muted autoplay></video><img id="clipview" alt=""></div>
-          <div class="camb"><button class="big" id="camflip">FLIP ⟲</button><button class="recbtn" id="cliprec">● RECORD</button></div></div>
-        <div class="seg sm" id="o-Camsrc" style="margin-top:7px"></div>
-        <div class="seg sm" id="o-Camfit" style="margin-top:7px"></div>
-        <div id="g-camfeed" style="margin-top:7px"></div>
-      </div></div>
-
-    <div class="card" id="cardClips"><div class="ch"><b>Clips</b><em>hold = delete</em></div>
-      <div class="cb">
-        <div class="clips" id="clips"></div>
-        <div id="g-clip" style="margin-top:7px"></div>
-        <div class="btns" style="grid-template-columns:1fr;margin-top:0"><button class="btn" id="t-Clipbounce" data-tog="Clipbounce">⇄ BOUNCE</button></div>
-      </div></div>
 
   </div>
   </section>
@@ -589,7 +574,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
       <div class="cb"><div class="lstack" id="vwtg"></div></div></div>
     </div><div class="colB">
     <div id="view2d" hidden>
-      <div id="g-frcam" data-fr="camera"></div><span id="mfrbox"></span><div id="g-frdraw" data-fr="draw"></div>
+      <span id="mfrbox"></span><div id="g-frdraw" data-fr="draw"></div>
       <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="frreset">RESET FRAMING</button></div>
     </div>
     <div id="view3dl" hidden>
@@ -710,7 +695,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11a';
+const BUILD = '2026-11-11b';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -889,7 +874,6 @@ function connectRelay(){
   c.on('error', e => lastErr = (e && e.message) || String(e)); c.on('close', () => { if (c === RELAYC) linkUp = false; }); c.on('offline', () => { if (c === RELAYC) linkUp = false; });
   c.on('message', (topic, payload) => { if (c !== RELAYC || topic.endsWith('/cmd')) return; try { onMsg(JSON.parse(payload.toString())); } catch(e){} });
   T.send = o => c === RELAYC && c.connected && c.publish(base + '/cmd', JSON.stringify(o));
-  T.cam = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/cam', buf, {qos:0}, () => done()); } catch(e){ done(); } };
   T.draw = (buf, done) => { if (!c.connected) return done(); try { c.publish(base + '/draw', buf, {qos:0}, () => done()); } catch(e){ done(); } };
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linkUp) send({t:'hello'}); });
@@ -901,60 +885,10 @@ function connect(){
   else connectWS();
 }
 
-/* ---------------- phone camera -> TouchDesigner ---------------- */
-const CAMF = {on:false, stream:null, facing:'environment', busy:false, timer:null, sent:0, t0:0, fps:12};
-const camCv = document.createElement('canvas'); camCv.width = 480; camCv.height = 270;
-const camCx = camCv.getContext('2d');
-async function camStart(){
-  if (!T.cam) { toast('Camera works on the GitHub (https) link'); return; }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('This browser cannot share the camera'); return; }
-  try { CAMF.stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:CAMF.facing, width:{ideal:640}, height:{ideal:360}, frameRate:{ideal:24}}}); }
-  catch(e){ toast('Camera blocked (' + e.name + ') · allow it in browser settings'); return; }
-  const v = $('#camv'); v.srcObject = CAMF.stream; v.classList.toggle('mir', CAMF.facing === 'user');
-  try { await v.play(); } catch(e){}
-  CAMF.on = true; CAMF.sent = 0; CAMF.t0 = performance.now();
-  $('#camgo').textContent = 'ON'; $('#camgo').classList.add('on'); cards();
-  send({t:'set', p:'Cammirror', v: CAMF.facing === 'user'});
-  if (!S.pars.Camsrc || S.pars.Camsrc === 'off') { send({t:'set', p:'Camsrc', v:'cam'}); S.pars.Camsrc = 'cam'; syncText(S.pars); }
-  camLoop(); clipUI(S.pars); buzz(15);
-}
-function camStop(off){
-  CAMF.on = false; clearTimeout(CAMF.timer); CAMF.busy = false;
-  if (CAMF.stream) CAMF.stream.getTracks().forEach(t => t.stop()); CAMF.stream = null; $('#camv').srcObject = null;
-  $('#camgo').textContent = 'OFF'; $('#camgo').classList.remove('on'); $('#camst').textContent = ''; cards();
-  if (off !== false && !(S && S.pars.Clipstate === 'loop')) { send({t:'set', p:'Camsrc', v:'off'}); if (S) { S.pars.Camsrc = 'off'; syncText(S.pars); } }
-  if (S) clipUI(S.pars);
-}
-function camLoop(){
-  if (!CAMF.on) return;
-  const t0 = performance.now(), v = $('#camv');
-  if (!CAMF.busy && v.videoWidth && document.visibilityState === 'visible') {
-    const vw = v.videoWidth, vh = v.videoHeight, k = 480 / Math.max(vw, vh);      // whole image, long side 480 px
-    const w = Math.round(vw * k), h = Math.round(vh * k);
-    if (camCv.width !== w || camCv.height !== h) { camCv.width = w; camCv.height = h; }
-    camCx.drawImage(v, 0, 0, vw, vh, 0, 0, w, h);
-    CAMF.busy = true;
-    camCv.toBlob(b => { if (!b) { CAMF.busy = false; return; }
-      if (recBuf) { recBuf.u.push(URL.createObjectURL(b)); recBuf.t.push((performance.now() - recBuf.t0) / 1000); }
-      b.arrayBuffer().then(ab => T.cam(withKey(new Uint8Array(ab)), () => { CAMF.busy = false; CAMF.sent++; })); }, 'image/jpeg', 0.65);
-  }
-  const el = (performance.now() - CAMF.t0) / 1000;
-  if (el > 1) $('#camst').textContent = '● ' + (CAMF.sent / el).toFixed(0) + ' fps' + (S.pars.Camsrc === 'off' ? ' · pick a mode' : '');
-  if (el > 10) { CAMF.sent = 0; CAMF.t0 = performance.now(); }
-  CAMF.timer = setTimeout(camLoop, Math.max(5, 1000 / CAMF.fps - (performance.now() - t0)));
-}
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && CAMF.on) $('#camv').play().catch(() => {}); });
-function clipUI(p){
-  const st = p.Clipstate || 'off', r = $('#cliprec');
-  if (st === 'rec' && !recBuf) recBuf = {u: [], t: [], t0: performance.now()};
-  if (st !== 'rec' && recBuf) { if (recBuf.u.length > 2) pendingClip = recBuf; recBuf = null; }
-  CAMF.fps = st === 'rec' ? 15 : 12;
-  r.classList.toggle('on', st === 'rec');
-  r.textContent = st === 'rec' ? '■ STOP  ' + (+p.Cliplen || 0).toFixed(1) + ' s' : '● RECORD';
-  renderClips();
-}
+/* phone camera removed for privacy: this page never asks for the camera */
+const CAMF = {on:false}; function camStart(){} function camStop(){} function clipUI(){}
 const MS = [1,2,3,4,5,6], MLIB = {};          // MLIB[i] = file list of layer i is unfolded
-const LDEF = ['text','text2','text3','draw','m1','m2','m3','m4','m5','m6','camera','model'];
+const LDEF = ['text','text2','text3','draw','m1','m2','m3','m4','m5','m6','model'];
 const MGROUPS = [].concat(...MS.map(i => ['m' + i + 'crop', 'm' + i + 'key', 'm' + i + 'obj', 'm' + i + 'fr', 'm' + i + 'op', 'm' + i + 'play', 'm' + i + 'mot']));
 const NAMEPAR = k => /^m\d$/.test(k) ? 'M' + k.slice(1) + 'name' : ({text:'Textname', text2:'T2name', text3:'T3name', model:'Modelname'}[k]);
 const custName = k => { const n = NAMEPAR(k); return n && S && S.pars[n] ? String(S.pars[n]) : ''; };
@@ -989,11 +923,11 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
 }
 mediaCardsBuild();
 (() => { const box = $('#scards');                   // every source card lives in one list, sorted like the Layers card
-  ['cardText','cardT2','cardT3','cardStatue'].concat(MS.map(i => 'cardM' + i)).concat(['cardDraw','cardCam','cardClips']).forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); }); })();
+  ['cardText','cardT2','cardT3','cardStatue'].concat(MS.map(i => 'cardM' + i)).concat(['cardDraw']).forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); }); })();
 let CARDSIG = '';
 function sortCards(){
   const p = S.pars, ids = [];
-  layerOrder().forEach(k => { if (/^text/.test(k)) { if (layerInfo(k).on) ids.push(layerInfo(k).card); } else if (k === 'model') ids.push('cardStatue'); else if (k === 'camera') ids.push('cardCam', 'cardClips'); else if (/^m\d$/.test(k)) ids.push('cardM' + k.slice(1)); });
+  layerOrder().forEach(k => { if (/^text/.test(k)) { if (layerInfo(k).on) ids.push(layerInfo(k).card); } else if (k === 'model') ids.push('cardStatue'); else if (/^m\d$/.test(k)) ids.push('cardM' + k.slice(1)); });
   const sig = ids.join(','); if (sig === CARDSIG) return; CARDSIG = sig;
   const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
 }
@@ -1027,7 +961,6 @@ function addLayer(t){
     if (!free) { toast('Up to 3 text layers'); return; }
     S.pars[free[0]] = true; send({t:'set', p:free[0], v:true}); delete SHUT[free[1]]; setTimeout(() => $('#' + free[1]).scrollIntoView({behavior:'smooth', block:'start'}), 300); }
   if (t === 'model') { S.pars.Statue = true; send({t:'set', p:'Statue', v:true}); S.pars.Spinaxis = 'y'; send({t:'set', p:'Spinaxis', v:'y'}); delete SHUT.cardStatue; }
-  if (t === 'camera') camStart();
   applyPars({});
 }
 function layerOrder(){
@@ -1138,33 +1071,16 @@ function cardOpen(id, on){                // ON opens the card; tapping its head
 }
 function cards(){
   if (!S) return; const p = S.pars, loop = p.Clipstate === 'loop';
-  const camOn = CAMF.on || loop || (!!p.Camsrc && p.Camsrc !== 'off');
   $('#cardText').classList.toggle('hide', !p.Texton); $('#cardT2').classList.toggle('hide', !p.T2on); $('#cardT3').classList.toggle('hide', !p.T3on);
-  $('#cardStatue').classList.toggle('hide', p.Statue === false); $('#cardCam').classList.toggle('hide', !camOn); $('#cardDraw').classList.add('hide');
+  $('#cardStatue').classList.toggle('hide', p.Statue === false); $('#cardDraw').classList.add('hide');
   cardOpen('cardT2', !!p.T2on); cardOpen('cardT3', !!p.T3on);
   cardOpen('cardStatue', p.Statue !== false);
-  cardOpen('cardCam', camOn);
   MS.forEach(i => cardOpen('cardM' + i, !!p['M' + i + 'on'] && !!p['M' + i + 'vis']));
   cardOpen('cardText', !!p.Texton);
   cardOpen('cardLayers', true); cardOpen('cardFxLayers', true); cardOpen('cardVwLayers', true);
   layerStack(); fxTargets(); sortCards(); renderQuick();
-  $('#cardClips').classList.toggle('open', CAMF.on || loop || !!(S.clips && S.clips.length));
-  $('#cardClips').classList.toggle('hide', !camOn);
-  $('#cliprec').disabled = !CAMF.on && p.Clipstate !== 'rec';
 }
-/* local copies of the frames this phone recorded, so the preview can play the clip */
 const LOCALCLIP = {}; let recBuf = null, pendingClip = null;
-function clipView(){
-  const box = $('#camvw'), st = S && S.pars.Clipstate, fr = st === 'loop' && S.clipcur && LOCALCLIP[S.clipcur];
-  const thumb = st === 'loop' && S.clipcur && (S.clips || []).find(c => c.id === S.clipcur);
-  box.classList.toggle('clip', !!(fr || (thumb && thumb.thumb)));
-  if (!fr) { if (thumb && thumb.thumb) $('#clipview').src = 'data:image/jpeg;base64,' + thumb.thumb; return; }
-  const sp = +S.pars.Clipspeed || 1, dur = fr.t[fr.t.length - 1] || 1, b = S.pars.Clipbounce;
-  let pos = ((performance.now() - fr.start) / 1000 * sp) % (b ? 2 * dur : dur); if (b && pos > dur) pos = 2 * dur - pos;
-  let i = 0; while (i < fr.t.length - 1 && fr.t[i + 1] <= pos) i++;
-  if (fr.i !== i) { fr.i = i; $('#clipview').src = fr.u[i]; }
-}
-setInterval(() => S && ui.tab === 'source' && clipView(), 50);
 function renderFxps(){
   if (!S || !$('#fxps')) return;
   $('#fxps').innerHTML = (S.fxps || []).map((x, i) => `<button class="fxp" data-fxp="${i}"><b>${esc(x.name)}</b><span class="d">${x.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('')}</span></button>`).join('')
@@ -1239,17 +1155,7 @@ document.getElementById('addLay').addEventListener('click', () => { $('#addMenu'
 document.getElementById('mediapick').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   if (/^video\//.test(f.type)) uploadVideo(f); else uploadPhoto(f); });
 
-function renderClips(){
-  if (!S) return; const st = S.pars.Clipstate, cur = st === 'loop' ? S.clipcur : null;
-  $('#clips').innerHTML = `<button class="clip live ${cur ? '' : 'on'}" data-clip="live">LIVE</button>` + (S.clips || []).slice().reverse().map(c =>
-    `<button class="clip ${c.id === cur ? 'on' : ''}" data-clip="${c.id}">${c.thumb ? `<img src="data:image/jpeg;base64,${c.thumb}" alt="">` : ''}<b>${c.dur.toFixed(1)}s</b></button>`).join('');
-}
-function clipRecTap(){
-  const st = S.pars.Clipstate || 'off';
-  if (st === 'rec') { send({t:'clip', do:'stop'}); buzz(30); return; }
-  if (!CAMF.on) { toast('Start the camera first'); return; }
-  send({t:'clip', do:'rec'}); buzz(30);
-}
+function renderClips(){} function clipRecTap(){}
 
 /* ---------------- draw pad -> TouchDesigner ---------------- */
 const DCOLS = ['#ffffff','#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3'];
@@ -1518,7 +1424,7 @@ function applyPars(p){
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Clipbounce','Statue','Drawon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
+  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Statue','Drawon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
   $('#spinrow').hidden = p.Motion !== 'spin';
   syncText(p); clipUI(p); ccUI('text'); ksDraw();
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';

@@ -1233,9 +1233,13 @@ def applySrc(d, slot=None):
     for n in FRAMEPARS: C.par[n] = fr.get(n, C.par[n].default)
     opd = s.get('opacity') or {}
     for n in OPPARS: C.par[n] = opd.get(n, 1.0)
-    if s.get('clip') and R.clipPlay(s['clip']): pass
-    elif C.par.Clipstate.eval() == 'loop': R.clipLive()
-    C.par.Camsrc = 'cam' if s.get('camsrc') == 'behind' else s.get('camsrc', 'off')   # BEHIND is now just the layer order
+    if getattr(R, 'CAMERA_REMOVED', False):                         # phone camera removed: old presets never switch it back on
+        C.par.Camsrc = 'off'
+        if C.par.Clipstate.eval() != 'off': C.par.Clipstate = 'off'
+    else:
+        if s.get('clip') and R.clipPlay(s['clip']): pass
+        elif C.par.Clipstate.eval() == 'loop': R.clipLive()
+        C.par.Camsrc = 'cam' if s.get('camsrc') == 'behind' else s.get('camsrc', 'off')   # BEHIND is now just the layer order
     if 'cammix' in s: C.par.Cammix = s['cammix']
     if 'camfit' in s: C.par.Camfit = s['camfit']
     C.par.Drawon = False                                          # drawings are media layers now
@@ -1510,7 +1514,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     newScene = bool(d.get('scene') and d['scene'] != C.par.Scene.eval())
     s_ = d.get('src') or {}
     newSrc = (sorted(m.get('file', '') for m in (s_.get('mslots') or {}).values()) != sorted(mp(C, i, 'file').eval() for i in MSLOTS if mp(C, i, 'on').eval())) \
-             or (s_.get('camsrc', 'off') != C.par.Camsrc.eval())
+             or (s_.get('camsrc', 'off') != C.par.Camsrc.eval() and not getattr(op('/project1/remote_cb').module, 'CAMERA_REMOVED', False))
     S['bank'] = slot; S['dirty'] = True
     tx = dict(d.get('text') or {})
     if tx: tx.setdefault('Textcm', 0)                           # presets from before text gradients: named colour

@@ -155,10 +155,14 @@ def fxpMsg():
     return {'t': 'fxps', 'v': [{'name': p['name'], 'on': [k for k, v in p['layers'].items() if v[0]]} for p in _E().fxList()]}
 
 def clipsMsg():
+    if CAMERA_REMOVED: return {'t': 'clips', 'v': [], 'cur': None}
     playing = CLIP['id'] if _C().par.Clipstate.eval() == 'loop' else None
     return {'t': 'clips', 'v': clipList(), 'cur': playing}
 
+CAMERA_REMOVED = True        # phone camera + clips removed for privacy: frames are thrown away unread
+
 def camFrame(payload):
+    if CAMERA_REMOVED: return
     payload = streamCheck(payload)
     if payload is None: return
     C = _C()
@@ -802,6 +806,7 @@ def handle(msg, reply):
     try:
         if t == 'set' and msg.get('p') in ALLOWED:
             p = msg['p']; v = _clean(p, msg['v'])
+            if CAMERA_REMOVED and p in ('Camsrc', 'Clipstate') and v != 'off': return
             if p in ('Model', 'Scene', 'Modelstyle', 'Camsrc', 'Camfit', 'Clipstate') or p in TEXTMENUS and p != 'Textstr':
                 par = C.par[p]
                 if hasattr(par, 'menuNames') and par.menuNames and v not in par.menuNames: return
@@ -898,6 +903,8 @@ def handle(msg, reply):
                 ok = E.storeUndo() if a == 'undo' else E.storeReload() if a == 'reload' else E.storeRestore(str(msg.get('f', '')))
                 reply({'t': 'history', 'v': E.storeHistory(40), 'done': a, 'ok': bool(ok)})
             elif a == 'backup': E.storeBackupNow(); reply({'t': 'history', 'v': E.storeHistory(40), 'done': 'backup', 'ok': True})
+        elif t == 'clip' and CAMERA_REMOVED:
+            return
         elif t == 'clip':
             a = msg.get('do')                                    # ('a' is the login token)
             if a == 'rec': clipRec()
