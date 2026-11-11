@@ -102,12 +102,18 @@ def analyze(C, dt):
     x = x[-N:]
     if len(x):
         BUF = np.concatenate([BUF[len(x):], x])
-    y = BUF * float(C.par.Gain.eval())
+    mic = bool(getattr(C.par, 'Automic', None) and C.par.Automic.eval())
+    y = BUF * float(C.par.Gain.eval()) * (A.get('ag', 1.0) if mic else 1.0)
     rms = float(np.sqrt(np.mean(y[-int(SR / 60):] ** 2))) + 1e-12
     X = np.abs(np.fft.rfft(y * HANN)) / (N / 4.0)
     db = {k: 20.0 * math.log10(float(np.sqrt(np.mean(X[m] ** 2))) + 1e-12) for k, m in MASKS.items()}
     db['level'] = 20.0 * math.log10(rms)
     A['db'] = db
+    if mic:                                   # ROOM MIC: keep the level around -20 dB whatever the room is doing (slow, so drops stay drops)
+        lv = db['level']
+        if lv > -75:
+            A['ag'] = min(60.0, max(0.5, A.get('ag', 1.0) * 10 ** ((-20.0 - lv) / 20.0 * min(1.0, dt * 0.35))))
+    A['lvl'] = db['level']
     gate, rng = float(C.par.Gate.eval()), max(6.0, float(C.par.Range.eval()))
     gated = db['level'] < gate
     for k, d in db.items():

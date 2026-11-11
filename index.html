@@ -320,6 +320,10 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .tin:focus{border-color:var(--hot)}
 .trow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
 .qtxt .qtrow{display:flex;gap:6px;margin-top:6px}.qtxt input{flex:1;min-width:0;padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 15px var(--sans)}
+.ain{margin:12px 0 4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.ainhd{display:flex;align-items:baseline;justify-content:space-between}.ainhd h2{margin:0 0 8px}#ainlv{font:600 12px var(--mono);color:var(--mute)}#ainlv.hot{color:var(--lime)}#ainlv.low{color:#ffb02e}
+.ainseg{flex-wrap:wrap;margin-bottom:8px}.ainseg button{flex:1 1 30%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#t-Automic{width:100%;display:flex;flex-direction:column;gap:2px;align-items:center}#t-Automic small{font:500 10px var(--sans);letter-spacing:.04em;opacity:.7;text-transform:none}
 .qrec{margin:8px 0 0;padding:0}.qrec[hidden]{display:none}
 .qtxt .qtrow button{padding:0 16px;border-radius:8px;background:var(--hot);color:#fff;font:700 12px var(--sans);letter-spacing:.08em}
 .capsb{padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 12px var(--sans);letter-spacing:.08em}.capsb.on{background:var(--ink);color:var(--bg)}
@@ -618,6 +622,11 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
   </section>
 
   <section class="view" id="v-audio">
+    <div class="ain">
+      <div class="ainhd"><h2>Sound input</h2><span id="ainlv">-- dB</span></div>
+      <div class="seg sm ainseg" id="ainseg"></div>
+      <button class="btn" id="t-Automic" data-tog="Automic">🎤 ROOM MIC MODE<small>levels itself: for a mic picking up the speakers</small></button>
+    </div>
     <div class="bars" style="margin-top:14px">
       <div class="bar" style="--c:var(--hot)"><div id="bL"></div><span>BASS</span></div><div class="bar" style="--c:var(--vio)"><div id="bM"></div><span>MID</span></div>
       <div class="bar" style="--c:var(--cyan)"><div id="bH"></div><span>HIGH</span></div><div class="bar" style="--c:var(--lime)"><div id="bK"></div><span>KICK</span></div>
@@ -719,7 +728,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11f';
+const BUILD = '2026-11-11g';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -769,10 +778,11 @@ function onMsg(m){
   if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
-    if (m.local) store.set('local', m.local); if (m.store) storeState(m.store);
+    if (m.local) store.set('local', m.local); if (m.store) storeState(m.store); setTimeout(renderAudioIn, 0);
     S.allL = S.layers.map(l => [l.k, l.on ? 1 : 0, l.amt, l.p1]); S.tfx = S.tfx || {};
     build(); applyPars(m.pars); applyTarget(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
   else if (!S) return;
+  else if (m.t === 'audioin') { S.audioin = m.v; renderAudioIn(); }
   else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); } if ((m.L || m.LT) && S.quick) quickSync();
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
@@ -1454,7 +1464,7 @@ function applyPars(p){
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Statue','Drawon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
+  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Statue','Drawon','Automic'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
   $('#spinrow').hidden = p.Motion !== 'spin';
   syncText(p); clipUI(p); ccUI('text'); ksDraw(); keyUI(p);
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';
@@ -1761,7 +1771,13 @@ function sheetGroupHdr(g){                // hold a group header -> rename / ung
   $('#shA').innerHTML = `<button class="pri" data-sh="grpadd">＋ Add presets to this group</button><button data-sh="grpren">Rename group</button><button class="dan" data-sh="grpdel">Ungroup its presets</button><button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.grp = g; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
+function renderAudioIn(){ const a = S && S.audioin, el = $('#ainseg'); if (!el) return;
+  if (!a || !a.v || !a.v.length) { el.innerHTML = '<span class="hint">Inputs show up once TouchDesigner reports them</span>'; return; }
+  const nice = l => (String(l).split(' (')[0].replace(/^Microphone Array|^Microphone$/i, 'Laptop mic') || String(l)).slice(0, 28);
+  el.innerHTML = a.v.map(x => `<button data-ain="${esc(x.n)}" class="${x.n === a.cur ? 'on' : ''}" title="${esc(x.l)}">${esc(nice(x.l))}</button>`).join(''); }
 function meters(m){
+  if (ui.tab === 'audio' && m.db !== undefined) { const e = $('#ainlv'), d = m.db; e.textContent = (d < -100 ? 'no sound' : Math.round(d) + ' dB') + (S && S.pars.Automic && m.ag > 1.05 ? ' · boost ×' + m.ag : '');
+    e.classList.toggle('low', d < -60); e.classList.toggle('hot', d >= -60); }
   const s = (id, v) => $(id).style.transform = 'scaleX(' + Math.min(1, v) + ')';
   s('#mL', m.l); s('#mM', m.m); s('#mH', m.h); s('#mK', m.k);
   if (ui.tab === 'audio') { const h = (id, v) => $(id).style.height = Math.max(2, Math.min(100, v * 100)) + '%'; h('#bL', m.l); h('#bM', m.m); h('#bH', m.h); h('#bK', m.k); }
@@ -2050,6 +2066,7 @@ document.addEventListener('click', e => {
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
   if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); hsvFrom(d.cwhich); return; }
   if (d.csw) { ccPick(d.csw, d.v); return; }
+  if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
   if (d.hsvt) { hsvToggle(d.hsvt); return; }
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }

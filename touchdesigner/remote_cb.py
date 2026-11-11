@@ -108,7 +108,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
 TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
@@ -576,6 +576,19 @@ def _layers():
 def _layersLive():
     return [[r['key'], int(r['on'] in ('1', 'True', 'true')), round(float(r['amt']), 3), round(float(r['p1']), 3)] for r in _E().layers()]
 
+def _audioDev():
+    a = op('/project1/AUDIO')
+    if a is None: return None
+    d = [o for o in a.findChildren(type=audiodeviceinCHOP)]
+    return d[0] if d else None
+
+def audioInputs():
+    """Sound inputs Windows offers (laptop mic, line-in, USB sound card...) for the AUDIO tab."""
+    d = _audioDev()
+    if d is None: return {'v': [], 'cur': ''}
+    try: return {'v': [{'n': n, 'l': l} for n, l in zip(d.par.device.menuNames, d.par.device.menuLabels)][:12], 'cur': d.par.device.eval()}
+    except Exception: return {'v': [], 'cur': ''}
+
 def state():
     C = _C()
     return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
@@ -584,6 +597,7 @@ def state():
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
                        for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
+            'audioin': audioInputs(),
             'sliders': [dict(zip(('p', 'label', 'min', 'max', 'step', 'group'), s)) for s in SLIDERS]}
 
 def _send(dat, client, obj):
@@ -655,7 +669,8 @@ def broadcastMeters():
         LIVE['fps'] = (f - LIVE['f']) / (now - LIVE['t']); LIVE['t'], LIVE['f'] = now, f
     S = _E().S
     msg = {'t': 'm', 'l': round(S['low'], 3), 'm': round(S['mid'], 3), 'h': round(S['high'], 3),
-           'k': round(S['kick'], 3), 'v': round(S['level'], 3), 'fps': round(LIVE['fps']), 'b': S.get('bank', 0)}
+           'k': round(S['kick'], 3), 'v': round(S['level'], 3), 'fps': round(LIVE['fps']), 'b': S.get('bank', 0),
+           'db': round(_E().A.get('lvl', -120.0), 1), 'ag': round(_E().A.get('ag', 1.0), 1)}
     LAST['n'] += 1
     full = LAST['n'] % 40 == 0                        # full resync every ~10 s, otherwise only changes
     P, L = _pars(), _layersLive()
@@ -801,6 +816,15 @@ def _clean(p, v):
         return v
     if p in TEXTMENUS or p in ('Scene', 'Modelstyle', 'Model'): return str(v)[:120]
     return float(v)
+
+def _ensurePars():
+    """Settings added after the project was built: create them if this .toe doesn't have them yet."""
+    try:
+        C = op('/project1/CONTROLS')
+        if not hasattr(C.par, 'Automic'): C.par.Gain.page.appendToggle('Automic', label='Room mic mode')
+        if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
+    except Exception as e: print('ensurePars', e)
+_ensurePars()
 
 LOST = {'t': 0.0, 'fired': False}      # last time a signed message came from a remote
 
@@ -979,6 +1003,12 @@ def handle(msg, reply):
             _all({'t': 'bank', 'bank': E.bankList()}); _publish(state(), active_only=True)
             if n:
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
+        elif t == 'audioin':                          # pick the sound input (laptop mic, line-in, USB card...)
+            d = _audioDev(); v = str(msg.get('v', ''))
+            if d is not None and v in d.par.device.menuNames:
+                d.par.device = v; d.par.active = True
+            reply({'t': 'audioin', 'v': audioInputs()})
+            _all({'t': 'audioin', 'v': audioInputs()}, skip=None)
         elif t == 'ping':
             if getattr(reply, 'local', False): reply({'t': 'pong'}); reply(hostsMsg())
         elif t == 'thumbs':                               # the phone is missing some preset pictures: send just those
