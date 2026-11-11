@@ -823,6 +823,18 @@ def _ensurePars():
         C = op('/project1/CONTROLS')
         if not hasattr(C.par, 'Automic'): C.par.Gain.page.appendToggle('Automic', label='Room mic mode')
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
+        for i in range(1, 7):                          # any background colour can be removed (picked on the remote)
+            m = C.par['M%dkeycolor' % i]
+            if m is None: continue
+            if 'custom' not in m.menuNames:
+                m.menuNames = ['auto', 'green', 'blue', 'custom']; m.menuLabels = ['Auto', 'Green', 'Blue', 'Picked']
+            if not hasattr(C.par, 'M%dkeyhex' % i):
+                pp = m.page.appendStr('M%dkeyhex' % i, label='M%d key colour' % i)[0]; pp.default = '#00ff00'; pp.val = '#00ff00'
+            k = op('/project1/mk%d' % i)
+            if k is not None and k.par.vec3name.eval() != 'uKC':
+                k.par.vec3name = 'uKC'; k.par.vec3valuew = 1
+                for j, ax in enumerate('xyz'):
+                    k.par['vec3value' + ax].expr = "op('/project1/fx_engine').module.hexc(op('/project1/CONTROLS').par.M%dkeyhex.eval(), %d)" % (i, j)
     except Exception as e: print('ensurePars', e)
 _ensurePars()
 
