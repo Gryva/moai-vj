@@ -109,7 +109,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -331,6 +331,12 @@ def mediaPlay(mid, fit=False, slot=None, keep=False):
             return True
     return False
 
+def mediaFull(rel):
+    """'videos/x.mp4' -> the file in the clip library, anything else -> Visuals/media/..."""
+    rel = str(rel or '')
+    if not rel: return ''
+    return os.path.join(VIDEODIR, rel[7:]) if rel.startswith('videos/') else os.path.join(MEDIADIR, rel)
+
 def mediaStop(i):
     C = _C(); C.par['M%dfile' % i] = ''; op('/project1/mf%d' % i).par.file = ''
 
@@ -530,10 +536,13 @@ def clipDel(cid):
 
 def _pars():
     C = _C()
-    d = {s[0]: round(float(C.par[s[0]].eval()), 4) for s in SLIDERS}
-    for t in TOGGLES: d[t] = bool(C.par[t].eval())
+    g = lambda n: C.par[n]                            # a setting missing from an older .toe is skipped, never a crash
+    d = {s[0]: round(float(g(s[0]).eval()), 4) for s in SLIDERS if g(s[0]) is not None}
+    for t in TOGGLES:
+        if g(t) is not None: d[t] = bool(g(t).eval())
     d['Model'] = C.par.Model.eval(); d['Scene'] = C.par.Scene.eval(); d['Modelstyle'] = C.par.Modelstyle.eval()
-    for t in TEXTMENUS: d[t] = C.par[t].eval()
+    for t in TEXTMENUS:
+        if g(t) is not None: d[t] = g(t).eval()
     d['Presetslot'] = int(C.par.Presetslot.eval()); d['Presetname'] = C.par.Presetname.eval()
     d['Cliplen'] = round(float(C.par.Cliplen.eval()), 1)
     for pre in ('Text', 'T2', 'T3'):
@@ -809,6 +818,9 @@ def _clean(p, v):
     if not SLIDERDEF: SLIDERDEF.update({s[0]: (s[2], s[3]) for s in SLIDERS})
     if p in SLIDERDEF: lo, hi = SLIDERDEF[p]; return min(hi, max(lo, float(v)))
     if p in TOGGLES: return bool(v)
+    if p == 'Noreact':
+        ok = _E().LAYER_IDS
+        return ','.join(k for k in dict.fromkeys(str(v).split(',')) if k in ok)
     if p.endswith('keyhex'):
         import re
         v = str(v).strip().lower()
@@ -822,6 +834,7 @@ def _ensurePars():
     try:
         C = op('/project1/CONTROLS')
         if not hasattr(C.par, 'Automic'): C.par.Gain.page.appendToggle('Automic', label='Room mic mode')
+        if not hasattr(C.par, 'Noreact'): C.par.Links.page.appendStr('Noreact', label='Layers ignoring the music')
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
         for i in range(1, 7):                          # any background colour can be removed (picked on the remote)
             m = C.par['M%dkeycolor' % i]
@@ -838,7 +851,8 @@ def _ensurePars():
     except Exception as e: print('ensurePars', e)
 _ensurePars()
 
-LOST = {'t': 0.0, 'fired': False}      # last time a signed message came from a remote
+LOST = {'t': 0.0, 'fired': False}
+MLOG = []      # last time a signed message came from a remote
 
 def lostCheck():
     """Called once a second by the engine: remote silent for 15 s and the option is on -> autopilot carries the show."""
@@ -849,7 +863,11 @@ def lostCheck():
 
 def handle(msg, reply):
     msg, ok = _verify(msg)
-    if ok and msg: LOST['t'] = time.time(); LOST['fired'] = False
+    if ok and msg:
+        LOST['t'] = time.time(); LOST['fired'] = False
+        if msg.get('t') not in ('ping', 'thumbs', 'hello'):          # last commands, to explain surprises later (no content, just what was asked)
+            MLOG.append((time.strftime('%H:%M:%S'), {k: msg.get(k) for k in ('t', 'do', 'slot', 'p', 'tgt', 'k', 'on') if k in msg}))
+            del MLOG[:-60]
     t = msg.get('t'); C, E = _C(), _E()
     cid = str(msg.get('c', ''))[:16]
     if not ok:                                        # locked: nothing happens without the password

@@ -194,6 +194,20 @@ def modelUpdate(C, T):
     MT['s'] = s
     return s
 
+def noReact(C=None):
+    """Layers switched to 'ignore the music' (SOURCE: the note button on a layer)."""
+    C = C or op('/project1/CONTROLS')
+    v = C.par.Noreact.eval() if hasattr(C.par, 'Noreact') else ''
+    return set(k for k in str(v).split(',') if k)
+
+def _gkey(name):
+    """3D group -> the layer it belongs to."""
+    if name in ('moai_geo', 'moai_particles') or name.startswith('a_') or name == 'anims': return 'model'
+    if name == 'draw_geo': return 'draw'
+    if name[:2] == 'mg' and name[2:].isdigit(): return 'm' + name[2:]
+    if name[:2] == 'tg' and name[2:].isdigit(): return textKey(int(name[2:]))
+    return 'model'
+
 def motionOffsets(C, T, react=1.0, m=None, a=None):
     """Extra statue movement on top of the pose: (yaw, nod, roll, lift)."""
     m = C.par.Motion.eval() if m is None else m; a = float(C.par.Motionamt.eval()) if a is None else float(a)
@@ -541,7 +555,8 @@ def textUpdate(C, T, n=1):
         return TXM['frm'][key] + (v - TXM['frm'][key]) * e if M else v
     mode = TXM['mode'] if (M and e < 0.5) else tp('Textmode').eval()
     pp.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
-    pp.vec1valuex, pp.vec1valuey, pp.vec1valuez, pp.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
+    if textKey(n) in noReact(): pp.vec1valuex = pp.vec1valuey = pp.vec1valuez = pp.vec1valuew = 0.0
+    else: pp.vec1valuex, pp.vec1valuey, pp.vec1valuez, pp.vec1valuew = o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()
     pp.vec2valuex = L('Textamount')
     pp.vec3valuex = TMODES.index(mode) if mode in TMODES else 0
     pp.vec3valuey = TANIM.get(anim, 0); pp.vec3valuez = L('Textspeed'); pp.vec3valuew = L('Textreact')
@@ -835,8 +850,9 @@ def fxTargets(C):
 def tUniforms(T):
     if not SLOTS: return
     o = op('/project1/AUDIO/OUT')
-    au = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval())
+    au0 = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval()); NR = noReact()
     for t, n in SLOTS.items():
+        au = (0.0, 0.0, 0.0, 0.0) if t in NR else au0             # a layer set to ignore the music: its effects ignore it too
         for k, v in FXT[t].items():
             if not (v[0] and v[1] > 0.001): continue
             g = op('/project1/fxS%d_%s' % (n, k))
@@ -1165,7 +1181,12 @@ def _mval(par):
 
 def mediaSlotData(C, i): return {n: _mval(mp(C, i, n)) for n in MPARS}
 
+SLOTLOG = []
 def mediaSlotClear(C, i):
+    if mp(C, i, 'on').eval() or mp(C, i, 'file').eval():                 # who emptied a layer that had something in it
+        import traceback
+        SLOTLOG.append((time.strftime('%H:%M:%S'), i, mp(C, i, 'file').eval(), ' < '.join(f.name for f in traceback.extract_stack()[-5:-1])))
+        del SLOTLOG[:-30]
     for n in MPARS:
         par = mp(C, i, n)
         try: par.val = par.default
@@ -1178,7 +1199,7 @@ def srcData():
     C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
     return {'camsrc': C.par.Camsrc.eval(), 'cammix': round(float(C.par.Cammix.eval()), 3), 'camfit': C.par.Camfit.eval(),
             'mslots': {str(i): mediaSlotData(C, i) for i in MSLOTS if mp(C, i, 'on').eval()},
-            'layers': layerOrder(C), 'links': C.par.Links.eval(), 'modelname': C.par.Modelname.eval() if hasattr(C.par, 'Modelname') else '',
+            'layers': layerOrder(C), 'links': C.par.Links.eval(), 'noreact': C.par.Noreact.eval() if hasattr(C.par, 'Noreact') else '', 'modelname': C.par.Modelname.eval() if hasattr(C.par, 'Modelname') else '',
             'frame': {n: round(float(C.par[n].eval()), 4) for n in FRAMEPARS},
             'opacity': {n: round(float(C.par[n].eval()), 4) for n in OPPARS},
             'clip': R.CLIP['id'] if C.par.Clipstate.eval() == 'loop' else None,
@@ -1239,6 +1260,7 @@ def applySrc(d, slot=None):
         if s.get('camsrc') == 'behind': order.remove('camera'); order.append('camera')
     C.par.Layerorder = ','.join(_LEGACY.get(k, k) for k in order)
     C.par.Links = s.get('links', '')
+    if hasattr(C.par, 'Noreact'): C.par.Noreact = s.get('noreact', '')
     if hasattr(C.par, 'Modelname'): C.par.Modelname = s.get('modelname', '')
     fr = s.get('frame') or {}
     for n in FRAMEPARS: C.par[n] = fr.get(n, C.par[n].default)
@@ -1779,6 +1801,10 @@ def camfeedUpdate(C, dt, T):
         if mf is not None:
             play = mediaActive(C, i)
             if bool(mf.par.play.eval()) != play: mf.par.play = play
+            if S['frame'] % 30 == i and mp(C, i, 'kind').eval() != 'draw':     # the file a layer names is always the file it plays
+                want = R.mediaFull(mp(C, i, 'file').eval()); have = mf.par.file.eval()
+                if os.path.normcase(os.path.normpath(have or '.')) != os.path.normcase(os.path.normpath(want or '.')):
+                    mf.par.file = want; SLOTLOG.append((time.strftime('%H:%M:%S'), i, 'resync', str(have)[-40:] + ' -> ' + str(want)[-40:])); del SLOTLOG[:-30]
     if g.bypass: g.bypass = False
     p = g.par; o = op('/project1/AUDIO/OUT')
     p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
@@ -1957,11 +1983,13 @@ def _models(C, dt, T, react, grid):
     msh = C.par.Modelshown.eval()
     if msh != S.get('msw'): S['msw'] = msh; staticSwitch(msh)
     _safe('objects', objUpdate, C)
-    ag = _safe('animation', animUpdate, C, dt, react)
-    o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, react)
+    NR = noReact(C); mreact = 0.0 if 'model' in NR else react
+    ag = _safe('animation', animUpdate, C, dt, mreact)
+    o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, mreact)
     ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
     for g in [op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/draw_geo'), ag] + [op('/project1/mg%d' % i) for i in S.get('objs', [])] + [op('/project1/tg%d' % n) for n in S.get('tobjs', [])]:
         if g is None: continue
+        react = 0.0 if _gkey(g.name) in NR else mreact if _gkey(g.name) == 'model' else C.par.Reactivity.eval()
         own = ownMotion(C, g.name)                                # a 3D picture / video / drawing / text with its own motion
         if own:
             m_, spd, ax_, amt, rev = own
@@ -2135,7 +2163,7 @@ def onFrameStart(frame):
     react = C.par.Reactivity.eval()
     if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin':
         sd = -1.0 if C.par.Spinrev.eval() else 1.0                  # spin direction (statues, animations, pictures, drawings)
-        S['angle'] = (S['angle'] + sd * (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * react) * dt) % 360.0
+        S['angle'] = (S['angle'] + sd * (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * (0.0 if 'model' in noReact(C) else react)) * dt) % 360.0
     sc = C.par.Scene.eval()
     if sc != S['scene']:
         _safe('scene', applyScene, sc); S['scene'] = sc; S['obj'] = None; S['anim'] = '?'

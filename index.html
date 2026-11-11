@@ -25,6 +25,7 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .r1{display:flex;align-items:center;gap:10px}
 .logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
+.larr.lau{color:var(--lime);font-size:15px}.larr.lau.mute{color:#cfc8d8;background:linear-gradient(to top right,transparent 46%,#ff4d2e 47%,#ff4d2e 53%,transparent 54%)}
 .qmenu{flex:none;margin-left:6px;width:30px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 15px/1 var(--sans);display:grid;place-items:center;padding:0}.qmenu:active{background:#ffffff14;color:var(--ink)}
 .sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
 .fps{font:500 12px var(--mono);color:var(--mute)}
@@ -728,7 +729,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11g';
+const BUILD = '2026-11-11h';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1088,12 +1089,14 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const vsel = k => flat(k) || is3dLayer(k) ? k : null;                  // VIEW: flat layers get 2D framing, 3D layers their own placement
   const act = k => fx ? (fxAvail().includes(k) ? `data-fxt="${k}"` : null) : vw ? (vsel(k) ? `data-vwt="${vsel(k)}"` : null) : `data-jump="${layerInfo(k).card}"`;
   const sel = k => ((fx && FXT_SEL === k) || (vw && vsel(k) === VW_SEL) || (src && SRC_SEL === k) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
-  const x = k => src ? (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
+  const NR = new Set(String(p.Noreact || '').split(',').filter(Boolean));
+  const au = k => `<button class="larr lau${NR.has(k) ? ' mute' : ''}" data-lau="${k}" aria-label="${NR.has(k) ? 'Ignores the music' : 'Reacts to the music'}">♪</button>`;
+  const x = k => src ? au(k) + (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   const lk = k => partnerOf(k) ? ` · ⇄ ${esc(lName(partnerOf(k)).split(' · ')[0])}${visOf(k) ? '' : ' (off)'}` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
   if (vw && layerOrder().some(is3dLayer)) h += `<div class="lrow on pin${VW_SEL === '3d' ? ' sel' : ''}"><button class="lname" data-vwt="3d"><b>3D camera</b><span>films every 3D layer · saved views, orbit, zoom</span></button></div>`;
   h += vis.map((k, i) => { const L = layerInfo(k), a = act(k);
-    const sub = esc(L.sub) + (vw && is3dLayer(k) ? ' · in 3D' : vw && L.text ? ' · placed in SOURCE' : '') + tag(k) + (src ? lk(k) : '');
+    const sub = esc(L.sub) + (src && NR.has(k) ? ' · ignores music' : '') + (vw && is3dLayer(k) ? ' · in 3D' : vw && L.text ? ' · placed in SOURCE' : '') + tag(k) + (src ? lk(k) : '');
     return `<div class="lrow on${sel(k)}${a ? '' : ' dim'}${src && !visOf(k) && partnerOf(k) ? ' dim' : ''}"><button class="lname" ${a || ''} data-lay="${k}"><b>${L.name}</b><span>${sub}</span></button>`
       + `<button class="larr" data-lmove="${k}" data-dir="-1" ${i === 0 ? 'disabled' : ''}>▲</button><button class="larr" data-lmove="${k}" data-dir="1" ${i === vis.length - 1 ? 'disabled' : ''}>▼</button>${x(k)}</div>`; }).join('');
   return h || '<p class="hint2" style="margin:2px">No layers yet.</p>';
@@ -2108,6 +2111,9 @@ document.addEventListener('click', e => {
   else if (d.addl) { addLayer(d.addl); buzz(); }
   else if (d.swapk) { const pt = partnerOf(d.swapk); if (pt) doSwap(d.swapk, pt); }
   else if (d.qswap !== undefined) { const it = qList()[+d.qswap]; if (it) { doSwap(it.a, it.b); setTimeout(quickSync, 60); } }
+  else if (d.lau) { const nr = new Set(String(S.pars.Noreact || '').split(',').filter(Boolean)), k = d.lau;
+    if (nr.has(k)) nr.delete(k); else nr.add(k); S.pars.Noreact = [...nr].join(','); send({t:'set', p:'Noreact', v:S.pars.Noreact});
+    toast(lName(k).split(' · ')[0] + (nr.has(k) ? ' ignores the music' : ' reacts to the music')); layerStack(); buzz(); }
   else if (d.loff) { if (partnerOf(d.loff)) setLinks(linkPairs().filter(x => !x.includes(d.loff)));   // removed = unlinked, no ghost row
     const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false], text2:['T2on', false], text3:['T3on', false]}[k];
     if (/^m\d$/.test(k)) { send({t:'media', do:'remove', slot:+k.slice(1)}); S.pars['M' + k.slice(1) + 'on'] = false; }
