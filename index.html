@@ -216,6 +216,14 @@ body.arranging .pad.full{touch-action:none}
 .cstrip button{flex:0 0 34px;height:34px;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 1px #fff2}
 .cstrip button.on{border-color:var(--ink)}
 .cstrip .cpick{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative}
+.hsv{margin:2px 0 10px;padding:10px;border-radius:10px;background:#0d0c12;border:1px solid var(--line)}.hsv[hidden]{display:none}
+.hsv .sv{position:relative;height:150px;border-radius:8px;touch-action:none;cursor:crosshair}
+.hsv .hue{position:relative;height:26px;margin-top:10px;border-radius:13px;touch-action:none;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.hsv i{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #0008,0 2px 8px #000a;pointer-events:none}
+.hsv .hue i{top:50%}
+.hsvrow{display:flex;gap:8px;align-items:center;margin-top:10px}.hsvsw{width:34px;height:34px;border-radius:8px;flex:none;box-shadow:inset 0 0 0 1px #fff3}
+.hsvhex{flex:1;min-width:0;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#000;color:var(--ink);font:600 13px var(--mono);text-transform:uppercase}
+.hsvok{height:34px;padding:0 14px;border-radius:8px;background:var(--lime);color:#0b0a0f;font:700 11px var(--sans);letter-spacing:.1em;border:0}
 .cstrip .cpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .cab{display:flex;gap:6px;margin-bottom:2px}.cab button{flex:1;display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;border:1px solid var(--line);font:600 11px var(--mono);color:var(--mute)}
 .cab button i{width:18px;height:18px;border-radius:50%;border:1px solid #fff4}.cab button.on{border-color:var(--ink);color:var(--ink)}
@@ -702,7 +710,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11d';
+const BUILD = '2026-11-11e';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -921,7 +929,7 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
         <details class="box mbox mkey" style="margin-top:8px"><summary>Remove background colour<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
           <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:4px"></div>
-          <div class="cstrip kstrip" data-kstrip="${i}">${KEYSW.map(c => `<button data-ksw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-kpick="${i}" value="#00ff00"></button></div>
+          <div class="cstrip kstrip" data-kstrip="${i}">${KEYSW.map(c => `<button data-ksw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="key:${i}" aria-label="Any colour"></button></div>${hsvBox('key:' + i)}
           <div id="g-m${i}key"></div></details>
         <div class="mmot" id="box-m${i}obj"><h4>Object motion</h4>
           <div class="ksrow"><span>Moves</span><div class="opts" id="o-M${i}motion"></div></div>
@@ -1294,14 +1302,12 @@ function buildText(){
   for (const p in TOPTS) { const h = $('#o-' + p); if (h) h.innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}"${/font$/.test(p) ? ` class="fch" style="font-family:'${v}',var(--sans)"` : ''}>${l}</button>`).join(''); }
   ccDef('text', () => { const p = S.pars; return +p.Textcm > 0 ? {m:+p.Textcm, a:p.Textca || '#ffffff', b:p.Textcb || '#ff3da8', ang:+p.Textcang || 0}
                                                    : {m:1, a:TCOL[p.Textcolor] || '#ffffff', b:p.Textcb || '#ff3da8', ang:+p.Textcang || 0}; },
-    c => { Object.assign(S.pars, {Textcm:c.m, Textca:c.a, Textcb:c.b, Textcang:c.ang}); clearTimeout(ccDef._t);
-           ccDef._t = setTimeout(() => send({t:'tcol', m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, GMODES);
+    c => { Object.assign(S.pars, {Textcm:c.m, Textca:c.a, Textcb:c.b, Textcang:c.ang}); thr('tcol', () => send({t:'tcol', m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)})); }, GMODES);
   $('#tcolbox').innerHTML = ccBox('text', 'Text colour', true); ccBind($('#tcolbox')); ccUI('text');
   [2,3].forEach(n => { const q = 'T' + n;
     ccDef('text' + n, () => { const p = S.pars; return +p[q + 'cm'] > 0 ? {m:+p[q + 'cm'], a:p[q + 'ca'] || '#ffffff', b:p[q + 'cb'] || '#ff3da8', ang:+p[q + 'cang'] || 0}
                                                   : {m:1, a:TCOL[p[q + 'color']] || '#ffffff', b:p[q + 'cb'] || '#ff3da8', ang:+p[q + 'cang'] || 0}; },
-      c => { Object.assign(S.pars, {[q + 'cm']:c.m, [q + 'ca']:c.a, [q + 'cb']:c.b, [q + 'cang']:c.ang}); clearTimeout(ccDef['_t' + n]);
-             ccDef['_t' + n] = setTimeout(() => send({t:'tcol', n, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, GMODES);
+      c => { Object.assign(S.pars, {[q + 'cm']:c.m, [q + 'ca']:c.a, [q + 'cb']:c.b, [q + 'cang']:c.ang}); thr('tcol' + n, () => send({t:'tcol', n, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)})); }, GMODES);
     $('#tcolbox' + n).innerHTML = ccBox('text' + n, 'Text colour', true); ccBind($('#tcolbox' + n)); ccUI('text' + n); });
   renderRecent();
 }
@@ -1481,7 +1487,7 @@ function ccBox(id, title, open){
   return `<details class="colbox" data-cbox="${id}" ${open || COPEN[id] ? 'open' : ''}><summary>${title} <i data-cprev="${id}"></i></summary>
     <div class="seg sm" style="margin:2px 0 6px">${d.modes.map(([m, l]) => `<button data-cmode="${id}" data-v="${m}">${l}</button>`).join('')}</div>
     <div class="cab" data-cab="${id}"><button data-cwhich="${id}" data-v="a"><i></i>${d.two ? d.two[0] : 'COLOUR A'}</button><button data-cwhich="${id}" data-v="b"><i></i>${d.two ? d.two[1] : 'COLOUR B'}</button></div>
-    <div class="cstrip">${SWC.map(c => `<button data-csw="${id}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-cpick="${id}"></button></div>
+    <div class="cstrip">${SWC.map(c => `<button data-csw="${id}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="${id}" aria-label="Any colour"></button></div>${hsvBox(id)}
     <div class="sub" data-cangrow="${id}"><span>Angle</span><input type="range" data-cang="${id}" min="0" max="360" step="1" value="0" style="--acc:var(--ink)"></div></details>`;
 }
 function ccBind(root){ (root || document).querySelectorAll('input[data-cang]').forEach(el => { if (el._b) return; el._b = 1; bindSlider(el, el.dataset.cang + ':ang', v => ccSet(el.dataset.cang, {ang: v})); }); }
@@ -1499,13 +1505,54 @@ function ccUI(id){
   const an = document.querySelector(`[data-cang="${id}"]`); if (an && !(touching[id + ':ang'] > performance.now()) && +an.value !== c.ang) { an.value = c.ang; an._show && an._show(); }
 }
 function ccSet(id, ch){ const d = CC[id]; if (!d) return; const c = Object.assign(d.get(), ch); d.set(c); ccUI(id); }
-function ccPick(id, v){ const c = CC[id].get(), two = CC[id].two; const w = c.m >= 2 || two ? (CED[id] || 'a') : 'a'; ccSet(id, Object.assign({[w]: v}, c.m === 0 ? {m: two ? 2 : 1} : {})); buzz(); }
+function ccPick(id, v, quiet){ const c = CC[id].get(), two = CC[id].two; const w = c.m >= 2 || two ? (CED[id] || 'a') : 'a'; ccSet(id, Object.assign({[w]: v}, c.m === 0 ? {m: two ? 2 : 1} : {})); if (!quiet) { buzz(); hsvFrom(id); } }
+function thr(key, fn, ms){                   // at most one message every ~70 ms, the last one always arrives: the picture follows your finger
+  ms = ms || 70; const T = thr.m || (thr.m = {}), t = T[key] || (T[key] = {last:0, tm:null}); t.fn = fn; const now = performance.now();
+  if (now - t.last >= ms) { t.last = now; clearTimeout(t.tm); t.tm = null; fn(); }
+  else if (!t.tm) t.tm = setTimeout(() => { t.tm = null; t.last = performance.now(); t.fn(); }, ms - (now - t.last));
+}
+/* own colour picker: drag on the square / rainbow and the visuals change live (the phone's colour dialog hides the screen) */
+const HSV = {};
+function hsvBox(id){ return `<div class="hsv" data-hsv="${id}" hidden><div class="sv" data-sv="${id}"><i></i></div><div class="hue" data-hue="${id}"><i></i></div>
+  <div class="hsvrow"><span class="hsvsw" data-hsvsw="${id}"></span><input class="hsvhex" data-hsvhex="${id}" maxlength="7" spellcheck="false" autocomplete="off"><button class="hsvok" data-hsvt="${id}">DONE</button></div></div>`; }
+function hex2hsv(h){ h = /^#[0-9a-f]{6}$/i.test(h || '') ? h : '#ffffff'; const r = parseInt(h.substr(1, 2), 16) / 255, g = parseInt(h.substr(3, 2), 16) / 255, b = parseInt(h.substr(5, 2), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let hu = 0;
+  if (d) hu = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return {h: (hu * 60 + 360) % 360, s: mx ? d / mx : 0, v: mx}; }
+function hsv2hex({h, s, v}){ const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
+function hsvCur(id){ if (id.startsWith('key:')) return S.pars['M' + id.slice(4) + 'keyhex'] || '#00ff00';
+  const c = CC[id].get(), w = c.m >= 2 || CC[id].two ? (CED[id] || 'a') : 'a'; return c.m === 0 ? c.a : c[w]; }
+function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q = HSV[id]; if (!b || !q) return; const hx = hsv2hex(q);
+  b.querySelector('.sv').style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(${q.h},100%,50%))`;
+  const d = b.querySelector('.sv i'); d.style.left = q.s * 100 + '%'; d.style.top = (1 - q.v) * 100 + '%'; d.style.background = hx;
+  const hd = b.querySelector('.hue i'); hd.style.left = q.h / 360 * 100 + '%'; hd.style.background = `hsl(${q.h},100%,50%)`;
+  b.querySelector('.hsvsw').style.background = hx; const inp = b.querySelector('.hsvhex'); if (document.activeElement !== inp) inp.value = hx; }
+function hsvFrom(id){ if (!HSV[id]) return; HSV[id] = hex2hsv(hsvCur(id)); hsvDraw(id); }
+function hsvApply(id){ const hx = hsv2hex(HSV[id]); if (id.startsWith('key:')) keyPick(+id.slice(4), hx, true); else ccPick(id, hx, true); hsvDraw(id); }
+function hsvToggle(id){ const b = document.querySelector(`[data-hsv="${id}"]`); if (!b) return; const open = b.hidden;
+  $$('.hsv').forEach(x => { if (x !== b) x.hidden = true; }); b.hidden = !open;
+  if (open) { HSV[id] = hex2hsv(hsvCur(id)); hsvDraw(id); setTimeout(() => b.scrollIntoView({block:'nearest', behavior:'smooth'}), 60); }
+  else { delete HSV[id]; if (id.startsWith('key:')) { syncText(S.pars); applyPars({}); } } buzz(); }
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-sv],[data-hue]'); if (!el) return; e.preventDefault();
+  const id = el.dataset.sv || el.dataset.hue, sv = !!el.dataset.sv; if (!HSV[id]) HSV[id] = hex2hsv(hsvCur(id));
+  const mv = ev => { const r = el.getBoundingClientRect(), x = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)), y = Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
+    if (sv) { HSV[id].s = x; HSV[id].v = 1 - y; } else HSV[id].h = x * 359.9; hsvApply(id); };
+  el.setPointerCapture(e.pointerId); mv(e);
+  const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); buzz(6); };
+  el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+});
+document.addEventListener('change', e => { const id = e.target.dataset && e.target.dataset.hsvhex; if (!id) return;
+  let v = e.target.value.trim().toLowerCase(); if (!v.startsWith('#')) v = '#' + v; if (!/^#[0-9a-f]{6}$/.test(v)) { hsvDraw(id); return; }
+  HSV[id] = hex2hsv(v); hsvApply(id); });
 document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cpick; if (k) ccPick(k, e.target.value);
   const kp = e.target.dataset && e.target.dataset.kpick; if (kp) { clearTimeout(keyPick._t); keyPick._t = setTimeout(() => keyPick(+kp, e.target.value), 80); } });
-function keyPick(i, hex){                      // any colour can be cut out: picking one switches the layer to it and turns the cut-out on
-  const m = 'M' + i; S.pars[m + 'keyhex'] = hex; S.pars[m + 'keycolor'] = 'custom'; S.pars[m + 'keyon'] = true;
-  send({t:'set', p:m + 'keyhex', v:hex}); send({t:'set', p:m + 'keycolor', v:'custom'}); send({t:'set', p:m + 'keyon', v:true});
-  keyUI(S.pars); syncText(S.pars); applyPars({}); buzz();
+function keyPick(i, hex, quiet){              // any colour can be cut out: picking one switches the layer to it and turns the cut-out on
+  const m = 'M' + i; S.pars[m + 'keyhex'] = hex; thr('key' + i, () => send({t:'set', p:m + 'keyhex', v:hex}));
+  if (S.pars[m + 'keycolor'] !== 'custom') { S.pars[m + 'keycolor'] = 'custom'; send({t:'set', p:m + 'keycolor', v:'custom'}); }
+  if (!S.pars[m + 'keyon']) { S.pars[m + 'keyon'] = true; send({t:'set', p:m + 'keyon', v:true}); }
+  keyUI(S.pars); if (!quiet) { syncText(S.pars); applyPars({}); buzz(); }
 }
 function keyUI(p){ MS.forEach(i => { const hx = String(p['M' + i + 'keyhex'] || '#00ff00').toLowerCase(), cu = p['M' + i + 'keycolor'] === 'custom';
   $$(`[data-ksw="${i}"]`).forEach(b => b.classList.toggle('on', cu && b.dataset.v === hx)); const k = $(`[data-kpick="${i}"]`); if (k && k.value !== hx) k.value = hx; }); }
@@ -1518,7 +1565,7 @@ const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, colMap(
 const TWOCOL = {duotone:['SHADOWS','HIGHLIGHTS'], thermal:['COLD','HOT'], sketch:['LINES','PAPER']};          // effects whose colour setting is simply two colours
 function colBox(k){
   const two = TWOCOL[k];
-  ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; clearTimeout(colBox[k]); colBox[k] = setTimeout(() => send({t:'lcol', tgt:FXT_SEL, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, two ? [[0,'OWN'],[2,'MY 2 COLOURS']] : FXMODES, two);
+  ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; const tg = FXT_SEL; thr('fx:' + tg + k, () => send({t:'lcol', tgt:tg, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)})); }, two ? [[0,'OWN'],[2,'MY 2 COLOURS']] : FXMODES, two);
   return ccBox('fx:' + k, two ? '🎨 Two colours' : '🎨 Colour');
 }
 const colUI = k => ccUI('fx:' + k);
@@ -1988,10 +2035,11 @@ document.addEventListener('click', e => {
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
   if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }
-  if (d.cmode) { ccSet(d.cmode, {m:+d.v}); buzz(); return; }
-  if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); return; }
+  if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
+  if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); hsvFrom(d.cwhich); return; }
   if (d.csw) { ccPick(d.csw, d.v); return; }
-  if (d.ksw) { keyPick(+d.ksw, d.v); return; }
+  if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
+  if (d.hsvt) { hsvToggle(d.hsvt); return; }
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); send({t:'set', p:'Autofade', v:ui.fade}); buzz(); }   // autopilot uses the same transition
