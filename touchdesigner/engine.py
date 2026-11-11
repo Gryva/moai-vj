@@ -1,6 +1,11 @@
 # MOAI VJ ENGINE  - runs every frame (fx_engine Execute DAT, synced to this file)
 import numpy as np, math, json, os, time, shutil
 
+def hexc(h, i):
+    """'#rrggbb' -> channel i as 0..1 (used by the background-removal shaders)"""
+    try: return int(str(h)[1 + 2 * i:3 + 2 * i], 16) / 255.0
+    except Exception: return 0.0
+
 NAMES = ['CLEAN']   # legacy (single-effect mode is replaced by the layer stack)
 S = {'angle': 0.0, 'low': 0.0, 'mid': 0.0, 'high': 0.0, 'level': 0.0, 'kick': 0.0,
      'scene': None, 'label': None, 'master': 1.0, 'frame': 0, 'layers': None,
@@ -1145,7 +1150,7 @@ def snapshot():
 EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
-MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keytol', 'keysoft', 'keyspill',
+MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
 
 def _mval(par):
@@ -2118,6 +2123,7 @@ def onFrameStart(frame):
     dt = 1.0 / max(1.0, float(project.cookRate))
     T = absTime.seconds
     S['frame'] += 1
+    if S['frame'] % 60 == 0: _safe('lost', op('/project1/remote_cb').module.lostCheck)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()

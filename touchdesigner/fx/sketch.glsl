@@ -36,6 +36,9 @@ void main(){
   float e = clamp(length(vec2(gx, gy)) * (2.0 + uP.x * 4.0), 0.0, 1.0);
   float paper = 0.92 + 0.06 * hash(floor(uv * RES() / 2.0) + floor(uTime * 8.0));
   vec3 c = vec3(paper) * (1.0 - e * (0.85 + a.w * 0.15));
-  vec3 ink = fxTint(vec3(0.05), uv); c = mix(ink, vec3(paper), c.r);
+  int cm = int(uCA.w + 0.5);
+  vec3 ink = cm >= 2 ? uCA.rgb : fxTint(vec3(0.05), uv);       // two colours: A = lines, B = paper
+  vec3 pc = cm >= 2 ? uCB.rgb * (paper / 0.95) : vec3(paper);
+  c = mix(ink, pc, c.r);
   fragColor = TDOutputSwizzle(outc(uv, c));
 }

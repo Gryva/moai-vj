@@ -1,7 +1,8 @@
-// GREEN / BLUE SCREEN KEYER  input 0 = image or video, output = straight RGBA (subject kept, screen made transparent)
-// uK = (on, colour 0 auto / 1 green / 2 blue, tolerance, softness)   uS = (spill removal, shrink edges px, 0, 0)
+// BACKGROUND KEYER  input 0 = image or video, output = straight RGBA (subject kept, background colour made transparent)
+// uK = (on, colour 0 auto / 1 green / 2 blue / 3 picked colour, tolerance, softness)   uKC = picked colour (rgb)   uS = (spill removal, shrink edges px, 0, 0)
 uniform vec4 uK;
 uniform vec4 uS;
+uniform vec4 uKC;
 uniform vec4 uC;   // crop: x left, y right, z top, w bottom (0..0.45)
 layout(location = 0) out vec4 fragColor;
 vec2 cc(vec3 c){ return vec2(-0.169 * c.r - 0.331 * c.g + 0.5 * c.b, 0.5 * c.r - 0.419 * c.g - 0.081 * c.b); }
@@ -11,6 +12,7 @@ vec3 KEY;
 void pickKey(){
   // sample the frame border: the screen is whatever surrounds the subject
   int mode = int(uK.y + 0.5);
+  if (mode == 3) { KEY = uKC.rgb; return; }                     // a colour picked on the remote: any colour, also black or white
   vec3 acc = vec3(0.0); float n = 0.0;
   for (int i = 0; i < 20; i++) {
     float t = (float(i) + 0.5) / 20.0;
@@ -27,6 +29,11 @@ void pickKey(){
 float alphaAt(vec2 uv){
   vec3 c = src(uv);
   float d = length(cc(c) - cc(KEY)) * 2.4;                  // chroma distance from the screen colour
+  float ks = max(KEY.r, max(KEY.g, KEY.b)) - min(KEY.r, min(KEY.g, KEY.b));
+  if (int(uK.y + 0.5) == 3) {                               // greys / black / white have no hue: brightness has to count too
+    float lw = mix(1.6, 0.35, smoothstep(0.08, 0.35, ks));
+    d = length(vec3(cc(c) - cc(KEY), (dot(c, vec3(0.299, 0.587, 0.114)) - dot(KEY, vec3(0.299, 0.587, 0.114))) * lw)) * 2.4;
+  }
   float tol = uK.z * 0.6, soft = 0.02 + uK.w * 0.5;
   return smoothstep(tol, tol + soft, d);
 }
@@ -47,7 +54,8 @@ void main(){
   vec3 kd = KEY - vec3(dot(KEY, vec3(0.299, 0.587, 0.114)));
   float kl = max(1e-3, length(kd)); kd /= kl;
   float sp = max(0.0, dot(c - vec3(l), kd));
-  c -= kd * sp * uS.x;
+  float kss = max(KEY.r, max(KEY.g, KEY.b)) - min(KEY.r, min(KEY.g, KEY.b));
+  c -= kd * sp * uS.x * smoothstep(0.08, 0.3, kss);       // no spill fix for grey / black / white backgrounds
   c = max(c, 0.0);
   fragColor = TDOutputSwizzle(vec4(c, a));
 }

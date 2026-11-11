@@ -25,12 +25,14 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .r1{display:flex;align-items:center;gap:10px}
 .logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
-.fps{margin-left:auto;font:500 12px var(--mono);color:var(--mute)}
+.sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
+.fps{font:500 12px var(--mono);color:var(--mute)}
+.stat{margin-left:auto;display:flex;align-items:center;gap:8px;background:none;border:0;padding:8px 6px;cursor:pointer;flex:none}.stbar{display:block;width:3px;height:24px;border-radius:2px;background:var(--lime);box-shadow:0 0 8px #c7ff3d66;transition:background .3s}.stbar.bk{background:#ffb02e;box-shadow:0 0 8px #ffb02e66}.stbar.bad{background:#ff4d2e;box-shadow:0 0 8px #ff4d2e88}.stat .sx{display:none;align-items:center;gap:8px}.stat.open .sx{display:flex}
 .lk{font:700 9px var(--mono);letter-spacing:.08em;padding:3px 6px;border-radius:5px;border:1px solid #ffffff22;color:var(--mute);flex:none;display:none}.lk.on{display:block}.lk.bk{color:#ffcf7a;border-color:#ffb02e66}.golocal{color:var(--lime);border-color:var(--lime);text-decoration:none;cursor:pointer;font-size:10px;padding:5px 8px}
 .fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
-@media (max-width:440px){body.editing .fps,body.editing .r1>.logo{display:none}body.editing .r1>.fsb{margin-left:auto}}
+@media (max-width:440px){body.editing .r1>.logo{display:none}}
 .savebtn{display:none;height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--lime);color:var(--lime);font-weight:700;letter-spacing:.1em;font-size:11px;white-space:nowrap;flex:none}
 body.editing .savebtn{display:block}.savebtn.ok{background:var(--lime);color:#0b0a0f}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
@@ -149,7 +151,7 @@ label.tg{cursor:pointer}
 .sl-tog{font:700 10px var(--mono);letter-spacing:.1em;padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
 .sl-tog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 .sltog{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:10px;padding:13px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 12px var(--sans);letter-spacing:.1em}
-.sltog span{font:700 10px var(--mono);letter-spacing:.1em}.sltog.on{border-color:#c6ff3d66;color:var(--ink)}.sltog.on span{color:var(--lime)}
+.sltog span{font:700 10px var(--mono);letter-spacing:.1em}.sltog.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.sltog.on span{color:#0b0a0f}
 .lstack{display:flex;flex-direction:column;gap:5px}
 .lrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 10px;background:#0c0b11}
 .lrow.on{border-color:#3d4a1c}.lrow .lname{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -184,6 +186,7 @@ label.tg{cursor:pointer}
 .sl-add.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 body.sladding .pad.full{outline:2px dashed #c6ff3d66;outline-offset:-2px}body.sladding .pad.full .live{display:none}
 body.sladding .pad.full::after{content:"＋";position:absolute;right:8px;bottom:6px;font:700 20px var(--sans);color:var(--lime);z-index:3}
+.grpbar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px;border-radius:30px;background:#141219;border:1px solid var(--lime);box-shadow:0 8px 30px #000c;font:600 13px var(--sans);color:var(--ink)}.grpbar[hidden]{display:none}.grpbar b{color:var(--lime)}.grpbar button{padding:9px 16px;border-radius:20px;background:var(--lime);color:#0b0a0f;font:700 12px var(--sans);letter-spacing:.08em;border:0}
 .pad.sladded{transform:scale(.95);outline-color:var(--lime)!important;transition:transform .15s}
 .sl-next{flex:1;min-width:0;font:600 11px var(--mono);color:var(--lime);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl-arrange{font:700 10px var(--mono);letter-spacing:.1em;padding:6px 9px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
@@ -421,7 +424,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><div class="fps" id="fps">-- fps</div><div class="lk" id="lk" title="Which link the remote is using"></div><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -435,6 +438,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="appanel" id="apPanel" hidden>
       <h4>Transition between presets</h4><div class="seg sm" id="fades"></div>
       <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button></div>
+      <h4>If the remote loses its connection</h4><div class="seg sm" id="apLost"><button data-aplost="0">KEEP THE LOOK</button><button data-aplost="1">START AUTOPILOT</button></div>
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
     </div>
     <button class="sltog" id="slTog" aria-pressed="true"><b>☰ SET LIST</b><span id="slState">ON</span></button>
@@ -650,6 +654,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
   <input type="password" id="lockpw" placeholder="Password" autocomplete="current-password"><button id="lockgo">UNLOCK</button><div class="err" id="lockerr"></div></div></div>
 <div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span><a class="offlocal" id="offL" style="display:none"></a></div></div>
 <div class="sbar" id="sbar"></div>
+<div class="grpbar" id="grpbar" hidden><span>Adding to <b></b></span><button id="grpdone">✓ DONE</button></div>
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
@@ -687,6 +692,7 @@ function sha256raw(ascii){
   return result;
 }
 
+const KEYSW = ['#00ff00','#0047ff','#000000','#ffffff','#ff0000','#ff00ff','#ffff00','#00ffff'];   // background colours to remove
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
@@ -695,7 +701,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11b';
+const BUILD = '2026-11-11c';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -800,7 +806,7 @@ function status(){
   else L.style.display = 'none';
 }
 setInterval(status, 500);
-setInterval(() => linkUp && send({t:'ping'}), location.protocol === 'http:' ? 3000 : 10000);   // lets TD know a phone is listening (direct: also fresh addresses)
+setInterval(() => linkUp && send({t:'ping'}), location.protocol === 'http:' ? 3000 : 5000);   // lets TD know a phone is listening (direct: also fresh addresses)
 /* direct links: TD tells us every address it has (Wi-Fi, USB cable, Bluetooth); if one goes quiet we try the next */
 const LOCAL = location.protocol === 'http:';
 let HOSTS = store.get('hosts', []), WSH = location.host, WS = null, WSN = 0, WSSW = 0, WSFAIL = 0, MODE = 'ws';   // MODE: ws = direct, relay = internet as last resort
@@ -810,7 +816,10 @@ function hostKind(h){ const ip = String(h || '').split(':')[0], f = (HOSTS || []
 function linkBadge(){ const b = $('#lk'); if (!b) return;
   const t = !linkUp ? 'NO LINK' : LOCAL && MODE === 'ws' ? hostKind(WSH) : 'INTERNET';
   if (b.textContent !== t) b.textContent = t; b.classList.add('on');
-  b.classList.toggle('bk', !linkUp || !LOCAL || MODE === 'relay' || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2))); }
+  const bk = !linkUp || !LOCAL || MODE === 'relay' || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2));
+  b.classList.toggle('bk', bk); const sb = $('#stbar'); if (sb) { sb.classList.toggle('bad', !linkUp); sb.classList.toggle('bk', linkUp && bk); } }
+document.getElementById('stat').addEventListener('click', () => { const o = !$('#stat').classList.contains('open'); $('#stat').classList.toggle('open', o); store.set('statopen', o); buzz(); });
+if (store.get('statopen', false)) $('#stat').classList.add('open');
 function wsNext(){ const c = wsCands(), i = c.indexOf(WSH); WSFAIL++;
   if (KEY && WSFAIL >= 2 * c.length + 1) return goRelay();          // every direct route failed twice: use the internet while we keep checking
   setTimeout(() => connectWS(c[(i + 1) % c.length]), WSFAIL > c.length ? Math.min(400 * WSFAIL, 3000) : 150); }
@@ -908,9 +917,11 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mplayreset="${i}">NORMAL SPEED · FULL LENGTH</button></div></details>
         <div class="dhost" id="dhost${i}"></div><button class="btn dpick" data-dpick="${i}">✎ DRAW ON THIS LAYER</button>
         <details class="box mbox" style="margin-top:8px"><summary>Crop<span id="sum-m${i}crop"></span></summary><div id="g-m${i}crop"></div><div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mcrop="${i}">RESET CROP</button></div></details>
-        <details class="box mbox mkey" style="margin-top:8px"><summary>Green / blue screen<span id="sum-m${i}key"></span></summary>
+        <details class="box mbox mkey" style="margin-top:8px"><summary>Remove background colour<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
-          <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:7px"></div><div id="g-m${i}key"></div></details>
+          <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:4px"></div>
+          <div class="cstrip kstrip" data-kstrip="${i}">${KEYSW.map(c => `<button data-ksw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-kpick="${i}" value="#00ff00"></button></div>
+          <div id="g-m${i}key"></div></details>
         <div class="mmot" id="box-m${i}obj"><h4>Object motion</h4>
           <div class="ksrow"><span>Moves</span><div class="opts" id="o-M${i}motion"></div></div>
           <div class="ksrow" data-mspin="M${i}"><span>Axis</span><div class="opts" id="o-M${i}maxis"></div><button class="btn mrev" id="t-M${i}mrev" data-tog="M${i}mrev">⟲ REV</button></div>
@@ -1276,7 +1287,7 @@ TOPTS.Textmotion = [['models','LIKE 3D MODELS'],['spin','SPIN'],['bob','BOB'],['
 TOPTS.Textmaxis = [['y','↻ Y'],['x','TUMBLE X'],['z','ROLL Z']];
 [2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'motion'] = TOPTS.Textmotion; TOPTS['M' + i + 'maxis'] = TOPTS.Textmaxis; });
-MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE']]; });
+MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE'],['custom','PICKED']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
   for (const p in TOPTS) { const h = $('#o-' + p); if (h) h.innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}"${/font$/.test(p) ? ` class="fch" style="font-family:'${v}',var(--sans)"` : ''}>${l}</button>`).join(''); }
@@ -1426,7 +1437,7 @@ function applyPars(p){
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
   ['Autospin','Spinrev','Showlabel','Texton','Monitor','Statue','Drawon'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
   $('#spinrow').hidden = p.Motion !== 'spin';
-  syncText(p); clipUI(p); ccUI('text'); ksDraw();
+  syncText(p); clipUI(p); ccUI('text'); ksDraw(); keyUI(p);
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';
   $('#t-Drawon').textContent = p.Drawon ? 'ON' : 'OFF';
   cards();
@@ -1449,10 +1460,11 @@ function onAir(){
   airSig = sig;
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
     const sw = SWATCH[l.k];
-    const p1 = !l.p1label ? '' : sw ? `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
-      : md ? `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
+    const pin = `<div class="sub pinl"><span data-qfx="${l.k}" data-qf="p1">${l.p1label || 'Style'}</span></div>`;
+    const p1 = !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+      : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
-    return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i>${l.label}<button class="x" data-off="${l.k}">×</button></div>
+    return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', tgt:FXT_SEL, k:el.dataset.lk, [el.dataset.f]: v})));
@@ -1462,12 +1474,12 @@ function onAir(){
 /* ---------------- colour picker (used by effects, text and drawing): solid / linear ramp / radial, 10 swatches + any colour */
 const SWC = ['#ffffff','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const CC = {}, CED = {}, COPEN = {};                             // id -> {get, set, modes};  which colour (a/b) is being edited
-function ccDef(id, get, set, modes){ CC[id] = {get, set, modes}; }
+function ccDef(id, get, set, modes, two){ CC[id] = {get, set, modes, two}; }    // two = [label A, label B]: a plain pair of colours (no ramp, no angle)
 function ccBox(id, title, open){
   const d = CC[id];
   return `<details class="colbox" data-cbox="${id}" ${open || COPEN[id] ? 'open' : ''}><summary>${title} <i data-cprev="${id}"></i></summary>
     <div class="seg sm" style="margin:2px 0 6px">${d.modes.map(([m, l]) => `<button data-cmode="${id}" data-v="${m}">${l}</button>`).join('')}</div>
-    <div class="cab" data-cab="${id}"><button data-cwhich="${id}" data-v="a"><i></i>COLOUR A</button><button data-cwhich="${id}" data-v="b"><i></i>COLOUR B</button></div>
+    <div class="cab" data-cab="${id}"><button data-cwhich="${id}" data-v="a"><i></i>${d.two ? d.two[0] : 'COLOUR A'}</button><button data-cwhich="${id}" data-v="b"><i></i>${d.two ? d.two[1] : 'COLOUR B'}</button></div>
     <div class="cstrip">${SWC.map(c => `<button data-csw="${id}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" aria-label="Pick any colour"><input type="color" data-cpick="${id}"></button></div>
     <div class="sub" data-cangrow="${id}"><span>Angle</span><input type="range" data-cang="${id}" min="0" max="360" step="1" value="0" style="--acc:var(--ink)"></div></details>`;
 }
@@ -1482,21 +1494,31 @@ function ccUI(id){
   const cur = grad ? c[w] : c.a;
   $$(`[data-csw="${id}"]`).forEach(b => b.classList.toggle('on', c.m > 0 && b.dataset.v.toLowerCase() === String(cur).toLowerCase()));
   const pk = document.querySelector(`[data-cpick="${id}"]`); if (pk) pk.value = cur;
-  document.querySelector(`[data-cangrow="${id}"]`).style.display = c.m === 2 ? '' : 'none';
+  document.querySelector(`[data-cangrow="${id}"]`).style.display = c.m === 2 && !d.two ? '' : 'none';
   const an = document.querySelector(`[data-cang="${id}"]`); if (an && !(touching[id + ':ang'] > performance.now()) && +an.value !== c.ang) { an.value = c.ang; an._show && an._show(); }
 }
 function ccSet(id, ch){ const d = CC[id]; if (!d) return; const c = Object.assign(d.get(), ch); d.set(c); ccUI(id); }
-function ccPick(id, v){ const c = CC[id].get(); const w = c.m >= 2 ? (CED[id] || 'a') : 'a'; ccSet(id, Object.assign({[w]: v}, c.m === 0 ? {m:1} : {})); buzz(); }
-document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cpick; if (k) ccPick(k, e.target.value); });
+function ccPick(id, v){ const c = CC[id].get(), two = CC[id].two; const w = c.m >= 2 || two ? (CED[id] || 'a') : 'a'; ccSet(id, Object.assign({[w]: v}, c.m === 0 ? {m: two ? 2 : 1} : {})); buzz(); }
+document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cpick; if (k) ccPick(k, e.target.value);
+  const kp = e.target.dataset && e.target.dataset.kpick; if (kp) { clearTimeout(keyPick._t); keyPick._t = setTimeout(() => keyPick(+kp, e.target.value), 80); } });
+function keyPick(i, hex){                      // any colour can be cut out: picking one switches the layer to it and turns the cut-out on
+  const m = 'M' + i; S.pars[m + 'keyhex'] = hex; S.pars[m + 'keycolor'] = 'custom'; S.pars[m + 'keyon'] = true;
+  send({t:'set', p:m + 'keyhex', v:hex}); send({t:'set', p:m + 'keycolor', v:'custom'}); send({t:'set', p:m + 'keyon', v:true});
+  keyUI(S.pars); syncText(S.pars); applyPars({}); buzz();
+}
+function keyUI(p){ MS.forEach(i => { const hx = String(p['M' + i + 'keyhex'] || '#00ff00').toLowerCase(), cu = p['M' + i + 'keycolor'] === 'custom';
+  $$(`[data-ksw="${i}"]`).forEach(b => b.classList.toggle('on', cu && b.dataset.v === hx)); const k = $(`[data-kpick="${i}"]`); if (k && k.value !== hx) k.value = hx; }); }
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.cbox; if (k) COPEN[k] = e.target.open; }, true);
 /* effects */
 const FXMODES = [[0,'OWN'],[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']], GMODES = [[1,'SOLID'],[2,'RAMP'],[3,'RADIAL']];
 let FXT_SEL = 'all', VW_SEL = '3d', FXCLIP = null, FXHOLD = 0;   // FXCLIP = layer whose effects were copied
 const colMap = () => FXT_SEL === 'all' ? (S.lcols = S.lcols || {}) : ((S.tcol = S.tcol || {})[FXT_SEL] = S.tcol[FXT_SEL] || {});
 const colOf = k => Object.assign({m:0, a:'#22e6ff', b:'#ff3da8', ang:0}, colMap()[k]);
+const TWOCOL = {duotone:['SHADOWS','HIGHLIGHTS'], thermal:['COLD','HOT'], sketch:['LINES','PAPER']};          // effects whose colour setting is simply two colours
 function colBox(k){
-  ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; clearTimeout(colBox[k]); colBox[k] = setTimeout(() => send({t:'lcol', tgt:FXT_SEL, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, FXMODES);
-  return ccBox('fx:' + k, '🎨 Colour');
+  const two = TWOCOL[k];
+  ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; clearTimeout(colBox[k]); colBox[k] = setTimeout(() => send({t:'lcol', tgt:FXT_SEL, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)}), 60); }, two ? [[0,'OWN'],[2,'MY 2 COLOURS']] : FXMODES, two);
+  return ccBox('fx:' + k, two ? '🎨 Two colours' : '🎨 Colour');
 }
 const colUI = k => ccUI('fx:' + k);
 function setLay(k, f, v){
@@ -1553,7 +1575,7 @@ function renderPads(){
   const shut = GSHUT;
   const sec = (g, label) => { const list = S.bank.map((p, i) => p && (p.group || '') === g ? [p, i + 1] : null).filter(Boolean); if (!list.length) return '';
     const live = list.some(([, sl]) => sl === S.b), closed = !!shut[g];
-    return `<div class="pgroup${closed ? ' shut' : ''}"><button class="pgh" data-gtog="${esc(g)}"><b>${esc(label)}</b><i>${list.length}</i>${live ? '<em>ON AIR</em>' : ''}<span>▾</span></button>`
+    return `<div class="pgroup${closed ? ' shut' : ''}"><button class="pgh" data-gtog="${esc(g)}"><b>${esc(label)}</b><i>${list.length}</i><span>▾</span></button>`
       + `<div class="pads">${closed ? '' : list.map(([p, sl]) => pad(p, sl)).join('')}</div></div>`; };
   $('#pads').classList.add('grouped');
   $('#pads').innerHTML = groups.map(g => sec(g, g)).join('') + sec('', 'No group') + `<div class="pads">${adds}</div>`;
@@ -1650,6 +1672,9 @@ function qtSend(n){
   const el = $(`#qk [data-qtxt="${n}"]`); if (!el) return; const v = capsOf(String(n), el.value.replace(/\n+$/, '')); if (!v.length) return;
   S.pars[QTP(n) + 'str'] = v; send({t:'qtext', n, v}); el.blur(); toast('Text updated' + (S.b ? ' · saved in this preset' : '')); buzz(12);
 }
+// typing words in Quick controls: keep the box above the on-screen keyboard
+document.addEventListener('focusin', e => { if (!e.target.matches || !e.target.matches('[data-qtxt]')) return; const el = e.target;
+  [250, 600].forEach(t => setTimeout(() => { if (document.activeElement === el) el.closest('.ctl').scrollIntoView({block:'start', behavior:'smooth'}); }, t)); });
 function quickSync(){                     // follow changes made elsewhere (other phones, presets, autopilot)
   const L = qList();
   $$('#qk [data-qtxt]').forEach(el => { if (document.activeElement === el) return; const n = +el.dataset.qtxt, v = S.pars[QTP(n) + 'str'] || ''; if (el.value !== v) el.value = v;
@@ -1673,7 +1698,7 @@ function sheetGroup(slot){                // hold a preset -> Move to group…
 function sheetGroupHdr(g){                // hold a group header -> rename / ungroup
   $('#shT').textContent = 'Group · ' + g; $('#shP').textContent = 'Renaming moves all its presets along. Ungrouping keeps the presets.';
   $('#shI').style.display = ''; $('#shI').value = g; $('#shI').placeholder = 'Group name';
-  $('#shA').innerHTML = `<button class="pri" data-sh="grpren">Rename group</button><button class="dan" data-sh="grpdel">Ungroup its presets</button><button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = `<button class="pri" data-sh="grpadd">＋ Add presets to this group</button><button data-sh="grpren">Rename group</button><button class="dan" data-sh="grpdel">Ungroup its presets</button><button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.grp = g; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function meters(m){
@@ -1706,10 +1731,15 @@ function qGo(i){
   send({t:'queue', do:'go', i, fade:ui.fade}); S.b = list[i]; renderPads(); renderQueue(); buzz(14);
 }
 // ＋ ADD PRESETS: while on, tapping a preset adds it to the set list instead of playing it
+let GRPADD = '';                          // adding presets to a group: a tap puts the preset in it, the picture stays
+function grpAddMode(g){ GRPADD = g || ''; if (GRPADD && SLADD) slAddMode(false);
+  document.body.classList.toggle('sladding', !!GRPADD || SLADD); const bar = $('#grpbar');
+  bar.hidden = !GRPADD; if (GRPADD) { bar.querySelector('b').textContent = GRPADD; delete GSHUT[GRPADD]; renderPads(); toast('Tap presets to put them in “' + GRPADD + '”'); } }
 let SLADD = false;
-function slAddMode(on){ SLADD = on; document.body.classList.toggle('sladding', on); const b = $('#slAdd'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+function slAddMode(on){ if (on && GRPADD) grpAddMode(''); SLADD = on; document.body.classList.toggle('sladding', on || !!GRPADD); const b = $('#slAdd'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
   b.textContent = on ? '✓ DONE ADDING' : '＋ ADD PRESETS'; if (on) toast('Tap presets to add them to the set list · the picture stays as it is'); }
 $('#slAdd').addEventListener('click', () => { slAddMode(!SLADD); buzz(8); });
+$('#grpdone').addEventListener('click', () => { grpAddMode(''); buzz(8); });
 function qAdd(slot){ const v = (S.queue.v || []).slice(); if (v.length >= 64) { toast('Set list is full'); return; } v.push(slot); S.queue.v = v; qSend(); toast('Added to the set list (#' + v.length + ')'); }
 function qMove(i, d){ const v = S.queue.v.slice(), j = i + d; if (j < 0 || j >= v.length) return; const cur = v[S.queue.pos];
   [v[i], v[j]] = [v[j], v[i]]; S.queue.v = v; S.queue.pos = S.queue.pos === i ? j : S.queue.pos === j ? i : S.queue.pos; qSend(); }
@@ -1807,12 +1837,15 @@ function apSummary(){                    // "1s fade · 10s" on the small settin
   const am = S.pars.Automode;
   $('#apSum').textContent = (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
   $$('#apMode [data-apm]').forEach(b => b.classList.toggle('on', b.dataset.apm === (S.pars.Automode || 'random')));
+  $$('#apLost [data-aplost]').forEach(b => b.classList.toggle('on', +b.dataset.aplost === (S.pars.Aplost ? 1 : 0)));
 }
 $('#apMore').addEventListener('click', () => { const open = $('#apPanel').hidden; $('#apPanel').hidden = !open; $('#apMore').setAttribute('aria-expanded', open); buzz(); });   // only opens / closes the settings
 $('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on' : 'Autopilot off'); buzz(); });
 $('#apMode').addEventListener('click', e => { const b = e.target.closest('[data-apm]'); if (!b || !S) return; const v = b.dataset.apm;
   if (v !== 'random' && !(S.queue && S.queue.v && S.queue.v.length)) toast('The set list is empty: turn it on → ＋ ADD PRESETS');
   S.pars.Automode = v; send({t:'set', p:'Automode', v}); apSummary(); buzz(); });
+$('#apLost').addEventListener('click', e => { const b = e.target.closest('[data-aplost]'); if (!b || !S) return; const v = b.dataset.aplost === '1';
+  S.pars.Aplost = v; send({t:'set', p:'Aplost', v}); apSummary(); toast(v ? 'If the remote drops for 15 s, autopilot takes over' : 'If the remote drops, the look stays as it is'); buzz(); });
 $('#apTimes').addEventListener('click', e => { const b = e.target.closest('[data-apt]'); if (!b || !S) return; const v = +b.dataset.apt;
   S.pars.Autotime = v; applyPars(S.pars); send({t:'set', p:'Autotime', v}); toast('Each preset stays ' + b.textContent); buzz(); });
 $('#bkBtn').addEventListener('click', () => { HIST = null; sheetBackups(); send({t:'store', do:'history'}); buzz(); });
@@ -1896,6 +1929,7 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'grp') bankOp('bankgroup', slot, b.dataset.g, b.dataset.g ? 'Moved to ' + b.dataset.g : 'Taken out of its group');
   else if (b.dataset.sh === 'grpnew') { if (!name) { toast('Type a group name first'); return; } bankOp('bankgroup', slot, name, 'Moved to ' + name); }
   else if (b.dataset.sh === 'grpren') { const g = $('#sheet').dataset.grp; if (name && name !== g) { const nn = Math.random().toString(36).slice(2, 9); send({t:'bankgroupren', old:g, name, n:nn}); toast('Group renamed'); if (GSHUT[g]) { GSHUT[name] = 1; delete GSHUT[g]; store.set('gshut', GSHUT); } } }
+  else if (b.dataset.sh === 'grpadd') grpAddMode($('#sheet').dataset.grp);
   else if (b.dataset.sh === 'grpdel') { send({t:'bankgroupren', old:$('#sheet').dataset.grp, name:'', n:'x'}); toast('Presets ungrouped'); }
   else if (b.dataset.sh === 'undo') { if (confirm('Undo the last preset change?')) { send({t:'store', do:'undo'}); toast('Undoing…'); } }
   else if (b.dataset.sh === 'rs') { if (confirm('Bring back all presets, the set list and FX presets from ' + b.dataset.w + '?\n(What you have now is kept as a restore point.)')) { send({t:'store', do:'restore', f:b.dataset.f}); toast('Restoring…'); } }
@@ -1907,13 +1941,14 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
 /* tap / hold on pads + camera chips */
 let holdT = null, held = false;
 document.addEventListener('pointerdown', e => {
-  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog],[data-qp],[data-qfx],[data-tog],[data-qk],[data-jump]'); if (!c) return;
+  const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog],[data-qp],[data-qfx],[data-tog],[data-qk],[data-jump],[data-layer]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
     if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }
     if (c.dataset.jump && c.dataset.lay && SWAPPABLE(c.dataset.lay)) { FXHOLD = performance.now(); return sheetLayer(c.dataset.lay); }
     if (c.dataset.jump) return;
     if (c.dataset.qk !== undefined) { FXHOLD = performance.now(); return sheetQk(+c.dataset.qk); }
+    if (c.dataset.layer) { FXHOLD = performance.now(); return sheetPin({k:'fx', t:FXT_SEL, e:c.dataset.layer, f:'on'}); }   // hold an effect = pin the effect itself
     if (c.dataset.qp || c.dataset.qfx || c.dataset.tog) { FXHOLD = performance.now();
       return sheetPin(c.dataset.qfx ? {k:'fx', t:FXT_SEL, e:c.dataset.qfx, f:c.dataset.qf} : c.dataset.tog ? {k:'tog', p:c.dataset.tog} : {k:'par', p:c.dataset.qp}); }
     if (c.dataset.gtog !== undefined) { FXHOLD = performance.now(); if (c.dataset.gtog) sheetGroupHdr(c.dataset.gtog); return; }   // hold a layer = its menu (copy / paste / clear)
@@ -1938,6 +1973,8 @@ const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad
     else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
     else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added at the end · build it, then tap SAVE'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
+    else if (c.dataset.pad && GRPADD) { const slot = +c.dataset.pad, p = S.bank[slot - 1];
+      if (p && (p.group || '') !== GRPADD) { bankOp('bankgroup', slot, GRPADD, 'Moved to ' + GRPADD); c.classList.add('sladded'); setTimeout(() => c.classList.remove('sladded'), 350); buzz(10); } }
     else if (c.dataset.pad && SLADD) { const slot = +c.dataset.pad; if (S.bank[slot - 1]) { qAdd(slot); c.classList.add('sladded'); setTimeout(() => c.classList.remove('sladded'), 350); buzz(10); } }   // adding mode: a tap adds, the picture stays
     else if (c.dataset.pad) { const slot = +c.dataset.pad; S.bank[slot - 1] ? go(slot) : sheet(slot); }
     else { send({t:'preset', v:+c.dataset.preset}); buzz(); } } };
@@ -1953,6 +1990,7 @@ document.addEventListener('click', e => {
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); buzz(); return; }
   if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); return; }
   if (d.csw) { ccPick(d.csw, d.v); return; }
+  if (d.ksw) { keyPick(+d.ksw, d.v); return; }
   if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); send({t:'set', p:'Autofade', v:ui.fade}); buzz(); }   // autopilot uses the same transition
@@ -1973,7 +2011,7 @@ document.addEventListener('click', e => {
   else if (d.dc) { DR.ops = []; drawRender(); drawSend(); drawSave(); buzz(15); }
 
   else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
-  else if (d.layer) { const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', tgt:FXT_SEL, k:l.k, on:l.on}); applyLayers(); buzz(); }
+  else if (d.layer) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', tgt:FXT_SEL, k:l.k, on:l.on}); applyLayers(); buzz(); }
   else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', tgt:FXT_SEL, k:l.k, on:false}); applyLayers(); buzz(); }
   else if (d.mode) { send({t:'layer', tgt:FXT_SEL, k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
   else if (d.scene) { send({t:'scene', v:d.scene}); buzz(); }
