@@ -419,7 +419,7 @@ def videoPoll(uid):
     VJOBS.pop(uid, None)
     if j['state'] == 'done':
         mediaPlay(j['name'], fit=True, slot=MEDIA_UP['slot'] if MEDIA_UP['slot'] and not _C().par['M%dfile' % MEDIA_UP['slot']].eval() else None)
-        _all({'t': 'vdone', 'u': uid, 'id': j['name']}); _allMedia(); _all(clipsMsg()); _publish(state())
+        _all({'t': 'vdone', 'u': uid, 'id': j['name']}); _allMedia(); _all(clipsMsg()); _publish(state(), active_only=True)
     else:
         _all({'t': 'err', 'msg': 'Video failed: ' + j['err']})
 
@@ -633,7 +633,7 @@ def _all(obj, skip=None, retain=False):
     dat = op('/project1/remote_server')
     for c in list(CLIENTS):
         if c != skip: _send(dat, c, obj)
-    _publish(obj, retain)
+    _publish(obj, retain, active_only=not retain)     # the internet relays only get updates while a phone actually uses them
 
 def _allMedia():
     _all(mediaMsg()); mediaThumbs(_all)
@@ -694,6 +694,7 @@ def onWebSocketClose(dat, client):
 def onWebSocketReceiveText(dat, client, data):
     try: msg = json.loads(data)
     except Exception: return
+    CLIENTS.add(client)                               # self-healing: a phone that talks is always on the list (survives code reloads)
     r = lambda o: _send(dat, client, o)
     r.local = True                                    # direct link: may be told the computer's addresses (never sent to the public relays)
     handle(msg, r)
@@ -704,6 +705,13 @@ HOSTS = {'v': [], 't': 0, 'busy': False}
 
 def _hostsRefresh():
     if HOSTS['busy'] or time.time() - HOSTS['t'] < 4: return
+    try:                                              # cheap check first: only ask Windows for details when an address changed
+        import socket
+        ips = sorted({a[4][0] for a in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET)})
+    except Exception: ips = None
+    if ips is not None and ips == HOSTS.get('ips') and HOSTS['v']:
+        HOSTS['t'] = time.time(); return
+    HOSTS['ips'] = ips
     HOSTS['busy'] = True
     import threading
     def job():
@@ -832,7 +840,7 @@ def handle(msg, reply):
             else: E.tSetLayer(tg, msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
         elif t == 'fxcopy':                                        # hold a layer in FX = copy, hold another = paste
             if E.fxCopy(str(msg.get('from', '')), str(msg.get('to', ''))):
-                _all({'t': 'lcols', 'v': dict(E.LCOL)}); _publish(state())
+                _all({'t': 'lcols', 'v': dict(E.LCOL)}); _publish(state(), active_only=True)
         elif t == 'clear':
             tg = msg.get('tgt') or 'all'
             if tg == 'all': E.clearLayers()
@@ -844,7 +852,7 @@ def handle(msg, reply):
         elif t == 'savelook':
             E.saveLook(int(msg['v']), msg.get('name') or None)
             _all({'t': 'looks', 'looks': E.lookNames()})
-            _publish(state())
+            _publish(state(), active_only=True)
         elif t == 'model':
             C.par.Model = msg['v']
         elif t == 'preset':
@@ -852,7 +860,7 @@ def handle(msg, reply):
         elif t == 'save':
             E.savePreset(int(msg['v']), msg.get('name') or None)
             _all({'t': 'presets', 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData()})
-            _publish(state())
+            _publish(state(), active_only=True)
         elif t == 'orbit':
             E.navOrbit(float(msg['dx']), float(msg['dy']))
         elif t == 'fling':
@@ -906,7 +914,7 @@ def handle(msg, reply):
             else: ok = E.bankRename(n, msg.get('name') or ('Preset %d' % n))
             _all({'t': 'bank', 'bank': E.bankList()})
             _all(E.qMsg())
-            _publish(state())
+            _publish(state(), active_only=True)
             if t not in ('bankrename', 'bankgroup'):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}
                 _all(th)
@@ -928,7 +936,7 @@ def handle(msg, reply):
             elif a == 'play': clipPlay(str(msg.get('id')))
             elif a == 'live': clipLive()
             elif a == 'del': clipDel(str(msg.get('id')))
-            _all(clipsMsg()); _publish(state())
+            _all(clipsMsg()); _publish(state(), active_only=True)
         elif t == 'media':
             a = msg.get('do')
             try: sl = int(msg.get('slot') or 0)
@@ -948,7 +956,7 @@ def handle(msg, reply):
             elif a == 'fit': E.mediaFit(sl or None)
             elif a == 'stop' and sl: mediaStop(sl)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
-            _allMedia(); _all(clipsMsg()); _publish(state())
+            _allMedia(); _all(clipsMsg()); _publish(state(), active_only=True)
         elif t == 'vup':
             videoPart(msg)
         elif t == 'vend':
@@ -956,7 +964,7 @@ def handle(msg, reply):
             if r_: reply(r_)
         elif t == 'up':
             r_ = mediaChunk(msg)
-            if r_ == 'ok': _allMedia(); _all(clipsMsg()); _publish(state())
+            if r_ == 'ok': _allMedia(); _all(clipsMsg()); _publish(state(), active_only=True)
             elif r_: reply({'t': 'err', 'msg': 'Upload failed: ' + r_})
         elif t == 'fxp':
             a = msg.get('do'); i = int(msg.get('i', -1))
@@ -968,7 +976,7 @@ def handle(msg, reply):
             _all(fxpMsg())
         elif t == 'clean':
             n = E.cleanSlate()
-            _all({'t': 'bank', 'bank': E.bankList()}); _publish(state())
+            _all({'t': 'bank', 'bank': E.bankList()}); _publish(state(), active_only=True)
             if n:
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
         elif t == 'ping':
