@@ -25,14 +25,20 @@ vec2 mir(vec2 p){ return abs(fract(p * 0.5) * 2.0 - 1.0); }
 // CLONES  copies of the layer: grid / row / column / fan / pile, with or without overlap, each copy moving on its own.
 // uP.x packs: count digit + 10 * overlap (0-2) + 100 * motion (0 still, 1 bob, 2 shake, 3 drift, 4 pulse, 5 spin)
 //             + 1000 * layout (0 grid, 1 row, 2 column, 3 fan, 4 pile) + 10000 * random (0 none, 1 tilt, 2 flip, 3 tilt + flip)
+//             + 100000 * copy size (0 normal, 1 0.5, 2 0.7, 3 0.85, 4 1.2, 5 1.5, 6 2)
 // count digit: 2-6 and 8 as is, 9 = 10, 7 = 12, 1 = 16, 0 = 24
+uniform vec4 uBB;   // where the picture really is (x0, y0, x1, y1), measured by the engine: empty space around it is not copied
 mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 void main(){
   vec4 a = uAudio; vec2 uv = vUV.st; float asp = ASP();
   float p = floor(uP.x + 0.5);
   float d = mod(p, 10.0);
   float n = d < 0.5 ? 24.0 : d < 1.5 ? 16.0 : d > 8.5 ? 10.0 : (d > 6.5 && d < 7.5) ? 12.0 : d;
-  float ovs = mod(floor(p / 10.0), 10.0), mot = mod(floor(p / 100.0), 10.0), lay = mod(floor(p / 1000.0), 10.0), rnd = floor(p / 10000.0);
+  float ovs = mod(floor(p / 10.0), 10.0), mot = mod(floor(p / 100.0), 10.0), lay = mod(floor(p / 1000.0), 10.0), rnd = mod(floor(p / 10000.0), 10.0), szd = floor(p / 100000.0);
+  float szk = szd < 0.5 ? 1.0 : szd < 1.5 ? 0.5 : szd < 2.5 ? 0.7 : szd < 3.5 ? 0.85 : szd < 4.5 ? 1.2 : szd < 5.5 ? 1.5 : 2.0;
+  vec4 bb = (uBB.z - uBB.x > 0.01 && uBB.w - uBB.y > 0.01) ? uBB : vec4(0.0, 0.0, 1.0, 1.0);
+  vec2 bs = bb.zw - bb.xy;                                           // the picture's own size inside the frame
+  float hk = bs.y / bs.x;                                            // copy height / width, in screen units
   float ov = ovs < 0.5 ? 0.0 : ovs < 1.5 ? 0.45 : 1.0;
   float cols = lay < 0.5 ? (n <= 8.0 ? n : ceil(sqrt(n * asp))) : n;     // big counts: a grid of about n copies
   float rows = lay < 0.5 ? (n <= 8.0 ? n : ceil(n / cols)) : 1.0;
@@ -41,6 +47,7 @@ void main(){
   if (lay < 0.5 && n > 8.0) s = (1.0 + ov) / max(cols, rows * asp);
   if (lay > 2.5 && lay < 3.5) s = 0.5 + 0.2 * ov;
   if (lay > 3.5) s = (1.1 + 0.9 * ov) * 1.25 / sqrt(n);                  // pile: copies big enough to cover and overlap
+  s *= szk;
   vec3 acc = vec3(0.0); float aa = 0.0;
   for (int k = 0; k < 64; k++) {
     if (k >= total) break;
@@ -68,11 +75,11 @@ void main(){
     else if (mot > 4.5) ang += uTime * 0.7 * (ph > 0.5 ? 1.0 : -1.0) + ph * 6.283;
     vec2 q = uv - c - off;
     if (ang != 0.0) { q.x *= asp; q = rot(ang) * q; q.x /= asp; }
-    q = q / sc;
+    q = q / vec2(sc, sc * hk);                                        // each copy is the picture, not the whole frame
     if (fl) q.x = -q.x;
     q += 0.5;
     if (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0) continue;
-    vec4 t = texture(sTD2DInputs[0], q);
+    vec4 t = texture(sTD2DInputs[0], bb.xy + q * bs);
     acc = mix(acc, t.rgb, t.a); aa = t.a + aa * (1.0 - t.a);
   }
   vec4 o = texture(sTD2DInputs[0], uv);

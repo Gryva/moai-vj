@@ -194,6 +194,29 @@ def modelUpdate(C, T):
     MT['s'] = s
     return s
 
+def clonesBB():
+    """CLONES copies only the picture itself: find where its visible pixels are (tiny copy of the input, a few times a second)."""
+    P = op('/project1')
+    for g in [P.op('fx_clones')] + [P.op('fxS%d_clones' % n) for n in (1, 2, 3, 4)]:
+        if g is None or g.bypass or not g.inputs: continue
+        r = P.op('cbb_' + g.name)
+        if r is None:
+            r = P.create(td.resolutionTOP, 'cbb_' + g.name); r.nodeX = g.nodeX; r.nodeY = g.nodeY - 120
+            r.par.outputresolution = 'custom'; r.par.resolutionw = 96; r.par.resolutionh = 54
+        if not r.inputs or r.inputs[0] != g.inputs[0]: r.inputConnectors[0].connect(g.inputs[0])
+        a = r.numpyArray(delayed=True)
+        if a is None: continue
+        m = np.maximum(a[..., 3], a[..., :3].max(axis=2)) > 0.04
+        ys, xs = np.nonzero(m); h, w = m.shape
+        bb = (xs.min() / w, ys.min() / h, (xs.max() + 1) / w, (ys.max() + 1) / h) if len(xs) else (0.0, 0.0, 1.0, 1.0)
+        vi = CBBI.get(g.name)
+        if vi is None:
+            vi = next((i for i in range(20) if g.par['vec%dname' % i] is not None and g.par['vec%dname' % i].eval() in ('uBB', '')), None)
+            if vi is None: continue
+            g.par['vec%dname' % vi] = 'uBB'; CBBI[g.name] = vi
+        for k, v in zip('xyzw', bb): g.par['vec%dvalue%s' % (vi, k)] = round(v, 4)
+CBBI = {}
+
 def noReact(C=None):
     """Layers switched to 'ignore the music' (SOURCE: the note button on a layer)."""
     C = C or op('/project1/CONTROLS')
@@ -2181,6 +2204,7 @@ def onFrameStart(frame):
     T = absTime.seconds
     S['frame'] += 1
     if S['frame'] % 60 == 0: _safe('lost', op('/project1/remote_cb').module.lostCheck)
+    if S['frame'] % 8 == 0: _safe('clonesbb', clonesBB)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()
