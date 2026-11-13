@@ -22,19 +22,29 @@ vec3 rgb2hsv(vec3 c){ vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0); vec4 p = mix(
 float ASP(){ vec2 r = RES(); return r.x / r.y; }
 #define OUT(c) fragColor = TDOutputSwizzle(outc(vUV.st, (c)))
 
-// SPOT PULSE  one spot (a logo's globe, a face...) swells and flashes with the kick.
-// uP.x = x * 100 + y (0-99, y from the top), uP.y = size * 100 + strength (0-99)
+// SPOT PULSE  one spot (a logo's globe, a face...) swells and flashes, on the kick or at a steady beat, with a soft ripple outwards.
+// uP.x = x * 100 + y (0-99, y from the top), uP.y = size * 100 + strength, uP.z = steady * 10000 + speed * 100 + ripple
 void main(){
   vec4 a = uAudio; vec2 uv = vUV.st; float asp = ASP();
   float px = floor(uP.x / 100.0 + 0.001), py = uP.x - px * 100.0;
   float sz = floor(uP.y / 100.0 + 0.001), st = uP.y - sz * 100.0;
+  float steady = floor(uP.z / 10000.0 + 0.001), q = uP.z - steady * 10000.0;
+  float sp = floor(q / 100.0 + 0.001), rp = (q - sp * 100.0) / 99.0;
   vec2 c = vec2(px / 99.0, 1.0 - py / 99.0);
   float R = 0.03 + (sz / 99.0) * 0.6, s = st / 99.0 * 1.6;
-  float beat = clamp(a.w * 0.9 + a.x * 0.35, 0.0, 1.5);
+  float bpm = 30.0 + sp * 1.5;                                   // speed 0-99 = 30-178 beats a minute
+  float ph = fract(uTime * bpm / 60.0);                            // where we are in the steady beat
+  float beat = steady > 0.5 ? exp(-ph * 6.0) : clamp(a.w * 0.9 + a.x * 0.35, 0.0, 1.5);
   vec2 d = (uv - c) * vec2(asp, 1.0); float r = length(d);
   float fall = smoothstep(R, 0.0, r);
   float k = s * beat * 0.42 * fall;
-  vec2 uv2 = c + (uv - c) * (1.0 - k);                      // magnify around the spot
-  vec3 col = tex(uv2) * (1.0 + s * beat * 0.7 * fall * fall);   // and a flash in its middle
+  vec2 uv2 = c + (uv - c) * (1.0 - k);                            // magnify around the spot
+  // ripple: a soft ring travels out from the spot after each pulse (steady) or keeps rolling with the music
+  float ring = steady > 0.5 ? R + ph * 1.1 : 0.0;
+  float w = steady > 0.5 ? sin((r - ring) * 38.0) * exp(-abs(r - ring) * 9.0) * (1.0 - ph)
+                         : sin(r * 34.0 - uTime * 7.0) * beat * exp(-r * 1.5);
+  vec2 dir = r > 0.0001 ? d / r : vec2(0.0); dir.x /= asp;
+  uv2 += dir * w * rp * 0.006 * (1.0 - fall);
+  vec3 col = tex(uv2) * (1.0 + s * beat * 0.7 * fall * fall + w * rp * 0.05 * (1.0 - fall));   // flash in the middle, faint shimmer in the ripple
   OUT(col);
 }

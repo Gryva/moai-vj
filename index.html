@@ -744,7 +744,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-13p';
+const BUILD = '2026-11-13q';
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
@@ -1564,7 +1564,8 @@ function onAir(){
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-clnum]').forEach(el => bindSlider(el, 'clnum', v => { const box = el.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.n = Math.round(v); clSet(box, c); }));
-  $$('#onair input[data-sp]').forEach(el => bindSlider(el, 'sp' + el.dataset.sp, v => { const box = el.closest('[data-spot]'), c = spDec(box.dataset.spot); c[el.dataset.sp] = Math.round(v); spSet(box, c); }));
+  $$('#onair input[data-sp]').forEach(el => bindSlider(el, 'sp' + el.dataset.sp, v => { const box = el.closest('[data-spot]'), c = spDec(box.dataset.spot); c[el.dataset.sp] = Math.round(v); spSet(box, c);
+    const b = box.querySelector('[data-spbpm]'); if (b) b.textContent = Math.round(30 + c.sp * 1.5); }));
   $$('#onair [data-sppad]').forEach(pad => { let t = 0; const at = e => { const r = pad.getBoundingClientRect(), box = pad.closest('[data-spot]'), c = spDec(box.dataset.spot);
       c.x = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 99); c.y = Math.round(Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) * 99);
       const n = performance.now(); if (n - t > 40 || e.type === 'pointerup') { t = n; spSet(box, c); } };
@@ -1928,12 +1929,15 @@ function clSet(box, c){ const p1 = clEnc(c); box.dataset.clones = p1; send({t:'l
 function mirDec(p){ p = Math.round(p); return {m:p % 10, side:Math.floor(p / 10) % 10, pos:p >= 100 ? Math.floor(p / 100) : 50}; }
 function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
 function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; return {look:Math.floor(q / 100), mv:q % 100}; } const v = Math.round(Math.max(0, Math.min(1, p)) * 99); return {look:v, mv:v}; }
-function spDec(p){ p = Math.round(+p || 0); return {x:Math.floor(p / 1e6) % 100, y:Math.floor(p / 1e4) % 100, sz:Math.floor(p / 100) % 100, st:p % 100}; }
-function spEnc(c){ return c.x * 1e6 + c.y * 1e4 + c.sz * 100 + c.st; }
+function spDec(p){ p = Math.round(+p || 0); const lo = p % 1e8, hi = Math.floor(p / 1e8); return {x:Math.floor(lo / 1e6) % 100, y:Math.floor(lo / 1e4) % 100, sz:Math.floor(lo / 100) % 100, st:lo % 100, md:Math.floor(hi / 1e4) % 10, sp:Math.floor(hi / 100) % 100, rp:hi % 100}; }
+function spEnc(c){ return (c.md * 1e4 + c.sp * 100 + c.rp) * 1e8 + c.x * 1e6 + c.y * 1e4 + c.sz * 100 + c.st; }
 function spotUI(l){ const c = spDec(l.p1);
   return `<div data-spot="${spEnc(c)}"><div class="sub"><span>Where it pulses</span></div><div class="sppad" data-sppad><i style="left:${c.x / 99 * 100}%;top:${c.y / 99 * 100}%;width:${(3 + c.sz / 99 * 60) * 2 * 9 / 16}%"></i></div>`
     + `<div class="sub"><span>Size</span><input type="range" data-sp="sz" min="0" max="99" step="1" value="${c.sz}" style="--acc:${GC[l.g]}"></div>`
-    + `<div class="sub"><span>Strength</span><input type="range" data-sp="st" min="0" max="99" step="1" value="${c.st}" style="--acc:${GC[l.g]}"></div><p class="hint2">Tap or drag on the box to put the pulse on your logo. It swells and flashes on every kick.</p></div>`; }
+    + `<div class="sub"><span>Strength</span><input type="range" data-sp="st" min="0" max="99" step="1" value="${c.st}" style="--acc:${GC[l.g]}"></div>`
+    + segUI('Pulses', 'data-spmd="1" data-v', ['WITH THE MUSIC','STEADY BEAT'], c.md)
+    + `<div class="sub"${c.md ? '' : ' hidden'} data-spspd><span>Speed · <b data-spbpm>${Math.round(30 + c.sp * 1.5)}</b> BPM</span><input type="range" data-sp="sp" min="0" max="99" step="1" value="${c.sp}" style="--acc:${GC[l.g]}"></div>`
+    + `<div class="sub"><span>Ripple</span><input type="range" data-sp="rp" min="0" max="99" step="1" value="${c.rp}" style="--acc:${GC[l.g]}"></div><p class="hint2">Tap or drag on the box to put the pulse on your logo. Ripple sends a soft wave out over the rest of the picture.</p></div>`; }
 function spSet(box, c){ const p1 = spEnc(c); box.dataset.spot = p1; send({t:'layer', tgt:FXT_SEL, k:'spotpulse', p1}); setLay('spotpulse', 'p1', p1); const L = S.layers.find(x => x.k === 'spotpulse'); if (L) L.p1 = p1;
   const i = box.querySelector('.sppad i'); if (i) { i.style.left = c.x / 99 * 100 + '%'; i.style.top = c.y / 99 * 100 + '%'; i.style.width = (3 + c.sz / 99 * 60) * 2 * 9 / 16 + '%'; } }
 function scrapUI(l){ const c = sbDec(l.p1);
@@ -2204,6 +2208,8 @@ document.addEventListener('click', e => {
   if (d.csw) { ccPick(d.csw, d.v); return; }
   if (d.mfit) { const i = +d.mfit, v = d.v === '1'; S.pars['M' + i + 'fit'] = v; send({t:'set', p:'M' + i + 'fit', v}); mediaCardsUI(S.pars);
     toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
+  if (d.spmd) { const box = e.target.closest('[data-spot]'), c = spDec(box.dataset.spot); c.md = +d.v; spSet(box, c);
+    box.querySelectorAll('[data-spmd]').forEach(b => b.classList.toggle('on', +b.dataset.v === c.md)); const sd = box.querySelector('[data-spspd]'); if (sd) sd.hidden = !c.md; buzz(); return; }
   if (d.mr !== undefined && d.mr !== '') { const box = e.target.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c[d.mr] = +d.v;
     const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } airSig = ''; onAir(); buzz(); return; }
   if (d.clbits) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones), b = +d.b, f = d.clbits;

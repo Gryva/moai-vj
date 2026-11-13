@@ -228,8 +228,9 @@ BLI = {}
 
 def pSet(g, k, p1):
     """An effect's one setting into its shader. CLONES needs more bits than one float holds: split over uP.x / uP.y."""
-    if k == 'spotpulse':                                               # x*1e6 + y*1e4 + size*100 + strength (each 0-99)
-        q = int(round(float(p1))); g.par.vec3valuex = q // 10000; g.par.vec3valuey = q % 10000
+    if k == 'spotpulse':                                               # steady*1e12 + speed*1e10 + ripple*1e8 + x*1e6 + y*1e4 + size*100 + strength (each 0-99)
+        q = int(round(float(p1))); lo = q % 100000000; hi = q // 100000000
+        g.par.vec3valuex = lo // 10000; g.par.vec3valuey = lo % 10000; g.par.vec3valuez = (hi // 10000) * 10000 + ((hi // 100) % 100) * 100 + hi % 100
         return
     if k == 'scrapbook':                                               # look + movement: 10000 + look * 100 + movement (each 0-99); older presets: one value for both
         p = float(p1)
