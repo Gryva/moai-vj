@@ -202,14 +202,15 @@ def clonesBB():
         r = P.op('cbb_' + g.name)
         if r is None:
             r = P.create(td.resolutionTOP, 'cbb_' + g.name); r.nodeX = g.nodeX; r.nodeY = g.nodeY - 120
-            r.par.outputresolution = 'custom'; r.par.resolutionw = 96; r.par.resolutionh = 54
+            r.par.outputresolution = 'custom'; r.par.resolutionw = 192; r.par.resolutionh = 108
         if not r.inputs or r.inputs[0] != g.inputs[0]: r.inputConnectors[0].connect(g.inputs[0])
         a = r.numpyArray(delayed=True)
         if a is None: continue
         solid = float(a[..., 3].min()) > 0.99                          # whole picture: no see-through, so black is the empty part
-        m = (a[..., :3].max(axis=2) > 0.04) if solid else (np.maximum(a[..., 3], a[..., :3].max(axis=2)) > 0.04)
+        m = (a[..., :3].max(axis=2) > 0.03) if solid else (a[..., 3] > 0.008)               # faint edges / soft shadows count too
         ys, xs = np.nonzero(m); h, w = m.shape
-        bb = (xs.min() / w, ys.min() / h, (xs.max() + 1) / w, (ys.max() + 1) / h) if len(xs) else (0.0, 0.0, 1.0, 1.0)
+        pd = 3                                                       # a safety margin, so nothing of the picture is trimmed
+        bb = (max(0, xs.min() - pd) / w, max(0, ys.min() - pd) / h, min(w, xs.max() + 1 + pd) / w, min(h, ys.max() + 1 + pd) / h) if len(xs) else (0.0, 0.0, 1.0, 1.0)
         vi = CBBI.get(g.name)
         if vi is None:
             vi = next((i for i in range(20) if g.par['vec%dname' % i] is not None and g.par['vec%dname' % i].eval() in ('uBB', '')), None)
