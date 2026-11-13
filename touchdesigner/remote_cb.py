@@ -838,10 +838,12 @@ def _ensurePars():
         for i in range(1, 7):                          # per layer: fill the screen (crop) or show the whole picture
             if not hasattr(C.par, 'M%dfit' % i):
                 C.par['M%dfzoom' % i].page.appendToggle('M%dfit' % i, label='M%d whole picture' % i)
+            C.par['M%dfit' % i].default = True                 # new pictures / videos: the whole picture, nothing cut off
             if fx is not None:
                 vp = fx.par['vec%dvaluex' % (18 + i)]
                 want = "op('/project1/CONTROLS').par.M%dfzoom * (-1 if op('/project1/CONTROLS').par.M%dfit else 1)" % (i, i)
                 if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
+        if C.par.Master.default != 1.0: C.par.Master.default = 1.0      # TUNE brightness starts at 1
         if not hasattr(C.par, 'Noreact'): C.par.Links.page.appendStr('Noreact', label='Layers ignoring the music')
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
         for i in range(1, 7):                          # any background colour can be removed (picked on the remote)

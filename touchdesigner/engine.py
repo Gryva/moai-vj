@@ -194,6 +194,28 @@ def modelUpdate(C, T):
     MT['s'] = s
     return s
 
+CL_NEW = 1 << 26
+def clDecode(p1):
+    """CLONES settings from its one number -> dict. Old presets used decimal digits; new ones a bit field above 2^26."""
+    p = int(round(float(p1)))
+    if p >= CL_NEW:
+        q = p - CL_NEW
+        return {'n': max(1, q & 127), 'lay': (q >> 7) & 7, 'ov': (q >> 10) & 3, 'rnd': (q >> 12) & 3, 'mot': (q >> 14) & 31, 'sz': (q >> 19) & 127}
+    d = p % 10; n = {0: 24, 1: 16, 7: 12, 9: 10}.get(d, d) or 3
+    lay = (p // 1000) % 10; mot = (p // 100) % 10; sz = (p // 100000) % 10
+    if lay == 0: n = min(100, n * n)                              # the old grid meant n x n
+    return {'n': n, 'lay': lay, 'ov': (p // 10) % 10, 'rnd': (p // 10000) % 10,
+            'mot': 0 if mot == 0 else 1 << (mot - 1), 'sz': 1 << {0: 3, 1: 0, 2: 1, 3: 2, 4: 4, 5: 5, 6: 6}.get(sz, 3)}
+
+def pSet(g, k, p1):
+    """An effect's one setting into its shader. CLONES needs more bits than one float holds: split over uP.x / uP.y."""
+    if k == 'clones':
+        c = clDecode(p1)
+        g.par.vec3valuex = c['n'] + c['lay'] * 128 + c['ov'] * 1024 + c['rnd'] * 4096
+        g.par.vec3valuey = c['mot'] + (c['sz'] or 8) * 32
+    else:
+        g.par.vec3valuex = p1
+
 def clonesBB():
     """CLONES copies only the picture itself: find where its visible pixels are (tiny copy of the input, a few times a second)."""
     P = op('/project1')
@@ -682,7 +704,7 @@ def applyLayers(T=None):
             g.bypass = not on
             if on:
                 g.par.vec2valuex = amt
-                g.par.vec3valuex = p1
+                pSet(g, k, p1)
     S['live'] = [k for k, on, a, p in live if on]
 
 def pushUniforms(T):
@@ -870,7 +892,7 @@ def fxTargets(C):
                     fb = P.op('fxS%d_%s_fb' % (n, k))
                     if fb: fb.par.resetpulse.pulse()
                 g.bypass = not on
-                if on: g.par.vec2valuex = v[1]; g.par.vec3valuex = v[2]
+                if on: g.par.vec2valuex = v[1]; pSet(g, k, v[2])
 
 def tUniforms(T):
     if not SLOTS: return
@@ -1296,7 +1318,7 @@ def applySrc(d, slot=None):
             continue
         for n in MPARS:
             if n == 'file': continue
-            try: mp(C, i, n).val = m[n] if n in m else mp(C, i, n).default      # older presets: defaults, not leftovers
+            try: mp(C, i, n).val = m[n] if n in m else (False if n == 'fit' else mp(C, i, n).default)      # older presets: defaults, not leftovers (and they filled the screen)
             except Exception: pass
         f = m.get('file') or ''
         if f and mp(C, i, 'file').eval() != f and not R.mediaPlay(f, slot=i, keep=True):

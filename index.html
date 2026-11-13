@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#09080d">
-<title>MOAI // VJ</title>
+<title>Video Jockey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -27,12 +27,15 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
 .larr.lau{color:var(--lime);font-size:15px}.larr.lau.mute{color:#cfc8d8;background:linear-gradient(to top right,transparent 46%,#ff4d2e 47%,#ff4d2e 53%,transparent 54%)}
 .mfitbox{margin:8px 0 4px}.mfitbox .sub{display:grid;grid-template-columns:auto 1fr 44px;gap:12px;align-items:center;font-size:12px;color:var(--mute)}.mfitbox output{font:600 12px var(--mono);text-align:right}.mfitbox[hidden]{display:none}.mfitbox .seg{margin-bottom:6px}
+.qbigrow{display:flex;gap:8px;align-items:stretch}.qbig{flex:1;min-height:64px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#16141c;color:var(--ink);text-align:left;font:700 15px var(--sans)}
+.qbig b{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qbig em{font:800 12px var(--mono);font-style:normal;letter-spacing:.1em;padding:6px 10px;border-radius:8px;background:#ffffff10;color:var(--mute)}
+.qbig.on{background:var(--lime);border-color:var(--lime);color:#0b0a0f}.qbig.on .qly{color:#0b0a0f;opacity:.7}.qbig.on em{background:#0b0a0f;color:var(--lime)}.qbigrow .qmenu{height:auto}
 .qmenu{flex:none;margin-left:6px;width:30px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 15px/1 var(--sans);display:grid;place-items:center;padding:0}.qmenu:active{background:#ffffff14;color:var(--ink)}
 .sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
 .fps{font:500 12px var(--mono);color:var(--mute)}
 .stat{margin-left:auto;display:flex;align-items:center;gap:8px;background:none;border:0;padding:8px 6px;cursor:pointer;flex:none}.stbar{display:block;width:3px;height:24px;border-radius:2px;background:var(--lime);box-shadow:0 0 8px #c7ff3d66;transition:background .3s}.stbar.bk{background:#ffb02e;box-shadow:0 0 8px #ffb02e66}.stbar.bad{background:#ff4d2e;box-shadow:0 0 8px #ff4d2e88}.stat .sx{display:none;align-items:center;gap:8px}.stat.open .sx{display:flex}
 .lk{font:700 9px var(--mono);letter-spacing:.08em;padding:3px 6px;border-radius:5px;border:1px solid #ffffff22;color:var(--mute);flex:none;display:none}.lk.on{display:block}.lk.bk{color:#ffcf7a;border-color:#ffb02e66}.golocal{color:var(--lime);border-color:var(--lime);text-decoration:none;cursor:pointer;font-size:10px;padding:5px 8px}
-.fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}.fsb:disabled{opacity:.28}#undoB,#redoB{color:var(--ink);font-size:19px}
+.fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}.fsb:disabled{opacity:.28}#undoB,#redoB{color:var(--ink);font-size:19px}body:not(.editing) #undoB,body:not(.editing) #redoB{display:none}
 @media (max-width:520px){#redoB{display:none}}
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
@@ -449,7 +452,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -679,7 +682,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
-<div class="lock" id="lock"><div class="box"><div class="logo" style="font-size:20px">MOAI<i>//</i>VJ</div>
+<div class="lock" id="lock"><div class="box"><div class="logo" style="font-size:20px">VIDEO<i>//</i>JOCKEY</div>
   <h3>Locked</h3><p>Enter the remote password set in TouchDesigner<br>(CONTROLS → Master → Remote password).</p>
   <input type="password" id="lockpw" placeholder="Password" autocomplete="current-password"><button id="lockgo">UNLOCK</button><div class="err" id="lockerr"></div></div></div>
 <div class="off on" id="off"><div><b id="offT">Connecting…</b><span id="offS"></span><a class="offlocal" id="offL" style="display:none"></a></div></div>
@@ -731,7 +734,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13f';
+const BUILD = '2026-11-13g';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1512,6 +1515,7 @@ function onAir(){
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
+  $$('#onair input[data-clnum]').forEach(el => bindSlider(el, 'clnum', v => { const box = el.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.n = Math.round(v); clSet(box, c); }));
   $$('#onair input[data-mrpos]').forEach(el => bindSlider(el, 'mirpos', v => { const box = el.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c.pos = Math.round(v);
     const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } }));
   $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', tgt:FXT_SEL, k:el.dataset.lk, [el.dataset.f]: v})));
@@ -1741,7 +1745,7 @@ function renderQuick(){
   $('#qk').innerHTML = TX.map(n => `<div class="ctl qtxt"><div class="top"><span><i class="qly">${esc(qtName(n))}</i> Words</span></div>
       <div class="qtrow"><input type="text" maxlength="120" data-qtxt="${n}" autocomplete="off"><button data-qtsend="${n}">SHOW</button></div><div class="recent qrec" data-qrec="${n}"></div></div>`).join('') + L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div></div>`;
-    if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow">${lab.replace('<output', '<button class="tg qtog" data-qtog="' + i + '">OFF</button><output hidden')}</div>`;
+    if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm)}</b><em>OFF</em></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
       const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
       return `<div class="ctl">${lab}<input type="range" id="s-qk_${i}" data-qki="${i}" min="${mn}" max="${mx}" step="${st}" style="--acc:${GC[l.g] || '#c7ff3d'}"></div>`; }
@@ -1770,7 +1774,7 @@ function quickSync(){                     // follow changes made elsewhere (othe
   $$('#qk input[data-qki]').forEach(el => { const i = +el.dataset.qki; if ((touching['qk_' + i] || 0) > performance.now()) return;
     const v = qVal(L[i]); if (v != null && +el.value !== +v) { el.value = +v; el._show && el._show(); } });
   $$('#qk [data-qa]').forEach(e => { const it = L[+e.dataset.qa]; e.classList.toggle('live', visOf(it.a)); $('[data-qb="' + e.dataset.qa + '"]').classList.toggle('live', visOf(it.b)); });
-  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]); b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
+  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]), em = b.querySelector('em'); if (em) em.textContent = on ? 'ON' : 'OFF'; else b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
 }
 function presetGroups(){                 // group names in the order their first preset appears
   const out = []; (S.bank || []).forEach(p => { if (p && p.group && !out.includes(p.group)) out.push(p.group); }); return out;
@@ -1838,17 +1842,25 @@ function histSheet(){ const u = HISTORY.u.slice().reverse();
   b.addEventListener('click', () => { if (held) return; const l = HISTORY.u[HISTORY.u.length - 1]; send({t:'hist', do:'undo', n:1}); toast('Undid: ' + (l ? l[1] : 'last change')); buzz(); });
   document.getElementById('redoB').addEventListener('click', () => { send({t:'hist', do:'redo', n:1}); toast('Redone'); buzz(); }); })();
 /* CLONES + MIRROR: their one number packs several choices */
-const CLN = {lay:['GRID','ROW','COLUMN','FAN','PILE'], n:[2,3,4,5,6,8,10,12,16,24], ov:['NO OVERLAP','SOME','A LOT'], mot:['STILL','BOB','SHAKE','DRIFT','PULSE','SPIN'], rnd:['STRAIGHT','TILTED','FLIPPED','TILTED + FLIPPED'], sz:['TINY','SMALL','SMALLER','NORMAL','BIGGER','BIG','HUGE']};
-const SZV = [1, 2, 3, 0, 4, 5, 6];                           // size buttons in order -> stored digit
-const CLD = {24:0, 16:1, 12:7, 10:9};                     // count -> its digit (2-6 and 8 are themselves)
-const cnt = d => ({0:24, 1:16, 7:12, 9:10})[d] || d;
-function clDec(p){ p = Math.round(p); return {n:cnt(p % 10), ov:Math.floor(p / 10) % 10, mot:Math.floor(p / 100) % 10, lay:Math.floor(p / 1000) % 10, rnd:Math.floor(p / 10000) % 10, sz:Math.floor(p / 100000) % 10}; }
-function clEnc(c){ return (CLD[c.n] ?? c.n) + c.ov * 10 + c.mot * 100 + c.lay * 1000 + c.rnd * 10000 + c.sz * 100000; }
+const CLN = {lay:['GRID','ROW','COLUMN','FAN','SCATTER'], ov:['NO OVERLAP','SOME','A LOT'], mot:['BOB','SHAKE','DRIFT','PULSE','SPIN'], sz:['TINY','SMALL','SMALLER','NORMAL','BIGGER','BIG','HUGE']};
+const CL_NEW = 2 ** 26;
+function clDec(p){ p = Math.round(p);                         // same rules as the engine (old presets: decimal digits)
+  if (p >= CL_NEW) { const q = p - CL_NEW; return {n:Math.max(1, q & 127), lay:(q >> 7) & 7, ov:(q >> 10) & 3, rnd:(q >> 12) & 3, mot:(q >> 14) & 31, sz:(q >> 19) & 127}; }
+  const d = p % 10; let n = ({0:24, 1:16, 7:12, 9:10})[d] || d || 3; const lay = Math.floor(p / 1000) % 10, mot = Math.floor(p / 100) % 10, sz = Math.floor(p / 100000) % 10;
+  if (lay === 0) n = Math.min(100, n * n);
+  return {n, lay, ov:Math.floor(p / 10) % 10, rnd:Math.floor(p / 10000) % 10, mot:mot ? 1 << (mot - 1) : 0, sz:1 << (({0:3, 1:0, 2:1, 3:2, 4:4, 5:5, 6:6})[sz] ?? 3)}; }
+function clEnc(c){ return CL_NEW + Math.max(1, Math.min(100, c.n)) + (c.lay << 7) + (c.ov << 10) + (c.rnd << 12) + (c.mot << 14) + ((c.sz || 8) << 19); }
 function segUI(lab, attr, list, cur, vals){ return `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px;flex-wrap:wrap">${list.map((m, i) => { const v = vals ? vals[i] : i;
   return `<button ${attr}="${v}" class="${cur === v ? 'on' : ''}">${m}</button>`; }).join('')}</div>`; }
+function bitsUI(lab, f, list, mask, none){ return `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px;flex-wrap:wrap">`
+  + (none ? `<button data-clbits="${f}" data-b="0" class="${mask ? '' : 'on'}">${none}</button>` : '')
+  + list.map((m, i) => `<button data-clbits="${f}" data-b="${1 << i}" class="${mask & (1 << i) ? 'on' : ''}">${m}</button>`).join('') + '</div>'; }
 function clonesUI(l){ const c = clDec(l.p1);
-  return `<div data-clones="${Math.round(l.p1)}">` + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay) + segUI('How many', 'data-cl="n" data-v', CLN.n, c.n, CLN.n)
-    + segUI('Copy size', 'data-cl="sz" data-v', CLN.sz, c.sz, SZV) + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov) + `<div class="sub pinl"><span>Angle</span></div><div class="seg sm" style="margin:4px 0 6px"><button data-cl="rnd" data-v="${c.rnd === 0 ? 0 : -1}" class="${c.rnd === 0 ? 'on' : ''}">STRAIGHT</button><button data-clbit="1" class="${c.rnd & 1 ? 'on' : ''}">TILTED</button><button data-clbit="2" class="${c.rnd & 2 ? 'on' : ''}">FLIPPED</button></div>` + segUI('Each copy', 'data-cl="mot" data-v', CLN.mot, c.mot) + '</div>'; }
+  return `<div data-clones="${Math.round(l.p1)}">` + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay)
+    + `<div class="sub"><span>How many</span><input type="range" data-clnum min="1" max="100" step="1" value="${c.n}" style="--acc:${GC[l.g]}"><output id="o-clnum">${c.n}</output></div>`
+    + bitsUI('Sizes (mix any)', 'sz', CLN.sz, c.sz || 8) + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov)
+    + bitsUI('Angle', 'rnd', ['TILTED','FLIPPED'], c.rnd, 'STRAIGHT') + bitsUI('Movement (mix any)', 'mot', CLN.mot, c.mot, 'STILL') + '</div>'; }
+function clSet(box, c){ const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; return p1; }
 function mirDec(p){ p = Math.round(p); return {m:p % 10, side:Math.floor(p / 10) % 10, pos:p >= 100 ? Math.floor(p / 100) : 50}; }
 function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
 function mirrorUI(l){ const c = mirDec(l.p1), sides = c.m === 1 ? ['KEEP TOP','KEEP BOTTOM'] : c.m === 3 ? ['TURN LEFT','TURN RIGHT'] : ['KEEP LEFT','KEEP RIGHT'];
@@ -2118,15 +2130,10 @@ document.addEventListener('click', e => {
     toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
   if (d.mr !== undefined && d.mr !== '') { const box = e.target.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c[d.mr] = +d.v;
     const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } airSig = ''; onAir(); buzz(); return; }
-  if (d.clbit) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.rnd ^= +d.clbit;          // tilt and flip each on / off, both at once is fine
-    const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
-    airSig = ''; onAir(); buzz(); return; }
-  if (d.cl === 'rnd') { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.rnd = 0;
-    const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
-    airSig = ''; onAir(); buzz(); return; }
-  if (d.cl) {
-    const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v;
-    const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
+  if (d.clbits) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones), b = +d.b, f = d.clbits;
+    c[f] = b === 0 ? 0 : (c[f] ^ b); if (f === 'sz' && !c.sz) c.sz = 8;             // sizes: at least one stays on (NORMAL)
+    clSet(box, c); airSig = ''; onAir(); buzz(); return; }
+  if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v; clSet(box, c);
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
@@ -2279,16 +2286,21 @@ if (window.visualViewport) { const vv = visualViewport, fit = () => { const sh =
     sh.style.bottom = kb + 'px'; sh.style.maxHeight = Math.max(160, vv.height - 16) + 'px'; sh.style.overflowY = 'auto';
     if (kb > 0 && document.activeElement && sh.contains(document.activeElement)) document.activeElement.scrollIntoView({block:'nearest'}); };
   vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
-// hold the MOAI//VJ logo -> About
+// hold the logo -> About + credits
 (function(){ const lg = $('#logo'); let t = null;
-  const open = () => { buzz(15); $('#shI').style.display = 'none'; $('#shT').textContent = 'MOAI//VJ';
+  const open = () => { buzz(15); $('#shI').style.display = 'none'; $('#shT').textContent = 'Video Jockey';
     $('#shP').innerHTML = `<div class="about"><p class="ver">Remote build ${BUILD}</p>
-      <p><b>MOAI//VJ</b> is a live, audio-reactive visual rig: TouchDesigner draws the picture, this page is its remote.
-      Presets, effects, layers, text, drawings, cameras and the projector are all set from here, on any phone or tablet.</p>
-      <p><b>Why "Moai"?</b> It isn't an acronym: the Moai are the giant stone heads of Rapa Nui (Easter Island). A Moai was
-      the first statue this rig ever spun, and the name stuck.</p>
-      <p><b>Fonts</b> Bangers, Permanent Marker, Caveat Brush, Rock Salt, Pacifico, Shrikhand, Monoton, Bungee Shade, Rubik Glitch,
-      Press Start 2P (Google Fonts, SIL Open Font / Apache licences).</p></div>`;
+      <p><b>Video Jockey</b> is a live, audio-reactive visual instrument. TouchDesigner draws the picture on the laptop;
+      this page is its remote, so presets, effects, layers, text, drawings, 3D, cameras and the projector are all played
+      from a tablet or phone, over a USB cable or Wi-Fi, without the internet.</p>
+      <p><b>Credits</b><br>
+      Concept, visuals &amp; direction · <b>Griva</b> (@griva.visuals)<br>
+      Engine &amp; remote code · written together with Claude (Anthropic)<br>
+      Visual engine · TouchDesigner by Derivative<br>
+      Fonts · Bangers, Permanent Marker, Caveat Brush, Rock Salt, Pacifico, Shrikhand, Monoton, Bungee Shade, Rubik Glitch,
+      Press Start 2P (Google Fonts, SIL Open Font / Apache licences)<br>
+      3D models &amp; clips · their creators, under their own licences</p>
+      <p class="ver">Formerly MOAI//VJ, named after the Moai of Rapa Nui, the first statue it ever spun.</p></div>`;
     $('#shA').innerHTML = '<button data-sh="cancel">Close</button>'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); };
   lg.addEventListener('pointerdown', () => { clearTimeout(t); t = setTimeout(open, 550); });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => lg.addEventListener(ev, () => clearTimeout(t)));
