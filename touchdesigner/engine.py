@@ -696,7 +696,7 @@ def pushUniforms(T):
         if k in COLFX: _colPush(k, p, T)
 
 # ------------------------------------------------------------------ effect colours (own colour / solid / linear / radial gradient)
-COLFX = ['hologram', 'neon', 'lines', 'halftone', 'ascii', 'thermal', 'palette', 'glow', 'glitch', 'matte', 'strobe', 'kaleido', 'tunnel', 'duotone', 'sketch', 'nightvis', 'flash']
+COLFX = ['hologram', 'neon', 'lines', 'halftone', 'ascii', 'thermal', 'palette', 'glow', 'glitch', 'matte', 'strobe', 'kaleido', 'tunnel', 'duotone', 'sketch', 'nightvis', 'flash', 'toon']
 LCOL_FILE = project.folder + '/td/lcols.json'
 LCOL = readJsonSafe(LCOL_FILE, {})                           # key -> {'m', 'a', 'b', 'ang'}
 if not isinstance(LCOL, dict): LCOL = {}

@@ -731,7 +731,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13e';
+const BUILD = '2026-11-13f';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1606,7 +1606,7 @@ const TWOCOL = {duotone:['SHADOWS','HIGHLIGHTS'], thermal:['COLD','HOT'], sketch
 function colBox(k){
   const two = TWOCOL[k];
   ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; const tg = FXT_SEL; thr('fx:' + tg + k, () => send({t:'lcol', tgt:tg, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)})); }, two ? [[0,'OWN'],[2,'MY 2 COLOURS']] : FXMODES, two);
-  return ccBox('fx:' + k, two ? '🎨 Two colours' : '🎨 Colour');
+  return ccBox('fx:' + k, two ? '🎨 Two colours' : k === 'toon' ? '🎨 Outline colour' : '🎨 Colour');
 }
 const colUI = k => ccUI('fx:' + k);
 function setLay(k, f, v){
@@ -1848,7 +1848,7 @@ function segUI(lab, attr, list, cur, vals){ return `<div class="sub pinl"><span>
   return `<button ${attr}="${v}" class="${cur === v ? 'on' : ''}">${m}</button>`; }).join('')}</div>`; }
 function clonesUI(l){ const c = clDec(l.p1);
   return `<div data-clones="${Math.round(l.p1)}">` + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay) + segUI('How many', 'data-cl="n" data-v', CLN.n, c.n, CLN.n)
-    + segUI('Copy size', 'data-cl="sz" data-v', CLN.sz, c.sz, SZV) + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov) + segUI('Angle', 'data-cl="rnd" data-v', CLN.rnd, c.rnd) + segUI('Each copy', 'data-cl="mot" data-v', CLN.mot, c.mot) + '</div>'; }
+    + segUI('Copy size', 'data-cl="sz" data-v', CLN.sz, c.sz, SZV) + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov) + `<div class="sub pinl"><span>Angle</span></div><div class="seg sm" style="margin:4px 0 6px"><button data-cl="rnd" data-v="${c.rnd === 0 ? 0 : -1}" class="${c.rnd === 0 ? 'on' : ''}">STRAIGHT</button><button data-clbit="1" class="${c.rnd & 1 ? 'on' : ''}">TILTED</button><button data-clbit="2" class="${c.rnd & 2 ? 'on' : ''}">FLIPPED</button></div>` + segUI('Each copy', 'data-cl="mot" data-v', CLN.mot, c.mot) + '</div>'; }
 function mirDec(p){ p = Math.round(p); return {m:p % 10, side:Math.floor(p / 10) % 10, pos:p >= 100 ? Math.floor(p / 100) : 50}; }
 function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
 function mirrorUI(l){ const c = mirDec(l.p1), sides = c.m === 1 ? ['KEEP TOP','KEEP BOTTOM'] : c.m === 3 ? ['TURN LEFT','TURN RIGHT'] : ['KEEP LEFT','KEEP RIGHT'];
@@ -2118,7 +2118,14 @@ document.addEventListener('click', e => {
     toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
   if (d.mr !== undefined && d.mr !== '') { const box = e.target.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c[d.mr] = +d.v;
     const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } airSig = ''; onAir(); buzz(); return; }
-  if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v;
+  if (d.clbit) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.rnd ^= +d.clbit;          // tilt and flip each on / off, both at once is fine
+    const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
+    airSig = ''; onAir(); buzz(); return; }
+  if (d.cl === 'rnd') { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.rnd = 0;
+    const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
+    airSig = ''; onAir(); buzz(); return; }
+  if (d.cl) {
+    const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v;
     const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
