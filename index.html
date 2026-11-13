@@ -31,7 +31,8 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .fps{font:500 12px var(--mono);color:var(--mute)}
 .stat{margin-left:auto;display:flex;align-items:center;gap:8px;background:none;border:0;padding:8px 6px;cursor:pointer;flex:none}.stbar{display:block;width:3px;height:24px;border-radius:2px;background:var(--lime);box-shadow:0 0 8px #c7ff3d66;transition:background .3s}.stbar.bk{background:#ffb02e;box-shadow:0 0 8px #ffb02e66}.stbar.bad{background:#ff4d2e;box-shadow:0 0 8px #ff4d2e88}.stat .sx{display:none;align-items:center;gap:8px}.stat.open .sx{display:flex}
 .lk{font:700 9px var(--mono);letter-spacing:.08em;padding:3px 6px;border-radius:5px;border:1px solid #ffffff22;color:var(--mute);flex:none;display:none}.lk.on{display:block}.lk.bk{color:#ffcf7a;border-color:#ffb02e66}.golocal{color:var(--lime);border-color:var(--lime);text-decoration:none;cursor:pointer;font-size:10px;padding:5px 8px}
-.fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}
+.fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}.fsb:disabled{opacity:.28}#undoB,#redoB{color:var(--ink);font-size:19px}
+@media (max-width:520px){#redoB{display:none}}
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
 @media (max-width:440px){body.editing .r1>.logo{display:none}}
@@ -447,7 +448,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">MOAI<i>//</i>VJ</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -611,7 +612,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
       <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="o3reset">RESET PLACEMENT</button></div>
     </div>
     <div id="view3d">
-    <h2><span>Saved views</span><em>hold = save current</em></h2><div class="presets" id="presets"></div>
+    <details class="box mbox" id="cvbox"><summary>Camera moves &amp; saved views<span>hold = save current</span></summary><div class="presets" id="presets"></div></details>
     <div class="tpad" id="tpad" style="margin-top:14px"><div class="ring" id="r1"></div><div class="ring b" id="r2"></div>
       <div class="hint">1 FINGER ORBIT · FLICK TO SPIN<br>2 FINGERS PINCH ZOOM · DRAG PAN · DOUBLE-TAP CENTRE</div></div>
     <div class="btns"><button class="btn" data-act="center">CENTRE</button><button class="btn" data-act="reset">RESET</button></div>
@@ -729,7 +730,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-11h';
+const BUILD = '2026-11-13a';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -775,6 +776,7 @@ function onMsg(m){
     return;
   }
   if (m.t === 'pong') { lastM = performance.now(); return; }
+  if (m.t === 'hist') { HISTORY = {u:m.u || [], r:m.r || 0}; histUI(); return; }
   if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { const nw = JSON.stringify(m.v) !== JSON.stringify(HOSTS); HOSTS = m.v; if (nw) { store.set('hosts', HOSTS); setTimeout(wsPrefer, 50); } } linkBadge(); return; }
   if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
@@ -1493,7 +1495,7 @@ function onAir(){
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
     const sw = SWATCH[l.k];
     const pin = `<div class="sub pinl"><span data-qfx="${l.k}" data-qf="p1">${l.p1label || 'Style'}</span></div>`;
-    const p1 = !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+    const p1 = l.k === 'clones' ? clonesUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
@@ -1810,6 +1812,24 @@ function qGo(i){
   send({t:'queue', do:'go', i, fade:ui.fade}); S.b = list[i]; renderPads(); renderQueue(); buzz(14);
 }
 // ＋ ADD PRESETS: while on, tapping a preset adds it to the set list instead of playing it
+/* undo / redo: TouchDesigner remembers the look before every change (tap = one step, hold = history list) */
+let HISTORY = {u:[], r:0};
+function histUI(){ $('#undoB').disabled = !HISTORY.u.length; $('#redoB').disabled = !HISTORY.r; }
+function histSheet(){ const u = HISTORY.u.slice().reverse();
+  $('#shT').textContent = 'History'; $('#shP').textContent = 'Latest first. Tap a step to go back to how it looked just before it.'; $('#shI').style.display = 'none';
+  $('#shA').innerHTML = (u.length ? u.map((x, i) => `<button class="hist" data-sh="histgo" data-n="${i + 1}"><b>${esc(x[1])}</b>&nbsp; · ${x[0]}</button>`).join('') : '<p class="hint2">Nothing to undo yet</p>') + '<button data-sh="cancel">Close</button>';
+  $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
+(() => { const b = document.getElementById('undoB'); let tm = null, held = false;
+  b.addEventListener('pointerdown', () => { held = false; tm = setTimeout(() => { held = true; histSheet(); buzz(15); }, 480); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => clearTimeout(tm)));
+  b.addEventListener('click', () => { if (held) return; const l = HISTORY.u[HISTORY.u.length - 1]; send({t:'hist', do:'undo', n:1}); toast('Undid: ' + (l ? l[1] : 'last change')); buzz(); });
+  document.getElementById('redoB').addEventListener('click', () => { send({t:'hist', do:'redo', n:1}); toast('Redone'); buzz(); }); })();
+/* CLONES effect: its one number packs four choices */
+const CLN = {lay:['GRID','ROW','COLUMN','FAN'], n:[2,3,4,5,6,8], ov:['NO OVERLAP','SOME','A LOT'], mot:['STILL','BOB','SHAKE','DRIFT','PULSE','SPIN']};
+function clDec(p){ p = Math.round(p); return {n:p % 10, ov:Math.floor(p / 10) % 10, mot:Math.floor(p / 100) % 10, lay:Math.floor(p / 1000) % 10}; }
+function clonesUI(l){ const c = clDec(l.p1);
+  const seg = (f, lab) => `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px">${CLN[f].map((m, i) => { const v = f === 'n' ? m : i; return `<button data-cl="${f}" data-v="${v}" class="${c[f] === v ? 'on' : ''}">${m}</button>`; }).join('')}</div>`;
+  return `<div data-clones="${Math.round(l.p1)}">` + seg('lay', 'Layout') + seg('n', 'How many') + seg('ov', 'Overlap') + seg('mot', 'Each copy') + '</div>'; }
 let GRPADD = '';                          // adding presets to a group: a tap puts the preset in it, the picture stays
 function grpAddMode(g){ GRPADD = g || ''; if (GRPADD && SLADD) slAddMode(false);
   document.body.classList.toggle('sladding', !!GRPADD || SLADD); const bar = $('#grpbar');
@@ -2008,6 +2028,7 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'grp') bankOp('bankgroup', slot, b.dataset.g, b.dataset.g ? 'Moved to ' + b.dataset.g : 'Taken out of its group');
   else if (b.dataset.sh === 'grpnew') { if (!name) { toast('Type a group name first'); return; } bankOp('bankgroup', slot, name, 'Moved to ' + name); }
   else if (b.dataset.sh === 'grpren') { const g = $('#sheet').dataset.grp; if (name && name !== g) { const nn = Math.random().toString(36).slice(2, 9); send({t:'bankgroupren', old:g, name, n:nn}); toast('Group renamed'); if (GSHUT[g]) { GSHUT[name] = 1; delete GSHUT[g]; store.set('gshut', GSHUT); } } }
+  else if (b.dataset.sh === 'histgo') { send({t:'hist', do:'undo', n:+b.dataset.n}); toast('Went back ' + b.dataset.n + (b.dataset.n === '1' ? ' step' : ' steps')); }
   else if (b.dataset.sh === 'grpadd') grpAddMode($('#sheet').dataset.grp);
   else if (b.dataset.sh === 'grpdel') { send({t:'bankgroupren', old:$('#sheet').dataset.grp, name:'', n:'x'}); toast('Presets ungrouped'); }
   else if (b.dataset.sh === 'undo') { if (confirm('Undo the last preset change?')) { send({t:'store', do:'undo'}); toast('Undoing…'); } }
@@ -2069,6 +2090,9 @@ document.addEventListener('click', e => {
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
   if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); hsvFrom(d.cwhich); return; }
   if (d.csw) { ccPick(d.csw, d.v); return; }
+  if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v;
+    const p1 = c.n + c.ov * 10 + c.mot * 100 + c.lay * 1000; box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1);
+    box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
   if (d.hsvt) { hsvToggle(d.hsvt); return; }

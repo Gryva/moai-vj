@@ -1169,6 +1169,29 @@ def snapshot():
         except Exception: pass
     return d
 
+HIST = {'undo': [], 'redo': [], 't': 0.0}
+def histMark(label):
+    """Called just before a command from the remote changes the look. One drag / quick burst = one step."""
+    now = time.time()
+    if HIST['undo'] and now - HIST['t'] < 1.2: HIST['t'] = now; return False
+    try: d = snapshot()
+    except Exception: return False
+    HIST['t'] = now
+    HIST['undo'].append({'d': d, 'l': str(label)[:40], 'at': time.strftime('%H:%M:%S')}); del HIST['undo'][:-40]
+    del HIST['redo'][:]
+    return True
+
+def histGo(redo=False):
+    a, b = (HIST['redo'], HIST['undo']) if redo else (HIST['undo'], HIST['redo'])
+    if not a: return False
+    it = a.pop(); b.append({'d': snapshot(), 'l': it['l'], 'at': it['at']})
+    _bankApply(it['d'], 0.0, True, True, True, cut=True, slot=None)
+    HIST['t'] = 0.0; S['dirty'] = True
+    return True
+
+def histList():
+    return {'u': [[x['at'], x['l']] for x in HIST['undo'][-15:]], 'r': len(HIST['redo'])}
+
 EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets

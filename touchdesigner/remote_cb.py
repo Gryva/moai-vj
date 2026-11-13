@@ -852,7 +852,20 @@ def _ensurePars():
 _ensurePars()
 
 LOST = {'t': 0.0, 'fired': False}
-MLOG = []      # last time a signed message came from a remote
+MLOG = []
+HISTT = ('set', 'layer', 'lcol', 'tcol', 'look', 'media', 'model', 'scene', 'bank', 'preset', 'clean', 'clear', 'swap', 'fxp', 'fxcopy', 'qtext', 'animloop', 'center')
+def _histLabel(m):
+    t = m.get('t')
+    try:
+        if t == 'layer':
+            lab = next((r['label'] for r in _E().layers() if r['key'] == m.get('k')), m.get('k'))
+            return '%s %s' % (lab, ('on' if m.get('on') else 'off') if 'on' in m else 'changed')
+        if t == 'set':
+            p = m.get('p'); return str(next((x[1] for x in SLIDERS if x[0] == p), p))
+        if t == 'bank': return 'Preset change'
+        return {'media': 'Source', 'model': '3D model', 'lcol': 'Effect colour', 'tcol': 'Effect colour', 'qtext': 'Words', 'clean': 'New clean preset', 'clear': 'Effects cleared',
+                'scene': 'Scene', 'preset': 'Camera view', 'look': 'Look', 'swap': 'Layer switch', 'fxcopy': 'Effects pasted', 'center': 'Camera centred'}.get(t, str(t))
+    except Exception: return str(t)      # last time a signed message came from a remote
 
 def lostCheck():
     """Called once a second by the engine: remote silent for 15 s and the option is on -> autopilot carries the show."""
@@ -868,6 +881,10 @@ def handle(msg, reply):
         if msg.get('t') not in ('ping', 'thumbs', 'hello'):          # last commands, to explain surprises later (no content, just what was asked)
             MLOG.append((time.strftime('%H:%M:%S'), {k: msg.get(k) for k in ('t', 'do', 'slot', 'p', 'tgt', 'k', 'on') if k in msg}))
             del MLOG[:-60]
+        if msg.get('t') in HISTT:                                    # undo history: remember the look just before this change
+            try:
+                if _E().histMark(_histLabel(msg)): _all(dict(_E().histList(), t='hist'))
+            except Exception as e: print('hist', e)
     t = msg.get('t'); C, E = _C(), _E()
     cid = str(msg.get('c', ''))[:16]
     if not ok:                                        # locked: nothing happens without the password
@@ -1033,6 +1050,11 @@ def handle(msg, reply):
             _all({'t': 'bank', 'bank': E.bankList()}); _publish(state(), active_only=True)
             if n:
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)
+        elif t == 'hist':                             # undo / redo (n steps back from the history list)
+            E_ = _E(); n = max(1, min(40, int(msg.get('n', 1))))
+            for _ in range(n):
+                if not E_.histGo(redo=(msg.get('do') == 'redo')): break
+            _all(state()); _all(dict(E_.histList(), t='hist'))
         elif t == 'audioin':                          # pick the sound input (laptop mic, line-in, USB card...)
             d = _audioDev(); v = str(msg.get('v', ''))
             if d is not None and v in d.par.device.menuNames:
@@ -1052,6 +1074,7 @@ def handle(msg, reply):
         elif t == 'hello':
             reply({'t': 'auth', 'ok': True, 'locked': bool(authToken()), 'to': cid})
             reply(state())
+            reply(dict(_E().histList(), t='hist'))
             if getattr(reply, 'local', False): reply(hostsMsg())
             if not E.STORE['ok']: reply({'t': 'store', 'v': E.storeInfo(), 'alert': 'PRESETS NOT SAVED: ' + E.STORE['err']})
             _thumbsPaced(reply, E.thumbAll())                 # one small message per picture, spaced out (public relays drop bursts)
