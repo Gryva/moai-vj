@@ -743,7 +743,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-13n';
+const BUILD = '2026-11-13o';
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
@@ -989,7 +989,7 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div id="g-m${i}mot"></div>
           <p class="hint2">Place it (move, depth, size, turn) in VIEW → tap this layer.</p></div>
       </div></div>`; }).join('');
-  $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div><div class="blrow" data-op="m${i}"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="M${i}blend" data-tv="${v}" class="${(S.pars && S.pars['M' + i + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('');
+  $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div><div class="blrow" data-op="m${i}"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="M${i}blend" data-tv="${v}" class="${(S && S.pars && S.pars['M' + i + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
   $('#m3dbox').innerHTML = MS.map(i => `<div data-v3="m${i}"><div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" data-mfit="${i}">⤢ FIT TO SCREEN</button></div><div id="g-m${i}obj"></div></div>`).join('');
 }
