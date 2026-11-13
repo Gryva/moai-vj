@@ -730,7 +730,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13a';
+const BUILD = '2026-11-13b';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -974,6 +974,8 @@ function sortCards(){
   const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
 }
 function mediaCardsUI(p){
+  const ksig = MS.map(i => p['M' + i + 'kind']).join(',');           // a layer changed between picture / video: its file list has to follow
+  if (ksig !== mediaCardsUI.k) { mediaCardsUI.k = ksig; renderMedia(); }
   MS.forEach(i => { const m = 'M' + i, c = $('#cardM' + i); if (!c) return;
     c.classList.toggle('hide', !p[m + 'on']);
     if (!p[m + 'on']) return;
