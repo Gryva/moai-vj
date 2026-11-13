@@ -603,9 +603,24 @@ def audioInputs():
     try: return {'v': [{'n': n, 'l': l} for n, l in zip(d.par.device.menuNames, d.par.device.menuLabels)][:12], 'cur': d.par.device.eval()}
     except Exception: return {'v': [], 'cur': ''}
 
+# ---------------------------------------------------------------- recording the show (what the projector shows, before keystone)
+# Motion-JPEG .mov + the audio input: cheap to encode, so the show keeps 60 fps (H.264 needs a paid TouchDesigner licence).
+REC = {'t0': None, 'file': ''}
+def recMsg(): return {'t': 'rec', 'on': REC['t0'] is not None, 'secs': round(time.time() - REC['t0'], 1) if REC['t0'] else 0, 'file': os.path.basename(REC['file'])}
+def recStart():
+    m = op('/project1/rec')
+    if m is None or REC['t0'] is not None: return
+    d = os.path.join(project.folder, 'recordings'); os.makedirs(d, exist_ok=True)
+    REC['file'] = os.path.join(d, 'VJ_' + time.strftime('%Y-%m-%d_%H-%M-%S') + '.mov')
+    m.par.file = REC['file']; m.par.record = True; REC['t0'] = time.time()
+def recStop():
+    m = op('/project1/rec')
+    if m is not None: m.par.record = False
+    REC['t0'] = None
+
 def state():
     C = _C()
-    return {'t': 'state', 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
+    return {'t': 'state', 'rec': recMsg(), 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
@@ -1027,6 +1042,10 @@ def handle(msg, reply):
                 if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
         elif t == 'swap':                                          # linked layers: one goes off, the other comes on
             E.layerSwap(str(msg.get('a', '')), str(msg.get('b', '')))
+        elif t == 'rec':
+            if msg.get('do') == 'start': recStart()
+            elif msg.get('do') == 'stop': recStop()
+            _all(recMsg())
         elif t == 'quick':                                         # pinned controls for LIVE
             ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))
             _all({'t': 'quick', 'v': E.quickAll()})
