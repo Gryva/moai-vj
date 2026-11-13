@@ -441,6 +441,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .ksnudge button{padding:11px 0;border-radius:8px;background:var(--panel2);font-weight:700}.ksnudge .kstep{font:700 10px var(--mono)}
 .ksrow{display:flex;align-items:center;gap:8px;margin-top:8px}.ksrow>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none;width:50px}.ksrow .opts{flex:1;margin:0}
 .tpos{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px}.tpos button{margin:0!important;font-size:15px}
+.blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
 .tsph{margin:6px 2px 0}
@@ -492,7 +493,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="fxtg"></div></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
-    <div id="g-opmodel" data-op="model"></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div>
+    <div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div>
     <div class="onair" id="onair"></div>
     </div><div class="colB">
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
@@ -741,7 +742,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13j';
+const BUILD = '2026-11-13k';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -986,7 +987,7 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div id="g-m${i}mot"></div>
           <p class="hint2">Place it (move, depth, size, turn) in VIEW → tap this layer.</p></div>
       </div></div>`; }).join('');
-  $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div>`).join('');
+  $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div><div class="blrow" data-op="m${i}"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="M${i}blend" data-tv="${v}" class="${(S.pars && S.pars['M' + i + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
   $('#m3dbox').innerHTML = MS.map(i => `<div data-v3="m${i}"><div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" data-mfit="${i}">⤢ FIT TO SCREEN</button></div><div id="g-m${i}obj"></div></div>`).join('');
 }
@@ -1343,7 +1344,9 @@ function build(){
   EL.layerBtns = [...$$('[data-layer]')]; EL.models = [...$$('[data-model]')]; EL.scene = [...$$('[data-scene]')];
   airSig = null; uiPrefs();
 }
+const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 const TOPTS = {
+  Modelblend: BLM, Drawblend: BLM,
   Spinaxis: [['y','SPIN ↻ Y'],['x','TUMBLE X'],['z','ROLL Z']],
   Camsrc: [['off','OFF'],['cam','NORMAL'],['screen','BLEND'],['mask','MASK']],
   Camfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
@@ -1552,13 +1555,15 @@ function onAir(){
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
     const sw = SWATCH[l.k];
     const pin = `<div class="sub pinl"><span data-qfx="${l.k}" data-qf="p1">${l.p1label || 'Style'}</span></div>`;
-    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-clnum]').forEach(el => bindSlider(el, 'clnum', v => { const box = el.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.n = Math.round(v); clSet(box, c); }));
+  $$('#onair input[data-sb]').forEach(el => bindSlider(el, 'sb' + el.dataset.sb, v => { const box = el.closest('[data-scrap]'), c = sbDec(+box.dataset.scrap); c[el.dataset.sb] = Math.round(v);
+    const p1 = 10000 + c.look * 100 + c.mv; box.dataset.scrap = p1; send({t:'layer', tgt:FXT_SEL, k:'scrapbook', p1}); setLay('scrapbook', 'p1', p1); { const L = S.layers.find(x => x.k === 'scrapbook'); if (L) L.p1 = p1; } }));
   $$('#onair input[data-mrpos]').forEach(el => bindSlider(el, 'mirpos', v => { const box = el.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c.pos = Math.round(v);
     const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } }));
   $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', tgt:FXT_SEL, k:el.dataset.lk, [el.dataset.f]: v})));
@@ -1915,6 +1920,10 @@ function clonesUI(l){ const c = clDec(l.p1);
 function clSet(box, c){ const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; return p1; }
 function mirDec(p){ p = Math.round(p); return {m:p % 10, side:Math.floor(p / 10) % 10, pos:p >= 100 ? Math.floor(p / 100) : 50}; }
 function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
+function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; return {look:Math.floor(q / 100), mv:q % 100}; } const v = Math.round(Math.max(0, Math.min(1, p)) * 99); return {look:v, mv:v}; }
+function scrapUI(l){ const c = sbDec(l.p1);
+  return `<div data-scrap="${10000 + c.look * 100 + c.mv}"><div class="sub"><span>Paper look</span><input type="range" data-sb="look" min="0" max="99" step="1" value="${c.look}" style="--acc:${GC[l.g]}"></div>`
+    + `<div class="sub"><span>Movement</span><input type="range" data-sb="mv" min="0" max="99" step="1" value="${c.mv}" style="--acc:${GC[l.g]}"></div><p class="hint2">Look at 0 = only the stop-motion movement. Movement at 0 = a still paper cut-out.</p></div>`; }
 function mirrorUI(l){ const c = mirDec(l.p1), sides = c.m === 1 ? ['KEEP TOP','KEEP BOTTOM'] : c.m === 3 ? ['TURN LEFT','TURN RIGHT'] : ['KEEP LEFT','KEEP RIGHT'];
   return `<div data-mirror="${Math.round(l.p1)}">` + segUI('Mirror', 'data-mr="m" data-v', ['LEFT | RIGHT','TOP | BOTTOM','QUAD','RADIAL'], c.m) + segUI('Side', 'data-mr="side" data-v', sides, c.side)
     + `<div class="sub"><span>${c.m === 3 ? 'Slices' : 'Mirror line'}</span><input type="range" data-mrpos min="2" max="98" step="1" value="${c.pos}" style="--acc:${GC[l.g]}"></div></div>`; }

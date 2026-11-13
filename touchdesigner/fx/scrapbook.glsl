@@ -22,16 +22,19 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 vec2 mir(vec2 p){ return abs(fract(p * 0.5) * 2.0 - 1.0); }
 #define OUT(c) fragColor = TDOutputSwizzle(outc(vUV.st, (c)))
 
-// SCRAPBOOK  paper cut-out collage: flat colours, white torn-paper edge with a shadow, paper grain, stop-motion wobble. uP.x = roughness
+// SCRAPBOOK  paper cut-out collage: flat colours, white torn-paper edge with a shadow, paper grain, stop-motion wobble.
+// uP.x = look (0 = the picture as it is, 1 = full paper cut-out), uP.y = movement (stop-motion jitter + cut edges wobbling)
 vec3 flat3(vec2 p){ vec2 d = PX() * 4.0;                          // soften first, so pieces are big flat shapes and not speckle
   vec3 c = (tex(p) * 2.0 + tex(p + vec2(d.x, 0.0)) + tex(p - vec2(d.x, 0.0)) + tex(p + vec2(0.0, d.y)) + tex(p - vec2(0.0, d.y))) / 6.0;
   vec3 q = floor(sqrt(max(c, 0.0)) * 3.0 + 0.5) / 3.0; return mix(vec3(luma(q)), q, 1.4); }
 void main(){
-  vec4 a = uAudio; vec2 uv = vUV.st; float r = clamp(uP.x, 0.0, 1.0);
+  vec4 a = uAudio; vec2 uv = vUV.st; float r = clamp(uP.x, 0.0, 1.0), mv = clamp(uP.y, 0.0, 1.0);
   float fr = floor(uTime * 8.0);                                   // moves 8 times a second, like stop motion
-  vec2 jit = (vec2(hash(vec2(fr, 1.0)), hash(vec2(fr, 7.0))) - 0.5) * 0.006 * (0.4 + r);
-  vec2 wob = (vec2(vnoise(uv * 9.0 + fr), vnoise(uv * 9.0 + 31.0 + fr)) - 0.5) * 0.014 * r;   // scissor-cut edges
+  vec2 jit = (vec2(hash(vec2(fr, 1.0)), hash(vec2(fr, 7.0))) - 0.5) * 0.014 * mv;
+  vec2 wob = (vec2(vnoise(uv * 9.0 + fr), vnoise(uv * 9.0 + 31.0 + fr)) - 0.5) * 0.022 * mv;   // scissor-cut edges
   vec2 p = uv + jit + wob;
+  vec3 orig = tex(p);
+  if (r < 0.01) { OUT(orig); return; }                             // movement only: the picture itself untouched
   vec3 q = flat3(p);
   vec2 px = PX() * (1.5 + 2.0 * r);
   float e = 0.0;
@@ -44,5 +47,5 @@ void main(){
   q *= 0.88 + 0.24 * fbm(uv * RES() / 3.0);                        // paper grain
   q += (hash(uv * RES() + fr) - 0.5) * 0.05;
   q *= 1.0 + a.w * 0.15;
-  OUT(clamp(q, 0.0, 1.0));
+  OUT(mix(orig, clamp(q, 0.0, 1.0), smoothstep(0.0, 0.45, r)));
 }

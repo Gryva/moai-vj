@@ -207,8 +207,30 @@ def clDecode(p1):
     return {'n': n, 'lay': lay, 'ov': (p // 10) % 10, 'rnd': (p // 10000) % 10,
             'mot': 0 if mot == 0 else 1 << (mot - 1), 'sz': 1 << {0: 3, 1: 0, 2: 1, 3: 2, 4: 4, 5: 5, 6: 6}.get(sz, 3)}
 
+BLENDS = ['normal', 'add', 'screen', 'multiply', 'overlay', 'difference', 'lighten', 'darken']
+def blendUpdate(C):
+    """Per layer opacity + blend mode into the layer stack (only writes what changed)."""
+    g = op('/project1/fx_src')
+    if g is None or BLI.get('al') is None: return
+    def b(p):
+        v = C.par[p].eval() if hasattr(C.par, p) else 'normal'
+        return BLENDS.index(v) if v in BLENDS else 0
+    def a(p): return float(C.par[p].eval()) if hasattr(C.par, p) else 1.0
+    vals = {BLI['al']: [a('M%dalpha' % i) for i in (1, 2, 3, 4)], BLI['al'] + 1: [a('M5alpha'), a('M6alpha'), a('Alphamodel'), a('Alphadraw')],
+            BLI['bl']: [b('M%dblend' % i) for i in (1, 2, 3, 4)], BLI['bl'] + 1: [b('M5blend'), b('M6blend'), b('Modelblend'), b('Drawblend')]}
+    for vi, vs in vals.items():
+        for ax, v in zip('xyzw', vs):
+            pp = g.par['vec%dvalue%s' % (vi, ax)]
+            if abs(pp.eval() - v) > 1e-5: pp.val = v
+BLI = {}
+
 def pSet(g, k, p1):
     """An effect's one setting into its shader. CLONES needs more bits than one float holds: split over uP.x / uP.y."""
+    if k == 'scrapbook':                                               # look + movement: 10000 + look * 100 + movement (each 0-99); older presets: one value for both
+        p = float(p1)
+        if p >= 10000: q = int(round(p)) - 10000; g.par.vec3valuex = (q // 100) / 99.0; g.par.vec3valuey = (q % 100) / 99.0
+        else: g.par.vec3valuex = p; g.par.vec3valuey = p
+        return
     if k == 'clones':
         c = clDecode(p1)
         g.par.vec3valuex = c['n'] + c['lay'] * 128 + c['ov'] * 1024 + c['rnd'] * 4096
@@ -1262,12 +1284,12 @@ def histGo(redo=False):
 def histList():
     return {'u': [[x['at'], x['l']] for x in HIST['undo'][-15:]], 'r': len(HIST['redo'])}
 
-EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
+EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alphamodel', 'Alphadraw', 'Modelblend', 'Drawblend']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend']
 
 def _mval(par):
     v = par.eval()
@@ -2254,6 +2276,7 @@ def onFrameStart(frame):
     if S['frame'] % 60 == 0: _safe('lost', op('/project1/remote_cb').module.lostCheck)
     if S['frame'] % 8 == 0: _safe('clonesbb', clonesBB)
     _safe('noise', noiseUpdate, C, T)
+    _safe('blend', blendUpdate, C)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()

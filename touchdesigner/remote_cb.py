@@ -25,7 +25,7 @@ for _i in range(1, 7):
                       (_m + 'mspeed', 'Spin speed (°/s)', 0, 180, 1, 'm%dmot' % _i), (_m + 'mamt', 'Amount', 0, 2, 0.01, 'm%dmot' % _i),
                       (_m + 'fzoom', 'Zoom', 0.2, 4, 0.01, 'm%dfr' % _i), (_m + 'fx', 'Left / right', -1, 1, 0.005, 'm%dfr' % _i),
                       (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
-                      (_m + 'op', 'Brightness', 0, 1.5, 0.01, 'm%dop' % _i),
+                      (_m + 'alpha', 'Opacity', 0, 1, 0.01, 'm%dop' % _i), (_m + 'op', 'Brightness', 0, 2, 0.01, 'm%dop' % _i),
                       (_m + 'speed', 'Speed', 0.1, 4, 0.05, 'm%dplay' % _i), (_m + 'trimin', 'Start', 0, 1, 0.005, 'm%dplay' % _i),
                       (_m + 'trimout', 'End', 0, 1, 0.005, 'm%dplay' % _i),
                       (_m + 'nzscale', 'Size of the pattern', 0.3, 20, 0.05, 'm%dnz' % _i), (_m + 'nzspeed', 'Speed', 0, 3, 0.01, 'm%dnz' % _i),
@@ -109,12 +109,12 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Animbeat', 'Speed-up on the beat', 0, 2, 0.01, 'anim'),
     ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
     ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
-    ('Opmodel', 'Brightness', 0, 1.5, 0.01, 'opmodel'),
+    ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'),
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
-    ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
+    ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -823,6 +823,10 @@ def _clean(p, v):
     if not SLIDERDEF: SLIDERDEF.update({s[0]: (s[2], s[3]) for s in SLIDERS})
     if p in SLIDERDEF: lo, hi = SLIDERDEF[p]; return min(hi, max(lo, float(v)))
     if p in TOGGLES: return bool(v)
+    if p.endswith('blend'):
+        v = str(v)
+        if v not in _E().BLENDS: raise ValueError('bad blend')
+        return v
     if p == 'Noreact':
         ok = _E().LAYER_IDS
         return ','.join(k for k in dict.fromkeys(str(v).split(',')) if k in ok)
@@ -849,6 +853,19 @@ def _ensurePars():
                 want = "op('/project1/CONTROLS').par.M%dfzoom * (-1 if op('/project1/CONTROLS').par.M%dfit else 1)" % (i, i)
                 if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
         if C.par.Master.default != 1.0: C.par.Master.default = 1.0      # TUNE brightness starts at 1
+        pg = C.par.Opmodel.page                         # per layer opacity + blend mode
+        for n, dv in [('M%dalpha' % i, 1.0) for i in range(1, 7)] + [('Alphamodel', 1.0), ('Alphadraw', 1.0)]:
+            if not hasattr(C.par, n): pp = pg.appendFloat(n, label=n)[0]; pp.default = dv; pp.val = dv
+        for n, dv in [('M%dblend' % i, 'normal') for i in range(1, 7)] + [('Modelblend', 'normal'), ('Drawblend', 'screen')]:
+            if not hasattr(C.par, n): pp = pg.appendStr(n, label=n)[0]; pp.default = dv; pp.val = dv
+        fx = op('/project1/fx_src'); E_ = _E()
+        if fx is not None and not E_.BLI:
+            names = {fx.par['vec%dname' % k].eval(): k for k in range(40) if fx.par['vec%dname' % k] is not None}
+            if 'uAL1' not in names:
+                free = [k for k in range(40) if fx.par['vec%dname' % k] is not None and not fx.par['vec%dname' % k].eval()][:4]
+                for k, nm in zip(free, ('uAL1', 'uAL2', 'uBL1', 'uBL2')): fx.par['vec%dname' % k] = nm; names[nm] = k
+            if names.get('uAL2') == names.get('uAL1', -9) + 1 and names.get('uBL2') == names.get('uBL1', -9) + 1:
+                E_.BLI.update({'al': names['uAL1'], 'bl': names['uBL1']})
         NZ = [('nzscale', 3.0), ('nzspeed', 0.3), ('nzdetail', 5), ('nzwarp', 0.4), ('nzcontrast', 1.2), ('nzdir', 0.0), ('nzreact', 0.5),
               ('nzbright', 1.0), ('nzsteps', 0), ('nzseed', 0)]
         for i in range(1, 7):                          # NOISE source settings, per media layer
