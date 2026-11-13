@@ -27,6 +27,7 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
 .larr.lau{color:var(--lime);font-size:15px}.larr.lau.mute{color:#cfc8d8;background:linear-gradient(to top right,transparent 46%,#ff4d2e 47%,#ff4d2e 53%,transparent 54%)}
 .mfitbox{margin:8px 0 4px}.mfitbox .sub{display:grid;grid-template-columns:auto 1fr 44px;gap:12px;align-items:center;font-size:12px;color:var(--mute)}.mfitbox output{font:600 12px var(--mono);text-align:right}.mfitbox[hidden]{display:none}.mfitbox .seg{margin-bottom:6px}
+.fsback{position:fixed;inset:0;z-index:99;display:grid;place-items:center;background:#09080dcc;color:var(--ink);font:700 16px var(--sans);text-align:center}.fsback b{display:block;font-size:42px;margin-bottom:10px;color:var(--lime)}
 .qbigrow{display:flex;gap:8px;align-items:stretch}.qbig{flex:1;min-height:64px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#16141c;color:var(--ink);text-align:left;font:700 15px var(--sans)}
 .qbig b{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qbig em{font:800 12px var(--mono);font-style:normal;letter-spacing:.1em;padding:6px 10px;border-radius:8px;background:#ffffff10;color:var(--mute)}
 .qbig.on{background:var(--lime);border-color:var(--lime);color:#0b0a0f}.qbig.on .qly{color:#0b0a0f;opacity:.7}.qbig.on em{background:#0b0a0f;color:var(--lime)}.qbigrow .qmenu{height:auto}
@@ -733,7 +734,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13h';
+const BUILD = '2026-11-13i';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1447,6 +1448,23 @@ function bindSlider(el, id, onv){
   el.addEventListener('input', () => { show(); touching[id] = Infinity; cancelAnimationFrame(raf); raf = requestAnimationFrame(() => onv(+el.value)); });
 }
 let EDIT = false;                                            // friends get the simple preset view; EDIT unlocks the rest
+/* ⟳ refresh: same version -> fresh data without reloading (stays full screen); new version -> reload, one tap back to full screen */
+async function refreshRemote(){
+  let newer = false;
+  try { const h = await (await fetch(location.pathname + '?v=' + Date.now(), {cache:'no-store'})).text(); const m = h.match(/const BUILD = '([^']+)'/); newer = !!(m && m[1] !== BUILD); } catch (e) {}
+  if (!newer) {
+    toast('Refreshing…'); QSIG = ''; airSig = '';
+    if (LOCAL && MODE === 'ws') wsSwitch(); else send({t:'hello'});
+    setTimeout(() => thumbsCheck && thumbsCheck(), 2500); return;
+  }
+  try { if (document.fullscreenElement) sessionStorage.setItem('fsback', '1'); } catch (e) {}
+  location.reload();
+}
+(() => { let back = false; try { back = sessionStorage.getItem('fsback') === '1'; sessionStorage.removeItem('fsback'); } catch (e) {}
+  if (!back) return;
+  const o = document.createElement('div'); o.className = 'fsback'; o.innerHTML = '<div><b>⛶</b>Updated · tap anywhere to go back to full screen</div>';
+  o.addEventListener('pointerup', () => { o.remove(); try { document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(() => {}); } catch (e) {} });
+  document.body.appendChild(o); })();
 function setEdit(on){
   EDIT = on; document.body.classList.toggle('editing', on);
   $('#editbtn').textContent = on ? '✓ DONE' : '✎ EDIT';
@@ -2221,7 +2239,7 @@ document.addEventListener('click', e => {
   else if (t.id === 'chpass') { const np = prompt('New remote password (leave empty to remove the lock):'); if (np !== null) {
       send({t:'setpass', v:np}); TOKEN = makeToken(np); store.set('tok_' + (KEY || 'local'), TOKEN); setTimeout(() => send({t:'hello'}), 600); toast(np ? 'Password changed' : 'Lock removed'); } }
   else if (t.id === 'logout') { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); lock('Locked on this phone'); }
-  else if (t.id === 'rlbtn') { buzz(); location.reload(); }
+  else if (t.id === 'rlbtn') { buzz(); refreshRemote(); }
 });
 
 /* ---------------- touch camera ---------------- */
