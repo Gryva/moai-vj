@@ -108,7 +108,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
 TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
@@ -834,6 +834,14 @@ def _ensurePars():
     try:
         C = op('/project1/CONTROLS')
         if not hasattr(C.par, 'Automic'): C.par.Gain.page.appendToggle('Automic', label='Room mic mode')
+        fx = op('/project1/fx_src')
+        for i in range(1, 7):                          # per layer: fill the screen (crop) or show the whole picture
+            if not hasattr(C.par, 'M%dfit' % i):
+                C.par['M%dfzoom' % i].page.appendToggle('M%dfit' % i, label='M%d whole picture' % i)
+            if fx is not None:
+                vp = fx.par['vec%dvaluex' % (18 + i)]
+                want = "op('/project1/CONTROLS').par.M%dfzoom * (-1 if op('/project1/CONTROLS').par.M%dfit else 1)" % (i, i)
+                if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
         if not hasattr(C.par, 'Noreact'): C.par.Links.page.appendStr('Noreact', label='Layers ignoring the music')
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
         for i in range(1, 7):                          # any background colour can be removed (picked on the remote)

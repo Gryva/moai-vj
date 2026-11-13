@@ -26,6 +26,7 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .logo{font-weight:700;letter-spacing:.08em;font-size:15px}.logo i{font-style:normal;color:var(--hot)}
 .dot{width:9px;height:9px;border-radius:50%;background:#555;transition:.3s}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
 .larr.lau{color:var(--lime);font-size:15px}.larr.lau.mute{color:#cfc8d8;background:linear-gradient(to top right,transparent 46%,#ff4d2e 47%,#ff4d2e 53%,transparent 54%)}
+.mfitbox{margin:8px 0 4px}.mfitbox .sub{display:grid;grid-template-columns:auto 1fr 44px;gap:12px;align-items:center;font-size:12px;color:var(--mute)}.mfitbox output{font:600 12px var(--mono);text-align:right}.mfitbox[hidden]{display:none}.mfitbox .seg{margin-bottom:6px}
 .qmenu{flex:none;margin-left:6px;width:30px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 15px/1 var(--sans);display:grid;place-items:center;padding:0}.qmenu:active{background:#ffffff14;color:var(--ink)}
 .sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
 .fps{font:500 12px var(--mono);color:var(--mute)}
@@ -726,11 +727,11 @@ const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); ret
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
 const SWATCH = {palette:['#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3']};
-const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'], mirror:['L|R','T|B','QUAD','RADIAL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
+const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13b';
+const BUILD = '2026-11-13d';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -943,6 +944,8 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
       <div class="cb"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button>
         <div class="clips mlib" id="mlist${i}" hidden></div>
+        <div class="mfitbox"><div class="seg sm" data-mfitseg="${i}"><button data-mfit="${i}" data-v="0">FILL SCREEN</button><button data-mfit="${i}" data-v="1">WHOLE PICTURE</button></div>
+          <div class="sub"><span>Size</span><input type="range" data-mzoom="${i}" min="0.2" max="3" step="0.01" value="1"><output id="o-mz${i}"></output></div></div>
         <div class="seg sm" id="o-${m}mode" style="margin:8px 0"></div>
         <details class="box mbox mplay"><summary>Playback<span id="sum-m${i}play"></span></summary><div id="g-m${i}play"></div>
           <div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mplayreset="${i}">NORMAL SPEED · FULL LENGTH</button></div></details>
@@ -973,7 +976,10 @@ function sortCards(){
   const sig = ids.join(','); if (sig === CARDSIG) return; CARDSIG = sig;
   const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
 }
+function mzBind(){ $$('[data-mzoom]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.mzoom;
+  bindSlider(el, 'mz' + i, v => { S.pars['M' + i + 'fzoom'] = v; send({t:'set', p:'M' + i + 'fzoom', v}); }); }); }
 function mediaCardsUI(p){
+  mzBind();
   const ksig = MS.map(i => p['M' + i + 'kind']).join(',');           // a layer changed between picture / video: its file list has to follow
   if (ksig !== mediaCardsUI.k) { mediaCardsUI.k = ksig; renderMedia(); }
   MS.forEach(i => { const m = 'M' + i, c = $('#cardM' + i); if (!c) return;
@@ -990,6 +996,9 @@ function mediaCardsUI(p){
     mfb.hidden = dr; $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
     lib.hidden = dr || (!!f && !MLIB[i]); mfb.classList.toggle('open', !lib.hidden);
     c.querySelector('.mplay').hidden = !vid;
+    c.querySelector('.mfitbox').hidden = dr || !f || p[m + 'mode'] === 'object';
+    $$(`[data-mfit="${i}"]`).forEach(b => b.classList.toggle('on', (+b.dataset.v === 1) === !!p[m + 'fit']));
+    const z = c.querySelector(`[data-mzoom="${i}"]`); if (z && !(touching['mz' + i] > performance.now())) { z.value = p[m + 'fzoom'] ?? 1; z._show && z._show(); }
     { const sp = +p[m + 'speed'] || 1, tr = (+p[m + 'trimin'] || 0) > 0.001 || (p[m + 'trimout'] != null && +p[m + 'trimout'] < 0.999);
       $('#sum-m' + i + 'play').textContent = [sp !== 1 ? sp.toFixed(2) + '×' : '', tr ? 'trimmed' : ''].filter(Boolean).join(' · '); }
     c.querySelector('.mkey').hidden = dr; c.querySelector('.mup').hidden = dr;
@@ -1497,12 +1506,14 @@ function onAir(){
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
     const sw = SWATCH[l.k];
     const pin = `<div class="sub pinl"><span data-qfx="${l.k}" data-qf="p1">${l.p1label || 'Style'}</span></div>`;
-    const p1 = l.k === 'clones' ? clonesUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
+  $$('#onair input[data-mrpos]').forEach(el => bindSlider(el, 'mirpos', v => { const box = el.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c.pos = Math.round(v);
+    const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } }));
   $$('#onair input[data-lk]').forEach(el => bindSlider(el, el.dataset.lk + ':' + el.dataset.f, v => send({t:'layer', tgt:FXT_SEL, k:el.dataset.lk, [el.dataset.f]: v})));
   ccBind($('#onair'));
   act.forEach(l => l.col && colUI(l.k));
@@ -1826,12 +1837,22 @@ function histSheet(){ const u = HISTORY.u.slice().reverse();
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => clearTimeout(tm)));
   b.addEventListener('click', () => { if (held) return; const l = HISTORY.u[HISTORY.u.length - 1]; send({t:'hist', do:'undo', n:1}); toast('Undid: ' + (l ? l[1] : 'last change')); buzz(); });
   document.getElementById('redoB').addEventListener('click', () => { send({t:'hist', do:'redo', n:1}); toast('Redone'); buzz(); }); })();
-/* CLONES effect: its one number packs four choices */
-const CLN = {lay:['GRID','ROW','COLUMN','FAN'], n:[2,3,4,5,6,8], ov:['NO OVERLAP','SOME','A LOT'], mot:['STILL','BOB','SHAKE','DRIFT','PULSE','SPIN']};
-function clDec(p){ p = Math.round(p); return {n:p % 10, ov:Math.floor(p / 10) % 10, mot:Math.floor(p / 100) % 10, lay:Math.floor(p / 1000) % 10}; }
+/* CLONES + MIRROR: their one number packs several choices */
+const CLN = {lay:['GRID','ROW','COLUMN','FAN','PILE'], n:[2,3,4,5,6,8,10,12,16,24], ov:['NO OVERLAP','SOME','A LOT'], mot:['STILL','BOB','SHAKE','DRIFT','PULSE','SPIN'], rnd:['STRAIGHT','TILTED','FLIPPED','TILTED + FLIPPED']};
+const CLD = {24:0, 16:1, 12:7, 10:9};                     // count -> its digit (2-6 and 8 are themselves)
+const cnt = d => ({0:24, 1:16, 7:12, 9:10})[d] || d;
+function clDec(p){ p = Math.round(p); return {n:cnt(p % 10), ov:Math.floor(p / 10) % 10, mot:Math.floor(p / 100) % 10, lay:Math.floor(p / 1000) % 10, rnd:Math.floor(p / 10000) % 10}; }
+function clEnc(c){ return (CLD[c.n] ?? c.n) + c.ov * 10 + c.mot * 100 + c.lay * 1000 + c.rnd * 10000; }
+function segUI(lab, attr, list, cur, vals){ return `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px;flex-wrap:wrap">${list.map((m, i) => { const v = vals ? vals[i] : i;
+  return `<button ${attr}="${v}" class="${cur === v ? 'on' : ''}">${m}</button>`; }).join('')}</div>`; }
 function clonesUI(l){ const c = clDec(l.p1);
-  const seg = (f, lab) => `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px">${CLN[f].map((m, i) => { const v = f === 'n' ? m : i; return `<button data-cl="${f}" data-v="${v}" class="${c[f] === v ? 'on' : ''}">${m}</button>`; }).join('')}</div>`;
-  return `<div data-clones="${Math.round(l.p1)}">` + seg('lay', 'Layout') + seg('n', 'How many') + seg('ov', 'Overlap') + seg('mot', 'Each copy') + '</div>'; }
+  return `<div data-clones="${Math.round(l.p1)}">` + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay) + segUI('How many', 'data-cl="n" data-v', CLN.n, c.n, CLN.n)
+    + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov) + segUI('Angle', 'data-cl="rnd" data-v', CLN.rnd, c.rnd) + segUI('Each copy', 'data-cl="mot" data-v', CLN.mot, c.mot) + '</div>'; }
+function mirDec(p){ p = Math.round(p); return {m:p % 10, side:Math.floor(p / 10) % 10, pos:p >= 100 ? Math.floor(p / 100) : 50}; }
+function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
+function mirrorUI(l){ const c = mirDec(l.p1), sides = c.m === 1 ? ['KEEP TOP','KEEP BOTTOM'] : c.m === 3 ? ['TURN LEFT','TURN RIGHT'] : ['KEEP LEFT','KEEP RIGHT'];
+  return `<div data-mirror="${Math.round(l.p1)}">` + segUI('Mirror', 'data-mr="m" data-v', ['LEFT | RIGHT','TOP | BOTTOM','QUAD','RADIAL'], c.m) + segUI('Side', 'data-mr="side" data-v', sides, c.side)
+    + `<div class="sub"><span>${c.m === 3 ? 'Slices' : 'Mirror line'}</span><input type="range" data-mrpos min="2" max="98" step="1" value="${c.pos}" style="--acc:${GC[l.g]}"></div></div>`; }
 let GRPADD = '';                          // adding presets to a group: a tap puts the preset in it, the picture stays
 function grpAddMode(g){ GRPADD = g || ''; if (GRPADD && SLADD) slAddMode(false);
   document.body.classList.toggle('sladding', !!GRPADD || SLADD); const bar = $('#grpbar');
@@ -2092,8 +2113,12 @@ document.addEventListener('click', e => {
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
   if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); hsvFrom(d.cwhich); return; }
   if (d.csw) { ccPick(d.csw, d.v); return; }
+  if (d.mfit) { const i = +d.mfit, v = d.v === '1'; S.pars['M' + i + 'fit'] = v; send({t:'set', p:'M' + i + 'fit', v}); mediaCardsUI(S.pars);
+    toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
+  if (d.mr !== undefined && d.mr !== '') { const box = e.target.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c[d.mr] = +d.v;
+    const p1 = mirEnc(c); box.dataset.mirror = p1; send({t:'layer', tgt:FXT_SEL, k:'mirror', p1}); setLay('mirror', 'p1', p1); { const L = S.layers.find(x => x.k === 'mirror'); if (L) L.p1 = p1; } airSig = ''; onAir(); buzz(); return; }
   if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v;
-    const p1 = c.n + c.ov * 10 + c.mot * 100 + c.lay * 1000; box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1);
+    const p1 = clEnc(c); box.dataset.clones = p1; send({t:'layer', tgt:FXT_SEL, k:'clones', p1}); setLay('clones', 'p1', p1); { const L = S.layers.find(x => x.k === 'clones'); if (L) L.p1 = p1; }
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }

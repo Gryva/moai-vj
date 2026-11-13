@@ -1196,7 +1196,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
-         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout']
+         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit']
 
 def _mval(par):
     v = par.eval()

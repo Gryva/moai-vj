@@ -23,15 +23,20 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 #define OUT(c) fragColor = TDOutputSwizzle(outc(vUV.st, (c)))
 
 // SYMMETRY  uP.x mode: 0 left|right  1 top|bottom  2 four-way  3 radial
+// uP.x packs: mode (0 left|right, 1 top|bottom, 2 quad, 3 radial) + 10 * side kept (0 left / top, 1 right / bottom) + 100 * line position (0-99, 50 = middle)
 void main(){
-  vec4 a = uAudio; vec2 uv = vUV.st; int m = int(uP.x + 0.5);
-  float w = sin(uTime * 0.6) * 0.03 * a.y;                       // axis breathes with mids
-  if (m == 0) uv.x = 0.5 - abs(uv.x - 0.5 - w);
-  else if (m == 1) uv.y = 0.5 + abs(uv.y - 0.5 - w);
-  else if (m == 2) uv = 0.5 - abs(uv - 0.5 - vec2(w));
+  vec4 a = uAudio; vec2 uv = vUV.st; float p = floor(uP.x + 0.5);
+  int m = int(mod(p, 10.0)); bool flip = mod(floor(p / 10.0), 10.0) > 0.5;
+  float ln = p >= 100.0 ? clamp(floor(p / 100.0) / 100.0, 0.02, 0.98) : 0.5;
+  float w = sin(uTime * 0.6) * 0.03 * a.y;                       // the mirror line breathes with the mids
+  float c = ln + w;
+  if (m == 0) uv.x = flip ? c + abs(uv.x - c) : c - abs(uv.x - c);
+  else if (m == 1) uv.y = flip ? c - abs(uv.y - c) : c + abs(uv.y - c);
+  else if (m == 2) { uv.x = flip ? c + abs(uv.x - c) : c - abs(uv.x - c); uv.y = flip ? c - abs(uv.y - c) : c + abs(uv.y - c); }
   else {
     vec2 q = uv - 0.5; q.x *= ASP();
-    float r = length(q), ang = atan(q.y, q.x) + uTime * 0.1, seg = 6.2831853 / 4.0;
+    float n = 2.0 + floor(ln * 10.0);                            // radial: the line position picks the number of slices
+    float r = length(q), ang = atan(q.y, q.x) + uTime * 0.1 * (flip ? -1.0 : 1.0), seg = 6.2831853 / n;
     ang = abs(mod(ang, seg) - seg * 0.5); q = vec2(cos(ang), sin(ang)) * r; q.x /= ASP(); uv = q + 0.5;
   }
   OUT(tex(uv));

@@ -33,7 +33,7 @@ vec2 frame(vec2 uv, vec4 f){
   vec2 res = uTD2DInfos[0].res.zw; float asp = res.x / res.y;
   vec2 q = uv - 0.5 - vec2(f.y, f.z) * 0.5; q.x *= asp;
   float r = radians(-f.w); q = mat2(cos(r), sin(r), -sin(r), cos(r)) * q; q.x /= asp;
-  return q / max(0.05, f.x) + 0.5;
+  return q / max(0.05, abs(f.x)) + 0.5;                  // zoom < 0 = the same zoom, 'whole picture' framing
 }
 vec4 tin(int i, vec2 p){
   p = clamp(p, 0.0, 1.0);
@@ -42,10 +42,10 @@ vec4 tin(int i, vec2 p){
   if (i == 5) return texture(sTD2DInputs[5], p); if (i == 6) return texture(sTD2DInputs[6], p);
   if (i == 7) return texture(sTD2DInputs[7], p); return texture(sTD2DInputs[8], p);
 }
-vec4 fitTex(int i, vec2 uv, bool mir){       // .rgb colour, .a = alpha (keyed alpha x inside the picture)
+vec4 fitTex(int i, vec2 uv, bool mir, bool whole){       // .rgb colour, .a = alpha (keyed alpha x inside the picture)
   vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[i].res.zw;
   float a0 = r0.x / r0.y, a1 = r1.x / r1.y;
-  bool fit = uP.y > 1.5;
+  bool fit = uP.y > 1.5 || whole;                        // whole: the full picture fits (bars), else it fills the screen (crops)
   vec2 q = uv - 0.5;
   if (fit) { if (a1 > a0) q.y *= a1 / a0; else q.x *= a0 / a1; }
   else     { if (a1 > a0) q.x *= a0 / a1; else q.y *= a1 / a0; }
@@ -60,12 +60,12 @@ float pick4(vec4 a, vec4 b, int j){ return j == 0 ? a.x : j == 1 ? a.y : j == 2 
 vec4 mframe(int j){ return j == 0 ? uMF1 : j == 1 ? uMF2 : j == 2 ? uMF3 : j == 3 ? uMF4 : j == 4 ? uMF5 : uMF6; }
 vec4 layerPM(int id, vec2 uv){                 // one layer on its own, premultiplied
   if (id == 1) return texture(sTD2DInputs[0], uv) * clamp(uA.x, 0.0, 1.0);
-  if (id == 2) { vec4 c = fitTex(1, frame(uv, uF2), mod(uP.y, 2.0) > 0.5); float a = c.a * clamp(uA.y, 0.0, 1.0); return vec4(c.rgb * a, a); }
+  if (id == 2) { vec4 c = fitTex(1, frame(uv, uF2), mod(uP.y, 2.0) > 0.5, false); float a = c.a * clamp(uA.y, 0.0, 1.0); return vec4(c.rgb * a, a); }
   if (id == 5) { vec2 p = frame(uv, uF5); float ins = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
                  vec3 d = clamp(texture(sTD2DInputs[2], clamp(p, 0.0, 1.0)).rgb * uQ.x, 0.0, 1.0) * ins; return vec4(d, max(d.r, max(d.g, d.b))); }
   if (id >= 11 && id <= 16) { int j = id - 11; float k = clamp(pick4(uMA1, uMA2, j), 0.0, 1.0); if (k < 0.002) return vec4(0.0);
                  if (pick4(uMM1, uMM2, j) > 0.5) return tin(3 + j, uv) * k;
-                 vec4 c = fitTex(3 + j, frame(uv, mframe(j)), false); float a = c.a * k; return vec4(c.rgb * a, a); }
+                 vec4 c = fitTex(3 + j, frame(uv, mframe(j)), false, mframe(j).x < 0.0); float a = c.a * k; return vec4(c.rgb * a, a); }
   if (id >= 21 && id <= 23) { int j = id - 21; float k = j == 0 ? uTX.x : j == 1 ? uTX.y : uTX.z; if (k < 0.5) return vec4(0.0);
                  return j == 0 ? texture(sTD2DInputs[13], uv) : j == 1 ? texture(sTD2DInputs[14], uv) : texture(sTD2DInputs[15], uv); }
   return vec4(0.0);
