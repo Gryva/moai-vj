@@ -859,7 +859,7 @@ def _ensurePars():
                 for j, ax in enumerate('xyz'):
                     k.par['vec3value' + ax].expr = "op('/project1/fx_engine').module.hexc(op('/project1/CONTROLS').par.M%dkeyhex.eval(), %d)" % (i, j)
     except Exception as e: print('ensurePars', e)
-_ensurePars()
+run("op('/project1/remote_cb').module._ensurePars()", delayFrames=1)   # after loading, never during: reading settings while this file loads made it reload every frame
 
 LOST = {'t': 0.0, 'fired': False}
 MLOG = []
