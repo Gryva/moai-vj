@@ -206,7 +206,8 @@ def clonesBB():
         if not r.inputs or r.inputs[0] != g.inputs[0]: r.inputConnectors[0].connect(g.inputs[0])
         a = r.numpyArray(delayed=True)
         if a is None: continue
-        m = np.maximum(a[..., 3], a[..., :3].max(axis=2)) > 0.04
+        solid = float(a[..., 3].min()) > 0.99                          # whole picture: no see-through, so black is the empty part
+        m = (a[..., :3].max(axis=2) > 0.04) if solid else (np.maximum(a[..., 3], a[..., :3].max(axis=2)) > 0.04)
         ys, xs = np.nonzero(m); h, w = m.shape
         bb = (xs.min() / w, ys.min() / h, (xs.max() + 1) / w, (ys.max() + 1) / h) if len(xs) else (0.0, 0.0, 1.0, 1.0)
         vi = CBBI.get(g.name)

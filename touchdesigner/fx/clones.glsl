@@ -48,6 +48,8 @@ void main(){
   if (lay > 2.5 && lay < 3.5) s = 0.5 + 0.2 * ov;
   if (lay > 3.5) s = (1.1 + 0.9 * ov) * 1.25 / sqrt(n);                  // pile: copies big enough to cover and overlap
   s *= szk;
+  float op4 = texture(sTD2DInputs[0], vec2(0.02)).a * texture(sTD2DInputs[0], vec2(0.98)).a * texture(sTD2DInputs[0], vec2(0.02, 0.98)).a * texture(sTD2DInputs[0], vec2(0.98, 0.02)).a;
+  bool solid = op4 > 0.99;                                           // whole picture (no see-through): black counts as empty
   vec3 acc = vec3(0.0); float aa = 0.0;
   for (int k = 0; k < 64; k++) {
     if (k >= total) break;
@@ -80,6 +82,7 @@ void main(){
     q += 0.5;
     if (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0) continue;
     vec4 t = texture(sTD2DInputs[0], bb.xy + q * bs);
+    if (solid) t.a = smoothstep(0.02, 0.09, max(t.r, max(t.g, t.b)));
     acc = mix(acc, t.rgb, t.a); aa = t.a + aa * (1.0 - t.a);
   }
   vec4 o = texture(sTD2DInputs[0], uv);
