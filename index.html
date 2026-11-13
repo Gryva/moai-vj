@@ -44,8 +44,7 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 body.editing .savebtn{display:block}.savebtn.ok{background:var(--lime);color:#0b0a0f}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
 body.editing .edit{background:var(--lime);color:#0b0a0f;border-color:transparent}
-body:not(.editing) nav{display:none}
-body:not(.editing) main{padding-bottom:calc(24px + var(--sb))}
+body:not(.editing) nav button:not([data-v="live"]):not([data-v="layers"]){display:none}              /* playing: LIVE + FX only */
 body:not(.editing) .pad.add,body:not(.editing) .edonly{display:none}
 .bo{height:36px;padding:0 16px;border-radius:8px;background:var(--ink);color:var(--bg);font-weight:700;letter-spacing:.12em;font-size:11px}
 .bo.on{background:var(--hot);color:#fff;animation:pulse 1s infinite}@keyframes pulse{50%{box-shadow:0 0 0 8px #ff4d2e33}}
@@ -452,7 +451,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="bo" id="bo">BLACKOUT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -734,7 +733,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13g';
+const BUILD = '2026-11-13h';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -1489,7 +1488,6 @@ function applyPars(p){
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';
   $('#t-Drawon').textContent = p.Drawon ? 'ON' : 'OFF';
   cards();
-  $('#bo').classList.toggle('on', !!p.Blackout); $('#bo').textContent = p.Blackout ? '● BLACK' : 'BLACKOUT';
   header();
 }
 function header(){
@@ -1707,7 +1705,12 @@ function qAlive(it){                     // a control for a layer this preset do
   if (it.k === 'fx') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
   const m = /^M(\d)/.exec(it.p || ''); return !m || slotOn(+m[1]);
 }
-function qList(){ const Q = S.quick || {all:[], p:{}}; return [].concat((Q.p || {})[S.b] || [], Q.all || []).filter(qAlive); }
+const QSEEN = {};                            // effects seen on in each preset since it was loaded
+function qUsed(it){ if (it.k !== 'fx') return true;
+  const k = S.b + '|' + (it.t || 'all'), set = QSEEN[k] || (QSEEN[k] = new Set());
+  const on = it.t && it.t !== 'all' ? ((S.tfx || {})[it.t] || []).some(r => r[0] === it.e && r[1]) : !!(S.layers.find(l => l.k === it.e) || {}).on;
+  if (on) set.add(it.e); return set.has(it.e); }
+function qList(){ const Q = S.quick || {all:[], p:{}}; return [].concat((Q.p || {})[S.b] || [], (Q.all || []).filter(qUsed)).filter(qAlive); }
 function sheetPin(it){
   const pre = S.b && S.bank[S.b - 1], Q = S.quick || {all:[], p:{}};
   const inP = pre && ((Q.p || {})[S.b] || []).some(x => qid(x) === qid(it)), inA = (Q.all || []).some(x => qid(x) === qid(it));
@@ -1745,7 +1748,7 @@ function renderQuick(){
   $('#qk').innerHTML = TX.map(n => `<div class="ctl qtxt"><div class="top"><span><i class="qly">${esc(qtName(n))}</i> Words</span></div>
       <div class="qtrow"><input type="text" maxlength="120" data-qtxt="${n}" autocomplete="off"><button data-qtsend="${n}">SHOW</button></div><div class="recent qrec" data-qrec="${n}"></div></div>`).join('') + L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div></div>`;
-    if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm)}</b><em>OFF</em></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
+    if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm.replace(/ · on \/ off$/, ''))}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
       const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
       return `<div class="ctl">${lab}<input type="range" id="s-qk_${i}" data-qki="${i}" min="${mn}" max="${mx}" step="${st}" style="--acc:${GC[l.g] || '#c7ff3d'}"></div>`; }
@@ -1774,7 +1777,7 @@ function quickSync(){                     // follow changes made elsewhere (othe
   $$('#qk input[data-qki]').forEach(el => { const i = +el.dataset.qki; if ((touching['qk_' + i] || 0) > performance.now()) return;
     const v = qVal(L[i]); if (v != null && +el.value !== +v) { el.value = +v; el._show && el._show(); } });
   $$('#qk [data-qa]').forEach(e => { const it = L[+e.dataset.qa]; e.classList.toggle('live', visOf(it.a)); $('[data-qb="' + e.dataset.qa + '"]').classList.toggle('live', visOf(it.b)); });
-  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]), em = b.querySelector('em'); if (em) em.textContent = on ? 'ON' : 'OFF'; else b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
+  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]); if (!b.classList.contains('qbig')) b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
 }
 function presetGroups(){                 // group names in the order their first preset appears
   const out = []; (S.bank || []).forEach(p => { if (p && p.group && !out.includes(p.group)) out.push(p.group); }); return out;
@@ -2218,7 +2221,7 @@ document.addEventListener('click', e => {
   else if (t.id === 'chpass') { const np = prompt('New remote password (leave empty to remove the lock):'); if (np !== null) {
       send({t:'setpass', v:np}); TOKEN = makeToken(np); store.set('tok_' + (KEY || 'local'), TOKEN); setTimeout(() => send({t:'hello'}), 600); toast(np ? 'Password changed' : 'Lock removed'); } }
   else if (t.id === 'logout') { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); lock('Locked on this phone'); }
-  else if (t.id === 'bo') { send({t:'set', p:'Blackout', v:!S.pars.Blackout}); buzz(25); }
+  else if (t.id === 'rlbtn') { buzz(); location.reload(); }
 });
 
 /* ---------------- touch camera ---------------- */
@@ -2300,7 +2303,7 @@ if (window.visualViewport) { const vv = visualViewport, fit = () => { const sh =
       Fonts · Bangers, Permanent Marker, Caveat Brush, Rock Salt, Pacifico, Shrikhand, Monoton, Bungee Shade, Rubik Glitch,
       Press Start 2P (Google Fonts, SIL Open Font / Apache licences)<br>
       3D models &amp; clips · their creators, under their own licences</p>
-      <p class="ver">Formerly MOAI//VJ, named after the Moai of Rapa Nui, the first statue it ever spun.</p></div>`;
+      </div>`;
     $('#shA').innerHTML = '<button data-sh="cancel">Close</button>'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); };
   lg.addEventListener('pointerdown', () => { clearTimeout(t); t = setTimeout(open, 550); });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => lg.addEventListener(ev, () => clearTimeout(t)));
