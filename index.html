@@ -28,13 +28,18 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .larr.lau{color:var(--lime);font-size:15px}.larr.lau.mute{color:#cfc8d8;background:linear-gradient(to top right,transparent 46%,#ff4d2e 47%,#ff4d2e 53%,transparent 54%)}
 .mfitbox{margin:8px 0 4px}.mfitbox .sub{display:grid;grid-template-columns:auto 1fr 44px;gap:12px;align-items:center;font-size:12px;color:var(--mute)}.mfitbox output{font:600 12px var(--mono);text-align:right}.mfitbox[hidden]{display:none}.mfitbox .seg{margin-bottom:6px}
 .fsback{position:fixed;inset:0;z-index:99;display:grid;place-items:center;background:#09080dcc;color:var(--ink);font:700 16px var(--sans);text-align:center}.fsback b{display:block;font-size:42px;margin-bottom:10px;color:var(--lime)}
+.nzbox{margin:6px 0 8px}.nzbox[hidden]{display:none}.nzseg{margin:4px 0 8px}.nzcols{display:flex;gap:8px;margin:2px 0 8px}.nzcols[hidden]{display:none}
+.nzc{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 11px var(--sans);letter-spacing:.08em}
+.nzc i{width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1px #fff3}.nzc[hidden]{display:none}
+.dshow{width:100%;margin:6px 0;background:#ffffff10}.dshow.pend{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.dfsbar .dshow{width:auto;margin:0}.dmore{margin:6px 0}
 .qbigrow{display:flex;gap:8px;align-items:stretch}.qbig{flex:1;min-height:64px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#16141c;color:var(--ink);text-align:left;font:700 15px var(--sans)}
 .qbig b{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qbig em{font:800 12px var(--mono);font-style:normal;letter-spacing:.1em;padding:6px 10px;border-radius:8px;background:#ffffff10;color:var(--mute)}
 .qbig.on{background:var(--lime);border-color:var(--lime);color:#0b0a0f}.qbig.on .qly{color:#0b0a0f;opacity:.7}.qbig.on em{background:#0b0a0f;color:var(--lime)}.qbigrow .qmenu{height:auto}
 .qmenu{flex:none;margin-left:6px;width:30px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 15px/1 var(--sans);display:grid;place-items:center;padding:0}.qmenu:active{background:#ffffff14;color:var(--ink)}
 .sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
 .fps{font:500 12px var(--mono);color:var(--mute)}
-.stat{margin-left:auto;display:flex;align-items:center;gap:8px;background:none;border:0;padding:8px 6px;cursor:pointer;flex:none}.stbar{display:block;width:3px;height:24px;border-radius:2px;background:var(--lime);box-shadow:0 0 8px #c7ff3d66;transition:background .3s}.stbar.bk{background:#ffb02e;box-shadow:0 0 8px #ffb02e66}.stbar.bad{background:#ff4d2e;box-shadow:0 0 8px #ff4d2e88}.stat .sx{display:none;align-items:center;gap:8px}.stat.open .sx{display:flex}
+.hsp{flex:1}.stat:not(.open)+.stbk{display:none}.stbk.lk{display:block;cursor:pointer}
+.stat{display:flex;align-items:center;gap:8px;background:none;border:0;padding:8px 6px;cursor:pointer;flex:none}.stbar{display:block;width:3px;height:24px;border-radius:2px;background:var(--lime);box-shadow:0 0 8px #c7ff3d66;transition:background .3s}.stbar.bk{background:#ffb02e;box-shadow:0 0 8px #ffb02e66}.stbar.bad{background:#ff4d2e;box-shadow:0 0 8px #ff4d2e88}.stat .sx{display:none;align-items:center;gap:8px}.stat.open .sx{display:flex}
 .lk{font:700 9px var(--mono);letter-spacing:.08em;padding:3px 6px;border-radius:5px;border:1px solid #ffffff22;color:var(--mute);flex:none;display:none}.lk.on{display:block}.lk.bk{color:#ffcf7a;border-color:#ffb02e66}.golocal{color:var(--lime);border-color:var(--lime);text-decoration:none;cursor:pointer;font-size:10px;padding:5px 8px}
 .fsb{width:36px;height:36px;flex:none;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-size:17px;line-height:1}.fsb.on{color:var(--ink);border-color:var(--ink)}.fsb:disabled{opacity:.28}#undoB,#redoB{color:var(--ink);font-size:19px}body:not(.editing) #undoB,body:not(.editing) #redoB{display:none}
 @media (max-width:520px){#redoB{display:none}}
@@ -452,7 +457,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -475,7 +480,6 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     </aside>
     <div class="livesplit" id="livesplit" aria-hidden="true"><i></i></div>
     <div class="livemain"><div class="presetsbox">
-    <h2><span>Presets</span><span class="h2r"><button class="sl-tog edonly" id="bkBtn">↺ Backups</button><em class="edonly">hold = edit</em></span></h2>
     <div class="pads" id="pads"></div></div>
     <div class="setlist" id="setlist">
       <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span><button class="sl-add" id="slAdd" aria-pressed="false">＋ ADD PRESETS</button></div>
@@ -501,7 +505,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="lstack"></div>
         <button class="addlay" id="addLay">＋ ADD LAYER</button>
-        <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button></div></div></div>
+        <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button><button data-addl="noise">Noise</button></div></div></div>
     </div><div class="colB">
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
     <div id="scards"></div>
@@ -585,12 +589,15 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 
     <div class="card hide" id="cardDraw"><div class="ch"><b>Draw</b><button class="tg" id="t-Drawon" data-tog="Drawon">OFF</button></div>
       <div class="cb" id="dpadwrap">
-        <div class="dpadbox"><canvas class="drawpad" id="drawpad" width="1280" height="720"></canvas><button class="dfsbtn" data-dfs="1" aria-label="Draw full screen">⛶ FULL SCREEN</button><div class="dfsbar"><button data-du="1">↶</button><button data-dtools="1">☰ TOOLS</button><button class="ok" data-dfs="0">✓ DONE</button></div></div>
+        <div class="dpadbox"><canvas class="drawpad" id="drawpad" width="1280" height="720"></canvas><button class="dfsbtn" data-dfs="1" aria-label="Draw full screen">⛶ FULL SCREEN</button><div class="dfsbar"><button data-du="1">↶</button><button class="dshow" data-dshow="1" hidden>⇪ SHOW</button><button data-dtools="1">☰ TOOLS</button><button class="ok" data-dfs="0">✓ DONE</button></div></div>
         <div class="dpanel">
         <div class="drow"><span>Tool</span><div class="tools" id="dtools"><button data-dt="pen" class="on">✎<small>PEN</small></button><button data-dt="line">／<small>LINE</small></button><button data-dt="circle">○<small>CIRCLE</small></button><button data-dt="square">□<small>BOX</small></button><button data-dt="triangle">△<small>TRIANGLE</small></button><button data-dt="star">☆<small>STAR</small></button><button data-dt="heart">♡<small>HEART</small></button><button data-dt="arrow">➜<small>ARROW</small></button></div></div>
+        <div class="drow"><span>Screen</span><div class="tools" id="dlive"><button data-dlive="1">LIVE WHILE DRAWING</button><button data-dlive="0">WHEN I SHOW IT</button></div></div>
+        <button class="btn dshow" data-dshow="1" hidden>⇪ SHOW ON SCREEN</button>
+        <details class="box mbox dmore"><summary>Brush · size, fill, colour<span id="sum-dbrush"></span></summary>
         <div class="drow"><span>Size</span><div class="tools" id="dsize"><button data-ds="3">S</button><button data-ds="7" class="on">M</button><button data-ds="16">L</button><button data-ds="32">XL</button></div></div>
         <div class="drow"><span>Shapes</span><div class="tools" id="dfill"><button data-df="0" class="on">OUTLINE</button><button data-df="1">FILLED</button></div></div>
-        <div id="dcolbox"></div>
+        <div id="dcolbox"></div></details>
         <div class="tools dacts"><button data-du="1">↶ UNDO</button><button data-dc="1">CLEAR ALL</button><button class="dfsx" data-dfs="0">✓ DONE</button></div>
         </div>
         <div id="g-draw" style="margin-top:7px" hidden></div>
@@ -734,7 +741,7 @@ const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
-const BUILD = '2026-11-13i';
+const BUILD = '2026-11-13j';
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
   try { const t = await (await fetch(location.pathname + '?nc=' + Date.now(), {cache:'no-store'})).text(); const m = t.match(/const BUILD = '([^']+)'/);
@@ -938,15 +945,29 @@ const NAMEPAR = k => /^m\d$/.test(k) ? 'M' + k.slice(1) + 'name' : ({text:'Textn
 const custName = k => { const n = NAMEPAR(k); return n && S && S.pars[n] ? String(S.pars[n]) : ''; };
 function mediaName(i){                    // "Video 2" = the 2nd video layer (or the name the user gave it)
   const c = custName('m' + i); if (c) return c;
-  const p = S.pars, kd = j => ['image', 'draw'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
+  const p = S.pars, kd = j => ['image', 'draw', 'noise'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
   const n = Math.max(1, MS.filter(j => j <= i && (p['M' + j + 'on'] || j === i) && kd(j) === kind).length);
-  return ({image:'Image', video:'Video', draw:'Drawing'}[kind]) + ' ' + n;
+  return ({image:'Image', video:'Video', draw:'Drawing', noise:'Noise'}[kind]) + ' ' + n;
 }
+const NZT = ['smooth', 'clouds', 'ridges', 'cells', 'marble', 'waves', 'static', 'plasma'];
+const NZCM = [['two', '2 COLOURS'], ['three', '3 COLOURS'], ['rainbow', 'RAINBOW'], ['mono', 'GREY']];
+function nzUI(i, p){ const m = 'M' + i;
+  $$(`[data-nzt="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'nztype'] || 'clouds')));
+  $$(`[data-nzcm="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'nzcmode'] || 'three')));
+  const cm = p[m + 'nzcmode'] || 'three', box = $('#cardM' + i + ' .nzcols');
+  if (box) { box.hidden = cm === 'rainbow' || cm === 'mono';
+    box.querySelectorAll('[data-nzck]').forEach(b => { const k = +b.dataset.nzck; b.hidden = k === 3 && cm !== 'three'; b.querySelector('i').style.background = p[m + 'nzc' + k] || '#000'; b.querySelector('span').textContent = cm === 'two' ? ['DARK', 'LIGHT', ''][k - 1] : ['DARK', 'MIDDLE', 'LIGHT'][k - 1]; }); } }
 function mediaCardsBuild(){               // 6 cards exist once; only added layers show
   $('#mcards').innerHTML = MS.map(i => { const m = 'M' + i;
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
       <div class="cb"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button>
         <div class="clips mlib" id="mlist${i}" hidden></div>
+        <div class="nzbox" hidden>
+          <div class="sub pinl"><span>Pattern</span></div><div class="seg sm nzseg" style="flex-wrap:wrap">${NZT.map(t => `<button data-nzt="${i}" data-v="${t}">${t.toUpperCase()}</button>`).join('')}</div>
+          <div class="sub pinl"><span>Colours</span></div><div class="seg sm nzseg">${NZCM.map(([v, l]) => `<button data-nzcm="${i}" data-v="${v}">${l}</button>`).join('')}</div>
+          <div class="nzcols">${[1, 2, 3].map(k => `<button class="nzc" data-hsvt="nz:${i}:${k}" data-nzck="${k}"><i></i><span>${['DARK', 'MIDDLE', 'LIGHT'][k - 1]}</span></button>`).join('')}</div>
+          ${[1, 2, 3].map(k => hsvBox('nz:' + i + ':' + k)).join('')}
+          <div id="g-m${i}nz"></div></div>
         <div class="mfitbox"><div class="seg sm" data-mfitseg="${i}"><button data-mfit="${i}" data-v="0">FILL SCREEN</button><button data-mfit="${i}" data-v="1">WHOLE PICTURE</button></div>
           <div class="sub"><span>Size</span><input type="range" data-mzoom="${i}" min="0.2" max="3" step="0.01" value="1"><output id="o-mz${i}"></output></div></div>
         <div class="seg sm" id="o-${m}mode" style="margin:8px 0"></div>
@@ -996,15 +1017,17 @@ function mediaCardsUI(p){
     $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
-    mfb.hidden = dr; $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
-    lib.hidden = dr || (!!f && !MLIB[i]); mfb.classList.toggle('open', !lib.hidden);
+    $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
+    const nz = p[m + 'kind'] === 'noise', lopen = MLIB[i] ?? !f;
+    lib.hidden = dr || nz || !lopen; mfb.hidden = dr || nz; mfb.classList.toggle('open', !lib.hidden);
+    c.querySelector('.nzbox').hidden = !nz; if (nz) nzUI(i, p);
     c.querySelector('.mplay').hidden = !vid;
-    c.querySelector('.mfitbox').hidden = dr || !f || p[m + 'mode'] === 'object';
+    c.querySelector('.mfitbox').hidden = dr || nz || !f || p[m + 'mode'] === 'object';
     $$(`[data-mfit="${i}"]`).forEach(b => b.classList.toggle('on', (+b.dataset.v === 1) === !!p[m + 'fit']));
     const z = c.querySelector(`[data-mzoom="${i}"]`); if (z && !(touching['mz' + i] > performance.now())) { z.value = p[m + 'fzoom'] ?? 1; z._show && z._show(); }
     { const sp = +p[m + 'speed'] || 1, tr = (+p[m + 'trimin'] || 0) > 0.001 || (p[m + 'trimout'] != null && +p[m + 'trimout'] < 0.999);
       $('#sum-m' + i + 'play').textContent = [sp !== 1 ? sp.toFixed(2) + '×' : '', tr ? 'trimmed' : ''].filter(Boolean).join(' · '); }
-    c.querySelector('.mkey').hidden = dr; c.querySelector('.mup').hidden = dr;
+    c.querySelector('.mkey').hidden = dr || nz; c.querySelector('.mup').hidden = dr || nz;
     c.querySelector('.dpick').hidden = !dr || DR.slot === i; c.querySelector('.dhost').hidden = !dr; });
   const ds = MS.filter(i => p['M' + i + 'on'] && p['M' + i + 'kind'] === 'draw');
   if (ds.length && !ds.includes(DR.slot)) { DR.slot = 0; drawPick(ds[0]); }
@@ -1012,7 +1035,7 @@ function mediaCardsUI(p){
 }
 function addLayer(t){
   $('#addMenu').hidden = true; const p = S.pars;
-  if (t === 'image' || t === 'video' || t === 'draw') { send({t:'media', do:'add', kind:t}); return; }
+  if (t === 'image' || t === 'video' || t === 'draw' || t === 'noise') { send({t:'media', do:'add', kind:t}); return; }
   if (t === 'text') { const free = [['Texton', 'cardText'], ['T2on', 'cardT2'], ['T3on', 'cardT3']].find(([k]) => !p[k]);
     if (!free) { toast('Up to 3 text layers'); return; }
     S.pars[free[0]] = true; send({t:'set', p:free[0], v:true}); delete SHUT[free[1]]; setTimeout(() => $('#' + free[1]).scrollIntoView({behavior:'smooth', block:'start'}), 300); }
@@ -1029,7 +1052,7 @@ function layerInfo(k){
   if (k === 'model') return {on: p.Statue !== false, name: custName('model') || '3D models', sub: (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', card: 'cardStatue'};
   if (k === 'camera') return {on: !!p.Camsrc && p.Camsrc !== 'off', name: 'Phone camera', sub: (p.Clipstate === 'loop' ? 'clip · ' : '') + ({cam:'normal', behind:'normal', screen:'blend', mask:'mask'}[p.Camsrc] || ''), card: 'cardCam'};
   if (/^m\d$/.test(k)) { const m = 'M' + k.slice(1), obj = p[m + 'mode'] === 'object';
-    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
+    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : p[m + 'kind'] === 'noise' ? 'noise · ' + (p[m + 'nztype'] || 'clouds') : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
   if (k === 'draw') return {on: !!p.Drawon, name: 'Drawing', sub: 'drawn on the phone', card: 'cardDraw'};
   if (/^text\d?$/.test(k)) { const q = k === 'text' ? 'Text' : 'T' + k.slice(4), d3 = p[q + 'space'] === '3d';
     return {on: !!p[q + 'on'], name: custName(k) || (k === 'text' ? 'Text' : 'Text ' + k.slice(4)), sub: (d3 ? '3D · ' : '') + (p[q + 'str'] || ''), card: k === 'text' ? 'cardText' : 'cardT' + k.slice(4), in3d: d3, text: true}; }
@@ -1247,7 +1270,11 @@ function drawShape(o){
   dcx.stroke();
 }
 function drawRender(){ dcx.fillStyle = '#000'; dcx.fillRect(0, 0, 640, 360); DR.ops.forEach(drawShape); if (DR.cur) drawShape(DR.cur); }
+const DR_LIVE = {v:store.get('drawlive', true), pend:false, force:false};
+function drawLiveUI(){ $$('[data-dlive]').forEach(b => b.classList.toggle('on', (b.dataset.dlive === '1') === DR_LIVE.v)); $$('.dshow').forEach(b => { b.hidden = DR_LIVE.v; b.classList.toggle('pend', !!DR_LIVE.pend); }); }
+drawLiveUI();
 function drawSend(){
+  if (!DR_LIVE.v && !DR_LIVE.force) { DR_LIVE.pend = true; drawLiveUI(); return; }      // drawing first, sent only when you press SHOW
   if (!T.draw || !(S && DR.slot && S.pars['M' + DR.slot + 'on'] && S.pars['M' + DR.slot + 'kind'] === 'draw')) return;
   if (DR.busy) { DR.again = true; return; }
   DR.busy = true;
@@ -1539,7 +1566,7 @@ function onAir(){
   act.forEach(l => l.col && colUI(l.k));
 }
 /* ---------------- colour picker (used by effects, text and drawing): solid / linear ramp / radial, 10 swatches + any colour */
-const SWC = ['#ffffff','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
+const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const CC = {}, CED = {}, COPEN = {};                             // id -> {get, set, modes};  which colour (a/b) is being edited
 function ccDef(id, get, set, modes, two){ CC[id] = {get, set, modes, two}; }    // two = [label A, label B]: a plain pair of colours (no ramp, no angle)
 function ccBox(id, title, open){
@@ -1582,6 +1609,7 @@ function hex2hsv(h){ h = /^#[0-9a-f]{6}$/i.test(h || '') ? h : '#ffffff'; const 
 function hsv2hex({h, s, v}){ const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
   return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
 function hsvCur(id){ if (id.startsWith('key:')) return S.pars['M' + id.slice(4) + 'keyhex'] || '#00ff00';
+  if (id.startsWith('nz:')) { const [, i, k] = id.split(':'); return S.pars['M' + i + 'nzc' + k] || '#000000'; }
   const c = CC[id].get(), w = c.m >= 2 || CC[id].two ? (CED[id] || 'a') : 'a'; return c.m === 0 ? c.a : c[w]; }
 function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q = HSV[id]; if (!b || !q) return; const hx = hsv2hex(q);
   b.querySelector('.sv').style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(${q.h},100%,50%))`;
@@ -1589,7 +1617,10 @@ function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q 
   const hd = b.querySelector('.hue i'); hd.style.left = q.h / 360 * 100 + '%'; hd.style.background = `hsl(${q.h},100%,50%)`;
   b.querySelector('.hsvsw').style.background = hx; const inp = b.querySelector('.hsvhex'); if (document.activeElement !== inp) inp.value = hx; }
 function hsvFrom(id){ if (!HSV[id]) return; HSV[id] = hex2hsv(hsvCur(id)); hsvDraw(id); }
-function hsvApply(id){ const hx = hsv2hex(HSV[id]); if (id.startsWith('key:')) keyPick(+id.slice(4), hx, true); else ccPick(id, hx, true); hsvDraw(id); }
+function hsvApply(id){ const hx = hsv2hex(HSV[id]);
+  if (id.startsWith('key:')) keyPick(+id.slice(4), hx, true);
+  else if (id.startsWith('nz:')) { const [, i, k] = id.split(':'), pn = 'M' + i + 'nzc' + k; S.pars[pn] = hx; thr(pn, () => send({t:'set', p:pn, v:hx})); nzUI(+i, S.pars); }
+  else ccPick(id, hx, true); hsvDraw(id); }
 function hsvToggle(id){ const b = document.querySelector(`[data-hsv="${id}"]`); if (!b) return; const open = b.hidden;
   $$('.hsv').forEach(x => { if (x !== b) x.hidden = true; }); b.hidden = !open;
   if (open) { HSV[id] = hex2hsv(hsvCur(id)); hsvDraw(id); setTimeout(() => b.scrollIntoView({block:'nearest', behavior:'smooth'}), 60); }
@@ -2156,6 +2187,9 @@ document.addEventListener('click', e => {
     clSet(box, c); airSig = ''; onAir(); buzz(); return; }
   if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v; clSet(box, c);
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.nzt || d.nzcm) { const i = d.nzt || d.nzcm, pn = 'M' + i + (d.nzt ? 'nztype' : 'nzcmode'); S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); nzUI(+i, S.pars); buzz(); return; }
+  if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
+  if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
   if (d.hsvt) { hsvToggle(d.hsvt); return; }

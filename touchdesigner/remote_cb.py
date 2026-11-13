@@ -27,7 +27,12 @@ for _i in range(1, 7):
                       (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
                       (_m + 'op', 'Brightness', 0, 1.5, 0.01, 'm%dop' % _i),
                       (_m + 'speed', 'Speed', 0.1, 4, 0.05, 'm%dplay' % _i), (_m + 'trimin', 'Start', 0, 1, 0.005, 'm%dplay' % _i),
-                      (_m + 'trimout', 'End', 0, 1, 0.005, 'm%dplay' % _i)]
+                      (_m + 'trimout', 'End', 0, 1, 0.005, 'm%dplay' % _i),
+                      (_m + 'nzscale', 'Size of the pattern', 0.3, 20, 0.05, 'm%dnz' % _i), (_m + 'nzspeed', 'Speed', 0, 3, 0.01, 'm%dnz' % _i),
+                      (_m + 'nzdetail', 'Detail', 1, 8, 1, 'm%dnz' % _i), (_m + 'nzwarp', 'Swirl', 0, 2, 0.01, 'm%dnz' % _i),
+                      (_m + 'nzcontrast', 'Contrast', 0.2, 4, 0.01, 'm%dnz' % _i), (_m + 'nzdir', 'Direction', 0, 360, 1, 'm%dnz' % _i),
+                      (_m + 'nzreact', 'Reacts to music', 0, 2, 0.01, 'm%dnz' % _i), (_m + 'nzbright', 'Brightness', 0, 2, 0.01, 'm%dnz' % _i),
+                      (_m + 'nzsteps', 'Flat bands (0 = smooth)', 0, 12, 1, 'm%dnz' % _i), (_m + 'nzseed', 'Variation', 0, 100, 1, 'm%dnz' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
@@ -109,7 +114,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opdraw', 'Brightness', 0, 1.5, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -821,7 +826,7 @@ def _clean(p, v):
     if p == 'Noreact':
         ok = _E().LAYER_IDS
         return ','.join(k for k in dict.fromkeys(str(v).split(',')) if k in ok)
-    if p.endswith('keyhex'):
+    if p.endswith('keyhex') or p[-4:-1] == 'nzc':
         import re
         v = str(v).strip().lower()
         if not re.fullmatch(r'#[0-9a-f]{6}', v): raise ValueError('bad colour')
@@ -844,6 +849,23 @@ def _ensurePars():
                 want = "op('/project1/CONTROLS').par.M%dfzoom * (-1 if op('/project1/CONTROLS').par.M%dfit else 1)" % (i, i)
                 if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
         if C.par.Master.default != 1.0: C.par.Master.default = 1.0      # TUNE brightness starts at 1
+        NZ = [('nzscale', 3.0), ('nzspeed', 0.3), ('nzdetail', 5), ('nzwarp', 0.4), ('nzcontrast', 1.2), ('nzdir', 0.0), ('nzreact', 0.5),
+              ('nzbright', 1.0), ('nzsteps', 0), ('nzseed', 0)]
+        for i in range(1, 7):                          # NOISE source settings, per media layer
+            m = C.par['M%dkind' % i]
+            if m is not None and m.menuNames and 'noise' not in m.menuNames:
+                m.menuNames = list(m.menuNames) + ['noise']; m.menuLabels = list(m.menuLabels) + ['Noise']
+            pg = C.par['M%dfzoom' % i].page
+            for n, dv in NZ:
+                if not hasattr(C.par, 'M%d%s' % (i, n)):
+                    pp = pg.appendFloat('M%d%s' % (i, n), label='M%d noise %s' % (i, n[2:]))[0]; pp.default = dv; pp.val = dv
+            for n, names, dv in (('nztype', ['smooth', 'clouds', 'ridges', 'cells', 'marble', 'waves', 'static', 'plasma'], 'clouds'),
+                                 ('nzcmode', ['two', 'three', 'rainbow', 'mono'], 'three')):
+                if not hasattr(C.par, 'M%d%s' % (i, n)):
+                    pp = pg.appendMenu('M%d%s' % (i, n), label='M%d noise %s' % (i, n[2:]))[0]; pp.menuNames = names; pp.menuLabels = [x.title() for x in names]; pp.default = dv; pp.val = dv
+            for n, dv in (('nzc1', '#05030a'), ('nzc2', '#7b2cff'), ('nzc3', '#22e6ff')):
+                if not hasattr(C.par, 'M%d%s' % (i, n)):
+                    pp = pg.appendStr('M%d%s' % (i, n), label='M%d noise colour' % i)[0]; pp.default = dv; pp.val = dv
         if not hasattr(C.par, 'Noreact'): C.par.Links.page.appendStr('Noreact', label='Layers ignoring the music')
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
         for i in range(1, 7):                          # any background colour can be removed (picked on the remote)
@@ -1024,7 +1046,7 @@ def handle(msg, reply):
             except Exception: sl = 0
             sl = sl if 1 <= sl <= 6 else 0
             if a == 'add':                                        # + ADD LAYER -> a new empty picture / video layer
-                kd = msg.get('kind'); n = mediaFree(kd if kd in ('image', 'draw') else 'video')
+                kd = msg.get('kind'); n = mediaFree(kd if kd in ('image', 'draw', 'noise') else 'video')
                 if n and kd == 'draw': DRAWS[n] = {'img': None, 'new': True}
                 if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
                 else: reply({'t': 'added', 'slot': n})

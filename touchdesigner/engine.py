@@ -216,6 +216,29 @@ def pSet(g, k, p1):
     else:
         g.par.vec3valuex = p1
 
+NZTYPES = ['smooth', 'clouds', 'ridges', 'cells', 'marble', 'waves', 'static', 'plasma']; NZCM = ['two', 'three', 'rainbow', 'mono']
+def noiseUpdate(C, T):
+    """NOISE layers: the generator only runs while its layer is on; settings + music straight into its shader."""
+    o = op('/project1/AUDIO/OUT'); au = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval())
+    for i in MSLOTS:
+        g = op('/project1/nz%d' % i)
+        if g is None: continue
+        on = mp(C, i, 'kind').eval() == 'noise' and bool(mp(C, i, 'on').eval())
+        if not on: continue                                            # (an unused generator isn't drawn: its switch doesn't pick it)
+        f = lambda n: float(mp(C, i, n).eval())
+        aa = (0.0, 0.0, 0.0, 0.0) if 'm%d' % i in noReact(C) else au
+        pp = g.par
+        pp.vec0valuex = T % TWRAP
+        pp.vec1valuex, pp.vec1valuey, pp.vec1valuez, pp.vec1valuew = aa
+        ty = mp(C, i, 'nztype').eval()
+        pp.vec2valuex, pp.vec2valuey, pp.vec2valuez, pp.vec2valuew = (NZTYPES.index(ty) if ty in NZTYPES else 1), f('nzscale'), f('nzspeed'), f('nzdetail')
+        pp.vec3valuex, pp.vec3valuey, pp.vec3valuez, pp.vec3valuew = f('nzwarp'), f('nzcontrast'), f('nzdir'), f('nzreact')
+        cm = mp(C, i, 'nzcmode').eval()
+        pp.vec4valuex, pp.vec4valuey, pp.vec4valuez, pp.vec4valuew = (NZCM.index(cm) if cm in NZCM else 1), f('nzbright'), f('nzseed'), f('nzsteps')
+        for vi, n in ((5, 'nzc1'), (6, 'nzc2'), (7, 'nzc3')):
+            h = mp(C, i, n).eval()
+            pp['vec%dvaluex' % vi], pp['vec%dvaluey' % vi], pp['vec%dvaluez' % vi] = hexc(h, 0), hexc(h, 1), hexc(h, 2)
+
 def clonesBB():
     """CLONES copies only the picture itself: find where its visible pixels are (tiny copy of the input, a few times a second)."""
     P = op('/project1')
@@ -270,7 +293,7 @@ def mp(C, i, n): return C.par['M%d%s' % (i, n)]
 
 def mediaActive(C, i, mode=None):
     """Media layer i is added, switched on and has a file (each layer is independent of 3D and the camera)."""
-    has = bool(mp(C, i, 'file').eval()) or mp(C, i, 'kind').eval() == 'draw'      # a drawing layer needs no file
+    has = bool(mp(C, i, 'file').eval()) or mp(C, i, 'kind').eval() in ('draw', 'noise')      # drawings and noise need no file
     on = bool(mp(C, i, 'on').eval()) and bool(mp(C, i, 'vis').eval()) and has
     return on and (mode is None or mp(C, i, 'mode').eval() == mode)
 
@@ -305,7 +328,7 @@ def objUpdate(C):
         if g is None: continue
         if g.render != on: g.render = on
         if on: objs.append(i); _cardShape(g, op('/project1/mk%d' % i))
-        src = op('/project1/msrc%d' % i); dr = 1 if mp(C, i, 'kind').eval() == 'draw' else 0   # drawing layers show the phone drawing
+        src = op('/project1/msrc%d' % i); dr = {'draw': 1, 'noise': 2}.get(mp(C, i, 'kind').eval(), 0)   # drawings show the phone drawing, noise its generator
         if src is not None and int(src.par.index.eval()) != dr: src.par.index = dr
         sw = op('/project1/mfeed%d' % i)                             # a 3D object is drawn by its own render pass (mr<n>),
         if sw is not None and int(sw.par.index.eval()) != (1 if on else 0): sw.par.index = 1 if on else 0   # so it stays its own layer
@@ -1243,7 +1266,8 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
-         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit']
+         'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3']
 
 def _mval(par):
     v = par.eval()
@@ -2229,6 +2253,7 @@ def onFrameStart(frame):
     S['frame'] += 1
     if S['frame'] % 60 == 0: _safe('lost', op('/project1/remote_cb').module.lostCheck)
     if S['frame'] % 8 == 0: _safe('clonesbb', clonesBB)
+    _safe('noise', noiseUpdate, C, T)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()
