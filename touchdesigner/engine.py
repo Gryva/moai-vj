@@ -218,6 +218,8 @@ def blendUpdate(C):
     def a(p): return float(C.par[p].eval()) if hasattr(C.par, p) else 1.0
     vals = {BLI['al']: [a('M%dalpha' % i) for i in (1, 2, 3, 4)], BLI['al'] + 1: [a('M5alpha'), a('M6alpha'), a('Alphamodel'), a('Alphadraw')],
             BLI['bl']: [b('M%dblend' % i) for i in (1, 2, 3, 4)], BLI['bl'] + 1: [b('M5blend'), b('M6blend'), b('Modelblend'), b('Drawblend')]}
+    if BLI.get('ct') is not None:
+        vals[BLI['ct']] = [a('M%dcontrast' % i) for i in (1, 2, 3, 4)]; vals[BLI['ct'] + 1] = [a('M5contrast'), a('M6contrast'), a('Contrastmodel'), a('Contrastdraw')]
     for vi, vs in vals.items():
         for ax, v in zip('xyzw', vs):
             pp = g.par['vec%dvalue%s' % (vi, ax)]
@@ -226,6 +228,9 @@ BLI = {}
 
 def pSet(g, k, p1):
     """An effect's one setting into its shader. CLONES needs more bits than one float holds: split over uP.x / uP.y."""
+    if k == 'spotpulse':                                               # x*1e6 + y*1e4 + size*100 + strength (each 0-99)
+        q = int(round(float(p1))); g.par.vec3valuex = q // 10000; g.par.vec3valuey = q % 10000
+        return
     if k == 'scrapbook':                                               # look + movement: 10000 + look * 100 + movement (each 0-99); older presets: one value for both
         p = float(p1)
         if p >= 10000: q = int(round(p)) - 10000; g.par.vec3valuex = (q // 100) / 99.0; g.par.vec3valuey = (q % 100) / 99.0
@@ -1284,12 +1289,12 @@ def histGo(redo=False):
 def histList():
     return {'u': [[x['at'], x['l']] for x in HIST['undo'][-15:]], 'r': len(HIST['redo'])}
 
-EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alphamodel', 'Alphadraw', 'Modelblend', 'Drawblend']
+EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alphamodel', 'Alphadraw', 'Modelblend', 'Drawblend', 'Contrastmodel', 'Contrastdraw']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast']
 
 def _mval(par):
     v = par.eval()

@@ -15,6 +15,7 @@ uniform vec4 uMM1; uniform vec4 uMM2;                   // media layers 1-6: 1 =
 uniform vec4 uMF1; uniform vec4 uMF2; uniform vec4 uMF3; uniform vec4 uMF4; uniform vec4 uMF5; uniform vec4 uMF6;   // media framing
 uniform vec4 uAL1; uniform vec4 uAL2;                   // opacity: media 1-4 | media 5, 6, 3D models, drawing
 uniform vec4 uBL1; uniform vec4 uBL2;                   // blend mode, same order: 0 normal 1 add 2 screen 3 multiply 4 overlay 5 difference 6 lighten 7 darken
+uniform vec4 uCT1; uniform vec4 uCT2;                   // contrast, same order (1 = as it is)
 uniform vec4 uTX; uniform vec4 uTS;                     // text layers 1-3 drawn inside the stack (behind something, or in 3D): on, effect chain
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -85,6 +86,8 @@ vec3 layer(int id, vec2 uv, vec3 o){
   float op = opOf(id); L.rgb *= max(op, 0.0);                                          // brightness: darker / brighter, not see-through
   int bi = id == 1 ? 6 : id == 5 ? 7 : (id >= 11 && id <= 16) ? id - 11 : -1;
   if (bi >= 0) {                                                                         // each layer: opacity + blend mode
+    float ct = bi < 4 ? uCT1[bi] : uCT2[bi - 4];
+    if (abs(ct - 1.0) > 0.001) { float a0 = max(L.a, 0.0001); L.rgb = max((L.rgb / a0 - 0.5) * ct + 0.5, 0.0) * L.a; }
     float al = bi < 4 ? uAL1[bi] : uAL2[bi - 4]; L *= clamp(al, 0.0, 1.0);
     int bm = int((bi < 4 ? uBL1[bi] : uBL2[bi - 4]) + 0.5);
     vec3 c = clamp(L.rgb / max(L.a, 0.0001), 0.0, 4.0); float a = clamp(L.a, 0.0, 1.0);

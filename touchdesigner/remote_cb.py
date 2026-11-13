@@ -25,7 +25,7 @@ for _i in range(1, 7):
                       (_m + 'mspeed', 'Spin speed (°/s)', 0, 180, 1, 'm%dmot' % _i), (_m + 'mamt', 'Amount', 0, 2, 0.01, 'm%dmot' % _i),
                       (_m + 'fzoom', 'Zoom', 0.2, 4, 0.01, 'm%dfr' % _i), (_m + 'fx', 'Left / right', -1, 1, 0.005, 'm%dfr' % _i),
                       (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
-                      (_m + 'alpha', 'Opacity', 0, 1, 0.01, 'm%dop' % _i), (_m + 'op', 'Brightness', 0, 2, 0.01, 'm%dop' % _i),
+                      (_m + 'alpha', 'Opacity', 0, 1, 0.01, 'm%dop' % _i), (_m + 'op', 'Brightness', 0, 2, 0.01, 'm%dop' % _i), (_m + 'contrast', 'Contrast', 0, 2, 0.01, 'm%dop' % _i),
                       (_m + 'speed', 'Speed', 0.1, 4, 0.05, 'm%dplay' % _i), (_m + 'trimin', 'Start', 0, 1, 0.005, 'm%dplay' % _i),
                       (_m + 'trimout', 'End', 0, 1, 0.005, 'm%dplay' % _i),
                       (_m + 'nzscale', 'Size of the pattern', 0.3, 20, 0.05, 'm%dnz' % _i), (_m + 'nzspeed', 'Speed', 0, 3, 0.01, 'm%dnz' % _i),
@@ -109,9 +109,9 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Animbeat', 'Speed-up on the beat', 0, 2, 0.01, 'anim'),
     ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
     ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
-    ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'),
+    ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
-    ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'),
+    ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
 TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
@@ -854,18 +854,27 @@ def _ensurePars():
                 if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
         if C.par.Master.default != 1.0: C.par.Master.default = 1.0      # TUNE brightness starts at 1
         pg = C.par.Opmodel.page                         # per layer opacity + blend mode
-        for n, dv in [('M%dalpha' % i, 1.0) for i in range(1, 7)] + [('Alphamodel', 1.0), ('Alphadraw', 1.0)]:
+        for n, dv in [('M%dalpha' % i, 1.0) for i in range(1, 7)] + [('Alphamodel', 1.0), ('Alphadraw', 1.0)] + [('M%dcontrast' % i, 1.0) for i in range(1, 7)] + [('Contrastmodel', 1.0), ('Contrastdraw', 1.0)]:
             if not hasattr(C.par, n): pp = pg.appendFloat(n, label=n)[0]; pp.default = dv; pp.val = dv
         for n, dv in [('M%dblend' % i, 'normal') for i in range(1, 7)] + [('Modelblend', 'normal'), ('Drawblend', 'screen')]:
             if not hasattr(C.par, n): pp = pg.appendStr(n, label=n)[0]; pp.default = dv; pp.val = dv
         fx = op('/project1/fx_src'); E_ = _E()
-        if fx is not None and not E_.BLI:
+        if fx is not None and E_.BLI.get('ct') is None:
             names = {fx.par['vec%dname' % k].eval(): k for k in range(40) if fx.par['vec%dname' % k] is not None}
-            if 'uAL1' not in names:
-                free = [k for k in range(40) if fx.par['vec%dname' % k] is not None and not fx.par['vec%dname' % k].eval()][:4]
-                for k, nm in zip(free, ('uAL1', 'uAL2', 'uBL1', 'uBL2')): fx.par['vec%dname' % k] = nm; names[nm] = k
+            for want in (('uAL1', 'uAL2', 'uBL1', 'uBL2'), ('uCT1', 'uCT2')):
+                if want[0] in names: continue
+                for f_ in (fx, op('/project1/lyr1')):           # lyr1 (single-layer preview) shares the shader: neutral values
+                    if f_ is None: continue
+                    nm_ = {f_.par['vec%dname' % k].eval() for k in range(40) if f_.par['vec%dname' % k] is not None}
+                    if want[0] in nm_: continue
+                    free = [k for k in range(40) if f_.par['vec%dname' % k] is not None and not f_.par['vec%dname' % k].eval()][:len(want)]
+                    for k, nm in zip(free, want):
+                        f_.par['vec%dname' % k] = nm
+                        for ax in 'xyzw': f_.par['vec%dvalue%s' % (k, ax)] = 0.0 if nm.startswith('uBL') else 1.0
+                        if f_ is fx: names[nm] = k
             if names.get('uAL2') == names.get('uAL1', -9) + 1 and names.get('uBL2') == names.get('uBL1', -9) + 1:
                 E_.BLI.update({'al': names['uAL1'], 'bl': names['uBL1']})
+            if names.get('uCT2') == names.get('uCT1', -9) + 1: E_.BLI['ct'] = names['uCT1']
         NZ = [('nzscale', 3.0), ('nzspeed', 0.3), ('nzdetail', 5), ('nzwarp', 0.4), ('nzcontrast', 1.2), ('nzdir', 0.0), ('nzreact', 0.5),
               ('nzbright', 1.0), ('nzsteps', 0), ('nzseed', 0)]
         for i in range(1, 7):                          # NOISE source settings, per media layer
@@ -1067,6 +1076,23 @@ def handle(msg, reply):
                 if n and kd == 'draw': DRAWS[n] = {'img': None, 'new': True}
                 if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
                 else: reply({'t': 'added', 'slot': n})
+            elif a == 'dup' and sl and C.par['M%don' % sl].eval():   # duplicate: same source + settings + effects, its own layer
+                n = mediaFree(C.par['M%dkind' % sl].eval())
+                if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
+                else:
+                    for nm in E.MPARS:
+                        if nm == 'file': continue
+                        try: E.mp(C, n, nm).val = E.mp(C, sl, nm).eval()
+                        except Exception: pass
+                    f = C.par['M%dfile' % sl].eval()
+                    if f: mediaPlay(f, slot=n, keep=True)
+                    if sl in DRAWS and DRAWS[sl].get('img') is not None: DRAWS[n] = {'img': DRAWS[sl]['img'].copy(), 'new': True}
+                    E.fxCopy('m%d' % sl, 'm%d' % n)
+                    o = [k for k in E.layerOrder(C) if k != 'm%d' % n]; j = o.index('m%d' % sl) if 'm%d' % sl in o else 0
+                    C.par.Layerorder = ','.join(o[:j] + ['m%d' % n] + o[j:])       # the copy sits right above the original
+                    nr = [x for x in str(C.par.Noreact.eval()).split(',') if x] if hasattr(C.par, 'Noreact') else []
+                    if 'm%d' % sl in nr: C.par.Noreact = ','.join(nr + ['m%d' % n])
+                    reply({'t': 'added', 'slot': n})
             elif a == 'remove' and sl: E.mediaSlotClear(C, sl); E.tClear('m%d' % sl); E.unlink(C, 'm%d' % sl)
             elif a == 'target': MEDIA_UP['slot'] = sl or None
             elif a == 'play' and sl: mediaPlay(str(msg.get('id', '')), fit=True, slot=sl)

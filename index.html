@@ -441,6 +441,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .ksnudge button{padding:11px 0;border-radius:8px;background:var(--panel2);font-weight:700}.ksnudge .kstep{font:700 10px var(--mono)}
 .ksrow{display:flex;align-items:center;gap:8px;margin-top:8px}.ksrow>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none;width:50px}.ksrow .opts{flex:1;margin:0}
 .tpos{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px}.tpos button{margin:0!important;font-size:15px}
+.sppad{position:relative;aspect-ratio:16/9;background:#ffffff0d;border:1px solid #ffffff22;border-radius:10px;margin:4px 0 10px;touch-action:none;overflow:hidden}.sppad i{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid var(--lime);border-radius:50%;box-shadow:0 0 12px var(--lime);pointer-events:none}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -743,7 +744,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-13o';
+const BUILD = '2026-11-13p';
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
@@ -1133,7 +1134,7 @@ function layerRows(mode){                 // one look for SOURCE ('src'), FX ('f
   const sel = k => ((fx && FXT_SEL === k) || (vw && vsel(k) === VW_SEL) || (src && SRC_SEL === k) ? ' sel' : '') + (fx && FXCLIP === k ? ' copied' : '');
   const NR = new Set(String(p.Noreact || '').split(',').filter(Boolean));
   const au = k => `<button class="larr lau${NR.has(k) ? ' mute' : ''}" data-lau="${k}" aria-label="${NR.has(k) ? 'Ignores the music' : 'Reacts to the music'}">♪</button>`;
-  const x = k => src ? au(k) + (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
+  const x = k => src ? au(k) + (partnerOf(k) ? `<button class="larr lsw${visOf(k) ? ' on' : ''}" data-swapk="${k}" aria-label="Swap">⇄</button>` : '') + (/^m\d$/.test(k) ? `<button class="larr" data-ldup="${k}" aria-label="Duplicate layer">⧉</button>` : '') + `<button class="larr lx" data-loff="${k}" aria-label="Remove layer">✕</button>` : '';
   const lk = k => partnerOf(k) ? ` · ⇄ ${esc(lName(partnerOf(k)).split(' · ')[0])}${visOf(k) ? '' : ' (off)'}` : '';
   let h = fx ? `<div class="lrow on pin${sel('all')}"><button class="lname" data-fxt="all"><b>All layers</b><span>the whole picture${tag('all')}</span></button></div>` : '';
   if (vw && layerOrder().some(is3dLayer)) h += `<div class="lrow on pin${VW_SEL === '3d' ? ' sel' : ''}"><button class="lname" data-vwt="3d"><b>3D camera</b><span>films every 3D layer · saved views, orbit, zoom</span></button></div>`;
@@ -1290,7 +1291,7 @@ function drawPick(i){                     // which drawing layer the pad is draw
   if (!ops) { ops = store.get('drawmig', 0) ? [] : store.get('draw', []); store.set('drawmig', 1); }
   DR.ops = ops;
   const h = $('#dhost' + i); if (h) h.appendChild($('#dpadwrap'));
-  drawRender(); drawSend(); if (S) mediaCardsUI(S.pars);
+  drawRender(); if (S) mediaCardsUI(S.pars);     // no send here: the layer keeps the drawing it has (a preset's) until you draw
 }
 const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
 dcv.addEventListener('pointerdown', e => { dcv.setPointerCapture(e.pointerId); const [x, y] = dpos(e);
@@ -1556,13 +1557,18 @@ function onAir(){
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
     const sw = SWATCH[l.k];
     const pin = `<div class="sub pinl"><span data-qfx="${l.k}" data-qf="p1">${l.p1label || 'Style'}</span></div>`;
-    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : l.k === 'spotpulse' ? spotUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay" style="--c:${GC[l.g]}"><div class="hd"><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-clnum]').forEach(el => bindSlider(el, 'clnum', v => { const box = el.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.n = Math.round(v); clSet(box, c); }));
+  $$('#onair input[data-sp]').forEach(el => bindSlider(el, 'sp' + el.dataset.sp, v => { const box = el.closest('[data-spot]'), c = spDec(box.dataset.spot); c[el.dataset.sp] = Math.round(v); spSet(box, c); }));
+  $$('#onair [data-sppad]').forEach(pad => { let t = 0; const at = e => { const r = pad.getBoundingClientRect(), box = pad.closest('[data-spot]'), c = spDec(box.dataset.spot);
+      c.x = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 99); c.y = Math.round(Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) * 99);
+      const n = performance.now(); if (n - t > 40 || e.type === 'pointerup') { t = n; spSet(box, c); } };
+    pad.addEventListener('pointerdown', e => { pad.setPointerCapture(e.pointerId); at(e); }); pad.addEventListener('pointermove', e => { if (e.buttons) at(e); }); pad.addEventListener('pointerup', at); });
   $$('#onair input[data-sb]').forEach(el => bindSlider(el, 'sb' + el.dataset.sb, v => { const box = el.closest('[data-scrap]'), c = sbDec(+box.dataset.scrap); c[el.dataset.sb] = Math.round(v);
     const p1 = 10000 + c.look * 100 + c.mv; box.dataset.scrap = p1; send({t:'layer', tgt:FXT_SEL, k:'scrapbook', p1}); setLay('scrapbook', 'p1', p1); { const L = S.layers.find(x => x.k === 'scrapbook'); if (L) L.p1 = p1; } }));
   $$('#onair input[data-mrpos]').forEach(el => bindSlider(el, 'mirpos', v => { const box = el.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c.pos = Math.round(v);
@@ -1922,6 +1928,14 @@ function clSet(box, c){ const p1 = clEnc(c); box.dataset.clones = p1; send({t:'l
 function mirDec(p){ p = Math.round(p); return {m:p % 10, side:Math.floor(p / 10) % 10, pos:p >= 100 ? Math.floor(p / 100) : 50}; }
 function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
 function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; return {look:Math.floor(q / 100), mv:q % 100}; } const v = Math.round(Math.max(0, Math.min(1, p)) * 99); return {look:v, mv:v}; }
+function spDec(p){ p = Math.round(+p || 0); return {x:Math.floor(p / 1e6) % 100, y:Math.floor(p / 1e4) % 100, sz:Math.floor(p / 100) % 100, st:p % 100}; }
+function spEnc(c){ return c.x * 1e6 + c.y * 1e4 + c.sz * 100 + c.st; }
+function spotUI(l){ const c = spDec(l.p1);
+  return `<div data-spot="${spEnc(c)}"><div class="sub"><span>Where it pulses</span></div><div class="sppad" data-sppad><i style="left:${c.x / 99 * 100}%;top:${c.y / 99 * 100}%;width:${(3 + c.sz / 99 * 60) * 2 * 9 / 16}%"></i></div>`
+    + `<div class="sub"><span>Size</span><input type="range" data-sp="sz" min="0" max="99" step="1" value="${c.sz}" style="--acc:${GC[l.g]}"></div>`
+    + `<div class="sub"><span>Strength</span><input type="range" data-sp="st" min="0" max="99" step="1" value="${c.st}" style="--acc:${GC[l.g]}"></div><p class="hint2">Tap or drag on the box to put the pulse on your logo. It swells and flashes on every kick.</p></div>`; }
+function spSet(box, c){ const p1 = spEnc(c); box.dataset.spot = p1; send({t:'layer', tgt:FXT_SEL, k:'spotpulse', p1}); setLay('spotpulse', 'p1', p1); const L = S.layers.find(x => x.k === 'spotpulse'); if (L) L.p1 = p1;
+  const i = box.querySelector('.sppad i'); if (i) { i.style.left = c.x / 99 * 100 + '%'; i.style.top = c.y / 99 * 100 + '%'; i.style.width = (3 + c.sz / 99 * 60) * 2 * 9 / 16 + '%'; } }
 function scrapUI(l){ const c = sbDec(l.p1);
   return `<div data-scrap="${10000 + c.look * 100 + c.mv}"><div class="sub"><span>Paper look</span><input type="range" data-sb="look" min="0" max="99" step="1" value="${c.look}" style="--acc:${GC[l.g]}"></div>`
     + `<div class="sub"><span>Movement</span><input type="range" data-sb="mv" min="0" max="99" step="1" value="${c.mv}" style="--acc:${GC[l.g]}"></div><p class="hint2">Look at 0 = only the stop-motion movement. Movement at 0 = a still paper cut-out.</p></div>`; }
@@ -2245,6 +2259,7 @@ document.addEventListener('click', e => {
   else if (d.lau) { const nr = new Set(String(S.pars.Noreact || '').split(',').filter(Boolean)), k = d.lau;
     if (nr.has(k)) nr.delete(k); else nr.add(k); S.pars.Noreact = [...nr].join(','); send({t:'set', p:'Noreact', v:S.pars.Noreact});
     toast(lName(k).split(' · ')[0] + (nr.has(k) ? ' ignores the music' : ' reacts to the music')); layerStack(); buzz(); }
+  else if (d.ldup) { send({t:'media', do:'dup', slot:+d.ldup.slice(1)}); toast('Layer duplicated'); buzz(); }
   else if (d.loff) { if (partnerOf(d.loff)) setLinks(linkPairs().filter(x => !x.includes(d.loff)));   // removed = unlinked, no ghost row
     const k = d.loff, off = {model:['Statue', false], draw:['Drawon', false], text:['Texton', false], text2:['T2on', false], text3:['T3on', false]}[k];
     if (/^m\d$/.test(k)) { send({t:'media', do:'remove', slot:+k.slice(1)}); S.pars['M' + k.slice(1) + 'on'] = false; }
