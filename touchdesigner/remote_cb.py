@@ -109,7 +109,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Animbeat', 'Speed-up on the beat', 0, 2, 0.01, 'anim'),
     ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
     ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
-    ('Fxfade', 'Effect fade', 0, 600, 0.05, 'fxfade'), ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
+    ('Fxfade', 'Effect fade', 0, 600, 0.05, 'fxfade'), ('Allalpha', 'Opacity', 0, 1, 0.01, 'opall'), ('Master', 'Brightness', 0, 1.5, 0.01, 'opall'), ('Allcontrast', 'Contrast', 0, 2, 0.01, 'opall'), ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
@@ -894,6 +894,8 @@ def _ensurePars():
                 if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
         if C.par.Master.default != 1.0: C.par.Master.default = 1.0      # TUNE brightness starts at 1
         pg = C.par.Opmodel.page                         # per layer opacity + blend mode
+        for n_ in ('Allalpha', 'Allcontrast'):                       # whole picture: opacity (fade to black) + contrast
+            if not hasattr(C.par, n_): pp = C.par.Opmodel.page.appendFloat(n_, label=n_)[0]; pp.default = 1.0; pp.val = 1.0
         if not hasattr(C.par, 'Fxfade'): pp = pg.appendFloat('Fxfade', label='Effect fade (s)')[0]; pp.default = 0.0; pp.val = 0.0
         for n, dv in [('M%dalpha' % i, 1.0) for i in range(1, 7)] + [('Alphamodel', 1.0), ('Alphadraw', 1.0)] + [('M%dcontrast' % i, 1.0) for i in range(1, 7)] + [('Contrastmodel', 1.0), ('Contrastdraw', 1.0)]:
             if not hasattr(C.par, n): pp = pg.appendFloat(n, label=n)[0]; pp.default = dv; pp.val = dv

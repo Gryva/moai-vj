@@ -1416,7 +1416,7 @@ def histGo(redo=False):
 def histList():
     return {'u': [[x['at'], x['l']] for x in HIST['undo'][-15:]], 'r': len(HIST['redo'])}
 
-EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alphamodel', 'Alphadraw', 'Modelblend', 'Drawblend', 'Contrastmodel', 'Contrastdraw']
+EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alphamodel', 'Alphadraw', 'Modelblend', 'Drawblend', 'Contrastmodel', 'Contrastdraw', 'Allalpha', 'Allcontrast']
 
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
@@ -2529,9 +2529,14 @@ def masterUpdate(C, dt):
     S['master'] += (tgt - S['master']) * min(1.0, dt * 3.0 / ft)
     if abs(S['master'] - tgt) < 0.002: S['master'] = tgt
     lv = op('/project1/master_level')
-    idle = abs(S['master'] - 1.0) < 1e-4
+    al = float(C.par.Allalpha.eval()) if hasattr(C.par, 'Allalpha') else 1.0          # whole picture opacity = fade towards black
+    ct = float(C.par.Allcontrast.eval()) if hasattr(C.par, 'Allcontrast') else 1.0
+    b = S['master'] * max(0.0, min(1.0, al))
+    idle = abs(b - 1.0) < 1e-4 and abs(ct - 1.0) < 1e-4
     if lv.bypass != idle: lv.bypass = idle                      # skip the pass at full brightness
-    if not idle and lv.par.brightness1.eval() != S['master']: lv.par.brightness1 = S['master']
+    if not idle:
+        if lv.par.brightness1.eval() != b: lv.par.brightness1 = b
+        if abs(lv.par.contrast.eval() - ct) > 1e-4: lv.par.contrast = ct
 
 def flashWatch(C, T):
     """Logs any near-white frame with the full state, so the cause can be found."""

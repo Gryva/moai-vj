@@ -496,6 +496,12 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .tinrow{display:flex;align-items:center;gap:10px;margin:4px 0 8px}.tin{display:inline-flex;align-items:center;gap:4px}.tin input,.cuer label input[type=number]{width:84px;height:38px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px;font:600 15px var(--mono)}.tin i{font-style:normal;opacity:.7}
 .glsw{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;margin:4px 0 10px}.glsw button{height:58px;border-radius:9px;border:1px solid var(--line);background:#121018;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px}
 .glsw i{width:34px;height:20px;border-radius:5px;display:block;box-shadow:0 0 8px #0006}.glsw b{font-size:9px;letter-spacing:.06em}.glsw button.on{border-color:#ff5fd2;box-shadow:0 0 0 2px #ff5fd2,0 0 18px -4px #ff5fd2}.glsw button.on b{color:#ff5fd2;text-shadow:0 0 8px #ff5fd2}
+.cuefx{position:relative;flex:0 0 96px;width:96px;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#121018;border:2px dashed #c6ff3d88;padding:0;display:grid;place-items:center}
+.cuefx img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cuefx b{position:relative;z-index:1;font-size:11px;text-shadow:0 1px 6px #000,0 0 3px #000;padding:0 4px;text-align:center}
+.cuefx em{position:absolute;right:5px;bottom:2px;font:700 18px var(--sans);font-style:normal;color:var(--lime);z-index:2;text-shadow:0 0 6px #000}.cuefxh{flex:1}
+.cuepickbar{display:none}body.cuepicking .cuepickbar{display:flex;position:sticky;top:0;z-index:6;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin:0 0 10px;border-radius:10px;background:#1a1f0d;border:2px dashed var(--lime);color:var(--lime);font-weight:700}
+.cuepickbar button{height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--lime);background:transparent;color:var(--lime);font:700 11px var(--sans)}
+body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body.cuepicking .lt button::after{content:"＋";position:absolute;left:auto;top:auto;right:6px;bottom:3px;width:auto;height:auto;background:none;font:700 18px var(--sans);color:var(--lime);z-index:3}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -548,10 +554,11 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="fxtg"></div></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
-    <details class="box lsets" id="lsets"><summary>Layer look<span>opacity · blend · brightness · contrast</span></summary><div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div></details>
+    <details class="box lsets" id="lsets"><summary>Layer look<span>opacity · blend · brightness · contrast</span></summary><div id="g-opall" data-op="all"></div><div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div></details>
     <div class="onair" id="onair"></div>
     <div class="fxfrow"><span>Effect on / off fade</span><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fxfadein"><i>s</i></span><span class="hint2">0 = instant</span></div>
     </div><div class="colB">
+    <div class="cuepickbar"><span>Pick the effect for your cue</span><button data-cuepickx="1">CANCEL</button></div>
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
     <h2>Post</h2><div class="lt" id="lt-post"></div>
@@ -813,7 +820,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14o';
+const BUILD = '2026-11-14p';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2056,6 +2063,10 @@ function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0), fi = $('#fxfadein')
 const VT = {}, CUESIG = {};
 const fmtT = t => { t = Math.max(0, +t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
 const parseT = v => { v = String(v).trim().replace(',', '.'); const p = v.split(':'); const t = p.length > 1 ? (+p[0] || 0) * 60 + (+p[1] || 0) : +v; return isFinite(t) ? Math.max(0, t) : 0; };
+let CPICK = null;
+function cuePickEnd(ok){ const P = CPICK; CPICK = null; document.body.classList.remove('cuepicking'); ui.tab = 'source'; uiPrefs();
+  if (P) setTimeout(() => { const b = $(`[data-cuel="${P.i}"]`); if (!b) return; const box = b.closest('.cuebox'); box.open = true; const row = b.querySelector(`[data-cue="${P.n}"]`) || box; row.scrollIntoView({block:'center'}); }, 60);
+  if (ok) toast('Cue effect set'); }
 function cuesOf(i){ try { return JSON.parse(S.pars['M' + i + 'cues'] || '[]') || []; } catch (e) { return []; } }
 function cuesSet(i, L){ const v = JSON.stringify(L); S.pars['M' + i + 'cues'] = v; send({t:'set', p:'M' + i + 'cues', v}); CUESIG[i] = ''; cueUI(i); }
 function cueUI(i){
@@ -2065,7 +2076,7 @@ function cueUI(i){
   const sig = JSON.stringify(L) + '|' + (S.layers || []).length; if (CUESIG[i] === sig) return cueBar(i); CUESIG[i] = sig;
   const fx = [...(S.layers || [])].sort((a, b) => a.label.localeCompare(b.label));
   box.innerHTML = L.map((c, n) => `<div class="cue" data-cue="${n}">
-    <div class="cuer"><select data-cuef="k">${fx.map(l => `<option value="${l.k}"${l.k === c.k ? ' selected' : ''}>${esc(l.label)}</option>`).join('')}</select><button class="cbtn cuex" data-cuedel="${n}" aria-label="Remove cue">✕</button></div>
+    <div class="cuer"><button class="cuefx" data-cuepick="${n}" style="--c:${GC[(fx.find(l => l.k === c.k) || {}).g] || 'var(--lime)'}"><img src="thumbs/fx/${c.k}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc((fx.find(l => l.k === c.k) || {label:c.k}).label)}</b><em>＋</em></button><span class="hint2 cuefxh">Tap to choose the effect in FX</span><button class="cbtn cuex" data-cuedel="${n}" aria-label="Remove cue">✕</button></div>
     <div class="cuer"><label>START<input data-cuef="t0" inputmode="decimal" value="${fmtT(c.t0)}"></label><button class="cbtn" data-cuenow="t0">NOW</button>
       <label>END<input data-cuef="t1" inputmode="decimal" value="${fmtT(c.t1)}"></label><button class="cbtn" data-cuenow="t1">NOW</button></div>
     <div class="seg sm"><button data-cuev="tgt" data-v="layer" class="${c.tgt !== 'all' ? 'on' : ''}">THIS VIDEO</button><button data-cuev="tgt" data-v="all" class="${c.tgt === 'all' ? 'on' : ''}">WHOLE PICTURE</button></div>
@@ -2406,6 +2417,9 @@ document.addEventListener('click', e => {
   if (d.mfit) { const i = +d.mfit, v = d.v === '1'; S.pars['M' + i + 'fit'] = v; send({t:'set', p:'M' + i + 'fit', v}); mediaCardsUI(S.pars);
     toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
   if (d.fxfd !== undefined) { S.pars.Fxfade = +d.fxfd; send({t:'set', p:'Fxfade', v:+d.fxfd}); fxfadeUI(); toast(+d.fxfd ? 'Effects fade in and out' : 'Effects switch instantly'); buzz(); return; }
+  if (d.cuepick !== undefined) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel; CPICK = {i, n:+d.cuepick}; document.body.classList.add('cuepicking');
+    ui.tab = 'layers'; uiPrefs(); $('main').scrollTop = 0; toast('Tap the effect for this cue'); buzz(); return; }
+  if (d.cuepickx) { cuePickEnd(false); buzz(); return; }
   if (d.cueadd) { const i = +d.cueadd, now = (VT[i] || [0])[0], L = cuesOf(i), last = L.length ? L[L.length - 1].k : 'glow';
     L.push({t0:+now.toFixed(2), t1:+(now + 2).toFixed(2), k:last, tgt:'layer', fade:0}); cuesSet(i, L); buzz(); return; }
   if (d.cuedel !== undefined) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel, L = cuesOf(i); L.splice(+d.cuedel, 1); cuesSet(i, L); buzz(); return; }
@@ -2455,6 +2469,7 @@ document.addEventListener('click', e => {
   else if (d.dc) { DR.ops = []; drawRender(); drawSend(); drawSave(); buzz(15); }
 
   else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
+  else if (d.layer && CPICK) { const P = CPICK, L = cuesOf(P.i); if (L[P.n]) { L[P.n].k = d.layer; cuesSet(P.i, L); } cuePickEnd(true); buzz(); }
   else if (d.layer) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const l = S.layers.find(x => x.k === d.layer); l.on = !l.on; send({t:'layer', tgt:FXT_SEL, k:l.k, on:l.on}); applyLayers(); buzz(); }
   else if (d.off) { const l = S.layers.find(x => x.k === d.off); l.on = false; send({t:'layer', tgt:FXT_SEL, k:l.k, on:false}); applyLayers(); buzz(); }
   else if (d.mode) { send({t:'layer', tgt:FXT_SEL, k:d.mode, p1:+d.v}); setLay(d.mode, 'p1', +d.v); buzz(); }
