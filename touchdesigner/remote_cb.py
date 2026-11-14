@@ -36,7 +36,7 @@ for _i in range(1, 7):
 SLIDERS = MSLOT_SLIDERS + [
     ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
-    ('Autofade', 'Autopilot transition', 0, 4, 0.1, 'apfade'),     # set by the phone's transition buttons
+    ('Autofade', 'Autopilot transition', 0, 600, 0.1, 'apfade'),     # set by the phone's transition buttons
     ('Swapfade', 'Linked layer switch', 0, 3, 0.05, 'swapfade'),    # 0 = instant cut; set by the phone's link menu
     # projector output (OUTPUT tab); corners are dragged on the phone's keystone pad
     ('Kstlx', 'Top-left x', -0.5, 0.5, 0.001, 'kscorner'), ('Kstly', 'Top-left y', -0.5, 0.5, 0.001, 'kscorner'),
@@ -109,7 +109,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Animbeat', 'Speed-up on the beat', 0, 2, 0.01, 'anim'),
     ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
     ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
-    ('Fxfade', 'Effect fade', 0, 3, 0.05, 'fxfade'), ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
+    ('Fxfade', 'Effect fade', 0, 600, 0.05, 'fxfade'), ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
@@ -861,7 +861,7 @@ def _clean(p, v):
         for c in v:
             if not isinstance(c, dict) or str(c.get('k')) not in keys: continue
             out.append({'t0': round(max(0.0, float(c.get('t0', 0))), 2), 't1': round(max(0.0, float(c.get('t1', 0))), 2), 'k': str(c['k']),
-                        'tgt': 'all' if c.get('tgt') == 'all' else 'layer', 'fade': round(min(10.0, max(0.0, float(c.get('fade', 0) or 0))), 2)})
+                        'tgt': 'all' if c.get('tgt') == 'all' else 'layer', 'fade': round(min(600.0, max(0.0, float(c.get('fade', 0) or 0))), 2)})
         return json.dumps(out, separators=(',', ':'))
     if p.endswith('blend'):
         v = str(v)
@@ -1024,7 +1024,7 @@ def handle(msg, reply):
             if tg == 'all': E.setLayer(msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
             else: E.tSetLayer(tg, msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
             fd = float(C.par.Fxfade.eval()) if hasattr(C.par, 'Fxfade') else 0.0
-            if msg.get('fade') is not None: fd = max(0.0, min(10.0, float(msg['fade'])))          # a pinned tile can have its own transition
+            if msg.get('fade') is not None: fd = max(0.0, min(600.0, float(msg['fade'])))          # a pinned tile can have its own transition
             if msg.get('on') is not None and fd > 0.01: E.fxFadeToggle(tg, msg['k'], bool(msg.get('on')), fd)
         elif t == 'fxcopy':                                        # hold a layer in FX = copy, hold another = paste
             if E.fxCopy(str(msg.get('from', '')), str(msg.get('to', ''))):
@@ -1060,12 +1060,12 @@ def handle(msg, reply):
         elif t == 'center':
             C.par.Pan = 0; C.par.Height = 0
         elif t == 'bank':
-            E.bankLoad(int(msg['v']), fade=float(msg.get('fade', 0)), cam=True, model=True, text=True)   # a preset is the whole look
+            E.bankLoad(int(msg['v']), fade=max(0.0, min(600.0, float(msg.get('fade', 0)))), cam=True, model=True, text=True)   # a preset is the whole look
             if E.qSync(int(msg['v'])): _all(E.qMsg())
         elif t == 'queue':
             a = msg.get('do')
             if a == 'set' and isinstance(msg.get('v'), list): E.qSet(msg['v'])
-            elif a == 'go': E.qGo(int(msg.get('i', 0)), fade=max(0.0, min(10.0, float(msg.get('fade', 0)))))
+            elif a == 'go': E.qGo(int(msg.get('i', 0)), fade=max(0.0, min(600.0, float(msg.get('fade', 0)))))
             _all(E.qMsg())
         elif t == 'animloop':                                    # loop / bounce for the animation on screen
             m = str(C.par.Model.eval())

@@ -2440,7 +2440,7 @@ def autopilotUpdate(C, T):
     if not C.par.Autopilot.eval(): AP['t'] = T; return
     if T - AP['t'] < max(5.0, float(C.par.Autotime.eval())): return
     AP['t'] = T
-    fd = max(0.0, min(10.0, float(op('/project1/CONTROLS').par.Autofade.eval())))
+    fd = max(0.0, min(600.0, float(op('/project1/CONTROLS').par.Autofade.eval())))
     if hasattr(C.par, 'Automode') and C.par.Automode.eval() == 'setlist' and qState()['v']:     # play the set list in order
         if len(qState()['v']) == 1 and qState()['v'][0] == b: return          # one preset only: nothing to change to
         qGo(qState()['pos'] + 1, fade=fd)
@@ -2455,7 +2455,7 @@ def autopilotUpdate(C, T):
     avoid = set(AP['recent'][-min(5, len(pool) - 1):]) | {b}
     cand = [x for x in pool if x not in avoid] or [x for x in pool if x != b]
     slot = random.choice(cand)
-    if bankLoad(slot, fade=max(0.0, min(10.0, float(op('/project1/CONTROLS').par.Autofade.eval()))), cam=True, model=True, text=True):   # the phone's transition time
+    if bankLoad(slot, fade=max(0.0, min(600.0, float(op('/project1/CONTROLS').par.Autofade.eval()))), cam=True, model=True, text=True):   # the phone's transition time
         try:
             if qSync(slot): op('/project1/remote_cb').module._all(qMsg())
         except Exception: pass

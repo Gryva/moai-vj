@@ -487,6 +487,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .cuetime{font:500 11px var(--mono);opacity:.7;margin:3px 0 8px}.cue{border-top:1px solid var(--line);padding:8px 0;display:grid;gap:6px}.cuer{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .cuer select{flex:1;min-width:0;height:36px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px}.cuer label{display:flex;align-items:center;gap:4px;font-size:10px;letter-spacing:.06em;opacity:.85}
 .cuer input{width:70px;height:34px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 6px;font:500 13px var(--mono)}.cbtn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#ffffff0d;color:var(--ink);font:700 11px var(--sans);letter-spacing:.06em}.cuex{width:36px;padding:0}.cueadd{margin:8px 0 4px;width:100%;height:40px;color:var(--lime);border-color:var(--lime)}
+.tinrow{display:flex;align-items:center;gap:10px;margin:4px 0 8px}.tin{display:inline-flex;align-items:center;gap:4px}.tin input,.cuer label input[type=number]{width:84px;height:38px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px;font:600 15px var(--mono)}.tin i{font-style:normal;opacity:.7}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -516,7 +517,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button>
       <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
     <div class="appanel" id="apPanel" hidden>
-      <h4>Transition between presets</h4><div class="seg sm" id="fades"></div>
+      <h4>Transition between presets</h4><div class="tinrow"><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fadein"><i>s</i></span><span class="hint2">0 = cut</span></div>
       <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button></div>
       <h4>If the remote loses its connection</h4><div class="seg sm" id="apLost"><button data-aplost="0">KEEP THE LOOK</button><button data-aplost="1">START AUTOPILOT</button></div>
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
@@ -541,7 +542,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
     <details class="box lsets" id="lsets"><summary>Layer look<span>opacity · blend · brightness · contrast</span></summary><div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div></details>
     <div class="onair" id="onair"></div>
-    <div class="fxfrow"><span>Effect on / off</span><div class="seg sm" id="fxfade"><button data-fxfd="0">CUT</button><button data-fxfd="0.5">FADE ½ s</button><button data-fxfd="1">FADE 1 s</button><button data-fxfd="2">FADE 2 s</button></div></div>
+    <div class="fxfrow"><span>Effect on / off fade</span><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fxfadein"><i>s</i></span><span class="hint2">0 = instant</span></div>
     </div><div class="colB">
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
@@ -749,7 +750,12 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
 document.addEventListener('change', e => { const el = e.target; if (!el.dataset || !el.dataset.cuef) return; const box = el.closest('.cuebox'); if (!box) return;
   const i = +box.querySelector('[data-cuel]').dataset.cuel, n = +el.closest('[data-cue]').dataset.cue, L = cuesOf(i); if (!L[n]) return;
-  L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : parseT(el.value); cuesSet(i, L); });
+  L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : el.dataset.cuef === 'fade' ? Math.max(0, +el.value || 0) : parseT(el.value); cuesSet(i, L); });
+document.addEventListener('change', e => { const el = e.target, v = Math.max(0, Math.min(600, +String(el.value).replace(',', '.') || 0));
+  if (el.id === 'fadein') { ui.fade = v; uiPrefs(); send({t:'set', p:'Autofade', v}); toast(v ? 'Presets fade in ' + v + ' s' : 'Presets cut'); }
+  else if (el.id === 'fxfadein') { S.pars.Fxfade = v; send({t:'set', p:'Fxfade', v}); toast(v ? 'Effects fade in ' + v + ' s' : 'Effects switch instantly'); }
+  else if (el.id === 'qkfadein') { const it = JSON.parse($('#sheet').dataset.qitem || 'null'); if (!it) return; const k = qid(it);
+    if (String(el.value).trim() === '') delete QFADE[k]; else QFADE[k] = v; store.set('qfade', QFADE); QSIG = ''; renderQuick(); toast(String(el.value).trim() === '' ? 'Uses the FX tab setting' : v ? 'Fades in ' + v + ' s' : 'Switches instantly'); } });
 document.addEventListener('DOMContentLoaded', () => { const h = $('#uifonts'); if (h) h.innerHTML = UIFONTS.map(([f, l]) => `<button data-uifont="${f}" style="font-family:'${f}'">${l}</button>`).join(''); uiFont(store.get('uifont', 'Space Grotesk')); });
 document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -795,7 +801,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14j';
+const BUILD = '2026-11-14k';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1405,7 +1411,7 @@ function buildDraw(){
 const EL = {};
 var ACC = {};
 function build(){
-  $('#fades').innerHTML = FADES.map(([n, v]) => `<button data-fade="${v}">${n}</button>`).join('');
+
   ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
     `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
   const mb = m => `<button class="model" data-model="${esc(m.name)}"><img src="thumbs/${esc(m.name)}.jpg" alt="" onerror="this.style.visibility='hidden'"><span>${esc(m.label)}</span></button>`;
@@ -1582,7 +1588,7 @@ function setEdit(on){
 }
 function uiPrefs(){
   if (ui.tab === 'text') ui.tab = 'source';                       // TEXT moved into SOURCE
-  $$('#fades button').forEach(b => b.classList.toggle('on', +b.dataset.fade === ui.fade)); apSummary();
+  { const fi = $('#fadein'); if (fi && document.activeElement !== fi) fi.value = ui.fade || 0; } apSummary();
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + ui.tab)); document.body.classList.toggle('tab-live', ui.tab === 'live');
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
@@ -1872,7 +1878,7 @@ function sheetQk(i){
   $('#shI').style.display = 'none'; $('#shT').textContent = qLabel(it).join(' · ');
   $('#shP').textContent = mine ? 'Pinned to this preset.' : 'Pinned to every preset.';
   const fxOn = it.k === 'fx' && it.f === 'on', fd = QFADE[qid(it)];
-  $('#shA').innerHTML = (fxOn ? `<p class="shsub">When you tap it</p><div class="seg sm qfseg">${[['', 'AS FX TAB'], [0, 'INSTANT'], [0.5, '½ s'], [1, '1 s'], [2, '2 s'], [4, '4 s']].map(([v, l]) => `<button data-sh="qkfade" data-v="${v}" class="${String(fd ?? '') === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div>` : '') + `<button data-sh="qkmv" data-d="-1">▲ Move up</button><button data-sh="qkmv" data-d="1">▼ Move down</button><button class="dan" data-sh="qkun" data-sc="${mine ? 'p' : 'a'}">Unpin</button><button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = (fxOn ? `<p class="shsub">Transition when you tap it (seconds, 0 = instant, empty = FX tab setting)</p><div class="tinrow">`+`<span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="qkfadein" placeholder="FX tab" value="${fd ?? ''}"><i>s</i></span>`+`</div>` : '') + `<button data-sh="qkmv" data-d="-1">▲ Move up</button><button data-sh="qkmv" data-d="1">▼ Move down</button><button class="dan" data-sh="qkun" data-sc="${mine ? 'p' : 'a'}">Unpin</button><button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.qitem = JSON.stringify(it); $('#sheet').dataset.qsc = mine ? 'p' : 'a'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function qVal(it){                        // current value of a pinned control
@@ -2027,7 +2033,7 @@ const PK = {
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
   dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]]};
-function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0); $$('[data-fxfd]').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.fxfd - v) < 0.01)); }
+function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0), fi = $('#fxfadein'); if (fi && document.activeElement !== fi) fi.value = v; }
 // ---- video cues: effects on / off at set times of a video layer
 const VT = {}, CUESIG = {};
 const fmtT = t => { t = Math.max(0, +t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
@@ -2045,7 +2051,7 @@ function cueUI(i){
     <div class="cuer"><label>START<input data-cuef="t0" inputmode="decimal" value="${fmtT(c.t0)}"></label><button class="cbtn" data-cuenow="t0">NOW</button>
       <label>END<input data-cuef="t1" inputmode="decimal" value="${fmtT(c.t1)}"></label><button class="cbtn" data-cuenow="t1">NOW</button></div>
     <div class="seg sm"><button data-cuev="tgt" data-v="layer" class="${c.tgt !== 'all' ? 'on' : ''}">THIS VIDEO</button><button data-cuev="tgt" data-v="all" class="${c.tgt === 'all' ? 'on' : ''}">WHOLE PICTURE</button></div>
-    <div class="seg sm">${[[0, 'CUT'], [0.5, '½ s'], [1, '1 s'], [2, '2 s']].map(([v, l]) => `<button data-cuev="fade" data-v="${v}" class="${(+c.fade || 0) === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('') || '<p class="hint2">No cues yet.</p>';
+    <div class="cuer"><label>FADE<input type="number" min="0" max="600" step="0.1" inputmode="decimal" data-cuef="fade" value="${+c.fade || 0}"></label><span class="hint2">seconds, 0 = cut</span></div></div>`).join('') || '<p class="hint2">No cues yet.</p>';
   cueBar(i); }
 function cueBar(i){ const bar = $(`[data-cuebar="${i}"]`), v = VT[i]; if (!bar) return; const d = v ? v[1] : 0;
   bar.querySelectorAll('.cueseg').forEach(e => e.remove());
@@ -2188,7 +2194,7 @@ function sheetBackups(){
   $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function apSummary(){                    // "1s fade · 10s" on the small settings button
-  if (!S) return; const at = +S.pars.Autotime || 30, f = (FADES.find(([, v]) => +v === ui.fade) || ['CUT'])[0];
+  if (!S) return; const at = +S.pars.Autotime || 30, f = ui.fade + ' s';
   const am = S.pars.Automode;
   $('#apSum').textContent = (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
   $$('#apMode [data-apm]').forEach(b => b.classList.toggle('on', b.dataset.apm === (S.pars.Automode || 'random')));
