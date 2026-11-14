@@ -48,9 +48,7 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
 @media (max-width:440px){body.editing .r1>.logo{display:none}}
-.ebar{position:fixed;left:10px;bottom:calc(64px + var(--sb));z-index:7;display:flex;gap:6px;align-items:center;padding:6px;border-radius:10px;background:#0d0b12e6;backdrop-filter:blur(12px);border:1px solid var(--line)}
-.ebar .fsb,.ebar .edit,.ebar .savebtn{height:40px}.ebar .fsb{width:40px}
-main{padding-bottom:calc(140px + var(--sb))!important}
+#rlbtn,#recbtn{margin-left:6px}.stat:not(.open)~#recbtn.on{display:block}   /* while recording, REC stays visible to stop it */
 .savebtn{display:none;height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--lime);color:var(--lime);font-weight:700;letter-spacing:.1em;font-size:11px;white-space:nowrap;flex:none}
 body.editing .savebtn{display:block}.savebtn.ok{background:var(--lime);color:#0b0a0f}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
@@ -468,7 +466,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="lk stbk" id="rlbtn">⟳ RELOAD</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb recb" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="fsb stbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb stbk" id="recbtn" aria-label="Record the show">● REC</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -697,7 +695,6 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 
 <div id="weak">Signal weak · reconnecting… (controls still work when it comes back)</div>
 <div id="rail" aria-hidden="true"><i></i></div>
-<div class="ebar" id="ebar"><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button></div>
 <nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
@@ -755,7 +752,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14e';
+const BUILD = '2026-11-14f';
 const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
