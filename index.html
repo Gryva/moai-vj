@@ -481,6 +481,12 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .recb{color:#ff4d5e;font-weight:700;letter-spacing:.04em;width:auto!important;padding:0 10px}.recb.on{background:#ff2d45;color:#fff;animation:recp 1.2s ease-in-out infinite}@keyframes recp{50%{opacity:.6}}
 .fxfrow{display:flex;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap}.fxfrow>span{font-size:12px;opacity:.7}.fxfrow .seg{flex:1}
 .shsub{margin:4px 0 2px;font-size:12px;opacity:.7;width:100%}.qfseg{width:100%;flex-wrap:wrap;margin-bottom:6px}
+.cuebox{margin:10px 0 4px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.cuebox>summary{font-weight:700;font-size:13px;cursor:pointer}.cuesum{font-weight:400;opacity:.7}
+.cuehd{display:flex;align-items:center;gap:10px;margin:10px 0 6px}.cuetog{flex:0 0 auto;min-width:110px;min-height:44px}
+.cuebar{position:relative;height:16px;border-radius:5px;background:#ffffff12;overflow:hidden;margin-top:6px}.cueseg{position:absolute;top:3px;bottom:3px;border-radius:3px;opacity:.85}.cueph{position:absolute;top:0;bottom:0;width:2px;background:#fff;z-index:2;box-shadow:0 0 6px #fff}
+.cuetime{font:500 11px var(--mono);opacity:.7;margin:3px 0 8px}.cue{border-top:1px solid var(--line);padding:8px 0;display:grid;gap:6px}.cuer{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cuer select{flex:1;min-width:0;height:36px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px}.cuer label{display:flex;align-items:center;gap:4px;font-size:10px;letter-spacing:.06em;opacity:.85}
+.cuer input{width:70px;height:34px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 6px;font:500 13px var(--mono)}.cbtn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#ffffff0d;color:var(--ink);font:700 11px var(--sans);letter-spacing:.06em}.cuex{width:36px;padding:0}.cueadd{margin:8px 0 4px;width:100%;height:40px;color:var(--lime);border-color:var(--lime)}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -741,6 +747,9 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
+document.addEventListener('change', e => { const el = e.target; if (!el.dataset || !el.dataset.cuef) return; const box = el.closest('.cuebox'); if (!box) return;
+  const i = +box.querySelector('[data-cuel]').dataset.cuel, n = +el.closest('[data-cue]').dataset.cue, L = cuesOf(i); if (!L[n]) return;
+  L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : parseT(el.value); cuesSet(i, L); });
 document.addEventListener('DOMContentLoaded', () => { const h = $('#uifonts'); if (h) h.innerHTML = UIFONTS.map(([f, l]) => `<button data-uifont="${f}" style="font-family:'${f}'">${l}</button>`).join(''); uiFont(store.get('uifont', 'Space Grotesk')); });
 document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -786,7 +795,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14i';
+const BUILD = '2026-11-14j';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -851,7 +860,7 @@ function onMsg(m){
     build(); applyPars(m.pars); applyTarget(); renderPads(); renderFxps(); renderMedia(); renderClips(); renderQueue(); }
   else if (!S) return;
   else if (m.t === 'audioin') { S.audioin = m.v; renderAudioIn(); }
-  else if (m.t === 'm') { lastM = performance.now(); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); } if ((m.L || m.LT) && S.quick) quickSync();
+  else if (m.t === 'm') { lastM = performance.now(); if (m.vt) cueTick(m.vt); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); } if ((m.L || m.LT) && S.quick) quickSync();
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
   else if (m.t === 'clips') {
@@ -1018,6 +1027,12 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
       <div class="cb"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button>
         <div class="clips mlib" id="mlist${i}" hidden></div>
+        <details class="cuebox" hidden><summary>⏱ Effect cues<span class="cuesum"></span></summary>
+          <div class="cuehd"><button class="qbig cuetog" data-cuetog="${i}" data-tog="M${i}cueon"><b>CUES</b></button><span class="hint2">Hold to pin to Quick controls</span></div>
+          <div class="cuebar" data-cuebar="${i}"><i class="cueph"></i></div><div class="cuetime" data-cuetime="${i}">–</div>
+          <div class="cuel" data-cuel="${i}"></div>
+          <button class="cbtn cueadd" data-cueadd="${i}">＋ ADD CUE AT NOW</button>
+          <p class="hint2">While the video plays, each cue switches its effect on at START and off at END. Times are in the video (min:sec).</p></details>
         <div class="rcbox" hidden>
           <div class="sub pinl"><span>Colour</span></div>
           <div class="cstrip">${SWC.map(c => `<button data-rcsw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="rc:${i}" aria-label="Any colour"></button></div>${hsvBox('rc:' + i)}
@@ -1083,6 +1098,7 @@ function mediaCardsUI(p){
     $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
     const nz = p[m + 'kind'] === 'noise', rc = p[m + 'kind'] === 'rect', lopen = MLIB[i] ?? !f;
     lib.hidden = dr || nz || rc || !lopen; mfb.hidden = dr || nz || rc;
+    { const cb = c.querySelector('.cuebox'); cb.hidden = p[m + 'kind'] !== 'video' || !f; if (!cb.hidden) cueUI(i); }
     c.querySelector('.rcbox').hidden = !rc; if (rc) { $$(`[data-rcsw="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'rcol'] || '#000000'))); const o = c.querySelector('[data-rcop]'); if (o && !(touching['rcop' + i] > performance.now())) { o.value = p[m + 'alpha'] ?? 1; o._show && o._show(); } } mfb.classList.toggle('open', !lib.hidden);
     c.querySelector('.nzbox').hidden = !nz; if (nz) nzUI(i, p);
     c.querySelector('.mplay').hidden = !vid;
@@ -1826,7 +1842,7 @@ function qLabel(it){
     return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
   const sd = (S.sliders || []).find(x => x.p === it.p);
   const raw = it.p.replace(/^(M\d|T\d(?=on|str)|Text(?=on))/, '');
-  const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor'};
+  const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor', cueon:'Effect cues'};
   return [qLayer(it.p), sd ? sd.label : (TL[raw] || TL[it.p] || raw || it.p)];
 }
 function qAlive(it){                     // a control for a layer this preset doesn't have is left out
@@ -2012,6 +2028,34 @@ const PK = {
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
   dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]]};
 function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0); $$('[data-fxfd]').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.fxfd - v) < 0.01)); }
+// ---- video cues: effects on / off at set times of a video layer
+const VT = {}, CUESIG = {};
+const fmtT = t => { t = Math.max(0, +t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const parseT = v => { v = String(v).trim().replace(',', '.'); const p = v.split(':'); const t = p.length > 1 ? (+p[0] || 0) * 60 + (+p[1] || 0) : +v; return isFinite(t) ? Math.max(0, t) : 0; };
+function cuesOf(i){ try { return JSON.parse(S.pars['M' + i + 'cues'] || '[]') || []; } catch (e) { return []; } }
+function cuesSet(i, L){ const v = JSON.stringify(L); S.pars['M' + i + 'cues'] = v; send({t:'set', p:'M' + i + 'cues', v}); CUESIG[i] = ''; cueUI(i); }
+function cueUI(i){
+  const L = cuesOf(i), on = S.pars['M' + i + 'cueon'] !== false, box = $(`[data-cuel="${i}"]`); if (!box) return;
+  const tb = $(`[data-cuetog="${i}"]`); if (tb) tb.classList.toggle('on', on);
+  const sum = box.closest('.cuebox').querySelector('.cuesum'); if (sum) sum.textContent = L.length ? ` · ${L.length} ${on ? '' : '(off)'}` : '';
+  const sig = JSON.stringify(L) + '|' + (S.layers || []).length; if (CUESIG[i] === sig) return cueBar(i); CUESIG[i] = sig;
+  const fx = [...(S.layers || [])].sort((a, b) => a.label.localeCompare(b.label));
+  box.innerHTML = L.map((c, n) => `<div class="cue" data-cue="${n}">
+    <div class="cuer"><select data-cuef="k">${fx.map(l => `<option value="${l.k}"${l.k === c.k ? ' selected' : ''}>${esc(l.label)}</option>`).join('')}</select><button class="cbtn cuex" data-cuedel="${n}" aria-label="Remove cue">✕</button></div>
+    <div class="cuer"><label>START<input data-cuef="t0" inputmode="decimal" value="${fmtT(c.t0)}"></label><button class="cbtn" data-cuenow="t0">NOW</button>
+      <label>END<input data-cuef="t1" inputmode="decimal" value="${fmtT(c.t1)}"></label><button class="cbtn" data-cuenow="t1">NOW</button></div>
+    <div class="seg sm"><button data-cuev="tgt" data-v="layer" class="${c.tgt !== 'all' ? 'on' : ''}">THIS VIDEO</button><button data-cuev="tgt" data-v="all" class="${c.tgt === 'all' ? 'on' : ''}">WHOLE PICTURE</button></div>
+    <div class="seg sm">${[[0, 'CUT'], [0.5, '½ s'], [1, '1 s'], [2, '2 s']].map(([v, l]) => `<button data-cuev="fade" data-v="${v}" class="${(+c.fade || 0) === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('') || '<p class="hint2">No cues yet.</p>';
+  cueBar(i); }
+function cueBar(i){ const bar = $(`[data-cuebar="${i}"]`), v = VT[i]; if (!bar) return; const d = v ? v[1] : 0;
+  bar.querySelectorAll('.cueseg').forEach(e => e.remove());
+  if (d) cuesOf(i).forEach(c => { const e = document.createElement('b'); e.className = 'cueseg'; const a = Math.min(1, c.t0 / d), z = Math.min(1, (c.t1 > c.t0 ? c.t1 : d) / d);
+    e.style.left = a * 100 + '%'; e.style.width = Math.max(0.6, (z - a) * 100) + '%'; const l = (S.layers || []).find(x => x.k === c.k); e.style.background = GC[l && l.g] || 'var(--lime)'; bar.appendChild(e); }); }
+function cueTick(vt){ for (const k in vt) { const i = +k, had = VT[i]; VT[i] = vt[k];
+    const bar = $(`[data-cuebar="${i}"]`); if (!bar || bar.closest('.cuebox').hidden) continue;
+    bar.querySelector('.cueph').style.left = Math.min(100, vt[k][0] / vt[k][1] * 100) + '%';
+    const tt = $(`[data-cuetime="${i}"]`); if (tt) tt.textContent = fmtT(vt[k][0]) + ' / ' + fmtT(vt[k][1]);
+    if (!had || had[1] !== vt[k][1]) cueBar(i); } }
 function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
 function pkEnc(k, c){ return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
 function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
@@ -2310,6 +2354,12 @@ document.addEventListener('click', e => {
   if (d.mfit) { const i = +d.mfit, v = d.v === '1'; S.pars['M' + i + 'fit'] = v; send({t:'set', p:'M' + i + 'fit', v}); mediaCardsUI(S.pars);
     toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
   if (d.fxfd !== undefined) { S.pars.Fxfade = +d.fxfd; send({t:'set', p:'Fxfade', v:+d.fxfd}); fxfadeUI(); toast(+d.fxfd ? 'Effects fade in and out' : 'Effects switch instantly'); buzz(); return; }
+  if (d.cueadd) { const i = +d.cueadd, now = (VT[i] || [0])[0], L = cuesOf(i), last = L.length ? L[L.length - 1].k : 'glow';
+    L.push({t0:+now.toFixed(2), t1:+(now + 2).toFixed(2), k:last, tgt:'layer', fade:0}); cuesSet(i, L); buzz(); return; }
+  if (d.cuedel !== undefined) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel, L = cuesOf(i); L.splice(+d.cuedel, 1); cuesSet(i, L); buzz(); return; }
+  if (d.cuenow) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel, n = +t.closest('[data-cue]').dataset.cue, L = cuesOf(i); L[n][d.cuenow] = +((VT[i] || [0])[0]).toFixed(2); cuesSet(i, L); buzz(); return; }
+  if (d.cuev) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel, n = +t.closest('[data-cue]').dataset.cue, L = cuesOf(i); L[n][d.cuev] = d.cuev === 'fade' ? +d.v : d.v; cuesSet(i, L); buzz(); return; }
+  if (d.cuetog) { if (FXHOLD && performance.now() - FXHOLD < 600) return; const i = +d.cuetog, v = S.pars['M' + i + 'cueon'] === false; S.pars['M' + i + 'cueon'] = v; send({t:'set', p:'M' + i + 'cueon', v}); cueUI(i); toast(v ? 'Cues on' : 'Cues off – the video plays without them'); buzz(); return; }
   if (d.pkf) { const box = e.target.closest('[data-pkk]'), c = pkDec(box.dataset.pkk, box.dataset.pkv); c[d.pkf] = +d.v; pkSet(box, c);
     box.querySelectorAll(`[data-pkf="${d.pkf}"]`).forEach(b => b.classList.toggle('on', b === t)); buzz(); return; }
   if (d.spmd) { const box = e.target.closest('[data-spot]'), c = spDec(box.dataset.spot); c.md = +d.v; spSet(box, c);

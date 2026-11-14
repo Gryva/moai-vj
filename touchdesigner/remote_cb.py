@@ -113,8 +113,8 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -710,6 +710,12 @@ def broadcastMeters():
     msg = {'t': 'm', 'l': round(S['low'], 3), 'm': round(S['mid'], 3), 'h': round(S['high'], 3),
            'k': round(S['kick'], 3), 'v': round(S['level'], 3), 'fps': round(LIVE['fps']), 'b': S.get('bank', 0),
            'db': round(_E().A.get('lvl', -120.0), 1), 'ag': round(_E().A.get('ag', 1.0), 1)}
+    C_ = _C(); vt = {}
+    for i in range(1, 7):                                       # where each playing video is (for the cue timeline)
+        if C_.par['M%don' % i].eval() and C_.par['M%dkind' % i].eval() == 'video':
+            x = _E().vidTime(i)
+            if x: vt[i] = [round(x[0], 2), round(x[1], 2)]
+    if vt: msg['vt'] = vt
     LAST['n'] += 1
     full = LAST['n'] % 40 == 0                        # full resync every ~10 s, otherwise only changes
     P, L = _pars(), _layersLive()
@@ -848,6 +854,15 @@ def _clean(p, v):
     if not SLIDERDEF: SLIDERDEF.update({s[0]: (s[2], s[3]) for s in SLIDERS})
     if p in SLIDERDEF: lo, hi = SLIDERDEF[p]; return min(hi, max(lo, float(v)))
     if p in TOGGLES: return bool(v)
+    if p.endswith('cues'):                                        # video cues: [{t0, t1, k, tgt, fade}]
+        v = json.loads(v) if isinstance(v, str) else v
+        if not isinstance(v, list) or len(v) > 40: raise ValueError('bad cues')
+        keys = {r['key'] for r in _E().layers()}; out = []
+        for c in v:
+            if not isinstance(c, dict) or str(c.get('k')) not in keys: continue
+            out.append({'t0': round(max(0.0, float(c.get('t0', 0))), 2), 't1': round(max(0.0, float(c.get('t1', 0))), 2), 'k': str(c['k']),
+                        'tgt': 'all' if c.get('tgt') == 'all' else 'layer', 'fade': round(min(10.0, max(0.0, float(c.get('fade', 0) or 0))), 2)})
+        return json.dumps(out, separators=(',', ':'))
     if p.endswith('blend'):
         v = str(v)
         if v not in _E().BLENDS: raise ValueError('bad blend')
@@ -929,6 +944,10 @@ def _ensurePars():
                 m.menuNames = ['auto', 'green', 'blue', 'custom']; m.menuLabels = ['Auto', 'Green', 'Blue', 'Picked']
             if not hasattr(C.par, 'M%dkeyhex' % i):
                 pp = m.page.appendStr('M%dkeyhex' % i, label='M%d key colour' % i)[0]; pp.default = '#00ff00'; pp.val = '#00ff00'
+            if not hasattr(C.par, 'M%dcues' % i):                       # VIDEO CUES: effects on at set times of the video
+                pp = m.page.appendStr('M%dcues' % i, label='M%d video cues' % i)[0]; pp.default = '[]'; pp.val = '[]'
+            if not hasattr(C.par, 'M%dcueon' % i):
+                pp = m.page.appendToggle('M%dcueon' % i, label='M%d cues on' % i)[0]; pp.default = True; pp.val = True
             if not hasattr(C.par, 'M%drcol' % i):                       # RECTANGLE layers: a plain colour card
                 pp = m.page.appendStr('M%drcol' % i, label='M%d rectangle colour' % i)[0]; pp.default = '#000000'; pp.val = '#000000'
             P_ = op('/project1'); sw = P_.op('msrc%d' % i)

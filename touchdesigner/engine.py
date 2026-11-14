@@ -207,6 +207,48 @@ def clDecode(p1):
     return {'n': n, 'lay': lay, 'ov': (p // 10) % 10, 'rnd': (p // 10000) % 10,
             'mot': 0 if mot == 0 else 1 << (mot - 1), 'sz': 1 << {0: 3, 1: 0, 2: 1, 3: 2, 4: 4, 5: 5, 6: 6}.get(sz, 3)}
 
+# ---------------------------------------------------------------- VIDEO CUES: effects that switch on / off at set times of a video layer
+CUEST = {}                                                    # (slot, cue list text, cue nr) -> on right now
+CUEP = {}                                                     # cue list text -> parsed list
+def vidTime(i):
+    """(seconds into the video, its length) for a video layer, or None."""
+    m = op('/project1/mf%d' % i)
+    try:
+        r = float(m.rate) or 30.0; n = int(m.numImages)
+        return (float(m.index) / r, n / r) if n > 1 else None
+    except Exception: return None
+def _cueSet(i, c, on):
+    tgt = 'm%d' % i if c.get('tgt', 'layer') == 'layer' else 'all'; k = c.get('k'); fd = float(c.get('fade', 0) or 0)
+    if tgt == 'all': setLayer(k, on=on)
+    else: tSetLayer(tgt, k, on=on)
+    if fd > 0.01: fxFadeToggle(tgt, k, on, fd)
+def cueUpdate(C):
+    live = set()
+    for i in MSLOTS:
+        txt = mp(C, i, 'cues').eval() if hasattr(C.par, 'M%dcues' % i) else ''
+        if not txt or txt == '[]': continue
+        armed = mp(C, i, 'on').eval() and mp(C, i, 'kind').eval() == 'video' and mp(C, i, 'cueon').eval()
+        cues = CUEP.get(txt)
+        if cues is None:
+            try: cues = [c for c in json.loads(txt) if isinstance(c, dict) and c.get('k')]
+            except Exception: cues = []
+            CUEP[txt] = cues
+            if len(CUEP) > 64: CUEP.clear()
+        vt = vidTime(i) if armed else None
+        for n, c in enumerate(cues):
+            key = (i, txt, n); live.add(key)
+            t0, t1 = float(c.get('t0', 0)), float(c.get('t1', 0))
+            act = vt is not None and t0 <= vt[0] < (t1 if t1 > t0 else vt[1] + 1)
+            if act != CUEST.get(key, False):
+                CUEST[key] = act
+                try: _cueSet(i, c, act)
+                except Exception: pass
+    for key in [k for k in CUEST if k not in live]:                # cue list changed / layer gone: drop what it switched on
+        if CUEST.pop(key):
+            try:
+                i, txt, n = key; _cueSet(i, CUEP.get(txt, [])[n], False)
+            except Exception: pass
+
 BLENDS = ['normal', 'add', 'screen', 'multiply', 'overlay', 'difference', 'lighten', 'darken']
 def blendUpdate(C):
     """Per layer opacity + blend mode into the layer stack (only writes what changed)."""
@@ -1342,7 +1384,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'cues', 'cueon']
 
 def _mval(par):
     v = par.eval()
@@ -2351,6 +2393,7 @@ def onFrameStart(frame):
     if S['frame'] % 8 == 0: _safe('clonesbb', clonesBB)
     _safe('noise', noiseUpdate, C, T)
     _safe('blend', blendUpdate, C)
+    _safe('cues', cueUpdate, C)
     if TFADES: _safe('tfade', tFadeStep, T)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
