@@ -487,7 +487,8 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .cuelanes{position:relative;background:#ffffff08;border-radius:0 0 5px 5px;min-height:26px}.cuelane{position:absolute;left:0;right:0;height:26px}
 .cueblk{position:absolute;top:3px;height:20px;border-radius:5px;cursor:grab;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 1px #0006 inset}.cueblk.drag{cursor:grabbing;box-shadow:0 0 0 2px #fff}
 .cueblk span{font:700 9px var(--sans);letter-spacing:.05em;color:#0b0a0f;white-space:nowrap;pointer-events:none;padding:0 12px}.cueblk i{position:absolute;top:0;bottom:0;width:12px;cursor:ew-resize;background:#ffffffaa}.cueblk .ch0{left:0;border-radius:5px 0 0 5px}.cueblk .ch1{right:0;border-radius:0 5px 5px 0}
-.cuetail{position:absolute;top:7px;height:12px;border-radius:0 5px 5px 0;pointer-events:none;opacity:.8}
+.cuetail{position:absolute;top:7px;height:12px;border-radius:0 5px 5px 0;pointer-events:none;opacity:.9}
+.cueblk::after,.cuetail::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)'/%3E%3C/svg%3E")}   /* film grain, like the reference */
 .cueph{position:absolute;top:0;bottom:0;width:2px;background:#fff;z-index:3;box-shadow:0 0 6px #fff;pointer-events:none}
 .cuetime{font:500 11px var(--mono);opacity:.7;margin:3px 0 8px}.cue{border-top:1px solid var(--line);padding:8px 0;display:grid;gap:6px}.cuer{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .cuer select{flex:1;min-width:0;height:36px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px}.cuer label{display:flex;align-items:center;gap:4px;font-size:10px;letter-spacing:.06em;opacity:.85}
@@ -812,7 +813,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14n';
+const BUILD = '2026-11-14o';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2075,8 +2076,8 @@ function cueBar(i){ const tl = $(`[data-cuebar="${i}"]`), v = VT[i]; if (!tl) re
   const L = cuesOf(i); lanes.style.height = Math.max(1, L.length) * 26 + 'px';
   lanes.innerHTML = !d ? '' : L.map((c, n) => { const f = +c.fade || 0, end = c.t1 > c.t0 ? c.t1 : d, a = Math.min(1, c.t0 / d), z = Math.min(1, end / d), w = Math.max(0.004, z - a);
     const l = (S.layers || []).find(x => x.k === c.k), col = GC[l && l.g] || '#c6ff3d', fi = Math.min(100, f / d / w * 100), tail = Math.max(0, Math.min(1 - z, f / d));
-    return `<div class="cuelane" style="top:${n * 26}px"><b class="cueblk" data-cueblk="${n}" style="left:${a * 100}%;width:${w * 100}%;--c:${col};background:${f > 0 ? `linear-gradient(90deg,${col}33,${col} ${fi}%,${col})` : col}"><i class="ch0" data-cueh="t0"></i><span>${esc(l ? l.label : c.k)}</span><i class="ch1" data-cueh="t1"></i></b>`
-      + (tail > 0 ? `<b class="cuetail" style="left:${z * 100}%;width:${tail * 100}%;background:linear-gradient(90deg,${col},${col}22)"></b>` : '') + '</div>'; }).join(''); }
+    return `<div class="cuelane" style="top:${n * 26}px"><b class="cueblk" data-cueblk="${n}" style="left:${a * 100}%;width:${w * 100}%;--c:${col};background:${f > 0 ? `linear-gradient(90deg,#ff8a1f,${col} ${fi}%,${col})` : col}"><i class="ch0" data-cueh="t0"></i><span>${esc(l ? l.label : c.k)}</span><i class="ch1" data-cueh="t1"></i></b>`
+      + (tail > 0 ? `<b class="cuetail" style="left:${z * 100}%;width:${tail * 100}%;background:linear-gradient(90deg,${col},#ff8a1f 45%,#ff8a1f00)"></b>` : '') + '</div>'; }).join(''); }
 let CDRAG = null;
 document.addEventListener('pointerdown', e => {
   const sc = e.target.closest('[data-cuescrub]'), blk = e.target.closest('[data-cueblk]'); if (!sc && !blk) return;
