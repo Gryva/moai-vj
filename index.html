@@ -502,6 +502,20 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .cuepickbar{display:none}body.cuepicking .cuepickbar{display:flex;position:sticky;top:0;z-index:6;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin:0 0 10px;border-radius:10px;background:#1a1f0d;border:2px dashed var(--lime);color:var(--lime);font-weight:700}
 .cuepickbar button{height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--lime);background:transparent;color:var(--lime);font:700 11px var(--sans)}
 body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body.cuepicking .lt button::after{content:"＋";position:absolute;left:auto;top:auto;right:6px;bottom:3px;width:auto;height:auto;background:none;font:700 18px var(--sans);color:var(--lime);z-index:3}
+.getvid{width:auto!important;padding:0 10px;font:700 11px var(--sans);letter-spacing:.05em;color:var(--cyan,#3ef0ff)}
+.prepPill{margin-left:6px;height:32px;padding:0 10px;border-radius:16px;border:1px solid #3ef0ff;background:#0d2228;color:#3ef0ff;font:700 11px var(--mono)}.prepPill.rdy{border-color:var(--lime);background:#1a1f0d;color:var(--lime);animation:recp 1.6s ease-in-out infinite}
+.prepov{position:fixed;inset:0;z-index:30;background:#000a;display:grid;place-items:center;padding:16px}.prepov[hidden]{display:none}
+.prepbox{width:min(560px,100%);max-height:92vh;overflow:auto;background:#121018;border:1px solid var(--line);border-radius:14px;padding:16px}.prepbig{width:min(820px,100%)}
+.prepbox h3{margin:0 0 6px;font-size:16px}.prepbox input[type=url]{width:100%;height:46px;margin:10px 0;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:500 14px var(--mono)}
+.prepacts{display:flex;gap:8px;margin:10px 0}.prepacts button{flex:1;height:44px;border-radius:10px;border:1px solid var(--line);background:#ffffff0d;color:var(--ink);font:700 12px var(--sans);letter-spacing:.05em}.prepacts .pri{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.prephd{display:flex;justify-content:space-between;align-items:center}.prephd button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--ink)}
+.prepjob{position:relative;display:block;width:100%;text-align:left;padding:8px 10px;margin:6px 0;border-radius:9px;border:1px solid var(--line);background:#16131c;color:var(--ink);overflow:hidden}.prepjob.on{border-color:var(--lime)}
+.prepjob b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prepjob span{font:500 11px var(--mono);opacity:.75}.prepjob i{position:absolute;left:0;bottom:0;height:3px;background:#3ef0ff}
+.preptl{position:relative;margin:12px 0 4px;height:64px;border-radius:8px;overflow:hidden;background:#000;touch-action:none;user-select:none}.prepstrip{display:flex;height:100%}.prepstrip img,.prepstrip i{flex:1;min-width:0;height:100%;object-fit:cover;opacity:.55}
+.prepsel{position:absolute;top:0;bottom:0;border:3px solid var(--lime);border-radius:6px;box-shadow:0 0 0 999px #0009;cursor:grab}.prepsel i{position:absolute;top:0;bottom:0;width:18px;background:var(--lime);cursor:ew-resize}.prepsel .ph0{left:-3px}.prepsel .ph1{right:-3px}
+.preptimes{display:flex;justify-content:space-between;font:500 12px var(--mono);opacity:.85}.prepfr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.prepfr figure{margin:0}.prepfr img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px;display:block}.prepfr figcaption{font-size:10px;opacity:.6;margin-top:2px}
+.preptg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.preptg button{height:42px;border-radius:9px;border:1px solid var(--line);background:#16131c;color:var(--ink);font:700 10px var(--sans);letter-spacing:.04em}.preptg button.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.prepname{flex:1}.prepname input{width:100%!important}.prepnew{width:100%;margin-top:8px;height:40px}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -519,7 +533,7 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="stat st2" id="stat2" aria-label="Reload and record"><i class="stbar"></i></button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="stat st2" id="stat2" aria-label="Reload and record"><i class="stbar"></i></button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk getvid" id="getvid" aria-label="Get a video from a link">⬇ VIDEO</button><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -756,6 +770,10 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 <div id="rail" aria-hidden="true"><i></i></div>
 <nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
+<div class="prepov" id="prepLink" hidden><div class="prepbox"><h3>Get a video</h3><p class="hint2">Paste a link (YouTube and most video sites). It downloads in the background, you get a message when it is ready to trim.</p>
+  <input type="url" id="prepUrl" placeholder="https://…" autocomplete="off"><div class="prepacts"><button class="pri" id="prepGo">⬇ DOWNLOAD</button><button id="prepLinkX">CANCEL</button></div></div></div>
+<div class="prepov" id="prep" hidden><div class="prepbox prepbig"><div class="prephd"><h3>Video prep</h3><button id="prepX" aria-label="Close">✕</button></div><div id="prepJobs"></div><div id="prepEd"></div>
+  <button class="cbtn prepnew" id="prepNew">＋ GET ANOTHER VIDEO</button></div></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
 <div class="lock" id="lock"><div class="box"><div class="logo" style="font-size:20px">VIDEO<i>//</i>JOCKEY</div>
@@ -770,6 +788,8 @@ const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s)
 document.addEventListener('change', e => { const el = e.target; if (!el.dataset || !el.dataset.cuef) return; const box = el.closest('.cuebox'); if (!box) return;
   const i = +box.querySelector('[data-cuel]').dataset.cuel, n = +el.closest('[data-cue]').dataset.cue, L = cuesOf(i); if (!L[n]) return;
   L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : el.dataset.cuef === 'fade' ? Math.max(0, +el.value || 0) : parseT(el.value); cuesSet(i, L); });
+document.addEventListener('input', e => { const el = e.target; if (!el.dataset || !el.dataset.prepv || !PREPSEL) return; const o = PREPO[PREPSEL];
+  o[el.dataset.prepv] = el.dataset.prepv === 'speed' ? Math.max(0.1, Math.min(8, +el.value || 1)) : el.value; prepTL(PREPJ.find(x => x.id === PREPSEL)); });
 document.addEventListener('change', e => { const el = e.target, v = Math.max(0, Math.min(600, +String(el.value).replace(',', '.') || 0));
   if (el.id === 'fadein') { ui.fade = v; uiPrefs(); send({t:'set', p:'Autofade', v}); toast(v ? 'Presets fade in ' + v + ' s' : 'Presets cut'); }
   else if (el.id === 'fxfadein') { S.pars.Fxfade = v; send({t:'set', p:'Fxfade', v}); toast(v ? 'Effects fade in ' + v + ' s' : 'Effects switch instantly'); }
@@ -820,7 +840,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14p';
+const BUILD = '2026-11-14q';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -877,6 +897,10 @@ function onMsg(m){
   if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { const nw = JSON.stringify(m.v) !== JSON.stringify(HOSTS); HOSTS = m.v; if (nw) { store.set('hosts', HOSTS); setTimeout(wsPrefer, 50); } } linkBadge(); return; }
   if (m.t === 'rec' || (m.t === 'state' && m.rec)) recUI(m.t === 'rec' ? m : m.rec);
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
+  if (m.t === 'prep' || (m.t === 'state' && m.prep)) prepState(m.t === 'prep' ? m.jobs : m.prep);
+  if (m.t === 'prepstrip') { PREPSTRIP[m.id] = m.v; if (PREPSEL === m.id && !$('#prep').hidden) { $('#prepEd').dataset.id = ''; prepUI(); } }
+  if (m.t === 'prepframe') { ['in', 'out'].forEach(k => { const o = PREPO[m.id]; if (!o) return; const at = +(k === 'out' ? Math.max(0, o.out - 0.05) : o.in).toFixed(2);
+    if (Math.abs(at - m.at) < 0.011) { PREPFR[m.id + k] = {at: k === 'out' ? Math.max(0, o.out - 0.05) : o.in, img:m.img}; const im = $(`[data-prepfr="${k}"]`); if (im && PREPSEL === m.id) im.src = 'data:image/jpeg;base64,' + m.img; } }); }
   if (m.t === 'state' || (m.t === 'm' && m.LT)) setTimeout(glitUI, 0);
   if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
@@ -2118,6 +2142,53 @@ function glitUI(){ $$('[data-glt]').forEach(el => { const t = el.dataset.glt, r 
     const c = pkDec('glitter', r ? r[3] : 7050); const sig = (on ? c.sty : -1) + '';
     if (el.dataset.sig === sig) return; el.dataset.sig = sig;
     el.innerHTML = `<div class="glsw"><button data-gloff="${t}" class="${on ? '' : 'on'}"><i style="background:#16131c"></i><b>OFF</b></button>${GLIT.map(([n, bg], i) => `<button data-glon="${t}" data-v="${i}" class="${on && c.sty === i ? 'on' : ''}"><i style="background:${bg}"></i><b>${n}</b></button>`).join('')}</div><p class="hint2">Sparkle amount, speed and beat: FX tab → this text → Glitter.</p>`; }); }
+// ---- video prep: link -> background download -> trim / reverse / mirror -> videos
+let PREPJ = [], PREPSEL = null; const PREPSTRIP = {}, PREPO = {}, PREPFR = {};
+function prepState(jobs){ const old = Object.fromEntries(PREPJ.map(j => [j.id, j.state])); PREPJ = jobs || [];
+  PREPJ.forEach(j => { const o = old[j.id]; if (o === undefined && j.state === 'download') return;
+    if (o === 'download' && j.state === 'ready') { toast('⬇ Video downloaded: ' + j.title + ' — tap ✂ to trim'); buzz(30); if (!PREPSEL) PREPSEL = j.id; }
+    if (o === 'saving' && j.state === 'done') { toast('✓ Saved to videos: ' + (j.out || '').replace('videos/', '')); buzz(30); }
+    if (o && o !== 'fail' && j.state === 'fail') toast('Video: ' + (j.err || 'failed')); });
+  const pill = $('#prepPill'), run = PREPJ.find(j => j.state === 'download' || j.state === 'saving'), rdy = PREPJ.filter(j => j.state === 'ready');
+  pill.hidden = !run && !rdy.length; pill.classList.toggle('rdy', !run && !!rdy.length);
+  pill.textContent = run ? (run.state === 'download' ? '⬇ ' : '⚙ ') + (run.pct || 0) + '%' : '✂ ' + rdy.length + ' READY';
+  if (!$('#prep').hidden) prepUI(); }
+function prepOpen(){ $('#prep').hidden = false; if (!PREPSEL) { const r = PREPJ.find(j => j.state === 'ready') || PREPJ[PREPJ.length - 1]; PREPSEL = r && r.id; } prepUI(); }
+function prepUI(){
+  $('#prepJobs').innerHTML = PREPJ.slice().reverse().map(j => `<button class="prepjob ${j.id === PREPSEL ? 'on' : ''}" data-prepsel="${j.id}"><b>${esc(j.title || j.url)}</b>
+    <span>${j.state === 'download' ? 'downloading ' + (j.pct || 0) + '%' : j.state === 'saving' ? 'saving ' + (j.pct || 0) + '%' : j.state === 'ready' ? 'ready to trim · ' + fmtT(j.dur) : j.state === 'done' ? '✓ in videos: ' + esc((j.out || '').replace('videos/', '')) : '✕ ' + esc(j.err || 'failed')}</span>
+    <i style="width:${j.state === 'download' || j.state === 'saving' ? (j.pct || 0) : 0}%"></i></button>`).join('') || '<p class="hint2">No videos yet.</p>';
+  const j = PREPJ.find(x => x.id === PREPSEL), ed = $('#prepEd');
+  if (!j || !(j.state === 'ready' || j.state === 'done' || (j.state === 'fail' && j.dur))) { ed.innerHTML = ''; return; }
+  const o = PREPO[j.id] || (PREPO[j.id] = {in:0, out:j.dur, speed:1, name:j.title});
+  if (ed.dataset.id === j.id && ed.innerHTML) return prepTL(j);
+  ed.dataset.id = j.id; if (!PREPSTRIP[j.id]) send({t:'prep', do:'strip', id:j.id});
+  ed.innerHTML = `<div class="preptl" data-preptl><div class="prepstrip">${(PREPSTRIP[j.id] || []).map(b => b ? `<img src="data:image/jpeg;base64,${b}">` : '<i></i>').join('')}</div>
+      <b class="prepsel"><i class="ph0" data-preph="in"></i><i class="ph1" data-preph="out"></i></b></div>
+    <div class="preptimes"><span>IN <b data-prept="in"></b></span><span>length <b data-prept="len"></b></span><span>OUT <b data-prept="out"></b></span></div>
+    <div class="prepfr"><figure><img data-prepfr="in"><figcaption>first frame</figcaption></figure><figure><img data-prepfr="out"><figcaption>last frame</figcaption></figure></div>
+    <div class="preptg">${[['reverse','⏪ REVERSE'],['pingpong','⇄ PING-PONG'],['mirror','⇆ MIRROR'],['flip','⇅ FLIP']].map(([k, l]) => `<button data-prepo="${k}" class="${o[k] ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <div class="cuer"><label>SPEED<input type="number" step="0.05" min="0.1" max="8" data-prepv="speed" value="${o.speed}"></label><label class="prepname">NAME<input type="text" maxlength="60" data-prepv="name" value="${esc(o.name || '')}"></label></div>
+    <div class="prepacts"><button class="pri" data-prepsave="${j.id}">✓ SAVE TO VIDEOS</button><button data-prepdrop="${j.id}">DELETE DOWNLOAD</button></div>
+    <p class="hint2">Drag the green edges to trim. Saved as 1280×720 into your videos, then it shows up when you add a video layer.</p>`;
+  prepTL(j); prepFrames(j); }
+function prepTL(j){ const o = PREPO[j.id], d = j.dur || 1, sel = $('#prepEd .prepsel'); if (!sel) return;
+  sel.style.left = o.in / d * 100 + '%'; sel.style.width = Math.max(0.5, (o.out - o.in) / d * 100) + '%';
+  $('[data-prept="in"]').textContent = fmtT(o.in); $('[data-prept="out"]').textContent = fmtT(o.out); $('[data-prept="len"]').textContent = fmtT((o.out - o.in) / (o.speed || 1) * (o.pingpong ? 2 : 1)); }
+function prepFrames(j){ const o = PREPO[j.id]; ['in', 'out'].forEach(k => { const at = k === 'out' ? Math.max(0, o.out - 0.05) : o.in, key = j.id + k;
+    if (PREPFR[key] && PREPFR[key].at === at) { const im = $(`[data-prepfr="${k}"]`); if (im) im.src = 'data:image/jpeg;base64,' + PREPFR[key].img; }
+    else send({t:'prep', do:'frame', id:j.id, at:+at.toFixed(2)}); }); }
+let PDRAG = null;
+document.addEventListener('pointerdown', e => { const sel = e.target.closest('#prepEd .prepsel'), tl = e.target.closest('[data-preptl]'); if (!tl) return;
+  const j = PREPJ.find(x => x.id === PREPSEL); if (!j) return; e.preventDefault(); const o = PREPO[j.id], r = tl.getBoundingClientRect(), d = j.dur || 1, tAt = x => Math.max(0, Math.min(d, (x - r.left) / r.width * d));
+  const h = e.target.dataset.preph || (sel ? 'both' : (Math.abs(tAt(e.clientX) - o.in) < Math.abs(tAt(e.clientX) - o.out) ? 'in' : 'out')), t0 = tAt(e.clientX), a0 = o.in, b0 = o.out;
+  PDRAG = {j, move: ev => { const dt = tAt(ev.clientX) - t0;
+    if (h === 'in') o.in = Math.max(0, Math.min(o.out - 0.2, sel ? a0 + dt : tAt(ev.clientX)));
+    else if (h === 'out') o.out = Math.min(d, Math.max(o.in + 0.2, sel ? b0 + dt : tAt(ev.clientX)));
+    else { const len = b0 - a0, na = Math.max(0, Math.min(d - len, a0 + dt)); o.in = na; o.out = na + len; }
+    prepTL(j); }}; PDRAG.move(e); });
+document.addEventListener('pointermove', e => { if (PDRAG) PDRAG.move(e); });
+document.addEventListener('pointerup', () => { if (!PDRAG) return; const j = PDRAG.j; PDRAG = null; prepFrames(j); });
 function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
 function pkEnc(k, c){ return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
 function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
@@ -2408,6 +2479,17 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
   if (d.uifont) { store.set('uifont', uiFont(d.uifont)); buzz(); return; }
   if (d.lfold) { const k = d.lfold; if (LFOLD.has(k)) LFOLD.delete(k); else LFOLD.add(k); store.set('lfold', [...LFOLD]); t.closest('.lay').classList.toggle('fold', LFOLD.has(k)); buzz(); return; }
+  if (t.id === 'getvid' || t.id === 'prepNew') { $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); buzz(); return; }
+  if (t.id === 'prepLinkX') { $('#prepLink').hidden = true; return; }
+  if (t.id === 'prepGo') { const u = $('#prepUrl').value.trim(); if (!/^https?:\/\//.test(u)) { toast('Paste a full link (https://…)'); return; }
+    send({t:'prep', do:'get', url:u}); $('#prepLink').hidden = true; toast('⬇ Downloading in the background — keep playing'); buzz(); return; }
+  if (t.id === 'prepPill') { prepOpen(); return; }
+  if (t.id === 'prepX') { $('#prep').hidden = true; return; }
+  if (d.prepsel) { PREPSEL = d.prepsel; $('#prepEd').dataset.id = ''; prepUI(); return; }
+  if (d.prepo) { const o = PREPO[PREPSEL]; o[d.prepo] = !o[d.prepo]; t.classList.toggle('on', o[d.prepo]); prepTL(PREPJ.find(x => x.id === PREPSEL)); buzz(); return; }
+  if (d.prepsave) { const o = PREPO[d.prepsave]; send({t:'prep', do:'save', id:d.prepsave, o:{in:+o.in.toFixed(2), out:+o.out.toFixed(2), speed:+o.speed || 1, reverse:!!o.reverse, pingpong:!!o.pingpong, mirror:!!o.mirror, flip:!!o.flip, name:o.name}});
+    toast('⚙ Saving in the background — you get a message when it is in videos'); $('#prep').hidden = true; buzz(); return; }
+  if (d.prepdrop) { send({t:'prep', do:'drop', id:d.prepdrop}); delete PREPO[d.prepdrop]; PREPSEL = null; $('#prepEd').dataset.id = ''; buzz(); return; }
   if (t.id === 'recx') { send({t:'rec', do:'discard'}); buzz(20); return; }
   if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start'}); buzz(20); return; }
   if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }

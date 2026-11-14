@@ -359,6 +359,146 @@ def mediaDel(mid):
 # ---- video upload: the phone sends JPEG frames (any phone, any codec) in parts; rebuilt here as an MP4
 VUPS = {}
 VJOBS = {}
+
+# ---------------------------------------------------------------- VIDEO PREP: link -> download in the background -> trim / reverse / mirror -> media/videos
+# Everything heavy runs in threads (no TouchDesigner calls there); a small poller on the main thread tells the phones.
+def _keep(name, val):                           # survives this script being reloaded (lives in the operator's storage)
+    o = op('/project1/remote_server'); v = o.fetch(name, None, storeDefault=False)
+    if v is None: o.store(name, val); v = o.fetch(name)
+    return v
+PREP = _keep('PREP', {})                        # job id -> {id, url, title, state, pct, raw, dur, fps, w, h, out, err}
+PREPQ = _keep('PREPQ', [])                      # finished thumbnails / frames waiting to be sent (filled by threads)
+PREPDIR = os.path.join(project.folder, 'prep')
+PREPLIB = os.path.join(project.folder, 'tools', 'pylib')
+PREPSIG = {'s': ''}
+def _prepPub(j): return {k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}
+def prepMsg(): return {'t': 'prep', 'jobs': [_prepPub(j) for j in sorted(PREP.values(), key=lambda j: j['t'])][-8:]}
+def prepPoll():
+    """Main thread: send job changes + finished pictures; keep polling while anything runs."""
+    sig = json.dumps(prepMsg()['jobs'])
+    if sig != PREPSIG['s']:
+        PREPSIG['s'] = sig; _all(prepMsg())
+        PREPSIG['until'] = time.time() + 8
+        if any(j['state'] == 'done' and not j.get('told') for j in PREP.values()):
+            for j in PREP.values():
+                if j['state'] == 'done': j['told'] = True
+            _allMedia(); _all(clipsMsg())
+    if PREPQ: PREPSIG['until'] = time.time() + 6
+    while PREPQ: _all(PREPQ.pop(0))
+    if any(j['state'] in ('download', 'saving') for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
+        run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
+
+def _prepDownload(j):
+    """yt-dlp in its own process (the show keeps its frame rate); this thread only reads the progress."""
+    import sys, glob, shutil, subprocess, re
+    try:
+        os.makedirs(PREPDIR, exist_ok=True)
+        py = sys.executable if os.path.basename(sys.executable).lower().startswith('python') else None   # TouchDesigner's own Python 3.11, as a separate process
+        py = py or shutil.which('python') or shutil.which('py')
+        if not py: raise RuntimeError('Python is needed for downloads')
+        env = dict(os.environ, PYTHONPATH=PREPLIB, PYTHONIOENCODING='utf-8')
+        cmd = [py, '-m', 'yt_dlp', '-f', 'bv*[height<=720][vcodec^=avc1][ext=mp4]/bv*[height<=720][ext=mp4]/b[height<=720][ext=mp4]/b[ext=mp4]/b',
+               '-o', os.path.join(PREPDIR, j['id'] + '.%(ext)s'), '--no-playlist', '--newline', '--no-warnings', '--max-filesize', '1500M',
+               '--js-runtimes', 'node', '--ffmpeg-location', FFMPEG, '--print', 'before_dl:TITLE:%(title)s', '--no-simulate', j['url']]
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env, text=True, encoding='utf-8', errors='replace',
+                             creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0))
+        j['proc'] = p; last = ''
+        for line in p.stdout:
+            line = line.strip()
+            if line.startswith('TITLE:'): j['title'] = line[6:][:80] or 'video'
+            m = re.search(r'\[download\]\s+([\d.]+)%', line)
+            if m: j['pct'] = int(float(m.group(1)))
+            if line.startswith('ERROR'): last = line
+        p.wait()
+        f = next(iter(sorted(x for x in glob.glob(os.path.join(PREPDIR, j['id'] + '.*')) if not x.endswith(('.part', '.ytdl')))), None)
+        if p.returncode != 0 or not f: raise RuntimeError(last.replace('ERROR:', '').strip() or 'download failed')
+        j['raw'] = f; _prepProbe(j); j['state'] = 'ready'; j['pct'] = 100
+        _prepStrip(j)
+    except Exception as e:
+        j['state'] = 'fail'; j['err'] = str(e).replace('\n', ' ')[:160]
+    j.pop('proc', None)
+
+FFMPEG = os.path.join(project.folder, 'tools', 'ffmpeg.exe')
+def _prepRun(cmd, **kw):
+    import subprocess
+    fl = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)   # never steals the show's frames
+    return subprocess.run(cmd, capture_output=True, creationflags=fl, **kw)
+def _prepProbe(j):
+    import re
+    r = _prepRun([FFMPEG, '-hide_banner', '-i', j['raw']]); e = r.stderr.decode('utf-8', 'replace')
+    m = re.search(r'Duration:\s*(\d+):(\d+):([\d.]+)', e); dur = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 0.0
+    f = re.search(r'([\d.]+)\s*fps', e); wh = re.search(r'Video:.*?(\d{2,5})x(\d{2,5})', e)
+    j.update(dur=round(dur, 2), fps=float(f.group(1)) if f else 30.0, w=int(wh.group(1)) if wh else 0, h=int(wh.group(2)) if wh else 0)
+def _prepShot(j, t, w):
+    import base64
+    r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-ss', '%.3f' % max(0.0, t), '-i', j['raw'], '-frames:v', '1', '-vf', 'scale=%d:-2' % w,
+                  '-q:v', '5', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-'])
+    return base64.b64encode(r.stdout).decode('ascii') if r.stdout else ''
+def _prepStrip(j, n=12):
+    PREPQ.append({'t': 'prepstrip', 'id': j['id'], 'v': [_prepShot(j, (k + 0.5) / n * (j['dur'] or 1), 160) for k in range(n)]})
+def _prepFrame(j, t):
+    b = _prepShot(j, t, 320)
+    if b: PREPQ.append({'t': 'prepframe', 'id': j['id'], 'at': t, 'img': b})
+
+def _prepRender(j, o):
+    """Trim + speed + reverse / ping-pong + mirror, filled to 1280x720 H.264, into media/videos (ffmpeg, its own process)."""
+    import subprocess, re
+    try:
+        t0 = max(0.0, float(o.get('in', 0))); t1 = min(j['dur'] or 1e9, float(o.get('out', j['dur']))); ln = t1 - t0
+        if ln < 0.1: raise ValueError('the clip is too short')
+        sp = max(0.1, min(8.0, float(o.get('speed', 1) or 1))); rev, pp = bool(o.get('reverse')), bool(o.get('pingpong'))
+        if (rev or pp) and ln > 60: raise ValueError('reverse / ping-pong: keep the clip under 60 s')
+        fps = min(60.0, j.get('fps') or 30.0)
+        vf = ['scale=1280:720:force_original_aspect_ratio=increase', 'crop=1280:720', 'fps=%g' % (min(fps, 30.0) if (rev or pp) else fps)]
+        if o.get('mirror'): vf.append('hflip')
+        if o.get('flip'): vf.append('vflip')
+        if abs(sp - 1.0) > 0.001: vf.append('setpts=PTS/%g' % sp)
+        chain = ','.join(vf)
+        if pp: fc = '[0:v]%s,split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1[v]' % chain
+        elif rev: fc = '[0:v]%s,reverse[v]' % chain
+        else: fc = '[0:v]%s[v]' % chain
+        outlen = ln / sp * (2 if pp else 1)
+        name = ''.join(ch for ch in str(o.get('name') or j.get('title') or 'clip') if ch.isalnum() or ch in ' -_').strip()[:60] or 'clip'
+        d = os.path.join(MEDIADIR, 'videos'); os.makedirs(d, exist_ok=True)
+        path = os.path.join(d, name + '.mp4'); n = 2
+        while os.path.exists(path): path = os.path.join(d, '%s %d.mp4' % (name, n)); n += 1
+        tmp = path[:-4] + '.part.mp4'
+        cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-ss', '%.3f' % t0, '-t', '%.3f' % ln, '-i', j['raw'], '-filter_complex', fc, '-map', '[v]', '-an',
+               '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-g', '30', '-movflags', '+faststart', '-progress', 'pipe:1', '-nostats', tmp]
+        fl = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=fl)
+        for line in p.stdout:
+            m = re.match(r'out_time_us=(\d+)', line.strip())
+            if m: j['pct'] = min(99, int(int(m.group(1)) / 1e6 / max(0.1, outlen) * 100))
+        p.wait(); err = p.stderr.read()
+        if p.returncode != 0 or not os.path.exists(tmp): raise RuntimeError((err or 'ffmpeg failed').strip().splitlines()[-1][:150])
+        os.replace(tmp, path)
+        j['out'] = 'videos/' + os.path.basename(path); j['state'] = 'done'; j['pct'] = 100
+    except Exception as e:
+        j['state'] = 'fail'; j['err'] = str(e)[:160]
+
+def prepHandle(msg, reply):
+    import threading, re, secrets
+    a = msg.get('do'); j = PREP.get(str(msg.get('id', '')))
+    if a == 'get':
+        url = str(msg.get('url', '')).strip()
+        if not re.match(r'^https?://[^\s]{4,500}$', url): return reply({'t': 'err', 'msg': 'That does not look like a link'})
+        if not os.path.isdir(PREPLIB) or not os.path.exists(FFMPEG): return reply({'t': 'err', 'msg': 'Video download tools are not installed yet (tools folder)'})
+        jid = secrets.token_hex(4)
+        PREP[jid] = j = {'id': jid, 'url': url, 'title': 'Downloading…', 'state': 'download', 'pct': 0, 't': time.time()}
+        threading.Thread(target=_prepDownload, args=(j,), daemon=True).start()
+    elif a == 'strip' and j and j.get('raw'): threading.Thread(target=_prepStrip, args=(j,), daemon=True).start()
+    elif a == 'frame' and j and j.get('raw'): threading.Thread(target=_prepFrame, args=(j, float(msg.get('at', 0))), daemon=True).start()
+    elif a == 'save' and j and j['state'] in ('ready', 'done', 'fail') and j.get('raw'):
+        j.update(state='saving', pct=0, err=None, told=False)
+        threading.Thread(target=_prepRender, args=(j, msg.get('o') or {}), daemon=True).start()
+    elif a == 'drop' and j:
+        PREP.pop(j['id'], None)
+        try:
+            if j.get('raw') and os.path.dirname(os.path.abspath(j['raw'])) == os.path.abspath(PREPDIR): os.remove(j['raw'])
+        except Exception: pass
+    PREPSIG['until'] = time.time() + 8                       # keep listening for the thumbnails / frames the threads make
+    reply(prepMsg()); prepPoll()
 VID_MAXF, VID_MAXB = 480, 48 * 1024 * 1024
 
 def videoPart(msg):
@@ -630,7 +770,7 @@ def _recDel(f, tries):
 
 def state():
     C = _C()
-    return {'t': 'state', 'rec': recMsg(), 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
+    return {'t': 'state', 'prep': prepMsg()['jobs'], 'rec': recMsg(), 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
             'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
@@ -1088,6 +1228,7 @@ def handle(msg, reply):
                 if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
         elif t == 'swap':                                          # linked layers: one goes off, the other comes on
             E.layerSwap(str(msg.get('a', '')), str(msg.get('b', '')))
+        elif t == 'prep': prepHandle(msg, reply)
         elif t == 'vseek':                                       # jump a video layer to a time (cue timeline scrub)
             i = int(msg.get('slot', 0)); m = op('/project1/mf%d' % i)
             if 1 <= i <= 6 and m is not None:
