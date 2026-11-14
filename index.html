@@ -34,6 +34,8 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .dshow{width:100%;margin:6px 0;background:#ffffff10}.dshow.pend{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.dfsbar .dshow{width:auto;margin:0}.dmore{margin:6px 0}
 .qbigrow{display:flex;gap:8px;align-items:stretch}.qbig{flex:1;min-height:64px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#16141c;color:var(--ink);text-align:left;font:700 15px var(--sans)}
 .qbig b{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qbig em{font:800 12px var(--mono);font-style:normal;letter-spacing:.1em;padding:6px 10px;border-radius:8px;background:#ffffff10;color:var(--mute)}
+.qfxt{position:relative;overflow:hidden;min-height:84px;justify-content:center;text-align:center;flex-direction:column;gap:2px;background:#121018}.qfxt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}.qfxt b,.qfxt .qly{position:relative;z-index:1;text-shadow:0 1px 8px #000}.qfxt b{flex:0;font-size:16px}
+.qfxt.on{background:#121018;color:var(--ink);border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.qfxt.on img{opacity:1}.qfxt.on .qly{color:var(--ink)}
 .qbig.on{background:var(--lime);border-color:var(--lime);color:#0b0a0f}.qbig.on .qly{color:#0b0a0f;opacity:.7}.qbig.on em{background:#0b0a0f;color:var(--lime)}.qbigrow .qmenu{height:auto}
 .qmenu{flex:none;margin-left:6px;width:30px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 15px/1 var(--sans);display:grid;place-items:center;padding:0}.qmenu:active{background:#ffffff14;color:var(--ink)}
 .sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
@@ -277,8 +279,8 @@ body.arranging .pad.full{touch-action:none}
 .lt{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px}
 .lt button{position:relative;aspect-ratio:1;border-radius:8px;background:linear-gradient(160deg,#211b2b,#121018);border:1px solid var(--line);overflow:hidden;text-align:left}
 .lt button img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .15s}
-.lt button::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0000 40%,#000c);z-index:1}
-.lt button b{position:absolute;left:6px;right:4px;bottom:5px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;z-index:2;text-shadow:0 1px 6px #000}
+.lt button::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,#0009 0,#0000 75%);z-index:1}
+.lt button b{position:absolute;left:4px;right:4px;top:50%;transform:translateY(-50%);text-align:center;font-size:11px;white-space:normal;overflow:hidden;line-height:1.15;z-index:2;text-shadow:0 1px 6px #000,0 0 3px #000}
 .lt button::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c);opacity:.6;z-index:2}
 .lt .ck{position:absolute;top:4px;right:4px;width:16px;height:16px;font-size:10px!important;border-radius:50%;background:var(--c);color:#0b0a0f;font:700 12px var(--sans);display:none;place-items:center;z-index:2}
 .lt button.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.lt button.on img{opacity:1}.lt button.on .ck{display:grid}
@@ -445,6 +447,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .tpos{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px}.tpos button{margin:0!important;font-size:15px}
 .sppad{position:relative;aspect-ratio:16/9;background:#ffffff0d;border:1px solid #ffffff22;border-radius:10px;margin:4px 0 10px;touch-action:none;overflow:hidden}.sppad i{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid var(--lime);border-radius:50%;box-shadow:0 0 12px var(--lime);pointer-events:none}
 .recb{color:#ff4d5e;font-weight:700;letter-spacing:.04em;width:auto!important;padding:0 10px}.recb.on{background:#ff2d45;color:#fff;animation:recp 1.2s ease-in-out infinite}@keyframes recp{50%{opacity:.6}}
+.fxfrow{display:flex;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap}.fxfrow>span{font-size:12px;opacity:.7}.fxfrow .seg{flex:1}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -499,6 +502,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
     <details class="box lsets" id="lsets"><summary>Layer look<span>opacity · blend · brightness · contrast</span></summary><div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div></details>
     <div class="onair" id="onair"></div>
+    <div class="fxfrow"><span>Effect on / off</span><div class="seg sm" id="fxfade"><button data-fxfd="0">CUT</button><button data-fxfd="0.5">FADE ½ s</button><button data-fxfd="1">FADE 1 s</button><button data-fxfd="2">FADE 2 s</button></div></div>
     </div><div class="colB">
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
@@ -747,7 +751,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14c';
+const BUILD = '2026-11-14d';
 const LFOLD = new Set(store.get('lfold', []));
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 setTimeout(async () => {
@@ -798,6 +802,7 @@ function onMsg(m){
   if (m.t === 'hist') { HISTORY = {u:m.u || [], r:m.r || 0}; histUI(); return; }
   if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { const nw = JSON.stringify(m.v) !== JSON.stringify(HOSTS); HOSTS = m.v; if (nw) { store.set('hosts', HOSTS); setTimeout(wsPrefer, 50); } } linkBadge(); return; }
   if (m.t === 'rec' || (m.t === 'state' && m.rec)) recUI(m.t === 'rec' ? m : m.rec);
+  if (m.t === 'state') setTimeout(fxfadeUI, 0);
   if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
@@ -1101,6 +1106,7 @@ function viewTargets(){
   const flat = layerOrder().filter(k => k !== 'model' && k !== 'draw' && !/^text/.test(k) && layerInfo(k).on && !layerInfo(k).in3d);
   const d3 = layerOrder().filter(is3dLayer);
   if (VW_SEL !== '3d' && !flat.includes(VW_SEL) && !d3.includes(VW_SEL)) VW_SEL = '3d';
+  if (VW_SEL === '3d' && !d3.length && flat.length) VW_SEL = flat[0];        // no 3D layer on: open on the picture's own zoom / move / turn / crop
   $('#vwtg').innerHTML = layerRows('view');
   const one3d = d3.includes(VW_SEL);
   $('#view2d').hidden = !flat.includes(VW_SEL); $('#view3d').hidden = VW_SEL !== '3d'; $('#view3dl').hidden = !one3d;
@@ -1562,7 +1568,7 @@ function onAir(){
   $('#onair').innerHTML = act.length ? act.map(l => { const md = MODES[l.k];
     const sw = SWATCH[l.k];
     const pin = `<div class="sub pinl"><span data-qfx="${l.k}" data-qf="p1">${l.p1label || 'Style'}</span></div>`;
-    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : l.k === 'spotpulse' ? spotUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
+    const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : l.k === 'spotpulse' ? spotUI(l) : PK[l.k] ? pkUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
     return `<div class="lay${LFOLD.has(l.k) ? ' fold' : ''}" style="--c:${GC[l.g]}"><div class="hd"><button class="lfold" data-lfold="${l.k}" aria-label="Show or hide settings">▾</button><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
@@ -1575,6 +1581,12 @@ function onAir(){
       c.x = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 99); c.y = Math.round(Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) * 99);
       const n = performance.now(); if (n - t > 40 || e.type === 'pointerup') { t = n; spSet(box, c); } };
     pad.addEventListener('pointerdown', e => { pad.setPointerCapture(e.pointerId); at(e); }); pad.addEventListener('pointermove', e => { if (e.buttons) at(e); }); pad.addEventListener('pointerup', at); });
+  $$('#onair input[data-pk]').forEach(el => bindSlider(el, 'pk' + el.dataset.pk, v => { const box = el.closest('[data-pkk]'), c = pkDec(box.dataset.pkk, box.dataset.pkv); c[el.dataset.pk] = Math.round(v); pkSet(box, c); }));
+  $$('#onair [data-pkpad]').forEach(pad => { let t = 0; const at = e => { const r = pad.getBoundingClientRect(), box = pad.closest('[data-pkk]'), c = pkDec(box.dataset.pkk, box.dataset.pkv);
+      c.x = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 99); c.y = Math.round(Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) * 99);
+      const n = performance.now(); if (n - t > 40 || e.type === 'pointerup') { t = n; pkSet(box, c); } };
+    pad.addEventListener('pointerdown', e => { pad.setPointerCapture(e.pointerId); at(e); }); pad.addEventListener('pointermove', e => { if (e.buttons) at(e); }); pad.addEventListener('pointerup', at); });
+  $$('#onair input[data-clscr]').forEach(el => bindSlider(el, 'clscr', v => { const box = el.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.scr = Math.round(v); clSet(box, c); }));
   $$('#onair input[data-sb]').forEach(el => bindSlider(el, 'sb' + el.dataset.sb, v => { const box = el.closest('[data-scrap]'), c = sbDec(+box.dataset.scrap); c[el.dataset.sb] = Math.round(v);
     const p1 = 10000 + c.look * 100 + c.mv; box.dataset.scrap = p1; send({t:'layer', tgt:FXT_SEL, k:'scrapbook', p1}); setLay('scrapbook', 'p1', p1); { const L = S.layers.find(x => x.k === 'scrapbook'); if (L) L.p1 = p1; } }));
   $$('#onair input[data-mrpos]').forEach(el => bindSlider(el, 'mirpos', v => { const box = el.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c.pos = Math.round(v);
@@ -1815,6 +1827,7 @@ function renderQuick(){
   $('#qk').innerHTML = TX.map(n => `<div class="ctl qtxt"><div class="top"><span><i class="qly">${esc(qtName(n))}</i> Words</span></div>
       <div class="qtrow"><input type="text" maxlength="120" data-qtxt="${n}" autocomplete="off"><button data-qtsend="${n}">SHOW</button></div><div class="recent qrec" data-qrec="${n}"></div></div>`).join('') + L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div></div>`;
+    if (it.k === 'fx' && it.f === 'on') { const L = S.layers.find(x => x.k === it.e) || {}; return `<div class="ctl qrow qbigrow"><button class="qbig qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><i class="qly">${esc(ly)}</i><b>${esc(L.label || it.e)}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`; }
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm.replace(/ · on \/ off$/, ''))}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
       const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
@@ -1915,11 +1928,11 @@ function histSheet(){ const u = HISTORY.u.slice().reverse();
 const CLN = {lay:['GRID','ROW','COLUMN','FAN','SCATTER'], ov:['NO OVERLAP','SOME','A LOT'], mot:['BOB','SHAKE','DRIFT','PULSE','SPIN'], sz:['TINY','SMALL','SMALLER','NORMAL','BIGGER','BIG','HUGE']};
 const CL_NEW = 2 ** 26;
 function clDec(p){ p = Math.round(p);                         // same rules as the engine (old presets: decimal digits)
-  if (p >= CL_NEW) { const q = p - CL_NEW; return {n:Math.max(1, (q & 127) + ((q >> 27) & 1) * 128), lay:(q >> 7) & 7, ov:(q >> 10) & 3, rnd:(q >> 12) & 3, mot:(q >> 14) & 31, sz:(q >> 19) & 127}; }
+  if (p >= CL_NEW) { const q = p - CL_NEW; return {n:Math.max(1, (q & 127) + ((q >> 27) & 1) * 128), lay:(q >> 7) & 7, ov:(q >> 10) & 3, rnd:(q >> 12) & 3, mot:(q >> 14) & 31, sz:(q >> 19) & 127, scr:Math.floor(q / 268435456) % 32}; }
   const d = p % 10; let n = ({0:24, 1:16, 7:12, 9:10})[d] || d || 3; const lay = Math.floor(p / 1000) % 10, mot = Math.floor(p / 100) % 10, sz = Math.floor(p / 100000) % 10;
   if (lay === 0) n = Math.min(100, n * n);
   return {n, lay, ov:Math.floor(p / 10) % 10, rnd:Math.floor(p / 10000) % 10, mot:mot ? 1 << (mot - 1) : 0, sz:1 << (({0:3, 1:0, 2:1, 3:2, 4:4, 5:5, 6:6})[sz] ?? 3)}; }
-function clEnc(c){ const n = Math.max(1, Math.min(150, c.n)); return CL_NEW + (n & 127) + (n >= 128 ? 134217728 : 0) + (c.lay << 7) + (c.ov << 10) + (c.rnd << 12) + (c.mot << 14) + ((c.sz || 8) << 19); }
+function clEnc(c){ const n = Math.max(1, Math.min(150, c.n)); return CL_NEW + (n & 127) + (n >= 128 ? 134217728 : 0) + (c.lay << 7) + (c.ov << 10) + (c.rnd << 12) + (c.mot << 14) + ((c.sz || 8) << 19) + (c.scr || 0) * 268435456; }
 function segUI(lab, attr, list, cur, vals){ return `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px;flex-wrap:wrap">${list.map((m, i) => { const v = vals ? vals[i] : i;
   return `<button ${attr}="${v}" class="${cur === v ? 'on' : ''}">${m}</button>`; }).join('')}</div>`; }
 function bitsUI(lab, f, list, mask, none){ return `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px;flex-wrap:wrap">`
@@ -1927,6 +1940,7 @@ function bitsUI(lab, f, list, mask, none){ return `<div class="sub pinl"><span>$
   + list.map((m, i) => `<button data-clbits="${f}" data-b="${1 << i}" class="${mask & (1 << i) ? 'on' : ''}">${m}</button>`).join('') + '</div>'; }
 function clonesUI(l){ const c = clDec(l.p1);
   return `<div data-clones="${Math.round(l.p1)}">` + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay)
+    + (c.lay === 1 || c.lay === 2 ? `<div class="sub"><span>${c.lay === 1 ? 'Moves left → right' : 'Moves top → bottom'} · speed</span><input type="range" data-clscr min="0" max="31" step="1" value="${c.scr || 0}" style="--acc:${GC[l.g]}"></div>` : '')
     + `<div class="sub"><span>How many</span><input type="range" data-clnum min="1" max="150" step="1" value="${c.n}" style="--acc:${GC[l.g]}"><output id="o-clnum">${c.n}</output></div>`
     + bitsUI('Sizes (mix any)', 'sz', CLN.sz, c.sz || 8) + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov)
     + bitsUI('Angle', 'rnd', ['TILTED','FLIPPED'], c.rnd, 'STRAIGHT') + bitsUI('Movement (mix any)', 'mot', CLN.mot, c.mot, 'STILL') + '</div>'; }
@@ -1940,6 +1954,24 @@ function recUI(r){ const was = REC.on; REC.on = !!r.on; REC.file = r.file || REC
 function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('on', REC.on);
   if (!REC.on) { b.textContent = '● REC'; return; } const s = Math.floor((performance.now() - REC.t0) / 1000); b.textContent = '■ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 setInterval(() => REC.on && recTick(), 500);
+const PK = {
+  mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
+  rotate: [['dir', 100, 10], ['sp', 1, 100]],
+  dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]]};
+function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0); $$('[data-fxfd]').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.fxfd - v) < 0.01)); }
+function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
+function pkEnc(k, c){ return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
+function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
+  const i = box.querySelector('.sppad i'); if (i && k === 'mask') pkDot(i, c); }
+function pkDot(i, c){ i.style.left = c.x / 99 * 100 + '%'; i.style.top = c.y / 99 * 100 + '%'; i.style.width = (1 + c.w / 99 * 60) * 2 * 9 / 16 + '%'; i.style.height = (1 + c.h / 99 * 60) * 2 + '%'; i.style.aspectRatio = 'auto'; i.style.borderRadius = c.shp ? '3px' : '50%'; }
+const pkS = (l, f, lab, v) => `<div class="sub"><span>${lab}</span><input type="range" data-pk="${f}" min="0" max="99" step="1" value="${v}" style="--acc:${GC[l.g]}"></div>`;
+function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k}" data-pkv="${pkEnc(k, c)}">`;
+  if (k === 'mask') { const sty = `left:${c.x / 99 * 100}%;top:${c.y / 99 * 100}%;width:${(1 + c.w / 99 * 60) * 2 * 9 / 16}%;height:${(1 + c.h / 99 * 60) * 2}%;aspect-ratio:auto;border-radius:${c.shp ? '3px' : '50%'}`;
+    h += segUI('Shape', 'data-pkf="shp" data-v', ['CIRCLE / OVAL','RECTANGLE'], c.shp) + `<div class="sub"><span>Where (tap or drag)</span></div><div class="sppad" data-pkpad><i style="${sty}"></i></div>`
+      + pkS(l, 'w', 'Width', c.w) + pkS(l, 'h', 'Height', c.h) + pkS(l, 'sf', 'Soft edge', c.sf) + segUI('Show', 'data-pkf="inv" data-v', ['INSIDE','OUTSIDE'], c.inv); }
+  if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp);
+  if (k === 'dvd') h += pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'sz', 'Size', c.sz) + pkS(l, 'an', 'Angle', c.an) + segUI('On each bounce', 'data-pkf="cc" data-v', ['SAME COLOUR','NEW COLOUR'], c.cc);
+  return h + '</div>'; }
 function spDec(p){ p = Math.round(+p || 0); const lo = p % 1e8, hi = Math.floor(p / 1e8); return {x:Math.floor(lo / 1e6) % 100, y:Math.floor(lo / 1e4) % 100, sz:Math.floor(lo / 100) % 100, st:lo % 100, md:Math.floor(hi / 1e4) % 10, sp:Math.floor(hi / 100) % 100, rp:hi % 100}; }
 function spEnc(c){ return (c.md * 1e4 + c.sp * 100 + c.rp) * 1e8 + c.x * 1e6 + c.y * 1e4 + c.sz * 100 + c.st; }
 function spotUI(l){ const c = spDec(l.p1);
@@ -2221,6 +2253,9 @@ document.addEventListener('click', e => {
   if (d.csw) { ccPick(d.csw, d.v); return; }
   if (d.mfit) { const i = +d.mfit, v = d.v === '1'; S.pars['M' + i + 'fit'] = v; send({t:'set', p:'M' + i + 'fit', v}); mediaCardsUI(S.pars);
     toast(v ? 'Whole picture: nothing cut off' : 'Fills the screen: edges may be cut off'); buzz(); return; }
+  if (d.fxfd !== undefined) { S.pars.Fxfade = +d.fxfd; send({t:'set', p:'Fxfade', v:+d.fxfd}); fxfadeUI(); toast(+d.fxfd ? 'Effects fade in and out' : 'Effects switch instantly'); buzz(); return; }
+  if (d.pkf) { const box = e.target.closest('[data-pkk]'), c = pkDec(box.dataset.pkk, box.dataset.pkv); c[d.pkf] = +d.v; pkSet(box, c);
+    box.querySelectorAll(`[data-pkf="${d.pkf}"]`).forEach(b => b.classList.toggle('on', b === t)); buzz(); return; }
   if (d.spmd) { const box = e.target.closest('[data-spot]'), c = spDec(box.dataset.spot); c.md = +d.v; spSet(box, c);
     box.querySelectorAll('[data-spmd]').forEach(b => b.classList.toggle('on', +b.dataset.v === c.md)); const sd = box.querySelector('[data-spspd]'); if (sd) sd.hidden = !c.md; buzz(); return; }
   if (d.mr !== undefined && d.mr !== '') { const box = e.target.closest('[data-mirror]'), c = mirDec(+box.dataset.mirror); c[d.mr] = +d.v;
@@ -2229,6 +2264,7 @@ document.addEventListener('click', e => {
     c[f] = b === 0 ? 0 : (c[f] ^ b); if (f === 'sz' && !c.sz) c.sz = 8;             // sizes: at least one stays on (NORMAL)
     clSet(box, c); airSig = ''; onAir(); buzz(); return; }
   if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v; clSet(box, c);
+    if (d.cl === 'lay') { airSig = ''; onAir(); buzz(); return; }
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.nzt || d.nzcm) { const i = d.nzt || d.nzcm, pn = 'M' + i + (d.nzt ? 'nztype' : 'nzcmode'); S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); nzUI(+i, S.pars); buzz(); return; }
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
@@ -2236,7 +2272,7 @@ document.addEventListener('click', e => {
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
   if (d.hsvt) { hsvToggle(d.hsvt); return; }
-  if (d.v && t.parentElement.id === 'nav') { ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
+  if (d.v && t.parentElement.id === 'nav') { if (d.v === 'view' && S) { const k = SRC_SEL || (FXT_SEL !== 'all' ? FXT_SEL : null); if (k) VW_SEL = k; viewTargets(); } ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
   else if (d.bank) { ui.bank = +d.bank; uiPrefs(); renderPads(); buzz(); }
   else if (d.fade !== undefined) { ui.fade = +d.fade; uiPrefs(); send({t:'set', p:'Autofade', v:ui.fade}); buzz(); }   // autopilot uses the same transition
   else if (d.aloop) { const md = (S.models || []).find(x => x.name === S.pars.Model); if (md) { md.loop = d.aloop; applyPars(S.pars); } send({t:'animloop', v:d.aloop}); buzz(); }

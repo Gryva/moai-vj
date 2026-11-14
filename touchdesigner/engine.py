@@ -200,7 +200,7 @@ def clDecode(p1):
     p = int(round(float(p1)))
     if p >= CL_NEW:
         q = p - CL_NEW
-        return {'n': max(1, (q & 127) + ((q >> 27) & 1) * 128), 'lay': (q >> 7) & 7, 'ov': (q >> 10) & 3, 'rnd': (q >> 12) & 3, 'mot': (q >> 14) & 31, 'sz': (q >> 19) & 127}
+        return {'n': max(1, (q & 127) + ((q >> 27) & 1) * 128), 'lay': (q >> 7) & 7, 'ov': (q >> 10) & 3, 'rnd': (q >> 12) & 3, 'mot': (q >> 14) & 31, 'sz': (q >> 19) & 127, 'scr': (q >> 28) & 31}
     d = p % 10; n = {0: 24, 1: 16, 7: 12, 9: 10}.get(d, d) or 3
     lay = (p // 1000) % 10; mot = (p // 100) % 10; sz = (p // 100000) % 10
     if lay == 0: n = min(100, n * n)                              # the old grid meant n x n
@@ -228,6 +228,14 @@ BLI = {}
 
 def pSet(g, k, p1):
     """An effect's one setting into its shader. CLONES needs more bits than one float holds: split over uP.x / uP.y."""
+    if k == 'mask':                                                    # invert*1e11 + shape*1e10 + x*1e8 + y*1e6 + w*1e4 + h*100 + soft
+        q = int(round(float(p1)))
+        g.par.vec3valuex = (q // 100000000) % 100 * 100 + (q // 1000000) % 100; g.par.vec3valuey = (q // 10000) % 100 * 100 + (q // 100) % 100
+        g.par.vec3valuez = (q // 10000000000) % 10 * 1000 + (q // 100000000000) % 10 * 100 + q % 100
+        return
+    if k == 'dvd':                                                     # colour*1e6 + angle*1e4 + speed*100 + size
+        q = int(round(float(p1))); g.par.vec3valuex = q % 10000; g.par.vec3valuey = (q // 10000) % 100 * 100 + (q // 1000000) % 10
+        return
     if k == 'spotpulse':                                               # steady*1e12 + speed*1e10 + ripple*1e8 + x*1e6 + y*1e4 + size*100 + strength (each 0-99)
         q = int(round(float(p1))); lo = q % 100000000; hi = q // 100000000
         g.par.vec3valuex = lo // 10000; g.par.vec3valuey = lo % 10000; g.par.vec3valuez = (hi // 10000) * 10000 + ((hi // 100) % 100) * 100 + hi % 100
@@ -241,6 +249,7 @@ def pSet(g, k, p1):
         c = clDecode(p1)
         g.par.vec3valuex = min(150, c['n']) + c['lay'] * 256 + c['ov'] * 2048 + c['rnd'] * 8192
         g.par.vec3valuey = c['mot'] + (c['sz'] or 8) * 32
+        g.par.vec3valuez = c.get('scr', 0) if c['lay'] in (1, 2) else 0
     else:
         g.par.vec3valuex = p1
 
@@ -270,7 +279,7 @@ def noiseUpdate(C, T):
 def clonesBB():
     """CLONES copies only the picture itself: find where its visible pixels are (tiny copy of the input, a few times a second)."""
     P = op('/project1')
-    for g in [P.op('fx_clones')] + [P.op('fxS%d_clones' % n) for n in (1, 2, 3, 4)]:
+    for g in [P.op(pre + k) for k in ('clones', 'dvd') for pre in ('fx_', 'fxS1_', 'fxS2_', 'fxS3_', 'fxS4_')]:
         if g is None or g.bypass or not g.inputs: continue
         r = P.op('cbb_' + g.name)
         if r is None:
@@ -867,6 +876,20 @@ def tFadeStep(T):
             if f['end'] is None: FXT[t].pop(k, None)
             else: FXT[t][k] = list(f['end'])
         else: FXT[t][k] = [True, f['a0'] + (f['a1'] - f['a0']) * u, f['p']]
+
+def fxFadeToggle(tgt, key, on, dur):
+    """An effect switched on / off by hand glides in / out instead of popping (EFFECT FADE setting)."""
+    T0 = absTime.seconds
+    if tgt == 'all':
+        t = op('/project1/FX_STACK'); row = t.row(key)
+        if row is None: return
+        r = row[0].row; amt = float(t[r, 'amt'].val or 1); p1 = float(t[r, 'p1'].val or 0)
+        S['fades'][key] = {'t0': T0, 'dur': dur, 'a0': 0.0 if on else amt, 'a1': amt if on else 0.0, 'p1': p1}
+        S['layers'] = None
+    elif tgt in FXT and key in FXT[tgt]:
+        v = list(FXT[tgt][key]); amt = v[1] if v[1] > 0.001 else 1.0
+        TFADES[(tgt, key)] = {'t0': T0, 'dur': dur, 'a0': 0.0 if on else amt, 'a1': amt if on else 0.0, 'p': v[2], 'end': [bool(on), amt, v[2]]}
+        FXT[tgt][key] = [True, 0.0 if on else amt, v[2]]
 
 def tSetLayer(tgt, key, on=None, amt=None, p1=None):
     if tgt not in FXT: return
@@ -2059,6 +2082,27 @@ def captureThumbs(presets=True, effects=True):
             q.append(((lambda k=k: (clearLayers(), setLayer(k, on=True, amt=1.0))), 10))
             q.append(((lambda k=k: open('%s/%s.jpg' % (FXTHUMB_DIR, k), 'wb').write(thumbBytes(72, norm=True))), 1))
     q.append((lambda: _sweepRestore(before, keep, bankBefore), 1))   # (this line was missing: the screen never came back)
+
+def thumbsFor(keys):
+    """Shoot effect tiles for just these effects (new effects), the same statue shot as the others; screen restored afterwards."""
+    import os
+    C = op('/project1/CONTROLS'); before = snapshot(); bankBefore = S.get('bank', 0)
+    keep = {p: C.par[p].eval() for p in ('Texton', 'Camsrc', 'Blackout', 'Scene', 'Model', 'Autopilot')}
+    C.par.Autopilot = False                                          # autopilot would change the picture mid-shoot
+    os.makedirs(FXTHUMB_DIR, exist_ok=True); q = SWEEP['q']
+    def ref():
+        C.par.Blackout = False; C.par.Camsrc = 'off'; C.par.Texton = False; C.par.Scene = 'solid'; C.par.Model = 'antinous'; C.par.Statue = True
+        clearLayers(); tClear()
+        for i in MSLOTS: mp(C, i, 'on').val = False                  # only the statue, like every other tile
+        for k, v in {'Orbit': 25, 'Orbitspeed': 0, 'Orbitsway': 0, 'Elevation': 4, 'Elevsway': 0, 'Distance': 3.4,
+                     'Distsway': 0, 'Height': 0, 'Fov': 45, 'Roll': 0, 'Rollsway': 0, 'Shake': 0, 'Pan': 0}.items():
+            try: C.par[k] = v
+            except Exception: pass
+    q.append((ref, 45))
+    for k in keys:
+        q.append(((lambda k=k: (clearLayers(), setLayer(k, on=True, amt=1.0))), 14))
+        q.append(((lambda k=k: open('%s/%s.jpg' % (FXTHUMB_DIR, k), 'wb').write(thumbBytes(72, norm=True))), 1))
+    q.append((lambda: _sweepRestore(before, keep, bankBefore), 1))
 
 def _sweepRestore(before, keep, bank):
     """After a picture shoot: the exact look from before (source, statue, camera, text), and the on-air slot."""

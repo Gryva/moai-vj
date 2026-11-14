@@ -109,7 +109,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Animbeat', 'Speed-up on the beat', 0, 2, 0.01, 'anim'),
     ('Fcamzoom', 'Zoom', 0.2, 4, 0.01, 'frcam'), ('Fcamx', 'Left / right', -1, 1, 0.005, 'frcam'), ('Fcamy', 'Up / down', -1, 1, 0.005, 'frcam'), ('Fcamrot', 'Rotate', -180, 180, 1, 'frcam'),
     ('Fdrawzoom', 'Zoom', 0.2, 4, 0.01, 'frdraw'), ('Fdrawx', 'Left / right', -1, 1, 0.005, 'frdraw'), ('Fdrawy', 'Up / down', -1, 1, 0.005, 'frdraw'), ('Fdrawrot', 'Rotate', -180, 180, 1, 'frdraw'),
-    ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
+    ('Fxfade', 'Effect fade', 0, 3, 0.05, 'fxfade'), ('Alphamodel', 'Opacity', 0, 1, 0.01, 'opmodel'), ('Opmodel', 'Brightness', 0, 2, 0.01, 'opmodel'), ('Contrastmodel', 'Contrast', 0, 2, 0.01, 'opmodel'),
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
@@ -870,6 +870,7 @@ def _ensurePars():
                 if vp is not None and vp.expr != want and 'M%dfzoom' % i in (vp.expr or ''): vp.expr = want
         if C.par.Master.default != 1.0: C.par.Master.default = 1.0      # TUNE brightness starts at 1
         pg = C.par.Opmodel.page                         # per layer opacity + blend mode
+        if not hasattr(C.par, 'Fxfade'): pp = pg.appendFloat('Fxfade', label='Effect fade (s)')[0]; pp.default = 0.0; pp.val = 0.0
         for n, dv in [('M%dalpha' % i, 1.0) for i in range(1, 7)] + [('Alphamodel', 1.0), ('Alphadraw', 1.0)] + [('M%dcontrast' % i, 1.0) for i in range(1, 7)] + [('Contrastmodel', 1.0), ('Contrastdraw', 1.0)]:
             if not hasattr(C.par, n): pp = pg.appendFloat(n, label=n)[0]; pp.default = dv; pp.val = dv
         for n, dv in [('M%dblend' % i, 'normal') for i in range(1, 7)] + [('Modelblend', 'normal'), ('Drawblend', 'screen')]:
@@ -983,6 +984,8 @@ def handle(msg, reply):
             tg = msg.get('tgt') or 'all'                          # which layer the effect is for (FX tab chips)
             if tg == 'all': E.setLayer(msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
             else: E.tSetLayer(tg, msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
+            fd = float(C.par.Fxfade.eval()) if hasattr(C.par, 'Fxfade') else 0.0
+            if msg.get('on') is not None and fd > 0.01: E.fxFadeToggle(tg, msg['k'], bool(msg.get('on')), fd)
         elif t == 'fxcopy':                                        # hold a layer in FX = copy, hold another = paste
             if E.fxCopy(str(msg.get('from', '')), str(msg.get('to', ''))):
                 _all({'t': 'lcols', 'v': dict(E.LCOL)}); _publish(state(), active_only=True)

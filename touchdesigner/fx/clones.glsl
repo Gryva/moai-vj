@@ -23,7 +23,7 @@ vec2 mir(vec2 p){ return abs(fract(p * 0.5) * 2.0 - 1.0); }
 #define OUT(c) fragColor = TDOutputSwizzle(outc(vUV.st, (c)))
 
 // CLONES  copies of the layer, spread over the screen. uP.x = count (1-150) + 256 * layout (0 grid, 1 row, 2 column, 3 fan, 4 scatter)
-//   + 2048 * overlap (0-2) + 8192 * angle bits (1 tilt, 2 flip).  uP.y = motion bits (1 bob, 2 shake, 4 drift, 8 pulse, 16 spin)
+//   + 2048 * overlap (0-2) + 8192 * angle bits; uP.z = row / column scroll speed (0-31) (1 tilt, 2 flip).  uP.y = motion bits (1 bob, 2 shake, 4 drift, 8 pulse, 16 spin)
 //   + 32 * size bits (0.5, 0.7, 0.85, 1, 1.2, 1.5, 2): each copy picks one of the chosen motions and one of the chosen sizes.
 uniform vec4 uBB;   // where the picture really is (x0, y0, x1, y1), measured by the engine: empty space around it is not copied
 mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
@@ -54,6 +54,9 @@ void main(){
   else s = min(1.0 / cols, 1.0 / (rows * hk)) * 1.15;
   s *= 1.0 + ov;
   vec3 acc = vec3(0.0); float aa = 0.0;
+  float scr = uP.z / 31.0 * 0.25;                                   // ROW / COLUMN scroll (screens a second)
+  if (scr > 0.0 && lay > 0.5 && lay < 1.5) uv.x = fract(uv.x - uTime * scr);
+  if (scr > 0.0 && lay > 1.5 && lay < 2.5) uv.y = fract(uv.y + uTime * scr);
   for (int k = 0; k < 150; k++) {
     float fk = float(k);
     if (fk >= n) break;
