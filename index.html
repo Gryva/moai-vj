@@ -488,6 +488,8 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .cuer select{flex:1;min-width:0;height:36px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px}.cuer label{display:flex;align-items:center;gap:4px;font-size:10px;letter-spacing:.06em;opacity:.85}
 .cuer input{width:70px;height:34px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 6px;font:500 13px var(--mono)}.cbtn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#ffffff0d;color:var(--ink);font:700 11px var(--sans);letter-spacing:.06em}.cuex{width:36px;padding:0}.cueadd{margin:8px 0 4px;width:100%;height:40px;color:var(--lime);border-color:var(--lime)}
 .tinrow{display:flex;align-items:center;gap:10px;margin:4px 0 8px}.tin{display:inline-flex;align-items:center;gap:4px}.tin input,.cuer label input[type=number]{width:84px;height:38px;background:#16131c;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:0 8px;font:600 15px var(--mono)}.tin i{font-style:normal;opacity:.7}
+.glsw{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;margin:4px 0 10px}.glsw button{height:58px;border-radius:9px;border:1px solid var(--line);background:#121018;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px}
+.glsw i{width:34px;height:20px;border-radius:5px;display:block;box-shadow:0 0 8px #0006}.glsw b{font-size:9px;letter-spacing:.06em}.glsw button.on{border-color:#ff5fd2;box-shadow:0 0 0 2px #ff5fd2,0 0 18px -4px #ff5fd2}.glsw button.on b{color:#ff5fd2;text-shadow:0 0 8px #ff5fd2}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -547,6 +549,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2>Warp</h2><div class="lt" id="lt-warp"></div>
     <h2>Style</h2><div class="lt" id="lt-style"></div>
     <h2>Post</h2><div class="lt" id="lt-post"></div>
+    <h2>Glitter core</h2><div class="lt" id="lt-glitter"></div>
   </div>
   </section>
 
@@ -570,6 +573,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
     <div class="tadir" data-tadir="Text"><span>Moves</span><div class="opts" id="o-Textadir"></div></div>
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
+    <h2>Glitter core</h2><div class="glrow" data-glt="text"></div>
     <h2>Colour</h2><div id="tcolbox"></div>
     <h2>Space</h2><div class="opts" id="o-Textspace"></div><p class="hint2 tsph" data-tsph="Text"></p>
     <div class="mmot" data-tmot="Text"><h4>Object motion</h4>
@@ -588,6 +592,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2>Animation</h2><div class="opts" id="o-T2anim"></div>
     <div class="tadir" data-tadir="T2"><span>Moves</span><div class="opts" id="o-T2adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T2font"></div>
+    <h2>Glitter core</h2><div class="glrow" data-glt="text2"></div>
     <h2>Colour</h2><div id="tcolbox2"></div>
     <h2>Space</h2><div class="opts" id="o-T2space"></div><p class="hint2 tsph" data-tsph="T2"></p>
     <div class="mmot" data-tmot="T2"><h4>Object motion</h4>
@@ -606,6 +611,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2>Animation</h2><div class="opts" id="o-T3anim"></div>
     <div class="tadir" data-tadir="T3"><span>Moves</span><div class="opts" id="o-T3adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T3font"></div>
+    <h2>Glitter core</h2><div class="glrow" data-glt="text3"></div>
     <h2>Colour</h2><div id="tcolbox3"></div>
     <h2>Space</h2><div class="opts" id="o-T3space"></div><p class="hint2 tsph" data-tsph="T3"></p>
     <div class="mmot" data-tmot="T3"><h4>Object motion</h4>
@@ -794,14 +800,14 @@ function sha256raw(ascii){
 const KEYSW = ['#00ff00','#0047ff','#000000','#ffffff','#ff0000','#ff00ff','#ffff00','#00ffff'];   // background colours to remove
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
-const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e'};
+const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e', glitter:'#ff5fd2'};
 const SWATCH = {palette:['#ff2114','#ff7a0d','#ffdb1a','#33ff59','#1ae0ff','#2e59ff','#9e38ff','#ff40b3']};
 const MODES = {wave:['SIDEWAYS','UP-DOWN','BOTH'], polar:['TINY PLANET','TUNNEL'], strobe:['INVERT','BLACK'], lines:['WAVES','CONTOUR','HATCH','SCAN'], palette:null};
 const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14k';
+const BUILD = '2026-11-14l';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -858,6 +864,7 @@ function onMsg(m){
   if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { const nw = JSON.stringify(m.v) !== JSON.stringify(HOSTS); HOSTS = m.v; if (nw) { store.set('hosts', HOSTS); setTimeout(wsPrefer, 50); } } linkBadge(); return; }
   if (m.t === 'rec' || (m.t === 'state' && m.rec)) recUI(m.t === 'rec' ? m : m.rec);
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
+  if (m.t === 'state' || (m.t === 'm' && m.LT)) setTimeout(glitUI, 0);
   if (m.t === 'state') { clearTimeout(thumbsCheck._t); thumbsCheck._t = setTimeout(thumbsCheck, 5000); setTimeout(thumbsCheck, 12000);
     const keep = S ? {clips: S.clips, clipcur: S.clipcur, media: S.media, fxps: S.fxps} : {};
     S = Object.assign(m, keep); S.queue = S.queue || {v:[], pos:-1}; S.lcols = S.lcols || {};
@@ -1412,7 +1419,7 @@ const EL = {};
 var ACC = {};
 function build(){
 
-  ['warp','style','post'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
+  ['warp','style','post','glitter'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
     `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
   const mb = m => `<button class="model" data-model="${esc(m.name)}"><img src="thumbs/${esc(m.name)}.jpg" alt="" onerror="this.style.visibility='hidden'"><span>${esc(m.label)}</span></button>`;
   const isA = m => m.anim || String(m.name).startsWith('anim_');
@@ -2032,7 +2039,12 @@ setInterval(() => REC.on && recTick(), 500);
 const PK = {
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
-  dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]]};
+  dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]],
+  glitter:[['beat', 1e6, 10], ['sty', 1e4, 100], ['amt', 100, 100], ['sp', 1, 100]]};
+const GLIT = [['PINK','linear-gradient(135deg,#ff3fb3,#ffc2ea)'],['BABY BLUE','linear-gradient(135deg,#4db3ff,#d1f2ff)'],['PURPLE','linear-gradient(135deg,#8c33ff,#e6b3ff)'],['GOLD','linear-gradient(135deg,#d98c14,#fff08c)'],
+  ['DISCO','repeating-conic-gradient(#777 0 25%,#fff 0 50%) 0 0/8px 8px'],['RAINBOW','linear-gradient(90deg,#ff4d4d,#ffd24d,#4dff88,#4dc3ff,#c94dff)'],['HEARTS','radial-gradient(circle at 30% 40%,#fff 0 6%,transparent 7%),linear-gradient(135deg,#f2144d,#ff8cb3)'],
+  ['STARRY','radial-gradient(circle at 70% 30%,#fff 0 5%,transparent 6%),linear-gradient(135deg,#0d1459,#5980ff)'],['JELLY','linear-gradient(180deg,#b3fff2,#1ad9bf 60%,#0a6b5e)'],['BLUSH','linear-gradient(135deg,#f28c9e,#ffe0d9)']];
+const glitSw = (attr, cur) => `<div class="glsw">${GLIT.map(([n, bg], i) => `<button ${attr}="${i}" class="${cur === i ? 'on' : ''}"><i style="background:${bg}"></i><b>${n}</b></button>`).join('')}</div>`;
 function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0), fi = $('#fxfadein'); if (fi && document.activeElement !== fi) fi.value = v; }
 // ---- video cues: effects on / off at set times of a video layer
 const VT = {}, CUESIG = {};
@@ -2062,6 +2074,10 @@ function cueTick(vt){ for (const k in vt) { const i = +k, had = VT[i]; VT[i] = v
     bar.querySelector('.cueph').style.left = Math.min(100, vt[k][0] / vt[k][1] * 100) + '%';
     const tt = $(`[data-cuetime="${i}"]`); if (tt) tt.textContent = fmtT(vt[k][0]) + ' / ' + fmtT(vt[k][1]);
     if (!had || had[1] !== vt[k][1]) cueBar(i); } }
+function glitUI(){ $$('[data-glt]').forEach(el => { const t = el.dataset.glt, r = ((S.tfx || {})[t] || []).find(x => x[0] === 'glitter'), on = !!(r && r[1]);
+    const c = pkDec('glitter', r ? r[3] : 7050); const sig = (on ? c.sty : -1) + '';
+    if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+    el.innerHTML = `<div class="glsw"><button data-gloff="${t}" class="${on ? '' : 'on'}"><i style="background:#16131c"></i><b>OFF</b></button>${GLIT.map(([n, bg], i) => `<button data-glon="${t}" data-v="${i}" class="${on && c.sty === i ? 'on' : ''}"><i style="background:${bg}"></i><b>${n}</b></button>`).join('')}</div><p class="hint2">Sparkle amount, speed and beat: FX tab → this text → Glitter.</p>`; }); }
 function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
 function pkEnc(k, c){ return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
 function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
@@ -2073,6 +2089,7 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
     h += segUI('Shape', 'data-pkf="shp" data-v', ['CIRCLE / OVAL','RECTANGLE'], c.shp) + `<div class="sub"><span>Where (tap or drag)</span></div><div class="sppad" data-pkpad><i style="${sty}"></i></div>`
       + pkS(l, 'w', 'Width', c.w) + pkS(l, 'h', 'Height', c.h) + pkS(l, 'sf', 'Soft edge', c.sf) + segUI('Show', 'data-pkf="inv" data-v', ['INSIDE','OUTSIDE'], c.inv); }
   if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp) + segUI('Empty corners', 'data-pkf="fill" data-v', ['LEAVE EMPTY','FILL (MIRROR)','ZOOM TO COVER'], c.fill);
+  if (k === 'glitter') h += `<div class="sub"><span>Look</span></div>` + glitSw('data-pkf="sty" data-v', c.sty) + pkS(l, 'amt', 'Glitter', c.amt) + pkS(l, 'sp', 'Sparkle speed', c.sp) + segUI('Sparkles', 'data-pkf="beat" data-v', ['STEADY','FLASH WITH THE BEAT'], c.beat);
   if (k === 'dvd') h += pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'sz', 'Size', c.sz) + pkS(l, 'an', 'Angle', c.an) + segUI('On each bounce', 'data-pkf="cc" data-v', ['SAME COLOUR','NEW COLOUR'], c.cc);
   return h + '</div>'; }
 function spDec(p){ p = Math.round(+p || 0); const lo = p % 1e8, hi = Math.floor(p / 1e8); return {x:Math.floor(lo / 1e6) % 100, y:Math.floor(lo / 1e4) % 100, sz:Math.floor(lo / 100) % 100, st:lo % 100, md:Math.floor(hi / 1e4) % 10, sp:Math.floor(hi / 100) % 100, rp:hi % 100}; }
@@ -2366,6 +2383,9 @@ document.addEventListener('click', e => {
   if (d.cuenow) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel, n = +t.closest('[data-cue]').dataset.cue, L = cuesOf(i); L[n][d.cuenow] = +((VT[i] || [0])[0]).toFixed(2); cuesSet(i, L); buzz(); return; }
   if (d.cuev) { const i = +t.closest('.cuebox').querySelector('[data-cuel]').dataset.cuel, n = +t.closest('[data-cue]').dataset.cue, L = cuesOf(i); L[n][d.cuev] = d.cuev === 'fade' ? +d.v : d.v; cuesSet(i, L); buzz(); return; }
   if (d.cuetog) { if (FXHOLD && performance.now() - FXHOLD < 600) return; const i = +d.cuetog, v = S.pars['M' + i + 'cueon'] === false; S.pars['M' + i + 'cueon'] = v; send({t:'set', p:'M' + i + 'cueon', v}); cueUI(i); toast(v ? 'Cues on' : 'Cues off – the video plays without them'); buzz(); return; }
+  if (d.glon) { const t = d.glon, r = ((S.tfx || {})[t] || []).find(x => x[0] === 'glitter'), c = pkDec('glitter', r ? r[3] : 7050); c.sty = +d.v;
+    send({t:'layer', tgt:t, k:'glitter', on:true, amt:1, p1:pkEnc('glitter', c)}); toast('Glitter: ' + GLIT[+d.v][0].toLowerCase()); buzz(); return; }
+  if (d.gloff) { send({t:'layer', tgt:d.gloff, k:'glitter', on:false}); buzz(); return; }
   if (d.pkf) { const box = e.target.closest('[data-pkk]'), c = pkDec(box.dataset.pkk, box.dataset.pkv); c[d.pkf] = +d.v; pkSet(box, c);
     box.querySelectorAll(`[data-pkf="${d.pkf}"]`).forEach(b => b.classList.toggle('on', b === t)); buzz(); return; }
   if (d.spmd) { const box = e.target.closest('[data-spot]'), c = spDec(box.dataset.spot); c.md = +d.v; spSet(box, c);
