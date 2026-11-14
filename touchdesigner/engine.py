@@ -200,7 +200,7 @@ def clDecode(p1):
     p = int(round(float(p1)))
     if p >= CL_NEW:
         q = p - CL_NEW
-        return {'n': max(1, q & 127), 'lay': (q >> 7) & 7, 'ov': (q >> 10) & 3, 'rnd': (q >> 12) & 3, 'mot': (q >> 14) & 31, 'sz': (q >> 19) & 127}
+        return {'n': max(1, (q & 127) + ((q >> 27) & 1) * 128), 'lay': (q >> 7) & 7, 'ov': (q >> 10) & 3, 'rnd': (q >> 12) & 3, 'mot': (q >> 14) & 31, 'sz': (q >> 19) & 127}
     d = p % 10; n = {0: 24, 1: 16, 7: 12, 9: 10}.get(d, d) or 3
     lay = (p // 1000) % 10; mot = (p // 100) % 10; sz = (p // 100000) % 10
     if lay == 0: n = min(100, n * n)                              # the old grid meant n x n
@@ -239,7 +239,7 @@ def pSet(g, k, p1):
         return
     if k == 'clones':
         c = clDecode(p1)
-        g.par.vec3valuex = c['n'] + c['lay'] * 128 + c['ov'] * 1024 + c['rnd'] * 4096
+        g.par.vec3valuex = min(150, c['n']) + c['lay'] * 256 + c['ov'] * 2048 + c['rnd'] * 8192
         g.par.vec3valuey = c['mot'] + (c['sz'] or 8) * 32
     else:
         g.par.vec3valuex = p1
@@ -858,8 +858,19 @@ def _defRow(key):
         if r['key'] == key: return float(r['amt'] or 1.0), float(r['p1'] or 0.0)
     return 1.0, 0.0
 
+TFADES = {}                                                   # (layer, effect) -> glide of its amount between presets
+def tFadeStep(T):
+    for (t, k), f in list(TFADES.items()):
+        u = min(1.0, max(0.0, (T - f['t0']) / max(0.01, f['dur']))); u = u * u * (3 - 2 * u)
+        if u >= 1.0:
+            del TFADES[(t, k)]
+            if f['end'] is None: FXT[t].pop(k, None)
+            else: FXT[t][k] = list(f['end'])
+        else: FXT[t][k] = [True, f['a0'] + (f['a1'] - f['a0']) * u, f['p']]
+
 def tSetLayer(tgt, key, on=None, amt=None, p1=None):
     if tgt not in FXT: return
+    TFADES.pop((tgt, key), None)                                  # a hand on the control beats a running preset glide
     cur = FXT[tgt].get(key) or ([False] + list(_defRow(key)))
     if on is not None: cur[0] = bool(on)
     if amt is not None: cur[1] = float(amt)
@@ -1007,9 +1018,21 @@ def applyLook(d, text=True):
     for a, b in (('images', 'm1'), ('videos', 'm2')):                 # before media layers were slots
         if a in tfx and b not in tfx: tfx[b] = tfx.pop(a)
         if a in tcol and b not in tcol: tcol[b] = tcol.pop(a)
+    fade = float(S.get('colfade', 0.0) or 0.0)
+    old = {t: {k: list(v) for k, v in FXT[t].items()} for t in FXTGTS} if fade > 0.01 else None
+    TFADES.clear()
     for t in FXTGTS:
         FXT[t] = {k: [bool(v[0]), float(v[1]), float(v[2])] for k, v in (tfx.get(t) or {}).items()}
         TCOL[t] = {k: _colClean(v) for k, v in (tcol.get(t) or {}).items()}
+    if old is not None:                                           # per-layer effects glide too (presets that only differ in a layer's effects)
+        T0 = absTime.seconds
+        for t in FXTGTS:
+            for k in set(old[t]) | set(FXT[t]):
+                o, n = old[t].get(k), FXT[t].get(k)
+                a0 = o[1] if o and o[0] else 0.0; a1 = n[1] if n and n[0] else 0.0
+                if abs(a0 - a1) < 0.001: continue
+                TFADES[(t, k)] = {'t0': T0, 'dur': fade, 'a0': a0, 'a1': a1, 'p': (n or o)[2], 'end': list(n) if n else None}
+                FXT[t][k] = [True, a0, (n or o)[2]]
 
 def lookNames():
     t = op('/project1/LOOKS')
@@ -2283,6 +2306,7 @@ def onFrameStart(frame):
     if S['frame'] % 8 == 0: _safe('clonesbb', clonesBB)
     _safe('noise', noiseUpdate, C, T)
     _safe('blend', blendUpdate, C)
+    if TFADES: _safe('tfade', tFadeStep, T)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()

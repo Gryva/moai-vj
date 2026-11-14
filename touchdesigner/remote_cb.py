@@ -212,6 +212,7 @@ def drawFrame(payload):
         img = cv2.imdecode(np.frombuffer(payload, np.uint8), cv2.IMREAD_COLOR)
         if img is None or img.shape[0] > 1080 or img.shape[1] > 1920: return
         DRAWS[slot] = {'img': np.ascontiguousarray(drawRGBA(img)[::-1]), 'new': True, 't': time.perf_counter()}
+        MLOG.append((time.strftime('%H:%M:%S'), {'t': 'drawframe', 'slot': slot, 'ink': int((img.max(axis=2) > 8).sum())})); del MLOG[:-60]
     except Exception as e:
         print('draw frame failed', e)
 

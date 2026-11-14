@@ -22,8 +22,8 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 vec2 mir(vec2 p){ return abs(fract(p * 0.5) * 2.0 - 1.0); }
 #define OUT(c) fragColor = TDOutputSwizzle(outc(vUV.st, (c)))
 
-// CLONES  copies of the layer, spread over the screen. uP.x = count (1-100) + 128 * layout (0 grid, 1 row, 2 column, 3 fan, 4 scatter)
-//   + 1024 * overlap (0-2) + 4096 * angle bits (1 tilt, 2 flip).  uP.y = motion bits (1 bob, 2 shake, 4 drift, 8 pulse, 16 spin)
+// CLONES  copies of the layer, spread over the screen. uP.x = count (1-150) + 256 * layout (0 grid, 1 row, 2 column, 3 fan, 4 scatter)
+//   + 2048 * overlap (0-2) + 8192 * angle bits (1 tilt, 2 flip).  uP.y = motion bits (1 bob, 2 shake, 4 drift, 8 pulse, 16 spin)
 //   + 32 * size bits (0.5, 0.7, 0.85, 1, 1.2, 1.5, 2): each copy picks one of the chosen motions and one of the chosen sizes.
 uniform vec4 uBB;   // where the picture really is (x0, y0, x1, y1), measured by the engine: empty space around it is not copied
 mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
@@ -38,7 +38,7 @@ float pickBit(float mask, float r, float nbits){                 // a random one
 void main(){
   vec4 a = uAudio; vec2 uv = vUV.st; float asp = ASP();
   float x = floor(uP.x + 0.5), y = floor(uP.y + 0.5);
-  float n = clamp(mod(x, 128.0), 1.0, 100.0), lay = mod(floor(x / 128.0), 8.0), ovs = mod(floor(x / 1024.0), 4.0), rnd = mod(floor(x / 4096.0), 4.0);
+  float n = clamp(mod(x, 256.0), 1.0, 150.0), lay = mod(floor(x / 256.0), 8.0), ovs = mod(floor(x / 2048.0), 4.0), rnd = mod(floor(x / 8192.0), 4.0);
   float motm = mod(y, 32.0), szm = mod(floor(y / 32.0), 128.0); if (szm < 0.5) szm = 8.0;
   float ov = ovs < 0.5 ? 0.0 : ovs < 1.5 ? 0.45 : 1.0;
   vec4 bb = (uBB.z - uBB.x > 0.01 && uBB.w - uBB.y > 0.01) ? uBB : vec4(0.0, 0.0, 1.0, 1.0);
@@ -54,7 +54,7 @@ void main(){
   else s = min(1.0 / cols, 1.0 / (rows * hk)) * 1.15;
   s *= 1.0 + ov;
   vec3 acc = vec3(0.0); float aa = 0.0;
-  for (int k = 0; k < 100; k++) {
+  for (int k = 0; k < 150; k++) {
     float fk = float(k);
     if (fk >= n) break;
     vec2 c;
