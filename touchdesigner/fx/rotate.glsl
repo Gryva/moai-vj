@@ -24,13 +24,18 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 
 vec4 texA(vec2 uv){ return (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) ? vec4(0.0) : texture(sTD2DInputs[0], uv); }   // outside the picture = see-through
 float d2(float v, float d){ return floor(v / d + 0.001); }
-// ROTATE  the layer turns around its middle. uP.x = direction * 100 + speed (0 clockwise / 1 anticlockwise, speed 0-99)
+// ROTATE  the layer turns around its middle. uP.x = fill * 1000 + direction * 100 + speed
+//   (fill: 0 corners stay empty / 1 the picture continues mirrored into them / 2 zooms in just enough to cover the screen; direction 0 clockwise / 1 anticlockwise; speed 0-99)
 void main(){
   vec2 uv = vUV.st; float asp = ASP();
-  float dir = d2(uP.x, 100.0), sp = uP.x - dir * 100.0;
+  float fill = d2(uP.x, 1000.0), r0 = uP.x - fill * 1000.0, dir = d2(r0, 100.0), sp = r0 - dir * 100.0;
   float ang = uTime * (sp / 99.0) * 3.14159 * (dir > 0.5 ? 1.0 : -1.0);   // up to half a turn a second
   vec2 q = (uv - 0.5) * vec2(asp, 1.0);
+  if (fill > 1.5) { float c = abs(cos(ang)), s = abs(sin(ang));            // smallest zoom where the turned picture still covers every corner
+    q /= max((asp * c + s) / asp, asp * s + c); }
   q = mat2(cos(ang), sin(ang), -sin(ang), cos(ang)) * q;
-  vec4 t = texA(q / vec2(asp, 1.0) + 0.5);
+  vec2 st = q / vec2(asp, 1.0) + 0.5;
+  if (fill > 0.5 && fill < 1.5) st = 1.0 - abs(1.0 - mod(st, 2.0));        // mirror-repeat: nothing extra is rendered, the edges just continue
+  vec4 t = texA(st);
   fragColor = TDOutputSwizzle(mix(texture(sTD2DInputs[0], uv), t, uMix));
 }

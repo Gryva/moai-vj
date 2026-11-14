@@ -114,7 +114,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -846,7 +846,7 @@ def _clean(p, v):
     if p == 'Noreact':
         ok = _E().LAYER_IDS
         return ','.join(k for k in dict.fromkeys(str(v).split(',')) if k in ok)
-    if p.endswith('keyhex') or p[-4:-1] == 'nzc':
+    if p.endswith('keyhex') or p[-4:-1] == 'nzc' or p.endswith('rcol'):
         import re
         v = str(v).strip().lower()
         if not re.fullmatch(r'#[0-9a-f]{6}', v): raise ValueError('bad colour')
@@ -918,6 +918,15 @@ def _ensurePars():
                 m.menuNames = ['auto', 'green', 'blue', 'custom']; m.menuLabels = ['Auto', 'Green', 'Blue', 'Picked']
             if not hasattr(C.par, 'M%dkeyhex' % i):
                 pp = m.page.appendStr('M%dkeyhex' % i, label='M%d key colour' % i)[0]; pp.default = '#00ff00'; pp.val = '#00ff00'
+            if not hasattr(C.par, 'M%drcol' % i):                       # RECTANGLE layers: a plain colour card
+                pp = m.page.appendStr('M%drcol' % i, label='M%d rectangle colour' % i)[0]; pp.default = '#000000'; pp.val = '#000000'
+            P_ = op('/project1'); sw = P_.op('msrc%d' % i)
+            if sw is not None and P_.op('rect%d' % i) is None:
+                r = P_.create(td.constantTOP, 'rect%d' % i); r.nodeX = sw.nodeX - 200; r.nodeY = sw.nodeY - 300
+                r.par.outputresolution = 'custom'; r.par.resolutionw = 1280; r.par.resolutionh = 720
+                for j, ax in enumerate(('colorr', 'colorg', 'colorb')):
+                    r.par[ax].expr = "op('/project1/fx_engine').module.hexc(op('/project1/CONTROLS').par.M%drcol.eval(), %d)" % (i, j)
+                sw.inputConnectors[3].connect(r)
             k = op('/project1/mk%d' % i)
             if k is not None and k.par.vec3name.eval() != 'uKC':
                 k.par.vec3name = 'uKC'; k.par.vec3valuew = 1
@@ -1095,7 +1104,7 @@ def handle(msg, reply):
             except Exception: sl = 0
             sl = sl if 1 <= sl <= 6 else 0
             if a == 'add':                                        # + ADD LAYER -> a new empty picture / video layer
-                kd = msg.get('kind'); n = mediaFree(kd if kd in ('image', 'draw', 'noise') else 'video')
+                kd = msg.get('kind'); n = mediaFree(kd if kd in ('image', 'draw', 'noise', 'rect') else 'video')
                 if n and kd == 'draw': DRAWS[n] = {'img': None, 'new': True}
                 if n is None: reply({'t': 'err', 'msg': 'All 6 picture / video layers are in use - remove one first'})
                 else: reply({'t': 'added', 'slot': n})

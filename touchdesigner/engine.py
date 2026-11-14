@@ -330,13 +330,14 @@ def mp(C, i, n): return C.par['M%d%s' % (i, n)]
 
 def mediaActive(C, i, mode=None):
     """Media layer i is added, switched on and has a file (each layer is independent of 3D and the camera)."""
-    has = bool(mp(C, i, 'file').eval()) or mp(C, i, 'kind').eval() in ('draw', 'noise')      # drawings and noise need no file
+    has = bool(mp(C, i, 'file').eval()) or mp(C, i, 'kind').eval() in ('draw', 'noise', 'rect')      # drawings, noise and rectangles need no file
     on = bool(mp(C, i, 'on').eval()) and bool(mp(C, i, 'vis').eval()) and has
     return on and (mode is None or mp(C, i, 'mode').eval() == mode)
 
 def cropUpdate(C, i):
     """Crop the picture / video (both flat and 3D card): the shader cuts, the output keeps the cropped shape."""
     k, mf = op('/project1/mk%d' % i), op('/project1/mf%d' % i)
+    if mp(C, i, 'kind').eval() in ('rect', 'noise', 'draw'): mf = op('/project1/msrc%d' % i) or mf      # no file: the layer's own picture size
     if k is None or mf is None: return
     l, r, t, b = [max(0.0, min(0.45, float(mp(C, i, 'crop' + n).eval()))) for n in 'lrtb']
     sig = (l, r, t, b, mf.width, mf.height)
@@ -365,7 +366,7 @@ def objUpdate(C):
         if g is None: continue
         if g.render != on: g.render = on
         if on: objs.append(i); _cardShape(g, op('/project1/mk%d' % i))
-        src = op('/project1/msrc%d' % i); dr = {'draw': 1, 'noise': 2}.get(mp(C, i, 'kind').eval(), 0)   # drawings show the phone drawing, noise its generator
+        src = op('/project1/msrc%d' % i); dr = {'draw': 1, 'noise': 2, 'rect': 3}.get(mp(C, i, 'kind').eval(), 0)   # drawings show the phone drawing, noise its generator
         if src is not None and int(src.par.index.eval()) != dr: src.par.index = dr
         sw = op('/project1/mfeed%d' % i)                             # a 3D object is drawn by its own render pass (mr<n>),
         if sw is not None and int(sw.par.index.eval()) != (1 if on else 0): sw.par.index = 1 if on else 0   # so it stays its own layer
@@ -1341,7 +1342,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol']
 
 def _mval(par):
     v = par.eval()

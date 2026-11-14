@@ -48,6 +48,9 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
 @media (max-width:440px){body.editing .r1>.logo{display:none}}
+.ebar{position:fixed;left:10px;bottom:calc(64px + var(--sb));z-index:7;display:flex;gap:6px;align-items:center;padding:6px;border-radius:10px;background:#0d0b12e6;backdrop-filter:blur(12px);border:1px solid var(--line)}
+.ebar .fsb,.ebar .edit,.ebar .savebtn{height:40px}.ebar .fsb{width:40px}
+main{padding-bottom:calc(140px + var(--sb))!important}
 .savebtn{display:none;height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--lime);color:var(--lime);font-weight:700;letter-spacing:.1em;font-size:11px;white-space:nowrap;flex:none}
 body.editing .savebtn{display:block}.savebtn.ok{background:var(--lime);color:#0b0a0f}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
@@ -465,7 +468,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="lk stbk" id="rlbtn">⟳ RELOAD</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb recb" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="lk stbk" id="rlbtn">⟳ RELOAD</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb recb" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -514,7 +517,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <div class="card open" id="cardLayers"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="lstack"></div>
         <button class="addlay" id="addLay">＋ ADD LAYER</button>
-        <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button><button data-addl="noise">Noise</button></div></div></div>
+        <div class="addmenu" id="addMenu" hidden><button data-addl="text">Text</button><button data-addl="model">3D models</button><button data-addl="image">Image</button><button data-addl="video">Video</button><button data-addl="draw">Draw</button><button data-addl="noise">Noise</button><button data-addl="rect">Rectangle</button></div></div></div>
     </div><div class="colB">
     <div class="upbar" id="upbar" style="margin-top:10px"><i></i><span></span></div>
     <div id="scards"></div>
@@ -694,6 +697,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 
 <div id="weak">Signal weak · reconnecting… (controls still work when it comes back)</div>
 <div id="rail" aria-hidden="true"><i></i></div>
+<div class="ebar" id="ebar"><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button></div>
 <nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
@@ -751,7 +755,8 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14d';
+const BUILD = '2026-11-14e';
+const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 setTimeout(async () => {
@@ -959,9 +964,9 @@ const NAMEPAR = k => /^m\d$/.test(k) ? 'M' + k.slice(1) + 'name' : ({text:'Textn
 const custName = k => { const n = NAMEPAR(k); return n && S && S.pars[n] ? String(S.pars[n]) : ''; };
 function mediaName(i){                    // "Video 2" = the 2nd video layer (or the name the user gave it)
   const c = custName('m' + i); if (c) return c;
-  const p = S.pars, kd = j => ['image', 'draw', 'noise'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
+  const p = S.pars, kd = j => ['image', 'draw', 'noise', 'rect'].includes(p['M' + j + 'kind']) ? p['M' + j + 'kind'] : 'video', kind = kd(i);
   const n = Math.max(1, MS.filter(j => j <= i && (p['M' + j + 'on'] || j === i) && kd(j) === kind).length);
-  return ({image:'Image', video:'Video', draw:'Drawing', noise:'Noise'}[kind]) + ' ' + n;
+  return ({image:'Image', video:'Video', draw:'Drawing', noise:'Noise', rect:'Rectangle'}[kind]) + ' ' + n;
 }
 const NZT = ['smooth', 'clouds', 'ridges', 'cells', 'marble', 'waves', 'static', 'plasma'];
 const NZCM = [['two', '2 COLOURS'], ['three', '3 COLOURS'], ['rainbow', 'RAINBOW'], ['mono', 'GREY']];
@@ -976,6 +981,11 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
       <div class="cb"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button>
         <div class="clips mlib" id="mlist${i}" hidden></div>
+        <div class="rcbox" hidden>
+          <div class="sub pinl"><span>Colour</span></div>
+          <div class="cstrip">${SWC.map(c => `<button data-rcsw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="rc:${i}" aria-label="Any colour"></button></div>${hsvBox('rc:' + i)}
+          <div class="sub"><span>Opacity</span><input type="range" data-rcop="${i}" min="0" max="1" step="0.01" value="1"></div>
+          <p class="hint2">Size and place it with Crop below and in VIEW (zoom, move, turn). Put it under a text layer to make the words easier to read.</p></div>
         <div class="nzbox" hidden>
           <div class="sub pinl"><span>Pattern</span></div><div class="seg sm nzseg" style="flex-wrap:wrap">${NZT.map(t => `<button data-nzt="${i}" data-v="${t}">${t.toUpperCase()}</button>`).join('')}</div>
           <div class="sub pinl"><span>Colours</span></div><div class="seg sm nzseg">${NZCM.map(([v, l]) => `<button data-nzcm="${i}" data-v="${v}">${l}</button>`).join('')}</div>
@@ -1014,7 +1024,9 @@ function sortCards(){
   const sig = ids.join(','); if (sig === CARDSIG) return; CARDSIG = sig;
   const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
 }
-function mzBind(){ $$('[data-mzoom]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.mzoom;
+function rcBind(){ $$('[data-rcop]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.rcop;
+  bindSlider(el, 'rcop' + i, v => { S.pars['M' + i + 'alpha'] = v; send({t:'set', p:'M' + i + 'alpha', v}); }); }); }
+function mzBind(){ rcBind(); $$('[data-mzoom]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.mzoom;
   bindSlider(el, 'mz' + i, v => { S.pars['M' + i + 'fzoom'] = v; send({t:'set', p:'M' + i + 'fzoom', v}); }); }); }
 function mediaCardsUI(p){
   mzBind();
@@ -1032,8 +1044,9 @@ function mediaCardsUI(p){
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
     $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
-    const nz = p[m + 'kind'] === 'noise', lopen = MLIB[i] ?? !f;
-    lib.hidden = dr || nz || !lopen; mfb.hidden = dr || nz; mfb.classList.toggle('open', !lib.hidden);
+    const nz = p[m + 'kind'] === 'noise', rc = p[m + 'kind'] === 'rect', lopen = MLIB[i] ?? !f;
+    lib.hidden = dr || nz || rc || !lopen; mfb.hidden = dr || nz || rc;
+    c.querySelector('.rcbox').hidden = !rc; if (rc) { $$(`[data-rcsw="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'rcol'] || '#000000'))); const o = c.querySelector('[data-rcop]'); if (o && !(touching['rcop' + i] > performance.now())) { o.value = p[m + 'alpha'] ?? 1; o._show && o._show(); } } mfb.classList.toggle('open', !lib.hidden);
     c.querySelector('.nzbox').hidden = !nz; if (nz) nzUI(i, p);
     c.querySelector('.mplay').hidden = !vid;
     c.querySelector('.mfitbox').hidden = dr || nz || !f || p[m + 'mode'] === 'object';
@@ -1041,7 +1054,7 @@ function mediaCardsUI(p){
     const z = c.querySelector(`[data-mzoom="${i}"]`); if (z && !(touching['mz' + i] > performance.now())) { z.value = p[m + 'fzoom'] ?? 1; z._show && z._show(); }
     { const sp = +p[m + 'speed'] || 1, tr = (+p[m + 'trimin'] || 0) > 0.001 || (p[m + 'trimout'] != null && +p[m + 'trimout'] < 0.999);
       $('#sum-m' + i + 'play').textContent = [sp !== 1 ? sp.toFixed(2) + '×' : '', tr ? 'trimmed' : ''].filter(Boolean).join(' · '); }
-    c.querySelector('.mkey').hidden = dr || nz; c.querySelector('.mup').hidden = dr || nz;
+    c.querySelector('.mkey').hidden = dr || nz || rc; c.querySelector('.mup').hidden = dr || nz || rc;
     c.querySelector('.dpick').hidden = !dr || DR.slot === i; c.querySelector('.dhost').hidden = !dr; });
   const ds = MS.filter(i => p['M' + i + 'on'] && p['M' + i + 'kind'] === 'draw');
   if (ds.length && !ds.includes(DR.slot)) { DR.slot = 0; drawPick(ds[0]); }
@@ -1049,7 +1062,7 @@ function mediaCardsUI(p){
 }
 function addLayer(t){
   $('#addMenu').hidden = true; const p = S.pars;
-  if (t === 'image' || t === 'video' || t === 'draw' || t === 'noise') { send({t:'media', do:'add', kind:t}); return; }
+  if (t === 'image' || t === 'video' || t === 'draw' || t === 'noise' || t === 'rect') { send({t:'media', do:'add', kind:t}); return; }
   if (t === 'text') { const free = [['Texton', 'cardText'], ['T2on', 'cardT2'], ['T3on', 'cardT3']].find(([k]) => !p[k]);
     if (!free) { toast('Up to 3 text layers'); return; }
     S.pars[free[0]] = true; send({t:'set', p:free[0], v:true}); delete SHUT[free[1]]; setTimeout(() => $('#' + free[1]).scrollIntoView({behavior:'smooth', block:'start'}), 300); }
@@ -1066,7 +1079,7 @@ function layerInfo(k){
   if (k === 'model') return {on: p.Statue !== false, name: custName('model') || '3D models', sub: (p.Modelshown || '').replace(/^anim_/, '') || 'models + animations', card: 'cardStatue'};
   if (k === 'camera') return {on: !!p.Camsrc && p.Camsrc !== 'off', name: 'Phone camera', sub: (p.Clipstate === 'loop' ? 'clip · ' : '') + ({cam:'normal', behind:'normal', screen:'blend', mask:'mask'}[p.Camsrc] || ''), card: 'cardCam'};
   if (/^m\d$/.test(k)) { const m = 'M' + k.slice(1), obj = p[m + 'mode'] === 'object';
-    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : p[m + 'kind'] === 'noise' ? 'noise · ' + (p[m + 'nztype'] || 'clouds') : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
+    return {on: !!p[m + 'on'], hid: !p[m + 'vis'], name: mediaName(+k.slice(1)), sub: (p[m + 'vis'] ? '' : 'off · ') + (obj ? '3D object · ' : '') + (p[m + 'kind'] === 'draw' ? 'drawing' : p[m + 'kind'] === 'rect' ? 'rectangle' : p[m + 'kind'] === 'noise' ? 'noise · ' + (p[m + 'nztype'] || 'clouds') : file(p[m + 'file'])) + (p[m + 'keyon'] ? ' · screen removed' : ''), card: 'cardM' + k.slice(1), in3d: obj}; }
   if (k === 'draw') return {on: !!p.Drawon, name: 'Drawing', sub: 'drawn on the phone', card: 'cardDraw'};
   if (/^text\d?$/.test(k)) { const q = k === 'text' ? 'Text' : 'T' + k.slice(4), d3 = p[q + 'space'] === '3d';
     return {on: !!p[q + 'on'], name: custName(k) || (k === 'text' ? 'Text' : 'Text ' + k.slice(4)), sub: (d3 ? '3D · ' : '') + (p[q + 'str'] || ''), card: k === 'text' ? 'cardText' : 'cardT' + k.slice(4), in3d: d3, text: true}; }
@@ -1596,7 +1609,6 @@ function onAir(){
   act.forEach(l => l.col && colUI(l.k));
 }
 /* ---------------- colour picker (used by effects, text and drawing): solid / linear ramp / radial, 10 swatches + any colour */
-const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const CC = {}, CED = {}, COPEN = {};                             // id -> {get, set, modes};  which colour (a/b) is being edited
 function ccDef(id, get, set, modes, two){ CC[id] = {get, set, modes, two}; }    // two = [label A, label B]: a plain pair of colours (no ramp, no angle)
 function ccBox(id, title, open){
@@ -1640,6 +1652,7 @@ function hsv2hex({h, s, v}){ const f = n => { const k = (n + h / 60) % 6; return
   return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
 function hsvCur(id){ if (id.startsWith('key:')) return S.pars['M' + id.slice(4) + 'keyhex'] || '#00ff00';
   if (id.startsWith('nz:')) { const [, i, k] = id.split(':'); return S.pars['M' + i + 'nzc' + k] || '#000000'; }
+  if (id.startsWith('rc:')) return S.pars['M' + id.slice(3) + 'rcol'] || '#000000';
   const c = CC[id].get(), w = c.m >= 2 || CC[id].two ? (CED[id] || 'a') : 'a'; return c.m === 0 ? c.a : c[w]; }
 function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q = HSV[id]; if (!b || !q) return; const hx = hsv2hex(q);
   b.querySelector('.sv').style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(${q.h},100%,50%))`;
@@ -1649,6 +1662,7 @@ function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q 
 function hsvFrom(id){ if (!HSV[id]) return; HSV[id] = hex2hsv(hsvCur(id)); hsvDraw(id); }
 function hsvApply(id){ const hx = hsv2hex(HSV[id]);
   if (id.startsWith('key:')) keyPick(+id.slice(4), hx, true);
+  else if (id.startsWith('rc:')) { const pn = 'M' + id.slice(3) + 'rcol'; S.pars[pn] = hx; thr(pn, () => send({t:'set', p:pn, v:hx})); mediaCardsUI(S.pars); }
   else if (id.startsWith('nz:')) { const [, i, k] = id.split(':'), pn = 'M' + i + 'nzc' + k; S.pars[pn] = hx; thr(pn, () => send({t:'set', p:pn, v:hx})); nzUI(+i, S.pars); }
   else ccPick(id, hx, true); hsvDraw(id); }
 function hsvToggle(id){ const b = document.querySelector(`[data-hsv="${id}"]`); if (!b) return; const open = b.hidden;
@@ -1956,7 +1970,7 @@ function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('
 setInterval(() => REC.on && recTick(), 500);
 const PK = {
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
-  rotate: [['dir', 100, 10], ['sp', 1, 100]],
+  rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
   dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]]};
 function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0); $$('[data-fxfd]').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.fxfd - v) < 0.01)); }
 function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
@@ -1969,7 +1983,7 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
   if (k === 'mask') { const sty = `left:${c.x / 99 * 100}%;top:${c.y / 99 * 100}%;width:${(1 + c.w / 99 * 60) * 2 * 9 / 16}%;height:${(1 + c.h / 99 * 60) * 2}%;aspect-ratio:auto;border-radius:${c.shp ? '3px' : '50%'}`;
     h += segUI('Shape', 'data-pkf="shp" data-v', ['CIRCLE / OVAL','RECTANGLE'], c.shp) + `<div class="sub"><span>Where (tap or drag)</span></div><div class="sppad" data-pkpad><i style="${sty}"></i></div>`
       + pkS(l, 'w', 'Width', c.w) + pkS(l, 'h', 'Height', c.h) + pkS(l, 'sf', 'Soft edge', c.sf) + segUI('Show', 'data-pkf="inv" data-v', ['INSIDE','OUTSIDE'], c.inv); }
-  if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp);
+  if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp) + segUI('Empty corners', 'data-pkf="fill" data-v', ['LEAVE EMPTY','FILL (MIRROR)','ZOOM TO COVER'], c.fill);
   if (k === 'dvd') h += pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'sz', 'Size', c.sz) + pkS(l, 'an', 'Angle', c.an) + segUI('On each bounce', 'data-pkf="cc" data-v', ['SAME COLOUR','NEW COLOUR'], c.cc);
   return h + '</div>'; }
 function spDec(p){ p = Math.round(+p || 0); const lo = p % 1e8, hi = Math.floor(p / 1e8); return {x:Math.floor(lo / 1e6) % 100, y:Math.floor(lo / 1e4) % 100, sz:Math.floor(lo / 100) % 100, st:lo % 100, md:Math.floor(hi / 1e4) % 10, sp:Math.floor(hi / 100) % 100, rp:hi % 100}; }
@@ -2270,6 +2284,7 @@ document.addEventListener('click', e => {
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.rcsw) { const pn = 'M' + d.rcsw + 'rcol'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); hsvFrom('rc:' + d.rcsw); mediaCardsUI(S.pars); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
   if (d.hsvt) { hsvToggle(d.hsvt); return; }
   if (d.v && t.parentElement.id === 'nav') { if (d.v === 'view' && S) { const k = SRC_SEL || (FXT_SEL !== 'all' ? FXT_SEL : null); if (k) VW_SEL = k; viewTargets(); } ui.tab = d.v; uiPrefs(); $('main').scrollTop = 0; buzz(); }
