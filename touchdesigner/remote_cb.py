@@ -1086,6 +1086,10 @@ def handle(msg, reply):
                 if c: _all({'t': 'tcols', 'tgt': tg, 'v': {k: c}})
         elif t == 'swap':                                          # linked layers: one goes off, the other comes on
             E.layerSwap(str(msg.get('a', '')), str(msg.get('b', '')))
+        elif t == 'vseek':                                       # jump a video layer to a time (cue timeline scrub)
+            i = int(msg.get('slot', 0)); m = op('/project1/mf%d' % i)
+            if 1 <= i <= 6 and m is not None:
+                m.par.cuepointunit = 'seconds'; m.par.cuepoint = max(0.0, float(msg.get('sec', 0))); m.par.cuepulse.pulse()
         elif t == 'rec':
             if msg.get('do') == 'start': recStart()
             elif msg.get('do') == 'stop': recStop()
