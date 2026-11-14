@@ -4,7 +4,7 @@ import json, os, time
 
 WEB = os.path.join(project.folder, 'web')
 MIME = {'.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css',
-        '.jpg': 'image/jpeg', '.ttf': 'font/ttf', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json',
+        '.jpg': 'image/jpeg', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json',
         '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'}
 CLIENTS = set()
 SEEN = {}            # relay DAT name -> last time a phone talked through it
@@ -1005,6 +1005,7 @@ def handle(msg, reply):
             if tg == 'all': E.setLayer(msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
             else: E.tSetLayer(tg, msg['k'], on=msg.get('on'), amt=msg.get('amt'), p1=msg.get('p1'))
             fd = float(C.par.Fxfade.eval()) if hasattr(C.par, 'Fxfade') else 0.0
+            if msg.get('fade') is not None: fd = max(0.0, min(10.0, float(msg['fade'])))          # a pinned tile can have its own transition
             if msg.get('on') is not None and fd > 0.01: E.fxFadeToggle(tg, msg['k'], bool(msg.get('on')), fd)
         elif t == 'fxcopy':                                        # hold a layer in FX = copy, hold another = paste
             if E.fxCopy(str(msg.get('from', '')), str(msg.get('to', ''))):

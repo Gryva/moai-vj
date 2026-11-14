@@ -8,8 +8,33 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#09080d">
 <title>Video Jockey</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><!-- non-blocking: with no internet the page must still open at once -->
+<style>/* fonts live next to the page: the remote looks the same with no internet */
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/barlow-condensed-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/barlow-condensed-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/barlow-condensed-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/barlow-condensed-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/oswald-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/oswald-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/oswald-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/oswald-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/roboto-condensed-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/roboto-condensed-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/roboto-condensed-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/roboto-condensed-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Saira Condensed';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/saira-condensed-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Saira Condensed';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/saira-condensed-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Saira Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/saira-condensed-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Saira Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/saira-condensed-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/space-grotesk-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/space-grotesk-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/space-grotesk-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/space-grotesk-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/jetbrains-mono-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/jetbrains-mono-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/jetbrains-mono-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}</style>
 <style>
 :root{--bg:#09080d;--panel:#13111a;--panel2:#1b1824;--line:#2a2635;--ink:#f3efe7;--mute:#8b8597;--hot:#ff4d2e;--cyan:#3ef0ff;--vio:#b06bff;--lime:#c6ff3d;
   --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
@@ -34,8 +59,11 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .dshow{width:100%;margin:6px 0;background:#ffffff10}.dshow.pend{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.dfsbar .dshow{width:auto;margin:0}.dmore{margin:6px 0}
 .qbigrow{display:flex;gap:8px;align-items:stretch}.qbig{flex:1;min-height:64px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#16141c;color:var(--ink);text-align:left;font:700 15px var(--sans)}
 .qbig b{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qbig em{font:800 12px var(--mono);font-style:normal;letter-spacing:.1em;padding:6px 10px;border-radius:8px;background:#ffffff10;color:var(--mute)}
-.qfxt{position:relative;overflow:hidden;min-height:84px;justify-content:center;text-align:center;flex-direction:column;gap:2px;background:#121018}.qfxt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}.qfxt b,.qfxt .qly{position:relative;z-index:1;text-shadow:0 1px 8px #000}.qfxt b{flex:0;font-size:16px}
-.qfxt.on{background:#121018;color:var(--ink);border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.qfxt.on img{opacity:1}.qfxt.on .qly{color:var(--ink)}
+#qk{display:flex;flex-wrap:wrap;align-items:flex-start}#qk>.ctl{flex:0 0 100%}
+.qfxw.lt{display:block;position:relative;width:96px;margin:10px 10px 4px 0}.qfxw .qfxt{width:96px}
+.qfxw .qfxm{position:absolute;right:-6px;top:-8px;width:24px;height:24px;margin:0;border-radius:50%;z-index:3;font-size:12px;padding:0;background:#1d1a25;border:1px solid var(--line)}
+.qfxt.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.qfxt.on img{opacity:1}.qfxt.on .ck{display:grid}
+.qfly,.qffd{position:absolute;left:4px;top:4px;z-index:2;font:700 8px var(--mono);font-style:normal;letter-spacing:.06em;padding:2px 4px;border-radius:4px;background:#000a;color:var(--ink)}.qffd{top:auto;bottom:4px;left:auto;right:4px}
 .qbig.on{background:var(--lime);border-color:var(--lime);color:#0b0a0f}.qbig.on .qly{color:#0b0a0f;opacity:.7}.qbig.on em{background:#0b0a0f;color:var(--lime)}.qbigrow .qmenu{height:auto}
 .qmenu{flex:none;margin-left:6px;width:30px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--mute);font:700 15px/1 var(--sans);display:grid;place-items:center;padding:0}.qmenu:active{background:#ffffff14;color:var(--ink)}
 .sub.pinl{display:block;margin:6px 0 0}.sub.pinl span{font-size:11px;color:var(--mute)}
@@ -272,6 +300,7 @@ body.arranging .pad.full{touch-action:none}
 /* layers */
 .onair{background:linear-gradient(180deg,#1d1424,#13111a);border:1px solid #3a2a48;border-radius:8px;padding:10px 12px;min-height:52px}
 .onair .empty{color:var(--mute);font-size:13px;text-align:center;padding:10px 0}
+:root.cond body{letter-spacing:.01em}:root.cond nav button{font-size:11px}
 .lay.fold>:not(.hd){display:none}.lfold{background:none;border:0;color:var(--mute);font-size:14px;padding:0 2px;transition:transform .15s}.lay.fold .lfold{transform:rotate(-90deg)}
 .lsets{margin:0 0 10px}.lsets>summary span{font-weight:400;opacity:.6;margin-left:8px;font-size:12px}
 .lay{border-bottom:1px solid #2c2236;padding:6px 0 4px}.lay:last-child{border-bottom:0}
@@ -286,7 +315,7 @@ body.arranging .pad.full{touch-action:none}
 .lt button b{position:absolute;left:4px;right:4px;top:50%;transform:translateY(-50%);text-align:center;font-size:11px;white-space:normal;overflow:hidden;line-height:1.15;z-index:2;text-shadow:0 1px 6px #000,0 0 3px #000}
 .lt button::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c);opacity:.6;z-index:2}
 .lt .ck{position:absolute;top:4px;right:4px;width:16px;height:16px;font-size:10px!important;border-radius:50%;background:var(--c);color:#0b0a0f;font:700 12px var(--sans);display:none;place-items:center;z-index:2}
-.lt button.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.lt button.on img{opacity:1}.lt button.on .ck{display:grid}
+.lt button.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}.lt button.on b,.qfxt.on b{color:var(--c);text-shadow:0 0 8px var(--c),0 0 16px var(--c),0 1px 4px #000}.lt button.on img{opacity:1}.lt button.on .ck{display:grid}
 .clr{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--hot);padding:6px 10px;border:1px solid #ff4d2e55;border-radius:6px}
 details.box summary{list-style:none;padding:12px 14px;border-radius:8px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--lime)}
 details.box summary::-webkit-details-marker{display:none}details.box summary::after{content:' ▾';color:var(--mute)}details.box[open] summary{margin-bottom:8px}
@@ -451,6 +480,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .sppad{position:relative;aspect-ratio:16/9;background:#ffffff0d;border:1px solid #ffffff22;border-radius:10px;margin:4px 0 10px;touch-action:none;overflow:hidden}.sppad i{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid var(--lime);border-radius:50%;box-shadow:0 0 12px var(--lime);pointer-events:none}
 .recb{color:#ff4d5e;font-weight:700;letter-spacing:.04em;width:auto!important;padding:0 10px}.recb.on{background:#ff2d45;color:#fff;animation:recp 1.2s ease-in-out infinite}@keyframes recp{50%{opacity:.6}}
 .fxfrow{display:flex;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap}.fxfrow>span{font-size:12px;opacity:.7}.fxfrow .seg{flex:1}
+.shsub{margin:4px 0 2px;font-size:12px;opacity:.7;width:100%}.qfseg{width:100%;flex-wrap:wrap;margin-bottom:6px}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
 .tpos button[data-tv="fill"],.tpos button[data-tv="stack"],.tpos button[data-tv="lower"]{font-size:11px}
 .tmv{margin-top:6px}.tadir{display:flex;align-items:center;gap:8px;margin-top:6px}.tadir>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);flex:none}.tadir .opts{flex:1}
@@ -691,6 +721,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
     <h2>Picture</h2><div id="g-projlook"></div>
     <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="ksall">RESET ALL OUTPUT SETTINGS</button></div>
     <p class="hint2">Saved on the computer, not in presets: the setup stays the same when you change looks.</p>
+    <h2>Remote font</h2><div class="seg sm" id="uifonts" style="flex-wrap:wrap"></div><p class="hint2">Only this remote (this tablet / phone) changes. Condensed fonts fit more on the buttons.</p>
   </div>
   </section>
 </main>
@@ -710,6 +741,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
+document.addEventListener('DOMContentLoaded', () => { const h = $('#uifonts'); if (h) h.innerHTML = UIFONTS.map(([f, l]) => `<button data-uifont="${f}" style="font-family:'${f}'">${l}</button>`).join(''); uiFont(store.get('uifont', 'Space Grotesk')); });
 document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function sha256(s){ return sha256raw(unescape(encodeURIComponent(s))); }
@@ -754,9 +786,13 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14h';
+const BUILD = '2026-11-14i';
+const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
+function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
+  document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
 const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
+const QFADE = store.get('qfade', {});        // pinned effect -> its own transition (s, 0 = cut); missing = the FX tab setting
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
 setTimeout(async () => {
   if (location.protocol === 'file:') return;
@@ -1819,7 +1855,8 @@ function sheetQk(i){
   const it = qList()[i]; if (!it) return; const Q = S.quick || {all:[], p:{}}, mine = ((Q.p || {})[S.b] || []).some(x => qid(x) === qid(it));
   $('#shI').style.display = 'none'; $('#shT').textContent = qLabel(it).join(' · ');
   $('#shP').textContent = mine ? 'Pinned to this preset.' : 'Pinned to every preset.';
-  $('#shA').innerHTML = `<button data-sh="qkmv" data-d="-1">▲ Move up</button><button data-sh="qkmv" data-d="1">▼ Move down</button><button class="dan" data-sh="qkun" data-sc="${mine ? 'p' : 'a'}">Unpin</button><button data-sh="cancel">Cancel</button>`;
+  const fxOn = it.k === 'fx' && it.f === 'on', fd = QFADE[qid(it)];
+  $('#shA').innerHTML = (fxOn ? `<p class="shsub">When you tap it</p><div class="seg sm qfseg">${[['', 'AS FX TAB'], [0, 'INSTANT'], [0.5, '½ s'], [1, '1 s'], [2, '2 s'], [4, '4 s']].map(([v, l]) => `<button data-sh="qkfade" data-v="${v}" class="${String(fd ?? '') === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div>` : '') + `<button data-sh="qkmv" data-d="-1">▲ Move up</button><button data-sh="qkmv" data-d="1">▼ Move down</button><button class="dan" data-sh="qkun" data-sc="${mine ? 'p' : 'a'}">Unpin</button><button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.qitem = JSON.stringify(it); $('#sheet').dataset.qsc = mine ? 'p' : 'a'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function qVal(it){                        // current value of a pinned control
@@ -1842,7 +1879,8 @@ function renderQuick(){
   $('#qk').innerHTML = TX.map(n => `<div class="ctl qtxt"><div class="top"><span><i class="qly">${esc(qtName(n))}</i> Words</span></div>
       <div class="qtrow"><input type="text" maxlength="120" data-qtxt="${n}" autocomplete="off"><button data-qtsend="${n}">SHOW</button></div><div class="recent qrec" data-qrec="${n}"></div></div>`).join('') + L.map((it, i) => { const [ly, nm0, ff] = qLabel(it), nm = nm0 + (it.k === 'fx' && ff ? ' · ' + ff.toLowerCase() : ''), lab = `<div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> ${esc(nm)}</span><output id="o-qk_${i}"></output><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'swap') return `<div class="ctl qrow"><div class="top" data-qk="${i}"><span><i class="qly">${esc(ly)}</i> <b class="qa" data-qa="${i}">${esc(lName(it.a))}</b> ⇄ <b class="qb" data-qb="${i}">${esc(lName(it.b))}</b></span><button class="tg qtog qsw" data-qswap="${i}">⇄</button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div></div>`;
-    if (it.k === 'fx' && it.f === 'on') { const L = S.layers.find(x => x.k === it.e) || {}; return `<div class="ctl qrow qbigrow"><button class="qbig qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><i class="qly">${esc(ly)}</i><b>${esc(L.label || it.e)}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`; }
+    if (it.k === 'fx' && it.f === 'on') { const L = S.layers.find(x => x.k === it.e) || {}, fd = QFADE[qid(it)];
+      return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(L.label || it.e)}</b><i class="ck">✓</i>${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}${fd != null ? `<i class="qffd">${fd ? fd + ' s' : 'CUT'}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Transition, move or remove">⋯</button></div>`; }
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm.replace(/ · on \/ off$/, ''))}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
       const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
@@ -1872,7 +1910,7 @@ function quickSync(){                     // follow changes made elsewhere (othe
   $$('#qk input[data-qki]').forEach(el => { const i = +el.dataset.qki; if ((touching['qk_' + i] || 0) > performance.now()) return;
     const v = qVal(L[i]); if (v != null && +el.value !== +v) { el.value = +v; el._show && el._show(); } });
   $$('#qk [data-qa]').forEach(e => { const it = L[+e.dataset.qa]; e.classList.toggle('live', visOf(it.a)); $('[data-qb="' + e.dataset.qa + '"]').classList.toggle('live', visOf(it.b)); });
-  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]); if (!b.classList.contains('qbig')) b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
+  $$('#qk [data-qtog]').forEach(b => { const on = !!qVal(L[+b.dataset.qtog]); if (!b.classList.contains('qbig') && !b.classList.contains('qfxt')) b.textContent = on ? 'ON' : 'OFF'; b.classList.toggle('on', on); });
 }
 function presetGroups(){                 // group names in the order their first preset appears
   const out = []; (S.bank || []).forEach(p => { if (p && p.group && !out.includes(p.group)) out.push(p.group); }); return out;
@@ -2182,6 +2220,7 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'lswapnow') { const k = $('#sheet').dataset.lk; doSwap(k, partnerOf(k)); }
   else if (b.dataset.sh === 'lswappin') { const k = $('#sheet').dataset.lk, it = {k:'swap', a:k, b:partnerOf(k)};
     send({t:'quick', do:'pin', scope:b.dataset.sc === 'a' ? 'all' : 'preset', slot:S.b, item:it}); toast('Swap pinned · LIVE → Quick controls'); }
+  else if (b.dataset.sh === 'qkfade') { const it = JSON.parse($('#sheet').dataset.qitem || 'null'); if (it) { const k = qid(it); if (b.dataset.v === '') delete QFADE[k]; else QFADE[k] = +b.dataset.v; store.set('qfade', QFADE); QSIG = ''; renderQuick(); toast(b.dataset.v === '' ? 'Uses the FX tab setting' : +b.dataset.v ? 'Fades in ' + b.dataset.v + ' s' : 'Switches instantly'); } }
   else if (b.dataset.sh === 'qkpin' || b.dataset.sh === 'qkun' || b.dataset.sh === 'qkmv') {
     const it = JSON.parse($('#sheet').dataset.qitem || '{}'), sc = b.dataset.sc || $('#sheet').dataset.qsc;
     send({t:'quick', do:b.dataset.sh === 'qkpin' ? 'pin' : b.dataset.sh === 'qkun' ? 'unpin' : 'move', scope:sc === 'a' ? 'all' : 'preset', slot:S.b, item:it, d:+(b.dataset.d || 0)});
@@ -2260,6 +2299,7 @@ document.addEventListener('click', e => {
   if (h && S && !e.target.closest('button, label, input')) { const c = h.parentElement;
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
+  if (d.uifont) { store.set('uifont', uiFont(d.uifont)); buzz(); return; }
   if (d.lfold) { const k = d.lfold; if (LFOLD.has(k)) LFOLD.delete(k); else LFOLD.add(k); store.set('lfold', [...LFOLD]); t.closest('.lay').classList.toggle('fold', LFOLD.has(k)); buzz(); return; }
   if (t.id === 'recx') { send({t:'rec', do:'discard'}); buzz(20); return; }
   if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start'}); buzz(20); return; }
@@ -2340,7 +2380,7 @@ document.addEventListener('click', e => {
     applyPars({}); buzz(); }
   else if (d.qmenu !== undefined) { sheetQk(+d.qmenu); buzz(); }
   else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; const v = !qVal(it);
-    if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, on:v}); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
+    if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; if (GSHUT[d.gtog]) delete GSHUT[d.gtog]; else GSHUT[d.gtog] = 1; store.set('gshut', GSHUT); renderPads(); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
