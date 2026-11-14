@@ -295,7 +295,7 @@ def _mediaThumb(rel, full, kind):
 
 def mediaMsg():
     """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
-    items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/')} for rel, full, kind in _mediaFiles()]
+    items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/'), 'mt': int(os.path.getmtime(full))} for rel, full, kind in _mediaFiles()]
     return {'t': 'media', 'v': items[-80:]}
 
 def mediaThumbs(send):
@@ -355,6 +355,19 @@ def mediaDel(mid):
         if _C().par['M%dfile' % i].eval() == mid: mediaStop(i)
     try: os.remove(full)
     except Exception: pass
+
+def mediaTrash(mid):
+    """Remove a picture / video from the list: moved into 'Deleted' next to the project (not erased, you can get it back)."""
+    import shutil
+    hit = next((f for r, f, k in _mediaFiles() if r == mid), None)
+    if not hit: return False
+    for i in range(1, 7):
+        if _C().par['M%dfile' % i].eval() == mid: mediaStop(i)
+    d = os.path.join(project.folder, 'Deleted'); os.makedirs(d, exist_ok=True)
+    dst = os.path.join(d, os.path.basename(hit)); n = 2
+    while os.path.exists(dst): b, e = os.path.splitext(os.path.basename(hit)); dst = os.path.join(d, '%s %d%s' % (b, n, e)); n += 1
+    try: shutil.move(hit, dst); return True
+    except Exception: return False
 
 # ---- video upload: the phone sends JPEG frames (any phone, any codec) in parts; rebuilt here as an MP4
 VUPS = {}
@@ -1351,6 +1364,9 @@ def handle(msg, reply):
             elif a == 'fit': E.mediaFit(sl or None)
             elif a == 'stop' and sl: mediaStop(sl)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
+            elif a == 'trash':
+                ok = mediaTrash(str(msg.get('id', '')))
+                reply({'t': 'toast', 'msg': 'Moved to the Deleted folder' if ok else 'Could not remove it (in use?)'}); _allMedia()
             _allMedia(); _all(clipsMsg()); _publish(state(), active_only=True)
         elif t == 'vup':
             videoPart(msg)
