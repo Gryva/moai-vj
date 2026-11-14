@@ -493,6 +493,20 @@ def prepHandle(msg, reply):
         jid = secrets.token_hex(4)
         PREP[jid] = j = {'id': jid, 'url': url, 'title': 'Downloading…', 'state': 'download', 'pct': 0, 't': time.time()}
         threading.Thread(target=_prepDownload, args=(j,), daemon=True).start()
+    elif a == 'local':                                           # a video already in your list: trim / reverse / mirror it into a new clip
+        rel = str(msg.get('mid', '')); hit = next((f for r, f, k in _mediaFiles() if r == rel and k == 'video'), None)
+        if not hit: return reply({'t': 'err', 'msg': 'That video was not found'})
+        if not os.path.exists(FFMPEG): return reply({'t': 'err', 'msg': 'Video tools are not installed yet (tools folder)'})
+        jid = secrets.token_hex(4)
+        PREP[jid] = j = {'id': jid, 'url': '', 'title': os.path.splitext(os.path.basename(hit))[0][:80], 'state': 'download', 'pct': 50, 't': time.time(), 'raw': hit}
+        def _loc(j=j):
+            try:
+                os.makedirs(PREPDIR, exist_ok=True); _prepProbe(j)
+                if not j.get('dur'): raise RuntimeError('could not read that video')
+                j['state'] = 'ready'; j['pct'] = 100; _prepStrip(j); _prepProxy(j)
+            except Exception as e: j['state'] = 'fail'; j['err'] = str(e)[:160]
+        threading.Thread(target=_loc, daemon=True).start()
+        reply({'t': 'prepsel', 'id': jid})
     elif a == 'strip' and j and j.get('raw'): threading.Thread(target=_prepStrip, args=(j,), daemon=True).start()
     elif a == 'frame' and j and j.get('raw'): threading.Thread(target=_prepFrame, args=(j, float(msg.get('at', 0))), daemon=True).start()
     elif a == 'save' and j and j['state'] in ('ready', 'done', 'fail') and j.get('raw'):
