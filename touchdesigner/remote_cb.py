@@ -232,7 +232,7 @@ def _mediaFiles():
         for dp, dn, fn in os.walk(root):
             for n in fn:
                 ext = os.path.splitext(n)[1].lower()
-                if ext in IMG_EXT or ext in VID_EXT:
+                if (ext in IMG_EXT or ext in VID_EXT) and '.part.' not in n:
                     full = os.path.join(dp, n)
                     out.append((pre + os.path.relpath(full, root).replace('\\', '/'), full, 'video' if ext in VID_EXT else 'image'))
     return sorted(out, key=lambda x: os.path.getmtime(x[1]))
@@ -371,7 +371,7 @@ PREPQ = _keep('PREPQ', [])                      # finished thumbnails / frames w
 PREPDIR = os.path.join(project.folder, 'prep')
 PREPLIB = os.path.join(project.folder, 'tools', 'pylib')
 PREPSIG = {'s': ''}
-def _prepPub(j): return {k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}
+def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')))
 def prepMsg(): return {'t': 'prep', 'jobs': [_prepPub(j) for j in sorted(PREP.values(), key=lambda j: j['t'])][-8:]}
 def prepPoll():
     """Main thread: send job changes + finished pictures; keep polling while anything runs."""
@@ -413,7 +413,7 @@ def _prepDownload(j):
         f = next(iter(sorted(x for x in glob.glob(os.path.join(PREPDIR, j['id'] + '.*')) if not x.endswith(('.part', '.ytdl')))), None)
         if p.returncode != 0 or not f: raise RuntimeError(last.replace('ERROR:', '').strip() or 'download failed')
         j['raw'] = f; _prepProbe(j); j['state'] = 'ready'; j['pct'] = 100
-        _prepStrip(j)
+        _prepStrip(j); _prepProxy(j)
     except Exception as e:
         j['state'] = 'fail'; j['err'] = str(e).replace('\n', ' ')[:160]
     j.pop('proc', None)
@@ -434,6 +434,12 @@ def _prepShot(j, t, w):
     r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-ss', '%.3f' % max(0.0, t), '-i', j['raw'], '-frames:v', '1', '-vf', 'scale=%d:-2' % w,
                   '-q:v', '5', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-'])
     return base64.b64encode(r.stdout).decode('ascii') if r.stdout else ''
+def _prepProxy(j):
+    """A light 360p copy just for watching / trimming on the phone."""
+    out = os.path.join(PREPDIR, j['id'] + '_pv.mp4')
+    r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-i', j['raw'], '-vf', 'scale=-2:360,fps=30', '-an', '-c:v', 'libx264', '-preset', 'veryfast',
+                  '-crf', '30', '-g', '15', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out])
+    if r.returncode == 0 and os.path.exists(out): j['pv'] = out
 def _prepStrip(j, n=12):
     PREPQ.append({'t': 'prepstrip', 'id': j['id'], 'v': [_prepShot(j, (k + 0.5) / n * (j['dur'] or 1), 160) for k in range(n)]})
 def _prepFrame(j, t):
@@ -459,10 +465,10 @@ def _prepRender(j, o):
         else: fc = '[0:v]%s[v]' % chain
         outlen = ln / sp * (2 if pp else 1)
         name = ''.join(ch for ch in str(o.get('name') or j.get('title') or 'clip') if ch.isalnum() or ch in ' -_').strip()[:60] or 'clip'
-        d = os.path.join(MEDIADIR, 'videos'); os.makedirs(d, exist_ok=True)
+        d = VIDEODIR; os.makedirs(d, exist_ok=True)                          # your clip library (the same 'videos' list as the phone)
         path = os.path.join(d, name + '.mp4'); n = 2
         while os.path.exists(path): path = os.path.join(d, '%s %d.mp4' % (name, n)); n += 1
-        tmp = path[:-4] + '.part.mp4'
+        tmp = os.path.join(PREPDIR, j['id'] + '_out.mp4')               # made outside the media folder: nothing opens it half-written
         cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-ss', '%.3f' % t0, '-t', '%.3f' % ln, '-i', j['raw'], '-filter_complex', fc, '-map', '[v]', '-an',
                '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-g', '30', '-movflags', '+faststart', '-progress', 'pipe:1', '-nostats', tmp]
         fl = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)
@@ -472,7 +478,7 @@ def _prepRender(j, o):
             if m: j['pct'] = min(99, int(int(m.group(1)) / 1e6 / max(0.1, outlen) * 100))
         p.wait(); err = p.stderr.read()
         if p.returncode != 0 or not os.path.exists(tmp): raise RuntimeError((err or 'ffmpeg failed').strip().splitlines()[-1][:150])
-        os.replace(tmp, path)
+        import shutil; shutil.move(tmp, path)
         j['out'] = 'videos/' + os.path.basename(path); j['state'] = 'done'; j['pct'] = 100
     except Exception as e:
         j['state'] = 'fail'; j['err'] = str(e)[:160]
@@ -494,9 +500,10 @@ def prepHandle(msg, reply):
         threading.Thread(target=_prepRender, args=(j, msg.get('o') or {}), daemon=True).start()
     elif a == 'drop' and j:
         PREP.pop(j['id'], None)
-        try:
-            if j.get('raw') and os.path.dirname(os.path.abspath(j['raw'])) == os.path.abspath(PREPDIR): os.remove(j['raw'])
-        except Exception: pass
+        for f in (j.get('raw'), j.get('pv')):
+            try:
+                if f and os.path.dirname(os.path.abspath(f)) == os.path.abspath(PREPDIR): os.remove(f)
+            except Exception: pass
     PREPSIG['until'] = time.time() + 8                       # keep listening for the thumbnails / frames the threads make
     reply(prepMsg()); prepPoll()
 VID_MAXF, VID_MAXB = 480, 48 * 1024 * 1024
@@ -868,8 +875,25 @@ def broadcastMeters():
     _publish(msg, active_only=True)
 
 # ---------------------------------------------------------------- HTTP
+def _prepServe(request, response, jid):
+    """The small preview copy of a downloaded video, in 1 MB pieces (the browser asks for ranges, so playback and seeking work)."""
+    import re
+    j = PREP.get(jid); f = j and j.get('pv')
+    if not f or not os.path.isfile(f):
+        response['statusCode'] = 404; response['statusReason'] = 'Not Found'; response['data'] = 'not found'; return response
+    size = os.path.getsize(f); rng = str(request.get('Range') or request.get('range') or '')
+    m = re.match(r'bytes=(\d*)-(\d*)', rng); a = int(m.group(1)) if m and m.group(1) else 0
+    b = int(m.group(2)) if m and m.group(2) else size - 1
+    b = min(b, a + 1024 * 1024 - 1, size - 1)
+    with open(f, 'rb') as fh: fh.seek(a); data = fh.read(b - a + 1)
+    response['statusCode'] = 206; response['statusReason'] = 'Partial Content'
+    response['content-type'] = 'video/mp4'; response['accept-ranges'] = 'bytes'; response['content-range'] = 'bytes %d-%d/%d' % (a, b, size)
+    response['cache-control'] = 'no-cache'; response['data'] = data
+    return response
+
 def onHTTPRequest(dat, request, response):
     uri = request.get('uri', '/').split('?')[0]
+    if uri.startswith('/prep/') and uri.endswith('.mp4'): return _prepServe(request, response, uri[6:14])
     if uri in ('', '/'): uri = '/index.html'
     root_ = os.path.normpath(WEB); path = os.path.normpath(os.path.join(root_, uri.lstrip('/')))
     if os.path.commonpath([root_, path]) != root_ or not os.path.isfile(path):

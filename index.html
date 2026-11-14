@@ -513,7 +513,8 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 .prepjob b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prepjob span{font:500 11px var(--mono);opacity:.75}.prepjob i{position:absolute;left:0;bottom:0;height:3px;background:#3ef0ff}
 .preptl{position:relative;margin:12px 0 4px;height:64px;border-radius:8px;overflow:hidden;background:#000;touch-action:none;user-select:none}.prepstrip{display:flex;height:100%}.prepstrip img,.prepstrip i{flex:1;min-width:0;height:100%;object-fit:cover;opacity:.55}
 .prepsel{position:absolute;top:0;bottom:0;border:3px solid var(--lime);border-radius:6px;box-shadow:0 0 0 999px #0009;cursor:grab}.prepsel i{position:absolute;top:0;bottom:0;width:18px;background:var(--lime);cursor:ew-resize}.prepsel .ph0{left:-3px}.prepsel .ph1{right:-3px}
-.preptimes{display:flex;justify-content:space-between;font:500 12px var(--mono);opacity:.85}.prepfr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.prepfr figure{margin:0}.prepfr img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px;display:block}.prepfr figcaption{font-size:10px;opacity:.6;margin-top:2px}
+.preptimes{display:flex;justify-content:space-between;font:500 12px var(--mono);opacity:.85}.prepvid{margin:10px 0;position:relative}.prepvid video{width:100%;aspect-ratio:16/9;background:#000;border-radius:8px;display:block}.prepplay{position:absolute;right:8px;bottom:8px;width:44px;height:44px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:16px}
+.prepnote{position:absolute;left:8px;top:8px;font:700 10px var(--mono);background:#000a;padding:3px 6px;border-radius:4px;color:var(--lime)}.prepnote:empty{display:none}
 .preptg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.preptg button{height:42px;border-radius:9px;border:1px solid var(--line);background:#16131c;color:var(--ink);font:700 10px var(--sans);letter-spacing:.04em}.preptg button.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
 .prepname{flex:1}.prepname input{width:100%!important}.prepnew{width:100%;margin-top:8px;height:40px}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
@@ -789,7 +790,7 @@ document.addEventListener('change', e => { const el = e.target; if (!el.dataset 
   const i = +box.querySelector('[data-cuel]').dataset.cuel, n = +el.closest('[data-cue]').dataset.cue, L = cuesOf(i); if (!L[n]) return;
   L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : el.dataset.cuef === 'fade' ? Math.max(0, +el.value || 0) : parseT(el.value); cuesSet(i, L); });
 document.addEventListener('input', e => { const el = e.target; if (!el.dataset || !el.dataset.prepv || !PREPSEL) return; const o = PREPO[PREPSEL];
-  o[el.dataset.prepv] = el.dataset.prepv === 'speed' ? Math.max(0.1, Math.min(8, +el.value || 1)) : el.value; prepTL(PREPJ.find(x => x.id === PREPSEL)); });
+  o[el.dataset.prepv] = el.dataset.prepv === 'speed' ? Math.max(0.1, Math.min(8, +el.value || 1)) : el.value; const j = PREPJ.find(x => x.id === PREPSEL); prepTL(j); prepVid(j); });
 document.addEventListener('change', e => { const el = e.target, v = Math.max(0, Math.min(600, +String(el.value).replace(',', '.') || 0));
   if (el.id === 'fadein') { ui.fade = v; uiPrefs(); send({t:'set', p:'Autofade', v}); toast(v ? 'Presets fade in ' + v + ' s' : 'Presets cut'); }
   else if (el.id === 'fxfadein') { S.pars.Fxfade = v; send({t:'set', p:'Fxfade', v}); toast(v ? 'Effects fade in ' + v + ' s' : 'Effects switch instantly'); }
@@ -840,7 +841,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14q';
+const BUILD = '2026-11-14r';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2152,7 +2153,7 @@ function prepState(jobs){ const old = Object.fromEntries(PREPJ.map(j => [j.id, j
   const pill = $('#prepPill'), run = PREPJ.find(j => j.state === 'download' || j.state === 'saving'), rdy = PREPJ.filter(j => j.state === 'ready');
   pill.hidden = !run && !rdy.length; pill.classList.toggle('rdy', !run && !!rdy.length);
   pill.textContent = run ? (run.state === 'download' ? '⬇ ' : '⚙ ') + (run.pct || 0) + '%' : '✂ ' + rdy.length + ' READY';
-  if (!$('#prep').hidden) prepUI(); }
+  if (!$('#prep').hidden) { const j = PREPJ.find(x => x.id === PREPSEL); if (j && j.pv && !$('#prepVid')) $('#prepEd').dataset.id = ''; prepUI(); } }
 function prepOpen(){ $('#prep').hidden = false; if (!PREPSEL) { const r = PREPJ.find(j => j.state === 'ready') || PREPJ[PREPJ.length - 1]; PREPSEL = r && r.id; } prepUI(); }
 function prepUI(){
   $('#prepJobs').innerHTML = PREPJ.slice().reverse().map(j => `<button class="prepjob ${j.id === PREPSEL ? 'on' : ''}" data-prepsel="${j.id}"><b>${esc(j.title || j.url)}</b>
@@ -2161,17 +2162,23 @@ function prepUI(){
   const j = PREPJ.find(x => x.id === PREPSEL), ed = $('#prepEd');
   if (!j || !(j.state === 'ready' || j.state === 'done' || (j.state === 'fail' && j.dur))) { ed.innerHTML = ''; return; }
   const o = PREPO[j.id] || (PREPO[j.id] = {in:0, out:j.dur, speed:1, name:j.title});
-  if (ed.dataset.id === j.id && ed.innerHTML) return prepTL(j);
+  if (ed.dataset.id === j.id && ed.innerHTML && (!j.pv || $('#prepVid'))) return prepTL(j);
   ed.dataset.id = j.id; if (!PREPSTRIP[j.id]) send({t:'prep', do:'strip', id:j.id});
   ed.innerHTML = `<div class="preptl" data-preptl><div class="prepstrip">${(PREPSTRIP[j.id] || []).map(b => b ? `<img src="data:image/jpeg;base64,${b}">` : '<i></i>').join('')}</div>
       <b class="prepsel"><i class="ph0" data-preph="in"></i><i class="ph1" data-preph="out"></i></b></div>
     <div class="preptimes"><span>IN <b data-prept="in"></b></span><span>length <b data-prept="len"></b></span><span>OUT <b data-prept="out"></b></span></div>
-    <div class="prepfr"><figure><img data-prepfr="in"><figcaption>first frame</figcaption></figure><figure><img data-prepfr="out"><figcaption>last frame</figcaption></figure></div>
+    <div class="prepvid">${j.pv && location.protocol !== 'https:' ? `<video id="prepVid" src="prep/${j.id}_pv.mp4" muted playsinline preload="auto"></video><button class="prepplay" id="prepPlay" aria-label="Play or pause">❚❚</button><span class="prepnote" id="prepNote"></span>` : `<p class="hint2">${location.protocol === 'https:' ? 'The preview plays on the direct link (USB / Wi-Fi), not over the internet.' : 'Preparing the preview…'}</p>`}</div>
     <div class="preptg">${[['reverse','⏪ REVERSE'],['pingpong','⇄ PING-PONG'],['mirror','⇆ MIRROR'],['flip','⇅ FLIP']].map(([k, l]) => `<button data-prepo="${k}" class="${o[k] ? 'on' : ''}">${l}</button>`).join('')}</div>
     <div class="cuer"><label>SPEED<input type="number" step="0.05" min="0.1" max="8" data-prepv="speed" value="${o.speed}"></label><label class="prepname">NAME<input type="text" maxlength="60" data-prepv="name" value="${esc(o.name || '')}"></label></div>
     <div class="prepacts"><button class="pri" data-prepsave="${j.id}">✓ SAVE TO VIDEOS</button><button data-prepdrop="${j.id}">DELETE DOWNLOAD</button></div>
     <p class="hint2">Drag the green edges to trim. Saved as 1280×720 into your videos, then it shows up when you add a video layer.</p>`;
-  prepTL(j); prepFrames(j); }
+  prepTL(j); prepVid(j); }
+function prepVid(j){ const v = $('#prepVid'); if (!v) return; const o = PREPO[j.id];
+  v.style.transform = `scale(${o.mirror ? -1 : 1}, ${o.flip ? -1 : 1})`; v.playbackRate = Math.max(0.0625, Math.min(16, +o.speed || 1));
+  const n = $('#prepNote'); if (n) n.textContent = o.reverse || o.pingpong ? (o.pingpong ? 'ping-pong' : 'reverse') + ' shows in the saved clip' : '';
+  if (!v._b) { v._b = 1; v.addEventListener('timeupdate', () => { const p = PREPO[PREPSEL]; if (!p || v.seeking) return;
+      if (v.currentTime >= p.out - 0.04 || v.currentTime < p.in - 0.25) v.currentTime = p.in; });          // plays only your cut, on a loop
+    v.addEventListener('loadedmetadata', () => { const p = PREPO[PREPSEL]; if (p) v.currentTime = p.in; v.play().catch(() => {}); }); } }
 function prepTL(j){ const o = PREPO[j.id], d = j.dur || 1, sel = $('#prepEd .prepsel'); if (!sel) return;
   sel.style.left = o.in / d * 100 + '%'; sel.style.width = Math.max(0.5, (o.out - o.in) / d * 100) + '%';
   $('[data-prept="in"]').textContent = fmtT(o.in); $('[data-prept="out"]').textContent = fmtT(o.out); $('[data-prept="len"]').textContent = fmtT((o.out - o.in) / (o.speed || 1) * (o.pingpong ? 2 : 1)); }
@@ -2182,13 +2189,13 @@ let PDRAG = null;
 document.addEventListener('pointerdown', e => { const sel = e.target.closest('#prepEd .prepsel'), tl = e.target.closest('[data-preptl]'); if (!tl) return;
   const j = PREPJ.find(x => x.id === PREPSEL); if (!j) return; e.preventDefault(); const o = PREPO[j.id], r = tl.getBoundingClientRect(), d = j.dur || 1, tAt = x => Math.max(0, Math.min(d, (x - r.left) / r.width * d));
   const h = e.target.dataset.preph || (sel ? 'both' : (Math.abs(tAt(e.clientX) - o.in) < Math.abs(tAt(e.clientX) - o.out) ? 'in' : 'out')), t0 = tAt(e.clientX), a0 = o.in, b0 = o.out;
-  PDRAG = {j, move: ev => { const dt = tAt(ev.clientX) - t0;
+  PDRAG = {j, h, move: ev => { const dt = tAt(ev.clientX) - t0;
     if (h === 'in') o.in = Math.max(0, Math.min(o.out - 0.2, sel ? a0 + dt : tAt(ev.clientX)));
     else if (h === 'out') o.out = Math.min(d, Math.max(o.in + 0.2, sel ? b0 + dt : tAt(ev.clientX)));
     else { const len = b0 - a0, na = Math.max(0, Math.min(d - len, a0 + dt)); o.in = na; o.out = na + len; }
-    prepTL(j); }}; PDRAG.move(e); });
+    prepTL(j); const v = $('#prepVid'); if (v) { v.pause(); v.currentTime = h === 'out' ? o.out : o.in; } }}; PDRAG.move(e); });
 document.addEventListener('pointermove', e => { if (PDRAG) PDRAG.move(e); });
-document.addEventListener('pointerup', () => { if (!PDRAG) return; const j = PDRAG.j; PDRAG = null; prepFrames(j); });
+document.addEventListener('pointerup', () => { if (!PDRAG) return; const j = PDRAG.j, h = PDRAG.h; PDRAG = null; const v = $('#prepVid'), o = PREPO[j.id]; if (v) { v.currentTime = h === 'out' ? Math.max(o.in, o.out - 1.5) : o.in; v.play().catch(() => {}); } });
 function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
 function pkEnc(k, c){ return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
 function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
@@ -2484,9 +2491,10 @@ document.addEventListener('click', e => {
   if (t.id === 'prepGo') { const u = $('#prepUrl').value.trim(); if (!/^https?:\/\//.test(u)) { toast('Paste a full link (https://…)'); return; }
     send({t:'prep', do:'get', url:u}); $('#prepLink').hidden = true; toast('⬇ Downloading in the background — keep playing'); buzz(); return; }
   if (t.id === 'prepPill') { prepOpen(); return; }
+  if (t.id === 'prepPlay') { const v = $('#prepVid'); if (v) { if (v.paused) v.play().catch(() => {}); else v.pause(); t.textContent = v.paused ? '▶' : '❚❚'; } return; }
   if (t.id === 'prepX') { $('#prep').hidden = true; return; }
   if (d.prepsel) { PREPSEL = d.prepsel; $('#prepEd').dataset.id = ''; prepUI(); return; }
-  if (d.prepo) { const o = PREPO[PREPSEL]; o[d.prepo] = !o[d.prepo]; t.classList.toggle('on', o[d.prepo]); prepTL(PREPJ.find(x => x.id === PREPSEL)); buzz(); return; }
+  if (d.prepo) { const o = PREPO[PREPSEL], j = PREPJ.find(x => x.id === PREPSEL); o[d.prepo] = !o[d.prepo]; t.classList.toggle('on', o[d.prepo]); prepTL(j); prepVid(j); buzz(); return; }
   if (d.prepsave) { const o = PREPO[d.prepsave]; send({t:'prep', do:'save', id:d.prepsave, o:{in:+o.in.toFixed(2), out:+o.out.toFixed(2), speed:+o.speed || 1, reverse:!!o.reverse, pingpong:!!o.pingpong, mirror:!!o.mirror, flip:!!o.flip, name:o.name}});
     toast('⚙ Saving in the background — you get a message when it is in videos'); $('#prep').hidden = true; buzz(); return; }
   if (d.prepdrop) { send({t:'prep', do:'drop', id:d.prepdrop}); delete PREPO[d.prepdrop]; PREPSEL = null; $('#prepEd').dataset.id = ''; buzz(); return; }
