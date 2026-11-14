@@ -919,6 +919,8 @@ def _ensurePars():
                 if not hasattr(C.par, 'M%d%s' % (i, n)):
                     pp = pg.appendStr('M%d%s' % (i, n), label='M%d noise colour' % i)[0]; pp.default = dv; pp.val = dv
         if not hasattr(C.par, 'Noreact'): C.par.Links.page.appendStr('Noreact', label='Layers ignoring the music')
+        if absTime.frame < 900 and C.par.Autopilot.eval(): C.par.Autopilot = False      # the show always starts with autopilot OFF
+        C.par.Autopilot.default = False
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
         for i in range(1, 7):                          # any background colour can be removed (picked on the remote)
             m = C.par['M%dkeycolor' % i]
