@@ -618,6 +618,15 @@ def recStop():
     m = op('/project1/rec')
     if m is not None: m.par.record = False
     REC['t0'] = None
+def recDiscard():
+    """Stop and throw the take away (the file is deleted once the recorder has let go of it)."""
+    f = REC['file']; recStop(); REC['file'] = ''
+    if f: run("op('/project1/remote_cb').module._recDel(%r, 5)" % f, delayFrames=20)
+def _recDel(f, tries):
+    try:
+        if os.path.exists(f) and os.path.dirname(os.path.abspath(f)) == os.path.abspath(os.path.join(project.folder, 'recordings')): os.remove(f)
+    except Exception:
+        if tries > 0: run("op('/project1/remote_cb').module._recDel(%r, %d)" % (f, tries - 1), delayFrames=30)
 
 def state():
     C = _C()
@@ -1058,6 +1067,7 @@ def handle(msg, reply):
         elif t == 'rec':
             if msg.get('do') == 'start': recStart()
             elif msg.get('do') == 'stop': recStop()
+            elif msg.get('do') == 'discard': recDiscard(); _all(dict(recMsg(), discarded=True)); return
             _all(recMsg())
         elif t == 'quick':                                         # pinned controls for LIVE
             ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))

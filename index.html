@@ -48,7 +48,9 @@ header{position:sticky;top:0;z-index:5;padding:calc(10px + var(--st)) 16px 8px;b
 .r1>.edit,.r1>.bo,.fps{white-space:nowrap;flex:none}
 @media (max-width:400px){.r1{gap:6px}.fps{font-size:10px}.r1>.edit,.r1>.bo,.r1>.savebtn{padding:0 9px}}
 @media (max-width:440px){body.editing .r1>.logo{display:none}}
-#rlbtn,#recbtn{margin-left:6px}.stat:not(.open)~#recbtn.on{display:block}   /* while recording, REC stays visible to stop it */
+.st2 .stbar{background:#ff4d5e;box-shadow:0 0 8px #ff4d5e66}.st2 .fps{font-size:16px}
+.tbk{margin-left:6px}.st2:not(.open)~.tbk:not(.on){display:none}   /* while recording, REC (and DISCARD) stay visible */
+#recx{width:auto!important;padding:0 10px;font:700 11px var(--sans);letter-spacing:.06em;color:var(--mute)}#recx:not(.on){display:none!important}
 .savebtn{display:none;height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--lime);color:var(--lime);font-weight:700;letter-spacing:.1em;font-size:11px;white-space:nowrap;flex:none}
 body.editing .savebtn{display:block}.savebtn.ok{background:var(--lime);color:#0b0a0f}
 .edit{height:36px;padding:0 12px;border-radius:4px;border:1px solid var(--line);color:var(--mute);font-weight:700;letter-spacing:.1em;font-size:11px}
@@ -466,7 +468,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="fsb stbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb stbk" id="recbtn" aria-label="Record the show">● REC</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="fsb" id="fsbtn" aria-label="Full screen">⛶</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="stat st2" id="stat2" aria-label="Reload and record"><i class="stbar"></i><span class="fps">⋯</span></button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -752,7 +754,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14f';
+const BUILD = '2026-11-14g';
 const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
 const BLM = [['normal','NORMAL'],['add','ADD'],['screen','SCREEN'],['multiply','MULTIPLY'],['overlay','OVERLAY'],['difference','DIFFERENCE'],['lighten','LIGHTEN'],['darken','DARKEN']];
@@ -876,6 +878,8 @@ function linkBadge(){ const b = $('#lk'); if (!b) return;
   if (b.textContent !== t) b.textContent = t; b.classList.add('on');
   const bk = !linkUp || !LOCAL || MODE === 'relay' || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2));
   b.classList.toggle('bk', bk); const sb = $('#stbar'); if (sb) { sb.classList.toggle('bad', !linkUp); sb.classList.toggle('bk', linkUp && bk); } }
+document.getElementById('stat2').addEventListener('click', () => { const o = !$('#stat2').classList.contains('open'); $('#stat2').classList.toggle('open', o); store.set('stat2open', o); buzz(); });
+if (store.get('stat2open', false)) $('#stat2').classList.add('open');
 document.getElementById('stat').addEventListener('click', () => { const o = !$('#stat').classList.contains('open'); $('#stat').classList.toggle('open', o); store.set('statopen', o); buzz(); });
 if (store.get('statopen', false)) $('#stat').classList.add('open');
 function wsNext(){ const c = wsCands(), i = c.indexOf(WSH); WSFAIL++;
@@ -1961,8 +1965,8 @@ function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
 function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; return {look:Math.floor(q / 100), mv:q % 100}; } const v = Math.round(Math.max(0, Math.min(1, p)) * 99); return {look:v, mv:v}; }
 const REC = {on:false, t0:0, file:''};
 function recUI(r){ const was = REC.on; REC.on = !!r.on; REC.file = r.file || REC.file; if (REC.on) REC.t0 = performance.now() - (r.secs || 0) * 1000;
-  if (was && !REC.on && REC.file) toast('Saved: recordings/' + REC.file); recTick(); }
-function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('on', REC.on);
+  if (r.discarded) toast('Recording thrown away'); else if (was && !REC.on && REC.file) toast('Saved: recordings/' + REC.file); recTick(); }
+function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('on', REC.on); const x = $('#recx'); if (x) x.classList.toggle('on', REC.on);
   if (!REC.on) { b.textContent = '● REC'; return; } const s = Math.floor((performance.now() - REC.t0) / 1000); b.textContent = '■ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 setInterval(() => REC.on && recTick(), 500);
 const PK = {
@@ -2257,6 +2261,7 @@ document.addEventListener('click', e => {
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
   if (d.lfold) { const k = d.lfold; if (LFOLD.has(k)) LFOLD.delete(k); else LFOLD.add(k); store.set('lfold', [...LFOLD]); t.closest('.lay').classList.toggle('fold', LFOLD.has(k)); buzz(); return; }
+  if (t.id === 'recx') { send({t:'rec', do:'discard'}); buzz(20); return; }
   if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start'}); buzz(20); return; }
   if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
