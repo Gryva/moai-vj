@@ -25,7 +25,7 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 vec4 texA(vec2 uv){ return (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) ? vec4(0.0) : texture(sTD2DInputs[0], uv); }   // outside the picture = see-through
 float d2(float v, float d){ return floor(v / d + 0.001); }
 // DVD BOUNCE  the picture flies around and bounces off the screen edges, like the old DVD screensaver.
-// uP.x = speed * 100 + size (0-99), uP.y = angle * 100 + colour change on each bounce (0 off / 1 on)
+// uP.x = speed * 100 + size (0-99), uP.y = angle * 100 + colour change on each bounce (0 off / 1 on), uP.z = copies (+1 every corner hit)
 uniform vec4 uBB;   // where the picture really is (x0, y0, x1, y1): empty space around it does not bounce
 float tri(float x){ return 1.0 - abs(1.0 - mod(x, 2.0)); }        // 0..1..0 ping-pong
 vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }
@@ -40,11 +40,16 @@ void main(){
   float th = radians(20.0 + an / 99.0 * 50.0);                         // flight angle 20-70 degrees
   vec2 v = vec2(cos(th), sin(th) * asp) * (0.03 + sp / 99.0 * 0.5);
   vec2 room = max(vec2(1.0) - box, vec2(0.0001));
-  vec2 tt = uTime * v / room;
-  vec2 pos = vec2(tri(tt.x), tri(tt.y)) * room;                        // bottom-left corner of the picture on screen
-  float hits = floor(tt.x) + floor(tt.y);
-  vec2 src = bb.xy + (uv - pos) / s;                                    // where on the original this pixel comes from
-  vec4 t = (uv.x < pos.x || uv.y < pos.y || uv.x > pos.x + box.x || uv.y > pos.y + box.y) ? vec4(0.0) : texA(src);
-  if (cc > 0.5) t.rgb = max(hueRot(t.rgb, hits * 2.39996), 0.0);       // a new colour on every bounce
+  float n = clamp(uP.z, 0.0, 12.0);                                    // corner hits so far: one more copy for each (counted by the engine)
+  vec4 t = vec4(0.0);
+  for (int k = 0; k < 13; k++) {
+    if (float(k) > n) break;
+    vec2 tt = (uTime + float(k) * 13.7) * v / room;                     // every copy flies the same path, at its own place on it
+    vec2 pos = vec2(tri(tt.x), tri(tt.y)) * room;                      // bottom-left corner of the picture on screen
+    if (uv.x < pos.x || uv.y < pos.y || uv.x > pos.x + box.x || uv.y > pos.y + box.y) continue;
+    vec4 c = texA(bb.xy + (uv - pos) / s);
+    if (cc > 0.5) c.rgb = max(hueRot(c.rgb, (floor(tt.x) + floor(tt.y) + float(k) * 3.0) * 2.39996), 0.0);   // a new colour on every bounce
+    t = c + t * (1.0 - c.a);                                          // newest copies on top
+  }
   fragColor = TDOutputSwizzle(mix(texture(sTD2DInputs[0], uv), t, uMix));
 }

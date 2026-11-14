@@ -249,6 +249,43 @@ def cueUpdate(C):
                 i, txt, n = key; _cueSet(i, CUEP.get(txt, [])[n], False)
             except Exception: pass
 
+# ---------------------------------------------------------------- DVD BOUNCE: a corner hit adds a copy (same path maths as dvd.glsl)
+DVDN = {}                                                     # op name -> {'n': copies, 'last': [(fx, fy) per copy]}
+def _tri(x): x = x % 2.0; return 1.0 - abs(1.0 - x)
+def dvdCorners():
+    P = op('/project1')
+    for pre in ('fx_', 'fxS1_', 'fxS2_', 'fxS3_', 'fxS4_'):
+        g = P.op(pre + 'dvd')
+        if g is None: continue
+        if g.bypass: DVDN.pop(g.name, None); continue
+        st = DVDN.setdefault(g.name, {'n': 0, 'last': {}})
+        try:
+            T = float(g.par.vec0valuex.eval()); px = int(g.par.vec3valuex.eval()); py = int(g.par.vec3valuey.eval())
+            sp, sz, an = px // 100, px % 100, py // 100
+            bb = (0.0, 0.0, 1.0, 1.0)
+            for k in range(40):
+                nm = g.par['vec%dname' % k]
+                if nm is None: break
+                if nm.eval() == 'uBB':
+                    b = tuple(float(g.par['vec%dvalue%s' % (k, a)].eval()) for a in 'xyzw')
+                    if b[2] - b[0] > 0.01 and b[3] - b[1] > 0.01: bb = b
+                    break
+            asp = g.width / float(max(1, g.height))
+            pw = (bb[2] - bb[0], bb[3] - bb[1]); s = (0.08 + sz / 99.0 * 0.82) / max(pw); s = min(s, 0.98 / max(pw))
+            box = (pw[0] * s, pw[1] * s); th = math.radians(20.0 + an / 99.0 * 50.0); m = 0.03 + sp / 99.0 * 0.5
+            v = (math.cos(th) * m, math.sin(th) * asp * m); room = (max(1.0 - box[0], 1e-4), max(1.0 - box[1], 1e-4))
+            new = 0
+            for k in range(st['n'] + 1):
+                tt = ((T + k * 13.7) * v[0] / room[0], (T + k * 13.7) * v[1] / room[1])
+                fl = (math.floor(tt[0]), math.floor(tt[1])); old = st['last'].get(k); st['last'][k] = fl
+                if old is None or old == fl: continue
+                near = lambda x, r: min(x % 1.0, 1.0 - x % 1.0) * r < 0.015      # within ~1.5% of the screen of the other wall
+                if ((fl[0] != old[0] and near(tt[1], room[1])) or (fl[1] != old[1] and near(tt[0], room[0]))) and T - st.setdefault('hit', {}).get(k, -9.0) > 0.5:
+                    st['hit'][k] = T; new += 1                             # one corner = one copy (x and y walls are hit a frame apart)
+            if new and st['n'] < 12: st['n'] = min(12, st['n'] + new)
+            if abs(g.par.vec3valuez.eval() - st['n']) > 0.01: g.par.vec3valuez = st['n']
+        except Exception: pass
+
 BLENDS = ['normal', 'add', 'screen', 'multiply', 'overlay', 'difference', 'lighten', 'darken']
 def blendUpdate(C):
     """Per layer opacity + blend mode into the layer stack (only writes what changed)."""
@@ -2394,6 +2431,7 @@ def onFrameStart(frame):
     _safe('noise', noiseUpdate, C, T)
     _safe('blend', blendUpdate, C)
     _safe('cues', cueUpdate, C)
+    _safe('dvd', dvdCorners)
     if TFADES: _safe('tfade', tFadeStep, T)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)

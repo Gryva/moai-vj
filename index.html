@@ -807,7 +807,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-14l';
+const BUILD = '2026-11-14m';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2067,8 +2067,13 @@ function cueUI(i){
   cueBar(i); }
 function cueBar(i){ const bar = $(`[data-cuebar="${i}"]`), v = VT[i]; if (!bar) return; const d = v ? v[1] : 0;
   bar.querySelectorAll('.cueseg').forEach(e => e.remove());
-  if (d) cuesOf(i).forEach(c => { const e = document.createElement('b'); e.className = 'cueseg'; const a = Math.min(1, c.t0 / d), z = Math.min(1, (c.t1 > c.t0 ? c.t1 : d) / d);
-    e.style.left = a * 100 + '%'; e.style.width = Math.max(0.6, (z - a) * 100) + '%'; const l = (S.layers || []).find(x => x.k === c.k); e.style.background = GC[l && l.g] || 'var(--lime)'; bar.appendChild(e); }); }
+  if (d) cuesOf(i).forEach(c => { const e = document.createElement('b'); e.className = 'cueseg';
+    const f = +c.fade || 0, end = c.t1 > c.t0 ? c.t1 : d, a = Math.min(1, c.t0 / d), z = Math.min(1, (end + f) / d), w = Math.max(0.006, z - a);   // the block runs to the end of the fade-out
+    const l = (S.layers || []).find(x => x.k === c.k), col = GC[l && l.g] || '#c6ff3d';
+    const fi = Math.min(1, f / d / w) * 100, fo = Math.max(0, Math.min(1, (end - c.t0) / d / w)) * 100;           // fade in: start .. start+fade, fade out: end .. end+fade
+    e.style.left = a * 100 + '%'; e.style.width = w * 100 + '%';
+    e.style.background = f > 0 ? `linear-gradient(90deg, ${col}22 0%, ${col} ${Math.min(fi, fo)}%, ${col} ${fo}%, ${col}22 100%)` : col;
+    e.title = l ? l.label : c.k; bar.appendChild(e); }); }
 function cueTick(vt){ for (const k in vt) { const i = +k, had = VT[i]; VT[i] = vt[k];
     const bar = $(`[data-cuebar="${i}"]`); if (!bar || bar.closest('.cuebox').hidden) continue;
     bar.querySelector('.cueph').style.left = Math.min(100, vt[k][0] / vt[k][1] * 100) + '%';
