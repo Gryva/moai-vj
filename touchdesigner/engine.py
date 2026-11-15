@@ -906,7 +906,7 @@ def applyLayers(T=None):
         k = r['key']; amt = float(r['amt'] or 0); p1 = float(r['p1'] or 0); on = _isOn(r)
         f = fades.get(k)
         if f:                                                     # crossfade in progress
-            x = min(1.0, (T - f['t0']) / max(0.001, f['dur']))
+            x = max(0.0, min(1.0, (T - f['t0']) / max(0.001, f['dur'])))
             x = x * x * (3 - 2 * x)
             amt = f['a0'] + (f['a1'] - f['a0']) * x
             if f['a1'] == 0 and x < 1: on = True; p1 = f.get('p1', p1)
@@ -1029,6 +1029,12 @@ def _defRow(key):
         if r['key'] == key: return float(r['amt'] or 1.0), float(r['p1'] or 0.0)
     return 1.0, 0.0
 
+def _stagger(fs, T, fade):
+    """Effects don't all change at once: the ones going off leave one after another first, the ones coming on follow - the picture never empties."""
+    if len(fs) < 2 or fade < 0.6: return
+    fs = sorted(fs, key=lambda f: (f['a1'] > f['a0'], -abs(f['a1'] - f['a0'])))
+    w = fade * 0.55; sp = (fade - w) / (len(fs) - 1)
+    for j, f in enumerate(fs): f['t0'] = T + sp * j; f['dur'] = w
 TFADES = {}                                                   # (layer, effect) -> glide of its amount between presets
 def tFadeStep(T):
     for (t, k), f in list(TFADES.items()):
@@ -1219,6 +1225,7 @@ def applyLook(d, text=True):
                 if abs(a0 - a1) < 0.001: continue
                 TFADES[(t, k)] = {'t0': T0, 'dur': fade, 'a0': a0, 'a1': a1, 'p': (n or o)[2], 'end': list(n) if n else None}
                 FXT[t][k] = [True, a0, (n or o)[2]]
+        _stagger(list(TFADES.values()), T0, fade)
 
 def lookNames():
     t = op('/project1/LOOKS')
@@ -1978,6 +1985,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     try: slot = int(slot)
     except Exception: return False
     if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+    if LX: _lxFinish()                                            # a new change during an overlap: the running one lands first
     if SF:                                                        # a new change during a source fade: the half-faded layers get the new preset's own values
         if SF.get('phase') == 1:
             for i, a in SF['a0'].items(): mp(op('/project1/CONTROLS'), i, 'alpha').val = a
@@ -2016,6 +2024,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
+    elif fade > 0.01 and _lxStart(d, slot, fade, cam, model, text, newScene, newModel): pass     # layers overlap: old ones leave while new ones arrive
     elif fade > 0.01 and (newSrc or newScene or newModel):        # new videos / scene style / 3D model: the old fades out still moving, the new fades in - never black
         mA0 = float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0
         d2 = d
@@ -2052,6 +2061,7 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
             if abs(A0 - A1) > 0.001 or pg:
                 S['fades'][k] = {'t0': T, 'dur': fade, 'a0': A0, 'a1': A1, 'p1': p0}
                 if pg: S['fades'][k].update(pA=p0, pB=pB)
+        _stagger([S['fades'][k] for k in old if k in S['fades'] and S['fades'][k]['t0'] == T], T, fade)
     if model and d.get('model') and d['model'] != C.par.Model.eval():
         S['modelcut'] = True                                     # presets never play the statue swap animation
         C.par.Model = d['model']
@@ -2194,6 +2204,119 @@ def qPrewarm():
 XF = {'on': False, 't0': 0.0, 'dur': 1.0, 'phase': 'out', 'pending': None}
 
 SF = {}
+LX = {}                                                       # a preset change where the layers overlap (nothing waits on black)
+def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
+    """Each layer on its own: staying layers glide, new ones fade in from the start, leaving ones fade out to the end,
+    a layer whose content changes dips and swaps at the middle - and so does the 3D model when its scene style / model changes."""
+    C = op('/project1/CONTROLS'); R = op('/project1/remote_cb').module
+    s_ = d.get('src') or {}; ms = s_.get('mslots')
+    if not isinstance(ms, dict): return False                     # older presets: the simple way
+    cur = {str(i): mediaSlotData(C, i) for i in MSLOTS if mp(C, i, 'on').eval()}
+    if not cur and not ms: return False                           # no layers on either side
+    plan = {}
+    for i in MSLOTS:
+        k = str(i); co, nw = cur.get(k), ms.get(k)
+        if co and nw: plan[i] = 'keep' if (co.get('kind') == nw.get('kind') and (co.get('file') or '') == (nw.get('file') or '') and nw.get('kind') != 'draw') else 'swap'
+        elif co: plan[i] = 'out'
+        elif nw: plan[i] = 'in'
+    same = all(v == 'keep' and abs(float(cur[str(i)].get('alpha', 1.0)) - float(ms[str(i)].get('alpha', 1.0))) < 1e-3 for i, v in plan.items())
+    if same and not newScene and not newModel: return False       # nothing to overlap
+    a0 = {i: float(mp(C, i, 'alpha').eval()) for i in plan if plan[i] != 'in'}
+    hold = [i for i, v in plan.items() if v in ('out', 'swap')]
+    d2 = dict(d); d2['src'] = dict(s_); d2['src']['mslots'] = dict(ms)
+    for i in hold: d2['src']['mslots'][str(i)] = cur[str(i)]      # these keep playing what they have for now
+    dr0 = {i: R.DRAWS.get(i) for i in hold}
+    m0 = float(C.par.Alphamodel.eval()); mb0 = C.par.Modelblend.eval() if hasattr(C.par, 'Modelblend') else None
+    swapm = bool(newScene or newModel)
+    if swapm:
+        d2['extra'] = dict(d.get('extra') or {})
+        if mb0 is not None: d2['extra']['Modelblend'] = mb0
+        if newScene: d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}
+        if newModel:
+            d2['model'] = C.par.Model.eval()
+            d2['obj'] = {k: C.par[k].eval() for k in OBJKEYS if hasattr(C.par, k)}; d2['obj']['angle'] = S['angle']
+    fx0 = {i: ({k: list(v) for k, v in FXT['m%d' % i].items()}, {k: dict(v) for k, v in TCOL['m%d' % i].items()}) for i in plan}
+    _bankApply(d2, fade, cam, model, text, cut=False, slot=slot, src=True)
+    for i, v in plan.items():                                     # a layer's own effects travel with its content: no half-way mixes, no effect leaving a layer empty
+        t = 'm%d' % i
+        for key in [q for q in TFADES if q[0] == t]: TFADES.pop(key, None)
+        if v in ('out', 'swap'): FXT[t] = {k: list(x) for k, x in fx0[i][0].items()}; TCOL[t] = {k: dict(x) for k, x in fx0[i][1].items()}
+        elif v == 'in': _lxFx(d, i)
+        else:                                                     # staying layer: its effects glide (set again so the glide starts clean)
+            new = {k: [bool(x[0]), float(x[1]), float(x[2])] for k, x in ((d.get('tfx') or {}).get(t) or {}).items()}; T0 = absTime.seconds
+            FXT[t] = {k: list(x) for k, x in new.items()}
+            for k in set(fx0[i][0]) | set(new):
+                o, n = fx0[i][0].get(k), new.get(k)
+                b0 = o[1] if o and o[0] else 0.0; b1 = n[1] if n and n[0] else 0.0
+                if abs(b0 - b1) < 0.001: continue
+                TFADES[(t, k)] = {'t0': T0, 'dur': fade, 'a0': b0, 'a1': b1, 'p': (n or o)[2], 'end': list(n) if n else None}
+                FXT[t][k] = [True, b0, (n or o)[2]]
+    for i, v in dr0.items():                                      # the leaving drawings stay until they have faded
+        if v is not None: v['new'] = True; R.DRAWS[i] = v
+    a1 = {i: float(mp(C, i, 'alpha').eval()) for i in plan if plan[i] in ('in', 'keep')}
+    for i, v in plan.items():
+        if v == 'swap': a1[i] = float((ms[str(i)] or {}).get('alpha', 1.0))
+    for i, v in plan.items(): mp(C, i, 'alpha').val = 0.0 if v == 'in' else a0[i]
+    m1 = float(C.par.Alphamodel.eval()); C.par.Alphamodel = m0
+    LX.clear(); LX.update(d=d, slot=slot, t0=absTime.seconds, dur=max(0.1, fade), plan=plan, a0=a0, a1=a1, mid=False, swapm=swapm, model=newModel, m0=m0, m1=m1, cur=cur)
+    return True
+def _lxFx(d, i):
+    """A layer's own effects + effect colours exactly as the preset has them."""
+    t = 'm%d' % i
+    FXT[t] = {k: [bool(v[0]), float(v[1]), float(v[2])] for k, v in ((d.get('tfx') or {}).get(t) or {}).items()}
+    TCOL[t] = {k: _colClean(v) for k, v in ((d.get('tcol') or {}).get(t) or {}).items()}
+def _lxMid(C, now=False):
+    """The middle: layers that change content and the 3D model (new scene style / statue) change under one short blend - nothing leaves the screen."""
+    R = op('/project1/remote_cb').module; d = LX['d']; plan = dict(LX['plan']); cur = LX['cur']; slot = LX['slot']; md = LX['model']; swapm = LX['swapm']
+    swaps = any(v == 'swap' for v in plan.values())
+    def sw():
+        if swaps:
+            d3 = dict(d); d3['src'] = dict(d.get('src') or {}); d3['src']['mslots'] = dict(d3['src'].get('mslots') or {})
+            outs = [i for i, v in plan.items() if v == 'out']
+            for i in outs: d3['src']['mslots'][str(i)] = cur[str(i)]
+            dr0 = {i: R.DRAWS.get(i) for i in outs}
+            keepa = {i: float(mp(C, i, 'alpha').eval()) for i in plan}
+            try: applySrc(d3, slot)
+            except Exception as er: print('preset source failed', er)
+            for i, v in dr0.items():
+                if v is not None: v['new'] = True; R.DRAWS[i] = v
+            for i, a_ in keepa.items(): mp(C, i, 'alpha').val = a_
+            for i, v in plan.items():
+                if v == 'swap': _lxFx(d, i)
+        if swapm:
+            _sfSwap(d, md)
+            mb = (d.get('extra') or {}).get('Modelblend')
+            if hasattr(C.par, 'Modelblend'): C.par.Modelblend = mb if mb is not None else C.par.Modelblend.default
+    if swaps or swapm:
+        if now: sw()
+        else: trStart('crossfade', min(1.5, max(0.6, LX['dur'] * 0.3)), sw)
+    LX['mid'] = True
+def lxStep(T):
+    if not LX: return
+    C = op('/project1/CONTROLS'); u = min(1.0, (T - LX['t0']) / LX['dur']); e = _ss(u); plan = LX['plan']; a0, a1 = LX['a0'], LX['a1']
+    if u >= 0.5 and not LX['mid']: _lxMid(C)
+    for i, v in plan.items():
+        if v == 'in': x = a1[i] * e
+        elif v == 'keep': x = a0[i] + (a1[i] - a0[i]) * e
+        elif v == 'out': x = a0[i] * (1.0 - e)
+        else: x = a0[i] + (a1[i] - a0[i]) * e                    # content changes under the blend at the middle
+        mp(C, i, 'alpha').val = x
+    C.par.Alphamodel = LX['m0'] + (LX['m1'] - LX['m0']) * e
+    if u >= 1.0: _lxFinish()
+def _lxFinish():
+    """Everything exactly as the preset says (also when another change cuts in half way)."""
+    if not LX: return
+    C = op('/project1/CONTROLS'); d, slot = LX['d'], LX['slot']
+    if not LX['mid']:
+        try: _lxMid(C, now=True)
+        except Exception as er: print('preset change failed', er)
+    plan = dict(LX['plan']); C.par.Alphamodel = LX['m1']; LX.clear()
+    for i, v in plan.items():
+        if v == 'out': FXT['m%d' % i] = {}; TCOL['m%d' % i] = {}
+    try: applySrc(d, slot)                                         # the leaving layers go, every level lands on its own value
+    except Exception as er: print('preset source failed', er)
+def _ss(u): u = min(1.0, max(0.0, u)); return u * u * (3.0 - 2.0 * u)
+
 def srcFadeStart(d, slot, fade, src=True, scene=False, mA0=1.0, model=False):
     """Live change of what can't glide: the old media layers / scene style fade out (still playing), the new ones are put in at the quiet point and fade in."""
     C = op('/project1/CONTROLS')
@@ -2816,6 +2939,7 @@ def onFrameStart(frame):
     _safe('dip', xfadeUpdate, T)
     _safe('trans', trUpdate, T)
     if SF: _safe('srcfade', srcFadeStep, T)
+    if LX: _safe('layerfade', lxStep, T)
     if PG or S.get('angoff'): _safe('pose', poseGlideStep, C, T)
     _safe('camera', camUpdate, C, dt)
     _safe('label', _label, C)
