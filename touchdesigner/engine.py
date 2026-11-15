@@ -2087,27 +2087,42 @@ TR = {'on': False}
 def _dipColour(v):
     b = op('/project1/xf_black')
     if b is not None and abs(b.par.colorr.eval() - v) > 1e-3: b.par.colorr = b.par.colorg = b.par.colorb = v
+TRCACHE = 40                                                     # frames of the running look kept for transitions (~0.7 s)
+def _trRec(h, on):
+    """tr_hold keeps recording the last TRCACHE frames of the look on screen, so a transition can keep the old look moving."""
+    if int(h.par.cachesize.eval()) != TRCACHE: h.par.cachesize = TRCACHE
+    if not h.par.alwayscook.eval(): h.par.alwayscook = True
+    if on and not h.par.active.eval(): TR['recf'] = absTime.frame
+    h.par.active = on
+    if on: h.par.outputindex = 0
 def trStart(style, dur, apply):
-    """Freeze what is on screen, put the new look underneath at once, then reveal it (crossfade / wipe / zoom / glitch)."""
+    """The old look keeps moving (replayed from the last moments), the new look goes in underneath at once and is revealed (crossfade / wipes / zoom / glitch)."""
     h, sw = op('/project1/tr_hold'), op('/project1/tr_sw')
     if h is None or sw is None: apply(); return
     if TR.get('pending'): TR['pending']()
-    h.par.active = True; h.cook(force=True)                    # grab the picture now (nothing else pulls the cache, it would hold an old / black frame)
+    if not h.par.active.eval(): _trRec(h, True)                 # a change during a transition: record the picture as it is now
     TR.update(on=False, pending=apply, mode=TRMODES.get(style, 1), dur=max(0.1, float(dur)), seed=random.random())
     run("op('/project1/fx_engine').module._trGo()", delayFrames=2)
 def _trGo():
     h, sw = op('/project1/tr_hold'), op('/project1/tr_sw')
-    h.cook(force=True); h.par.active = False
+    h.cook(force=True)
+    TR['n'] = max(1, min(TRCACHE - 1, absTime.frame - TR.get('recf', -10 ** 9) - 1))   # how many recorded frames are real
+    _trRec(h, False)
     p, TR['pending'] = TR.get('pending'), None
     if p:
         try: p()
         except Exception as e: print('transition', e)
     TR.update(on=True, t0=absTime.seconds); sw.par.index = 1
 def trUpdate(T):
-    if not TR.get('on'): return
-    g = op('/project1/tr_mix'); u = min(1.0, (T - TR['t0']) / TR['dur'])
+    h = op('/project1/tr_hold')
+    if not TR.get('on'):
+        if h is not None and not h.par.active.eval(): _trRec(h, True)
+        return
+    g = op('/project1/tr_mix'); el = T - TR['t0']; u = min(1.0, el / TR['dur'])
     g.par.vec0valuex, g.par.vec0valuey, g.par.vec0valuez = TR['mode'], u, TR['seed']
-    if u >= 1.0: TR['on'] = False; op('/project1/tr_sw').par.index = 0
+    n = TR.get('n', 1); f = (el * 30.0) % (2.0 * n)               # old look: plays back and forth through its last moments at half speed, never stops
+    h.par.outputindex = -(f if f <= n else 2.0 * n - f)
+    if u >= 1.0: TR['on'] = False; op('/project1/tr_sw').par.index = 0; _trRec(h, True)
 
 def xfadeStart(dur, pending=None, keeptext=False):
     """Fade the running look down (it keeps moving), run `pending` at the dark point, fade the new look up."""
