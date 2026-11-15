@@ -834,6 +834,7 @@ def applyLayers(T=None):
             x = x * x * (3 - 2 * x)
             amt = f['a0'] + (f['a1'] - f['a0']) * x
             if f['a1'] == 0 and x < 1: on = True; p1 = f.get('p1', p1)
+            elif 'pA' in f: p1 = f['pA'] + (f['pB'] - f['pA']) * x
             if x >= 1: del fades[k]
         live.append((k, on and amt > 0.001, amt, p1))
     sig = tuple(live)
@@ -1378,6 +1379,19 @@ def _bankTable():
         while t.numRows < BANK_SLOTS + 1: t.appendRow(['', ''])
     return t
 
+GLIDEPOSE = ['Angle', 'Tilt', 'Motionamt', 'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
+PG = {}
+def poseGlideStep(C, T):
+    for k in list(PG):
+        v0, v1, t0, dur = PG[k]; u = min(1.0, (T - t0) / max(0.01, dur)); e = u * u * (3.0 - 2.0 * u)
+        if k in ('Angle', 'Modelturn'): v1 = v0 + ((v1 - v0 + 180.0) % 360.0 - 180.0)
+        try: C.par[k] = v0 + (v1 - v0) * e
+        except Exception: PG.pop(k, None); continue
+        if u >= 1.0: PG.pop(k, None)
+    a = S.get('angoff')
+    if a:
+        u = min(1.0, (T - a['t0']) / max(0.01, a['dur'])); S['angoffv'] = a['v'] * (1.0 - u * u * (3.0 - 2.0 * u))
+        if u >= 1.0: S['angoff'] = None; S['angoffv'] = 0.0
 OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat',
            'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
 MODEL3D = {'Modelx': 0.0, 'Modely': 0.0, 'Modelz': 0.0, 'Modelscale': 1.0, 'Modelturn': 0.0, 'Modeltilt': 0.0}
@@ -1841,6 +1855,8 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
+    elif fade > 0.01 and (newScene or newSrc):
+        trStart('crossfade', min(fade, 1.5), lambda: _bankApply(d, fade, cam, model, text, cut=False, slot=slot))
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
     try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
@@ -1860,12 +1876,19 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None):
         for k, (on0, a0, p0) in old.items():
             on1, a1, p1 = d['layers'].get(k, [0, a0, p0])
             A0 = a0 if on0 else 0.0; A1 = float(a1) if on1 else 0.0
-            if abs(A0 - A1) > 0.001:
+            pB = float(p1)
+            pg = on0 and on1 and abs(p0) < 1000 and abs(pB) < 1000 and abs(pB - p0) > 1e-4
+            if abs(A0 - A1) > 0.001 or pg:
                 S['fades'][k] = {'t0': T, 'dur': fade, 'a0': A0, 'a1': A1, 'p1': p0}
+                if pg: S['fades'][k].update(pA=p0, pB=pB)
     if model and d.get('model') and d['model'] != C.par.Model.eval():
         S['modelcut'] = True                                     # presets never play the statue swap animation
         C.par.Model = d['model']
     ob = d.get('obj', {})
+    glide = fade > 0.01 and not cut and not S.get('modelcut')
+    pose0 = {k: float(C.par[k].eval()) for k in GLIDEPOSE if hasattr(C.par, k)} if glide else {}
+    mot0 = (str(C.par.Motion.eval()), float(C.par.Motionamt.eval()))
+    ang0 = S['angle']
     if 'Spinaxis' not in ob: C.par.Spinaxis = 'y'                # older presets: spin turns around Y
     if 'Spinrev' not in ob: C.par.Spinrev = False
     for k, v in MODEL3D.items():                                 # older presets: the models sit where they always did
@@ -1874,6 +1897,16 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None):
         try: C.par[k] = v
         except Exception: pass
     if 'angle' in d.get('obj', {}): S['angle'] = float(d['obj']['angle'])
+    if glide:                                                    # same model: the statue turns / moves to its new pose over the transition
+        PG.clear(); T0 = absTime.seconds
+        for k, v0 in pose0.items():
+            v1 = float(C.par[k].eval())
+            if abs(v1 - v0) > 1e-4: PG[k] = (v0, v1, T0, fade); C.par[k] = v0
+        if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin': S['angle'] = ang0      # still spinning: carry on from where it is, never turn back
+        S['mfade'] = {'m': mot0[0], 'a': mot0[1], 't0': T0, 'dur': fade} if str(C.par.Motion.eval()) != mot0[0] else None
+        off = ((ang0 - S['angle'] + 180.0) % 360.0) - 180.0
+        S['angoff'] = {'v': off, 't0': T0, 'dur': fade} if abs(off) > 0.05 else None
+        S['angoffv'] = off if abs(off) > 0.05 else 0.0
     ex = d.get('extra') or {}
     for k in EXTRAPARS:                                          # older presets: back to the default, not the last look's value
         try: C.par[k] = ex[k] if k in ex else C.par[k].default
@@ -1891,6 +1924,7 @@ def camGlide(cam, dur):
     C = op('/project1/CONTROLS'); T = absTime.seconds
     if CS.get('cur') is None: CS['cur'] = {k: getattr(C.par, k).eval() for k in CAMKEYS}
     b0 = dict(CS['cur']); b0['_pan'] = CS.get('pan', float(C.par.Pan.eval()))
+    b0['Orbit'] = b0.get('Orbit', 0.0) + CS.get('orb', 0.0); CS['orb'] = 0.0      # the turning so far becomes part of the start angle
     for k, v in cam.items():
         try: C.par[k] = v
         except Exception: pass
@@ -2328,6 +2362,12 @@ def _models(C, dt, T, react, grid):
     NR = noReact(C); mreact = 0.0 if 'model' in NR else react
     ag = _safe('animation', animUpdate, C, dt, mreact)
     o_ry, o_rx, o_rz, o_ty = motionOffsets(C, T, mreact)
+    mf = S.get('mfade')
+    if mf:                                                       # a new kind of statue motion blends in over the transition
+        u = min(1.0, (T - mf['t0']) / max(0.01, mf['dur'])); e = u * u * (3.0 - 2.0 * u)
+        a = motionOffsets(C, T, mreact, mf['m'], mf['a'])
+        o_ry, o_rx, o_rz, o_ty = (a[0] + (o_ry - a[0]) * e, a[1] + (o_rx - a[1]) * e, a[2] + (o_rz - a[2]) * e, a[3] + (o_ty - a[3]) * e)
+        if u >= 1.0: S['mfade'] = None
     ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
     for g in [op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/draw_geo'), ag] + [op('/project1/mg%d' % i) for i in S.get('objs', [])] + [op('/project1/tg%d' % n) for n in S.get('tobjs', [])]:
         if g is None: continue
@@ -2343,7 +2383,7 @@ def _models(C, dt, T, react, grid):
             g.par.rx = b_rx + (spin if ax_ == 'x' else 0.0); g.par.rz = b_rz + (spin if ax_ == 'z' else 0.0)
             if b_ty: g.par.ty = g.par.ty.eval() + b_ty
         else:
-            spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle']
+            spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle'] + S.get('angoffv', 0.0)
             base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
             applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
             g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
@@ -2527,6 +2567,7 @@ def onFrameStart(frame):
     _safe('sweep', sweepUpdate)
     _safe('dip', xfadeUpdate, T)
     _safe('trans', trUpdate, T)
+    if PG or S.get('angoff'): _safe('pose', poseGlideStep, C, T)
     _safe('camera', camUpdate, C, dt)
     _safe('label', _label, C)
     _safe('text', textAll, C, T)
