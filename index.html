@@ -577,6 +577,10 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 .mfsearch{grid-column:1/-1}.mfsearch input{width:100%;height:38px;border-radius:9px;border:1px solid var(--line);background:#16131c;color:var(--ink);padding:0 12px;font:500 13px var(--sans)}.mfmore{grid-column:1/-1;height:38px;border-radius:9px;border:1px dashed var(--line);font:700 11px var(--sans)}
 .prepbands{position:absolute;left:0;right:0;top:0;height:16px;z-index:3}.pband{position:absolute;top:0;height:14px;border-radius:0 0 4px 4px;background:hsl(var(--h) 85% 60% / .9);color:#000;font:800 9px var(--sans);display:grid;place-items:center;cursor:pointer;overflow:hidden;box-shadow:0 1px 3px #000a}.pband.on{outline:2px solid #fff;z-index:1}
 .prepmk.rec{background:#ff3b3b;border-color:#ff3b3b;color:#fff;animation:recp 1s infinite}.pt2{grid-template-columns:1fr 1fr!important}.prepsavebar button[disabled]{opacity:.5}.prepsavebar .pri{flex:1;max-width:none}
+.mtabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:4px;margin:10px 0 0;padding:4px;border-radius:12px;background:#0e0c13;border:1px solid var(--line)}
+.mtabs button{position:relative;height:40px;border-radius:9px;font:800 11.5px var(--sans);letter-spacing:.1em;color:var(--mute,#9a94a8)}.mtabs button[hidden]{display:none}.mtabs button.on{background:var(--lime);color:#0b0a0f}
+.mtabs button i{position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:50%;background:transparent}.mtabs button i.on{background:var(--hot,#ff4d4d)}.mtabs button.on i.on{background:#0b0a0f}
+.tabp>summary{display:none}.tabp.tabhide{display:none!important}.tabp{margin-top:6px!important;border-top-left-radius:6px}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -906,7 +910,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15f';
+const BUILD = '2026-11-15g';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -965,6 +969,7 @@ function onMsg(m){
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
   if (m.t === 'prep' || (m.t === 'state' && m.prep)) prepState(m.t === 'prep' ? m.jobs : m.prep);
   if (m.t === 'toast' && m.msg) toast(m.msg);
+  if (m.t === 'mframe') { MFR[m.slot] = {file:m.file, img:m.img}; mCropUI(m.slot); }
   if (m.t === 'muses') { const el = $('#shP .musep'); if (el && $('#sheet').dataset.mid === m.id) { el.className = m.v.length ? 'muse' : 'musep ok';
       el.innerHTML = m.v.length ? `⚠ Used in ${m.v.length} preset${m.v.length > 1 ? 's' : ''}: <b>${m.v.map(esc).join(', ')}</b>. Those presets will load without it.` : 'Not used in any preset. '; } }
   if (m.t === 'preplib') { PLIB = m.v; libUI(); }
@@ -1159,26 +1164,27 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="nzcols">${[1, 2, 3].map(k => `<button class="nzc" data-hsvt="nz:${i}:${k}" data-nzck="${k}"><i></i><span>${['DARK', 'MIDDLE', 'LIGHT'][k - 1]}</span></button>`).join('')}</div>
           ${[1, 2, 3].map(k => hsvBox('nz:' + i + ':' + k)).join('')}
           <div id="g-m${i}nz"></div></div>
-        <details class="box mbox mgrp mframe"><summary>FRAME<span id="sum-m${i}frame"></span></summary>
+        <div class="mtabs" data-mtabs="${i}">${[["frame","FRAME"],["time","TIME"],["look","LOOK"],["cues","CUES"]].map(([k, l]) => `<button data-mtab="${k}" data-mtabi="${i}">${l}<i></i></button>`).join("")}</div>
+        <details class="box mbox mgrp mframe tabp"><summary>FRAME<span id="sum-m${i}frame"></span></summary>
           <div class="mfitbox"><div class="seg sm" data-mfitseg="${i}"><button data-mfit="${i}" data-v="0">FILL SCREEN</button><button data-mfit="${i}" data-v="1">WHOLE PICTURE</button></div>
             <div class="sub"><span>Size</span><input type="range" data-mzoom="${i}" min="0.2" max="3" step="0.01" value="1"><output id="o-mz${i}"></output></div></div>
           <div class="seg sm" id="o-${m}mode" style="margin:8px 0"></div>
           <div class="mflip"><button class="btn" id="t-${m}mirror" data-tog="${m}mirror">⇆ MIRROR</button><button class="btn" id="t-${m}flip" data-tog="${m}flip">⇅ FLIP</button></div>
-          <div class="mcropw"><div class="mcroph"><span>CROP · drag the edges</span><button class="mini" data-mcrop="${i}">RESET</button></div>
+          <div class="mcropw"><div class="mcroph"><span>CROP · drag the edges</span><span><button class="mini" data-mfr="${i}">↻ NEW FRAME</button> <button class="mini" data-mcrop="${i}">RESET</button></span></div>
             <div class="mcropbox" data-mcropbox="${i}"><img alt=""><i class="mcf"><b data-ce="l"></b><b data-ce="r"></b><b data-ce="t"></b><b data-ce="b"></b></i></div><div id="g-m${i}crop" class="hidsl"></div></div></details>
-        <details class="box mbox mgrp mplay"><summary>TIME<span id="sum-m${i}play"></span></summary>
+        <details class="box mbox mgrp mplay tabp"><summary>TIME<span id="sum-m${i}play"></span></summary>
           <div class="mtl" data-mtl="${i}"><div class="mtlin"><b class="mtsel"></b><i class="mtph"></i></div><i class="preph h0" data-mth="in"></i><i class="preph h1" data-mth="out"></i></div>
           <div class="mtt"><span data-mtt="in"></span><span data-mtt="len"></span><span data-mtt="out"></span></div>
           <div class="mspd">${[['0.25','¼×'],['0.5','½×'],['1','1×'],['2','2×'],['4','4×']].map(([v, l]) => `<button data-mspd="${i}" data-v="${v}">${l}</button>`).join('')}</div>
           <div id="g-m${i}play" class="mplaysl"></div>
           <div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mplayreset="${i}">NORMAL SPEED · FULL LENGTH</button></div></details>
         <div class="dhost" id="dhost${i}"></div><button class="btn dpick" data-dpick="${i}">✎ DRAW ON THIS LAYER</button>
-        <details class="box mbox mkey" style="margin-top:8px"><summary>LOOK · remove background<span id="sum-m${i}key"></span></summary>
+        <details class="box mbox mkey tabp" style="margin-top:8px"><summary>LOOK · remove background<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
           <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:4px"></div>
           <div class="cstrip kstrip" data-kstrip="${i}">${KEYSW.map(c => `<button data-ksw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="key:${i}" aria-label="Any colour"></button></div>${hsvBox('key:' + i)}
           <div id="g-m${i}key"></div></details>
-        <details class="cuebox" hidden><summary>⏱ Effect cues<span class="cuesum"></span></summary>
+        <details class="cuebox tabp" hidden><summary>⏱ Effect cues<span class="cuesum"></span></summary>
           <div class="cuehd"><button class="qbig cuetog" data-cuetog="${i}" data-tog="M${i}cueon"><b>CUES</b></button><span class="hint2">Hold to pin to Quick controls</span></div>
           <div class="cuetl" data-cuebar="${i}"><div class="cuescrub" data-cuescrub="${i}"></div><div class="cuelanes"></div><i class="cueph"></i></div><div class="cuetime" data-cuetime="${i}">–</div><p class="hint2">Drag a cue's ends to move START / END, drag its middle to move the whole cue. Drag the top strip to jump the video.</p>
           <div class="cuel" data-cuel="${i}"></div>
@@ -1223,6 +1229,7 @@ function mediaCardsUI(p){
     { const cr = ['l','r','t','b'].some(n => +p[m + 'crop' + n] > 0.001), z = +(p[m + 'fzoom'] ?? 1);
       $('#sum-m' + i + 'frame').textContent = [p[m + 'fit'] ? 'whole' : '', Math.abs(z - 1) > 0.01 ? '×' + z.toFixed(2) : '', cr ? 'cropped' : '', p[m + 'mirror'] ? 'mirrored' : '', p[m + 'flip'] ? 'flipped' : ''].filter(Boolean).join(' · ');
       mCropUI(i); mTimeUI(i); }
+    mTabsUI(i);
     $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
@@ -1382,8 +1389,19 @@ function renderFxps(){
 const MFOPEN = new Set();
 document.addEventListener('toggle', e => { const f = e.target.dataset && e.target.dataset.mfold; if (f === undefined) return; if (e.target.open) MFOPEN.add(f); else MFOPEN.delete(f); }, true);
 /* layer card: crop on a still picture, the time strip, speed */
+const MTAB = {}, MTABSEL = {frame:'.mframe', time:'.mplay', look:'.mkey', cues:'.cuebox'}, MFR = {};
+function mTabsUI(i){ const c = $('#cardM' + i); if (!c) return; let cur = MTAB[i] || null;
+  for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]), b = c.querySelector(`[data-mtab="${k}"]`); if (!el || !b) continue;
+    b.hidden = el.hidden; if (el.hidden && cur === k) cur = MTAB[i] = null;
+    const sm = el.querySelector('summary span'); b.querySelector('i').classList.toggle('on', !!(sm && sm.textContent.trim())); }
+  for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]), b = c.querySelector(`[data-mtab="${k}"]`); if (!el) continue;
+    const on = k === cur; b.classList.toggle('on', on); el.classList.toggle('tabhide', !on); if (el.open !== on) { el._tabset = true; el.open = on; } } }
+document.addEventListener('toggle', e => { const el = e.target; if (!el.classList || !el.classList.contains('tabp')) return; if (el._tabset) { el._tabset = false; return; }
+  if (el.open) { const c = el.closest('[id^="cardM"]'); if (!c) return; const i = +c.id.slice(5); for (const k in MTABSEL) if (el.matches(MTABSEL[k])) MTAB[i] = k; mTabsUI(i); } }, true);
+function mFrameAsk(i){ if (S.pars['M' + i + 'file']) send({t:'media', do:'frame', slot:i}); }
 function mCropUI(i){ const box = $(`[data-mcropbox="${i}"]`); if (!box) return; const p = S.pars, m = 'M' + i, f = p[m + 'file'];
-  const it = (S.media || []).find(x => x.id === f), img = box.querySelector('img'), src = it && it.thumb ? 'data:image/jpeg;base64,' + it.thumb : '';
+  const it = (S.media || []).find(x => x.id === f), img = box.querySelector('img'), fr = MFR[i] && MFR[i].file === f ? MFR[i].img : '', src = fr ? 'data:image/jpeg;base64,' + fr : it && it.thumb ? 'data:image/jpeg;base64,' + it.thumb : '';
+  if (MTAB[i] === 'frame' && f && (!MFR[i] || MFR[i].file !== f) && MFR[i + 'ask'] !== f) { MFR[i + 'ask'] = f; mFrameAsk(i); }
   if (img.getAttribute('src') !== src) { if (src) img.setAttribute('src', src); else img.removeAttribute('src'); }
   if (MCROP && MCROP.i === i) return; const c = box.querySelector('.mcf');
   c.style.left = (+p[m + 'cropl'] || 0) * 100 + '%'; c.style.right = (+p[m + 'cropr'] || 0) * 100 + '%'; c.style.top = (+p[m + 'cropt'] || 0) * 100 + '%'; c.style.bottom = (+p[m + 'cropb'] || 0) * 100 + '%'; }
@@ -2748,6 +2766,8 @@ document.addEventListener('click', e => {
   if (d.preplocal) { send({t:'prep', do:'local', mid:d.preplocal}); $('#prepPick').innerHTML = ''; PREPWANT = true; toast('Opening the video…'); buzz(); return; }
   if (d.qvid) { const sl = +d.qvslot; if (S.pars['M' + sl + 'file'] !== d.qvid) { send({t:'media', do:'play', slot:sl, id:d.qvid}); S.pars['M' + sl + 'file'] = d.qvid; QSIG = ''; renderQuick(); } buzz(); return; }
   if (d.mfold !== undefined && d.mslot) { binOf(+d.mslot).f = d.mfold; renderMedia(); buzz(); return; }
+  if (d.mtab) { const i = +d.mtabi; MTAB[i] = MTAB[i] === d.mtab ? null : d.mtab; mTabsUI(i); if (MTAB[i] === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (MTAB[i] === 'cues') cueUI(i); buzz(); return; }
+  if (d.mfr) { MFR[+d.mfr + 'ask'] = S.pars['M' + d.mfr + 'file']; mFrameAsk(+d.mfr); toast('Grabbing the frame playing now…'); buzz(); return; }
   if (d.mfback) { binOf(+d.mfback).f = null; renderMedia(); buzz(); return; }
   if (d.mfall) { binOf(+d.mfall).all = true; renderMedia(); return; }
   if (d.mspd) { const k = 'M' + d.mspd + 'speed', v = +d.v; S.pars[k] = v; send({t:'set', p:k, v}); mTimeUI(+d.mspd); build(); buzz(); return; }

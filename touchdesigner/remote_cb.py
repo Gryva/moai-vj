@@ -1552,6 +1552,15 @@ def handle(msg, reply):
             elif a == 'fit': E.mediaFit(sl or None)
             elif a == 'stop' and sl: mediaStop(sl)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
+            elif a == 'frame' and sl:                             # a picture of what the layer shows now (for cropping)
+                f = C.par['M%dfile' % sl].eval(); full = mediaFull(f)
+                if not f or not os.path.isfile(full) or not os.path.exists(FFMPEG): return
+                x = E.vidTime(sl) if C.par['M%dkind' % sl].eval() == 'video' else None
+                def _mf(full=full, t=(x[0] if x else 0.0), sl=sl, f=f):
+                    b = _prepShot({'raw': full}, t, 480)
+                    if b: PREPQ.append({'t': 'mframe', 'slot': sl, 'file': f, 'img': b})
+                import threading; threading.Thread(target=_mf, daemon=True).start()
+                PREPSIG['until'] = time.time() + 6; run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=300); return
             elif a == 'rename':
                 mid = str(msg.get('id', '')); nm = _safeName(msg.get('name'), 80)
                 if not nm or not mid.startswith('videos/'): return reply({'t': 'toast', 'msg': 'Use letters and numbers for the name'})
