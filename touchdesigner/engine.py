@@ -419,9 +419,13 @@ def cropUpdate(C, i):
     if mp(C, i, 'kind').eval() in ('rect', 'noise', 'draw'): mf = op('/project1/msrc%d' % i) or mf      # no file: the layer's own picture size
     if k is None or mf is None: return
     l, r, t, b = [max(0.0, min(0.45, float(mp(C, i, 'crop' + n).eval()))) for n in 'lrtb']
-    sig = (l, r, t, b, mf.width, mf.height)
+    mi = 1.0 if hasattr(C.par, 'M%dmirror' % i) and mp(C, i, 'mirror').eval() else 0.0
+    fl = 1.0 if hasattr(C.par, 'M%dflip' % i) and mp(C, i, 'flip').eval() else 0.0
+    sig = (l, r, t, b, mf.width, mf.height, mi, fl)
     if sig == S.get('cropsig%d' % i): return
     S['cropsig%d' % i] = sig
+    if k.par.vec4name.eval() != 'uM': k.par.vec4name = 'uM'
+    k.par.vec4valuex, k.par.vec4valuey = mi, fl                          # mirror / flip the layer (the keyer shader turns the picture)
     k.par.vec2valuex, k.par.vec2valuey, k.par.vec2valuez, k.par.vec2valuew = l, r, t, b
     if l + r + t + b < 1e-4:
         if k.par.outputresolution.eval() != 'useinput': k.par.outputresolution = 'useinput'
@@ -1421,7 +1425,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'cues', 'cueon']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()

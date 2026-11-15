@@ -4,9 +4,10 @@ uniform vec4 uK;
 uniform vec4 uS;
 uniform vec4 uKC;
 uniform vec4 uC;   // crop: x left, y right, z top, w bottom (0..0.45)
+uniform vec4 uM;   // x mirror, y flip upside down
 layout(location = 0) out vec4 fragColor;
 vec2 cc(vec3 c){ return vec2(-0.169 * c.r - 0.331 * c.g + 0.5 * c.b, 0.5 * c.r - 0.419 * c.g - 0.081 * c.b); }
-vec2 crop(vec2 uv){ return vec2(uC.x + uv.x * (1.0 - uC.x - uC.y), uC.w + uv.y * (1.0 - uC.z - uC.w)); }
+vec2 crop(vec2 uv){ uv = vec2(uM.x > 0.5 ? 1.0 - uv.x : uv.x, uM.y > 0.5 ? 1.0 - uv.y : uv.y); return vec2(uC.x + uv.x * (1.0 - uC.x - uC.y), uC.w + uv.y * (1.0 - uC.z - uC.w)); }
 vec3 src(vec2 uv){ return texture(sTD2DInputs[0], clamp(crop(uv), 0.0, 1.0)).rgb; }
 vec3 KEY;
 void pickKey(){

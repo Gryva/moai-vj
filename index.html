@@ -522,7 +522,7 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 .mtile .clip .vid{right:auto;left:5px}.mname{display:block;font-size:10.5px;line-height:1.25;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mdate{display:block;font:500 9px var(--mono);font-style:normal;opacity:.55}
 .mfrow{display:flex;gap:6px}.mfrow .mfile{flex:1;min-width:0}.mtrimb{flex:none;padding:0 14px;border-radius:8px;border:1px solid #3ef0ff66;background:#3ef0ff12;color:#3ef0ff;font:700 11px var(--sans);letter-spacing:.05em}.mtrimb[hidden]{display:none}
 .prepname{flex:1}.prepcrop{display:grid;grid-template-columns:auto repeat(4,1fr);gap:8px;align-items:center;margin:8px 0}.prepcrop>span{font:700 10px var(--sans);letter-spacing:.06em;opacity:.8}.prepcrop label{display:flex;flex-direction:column;font-size:9px;letter-spacing:.06em;opacity:.85;gap:2px}.prepcrop input{width:100%}
-.prepfit{margin:4px 0 10px}.prepfit button{font-size:10px}.prepcropv{position:absolute;border:2px dashed var(--lime);box-shadow:0 0 0 999px #000a;pointer-events:none;border-radius:2px}.prepvid{overflow:hidden;border-radius:8px}
+.prepfit{margin:4px 0 10px}.prepfit button{font-size:10px}.prepcropv{display:none;position:absolute;border:2px dashed var(--lime);box-shadow:0 0 0 999px #000a;pointer-events:none;border-radius:2px}.prepvid{overflow:hidden;border-radius:8px}
 .prepsaves{display:grid;gap:4px;margin:6px 0}.prepsv{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;border-radius:8px;background:#16131c;font-size:12px}.prepsv span{font:500 11px var(--mono);opacity:.8}.prepsv.done span{color:var(--lime)}.prepsv.fail span{color:#ff6b6b}
 .qvids .top{display:flex;justify-content:space-between;align-items:center}.qvrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-top:6px}.qv{position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#000;padding:0}.qv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.7}.qv b{position:absolute;left:4px;right:4px;bottom:3px;font-size:10px;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}.qv.on{border-color:var(--lime);box-shadow:0 0 0 2px var(--lime)}.qv.on img{opacity:1}.prepname input{width:100%!important}.prepnew{width:100%;margin-top:8px;height:40px}
 .blrow{margin:2px 0 12px}.blrow>span{display:block;font-size:11px;letter-spacing:.08em;opacity:.7;margin-bottom:4px}.blrow .seg{flex-wrap:wrap}.blrow .seg button{flex:1 0 22%;font-size:11px}
@@ -560,6 +560,23 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 .plclips{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;padding:4px 10px 10px}.plclip{display:grid;grid-template-columns:48px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;padding:5px;border-radius:8px;border:1px solid var(--line);background:#0e0c13}
 .plclip .mfi{grid-row:1/3;width:48px;height:27px}.plclip b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.plclip i{font:500 9px var(--mono);font-style:normal;color:#3ef0ff}.plmore{height:40px;border-radius:10px;border:1px dashed var(--line);font:700 11px var(--sans)}
 .muse{display:block;margin:0 0 8px;padding:8px 10px;border-radius:8px;background:#ff4d4d1f;border:1px solid #ff4d4d66;color:#ffb3b3;font-weight:600}.muse b{color:#fff}.musep{display:block;margin:0 0 6px;opacity:.7}.musep.ok{color:var(--lime);opacity:1}
+.mgrp>summary{font:800 12px var(--sans);letter-spacing:.1em}.mgrp>summary span{font:500 11px var(--mono);letter-spacing:0;color:var(--lime);margin-left:8px;text-transform:none}
+.mflip{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 10px}.hidsl,.mplaysl .ctl:has([data-p$="trimin"]),.mplaysl .ctl:has([data-p$="trimout"]){display:none}
+.mcroph{display:flex;justify-content:space-between;align-items:center;font:700 10px var(--sans);letter-spacing:.08em;opacity:.85;margin-bottom:6px}.mini{height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--line);font:700 10px var(--sans)}
+.mcropbox{position:relative;width:100%;aspect-ratio:16/9;background:#000 repeating-linear-gradient(45deg,#ffffff08 0 8px,transparent 8px 16px);border-radius:8px;overflow:hidden;touch-action:none;cursor:crosshair}.mcropbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;opacity:.85}
+.mcf{position:absolute;inset:0;border:2px solid var(--lime);box-shadow:0 0 0 999px #000b;pointer-events:none}.mcf b{position:absolute;pointer-events:auto;background:transparent}.mcf b::after{content:'';position:absolute;background:var(--lime);border-radius:3px}
+.mcf [data-ce=l],.mcf [data-ce=r]{top:0;bottom:0;width:28px}.mcf [data-ce=l]{left:-14px}.mcf [data-ce=r]{right:-14px}.mcf [data-ce=t],.mcf [data-ce=b]{left:0;right:0;height:28px}.mcf [data-ce=t]{top:-14px}.mcf [data-ce=b]{bottom:-14px}
+.mcf [data-ce=l]::after,.mcf [data-ce=r]::after{left:11px;top:35%;bottom:35%;width:6px}.mcf [data-ce=t]::after,.mcf [data-ce=b]::after{top:11px;left:40%;right:40%;height:6px}
+.mtl{position:relative;height:40px;padding:0 22px;margin:4px 0 2px;touch-action:none}.mtlin{position:relative;height:100%;background:#0e0c13;border-radius:3px;overflow:hidden;border:1px solid var(--line)}.mtsel{position:absolute;top:0;bottom:0;background:#c8ff3226;border-top:2px solid var(--lime);border-bottom:2px solid var(--lime)}.mtph{position:absolute;top:0;bottom:0;width:2px;background:#fff;margin-left:-1px}
+.mtl .preph{width:20px}.mtt{display:flex;justify-content:space-between;font:500 11px var(--mono);opacity:.75;padding:0 22px}.mspd{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:10px 0 4px}.mspd button{height:38px;border-radius:9px;border:1px solid var(--line);background:#16131c;font:800 13px var(--sans)}.mspd button.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+.mfull{position:absolute;left:5px;bottom:5px;font:800 8.5px var(--sans);letter-spacing:.08em;background:var(--lime);color:#0b0a0f;padding:2px 5px;border-radius:3px}.mtile .clip .vid+.mfull{left:5px}.mrng{position:absolute;left:0;right:0;bottom:0;height:4px;background:#0009}.mrng u{position:absolute;top:0;bottom:0;background:var(--lime)}
+.mfoldt .clip{box-shadow:4px -4px 0 -1px #2a2633,8px -8px 0 -2px #1c1924;margin:8px 8px 0 0;width:calc(100% - 8px)!important}.mfcnt{position:absolute;right:6px;bottom:6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#000c;font:800 11px var(--sans);display:grid;place-items:center}
+.mlinkt{display:flex!important;flex-direction:column;align-items:center;justify-content:center;border:1.5px dashed #3ef0ff88!important;background:#3ef0ff0d!important;color:#3ef0ff}.mlinkt span{font-size:26px;line-height:1}.mlinkt b{position:static;text-shadow:none;font:800 10px var(--sans);letter-spacing:.12em}
+.mdl .clip{display:grid;place-items:center;position:relative;background:#0e0c13;border:1px solid var(--line);border-radius:8px;overflow:hidden}.mdlbar{position:absolute;left:0;top:0;bottom:0;background:#3ef0ff22}.mdl .clip span{position:relative;font:700 12px var(--mono);color:#3ef0ff}
+.mfbar{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:2px 0 4px}.mfbar button{height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:#16131c;font:700 11px var(--sans);flex:none}.mfbar b{font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mfbar i{font:500 10px var(--mono);font-style:normal;opacity:.6;flex:none}
+.mfsearch{grid-column:1/-1}.mfsearch input{width:100%;height:38px;border-radius:9px;border:1px solid var(--line);background:#16131c;color:var(--ink);padding:0 12px;font:500 13px var(--sans)}.mfmore{grid-column:1/-1;height:38px;border-radius:9px;border:1px dashed var(--line);font:700 11px var(--sans)}
+.prepbands{position:absolute;left:0;right:0;top:0;height:16px;z-index:3}.pband{position:absolute;top:0;height:14px;border-radius:0 0 4px 4px;background:hsl(var(--h) 85% 60% / .9);color:#000;font:800 9px var(--sans);display:grid;place-items:center;cursor:pointer;overflow:hidden;box-shadow:0 1px 3px #000a}.pband.on{outline:2px solid #fff;z-index:1}
+.prepmk.rec{background:#ff3b3b;border-color:#ff3b3b;color:#fff;animation:recp 1s infinite}.pt2{grid-template-columns:1fr 1fr!important}.prepsavebar button[disabled]{opacity:.5}.prepsavebar .pri{flex:1;max-width:none}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -575,7 +592,7 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="stat st2" id="stat2" aria-label="Reload and record"><i class="stbar"></i></button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk getvid" id="getvid" aria-label="Get a video from a link">⬇ VIDEO</button><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="stat st2" id="stat2" aria-label="Reload and record"><i class="stbar"></i></button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -815,12 +832,13 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 <div class="prepov" id="prepLink" hidden><div class="prepbox"><h3>Get a video</h3><p class="hint2">Paste a link (YouTube and most video sites). It downloads in the background, you get a message when it is ready to trim.</p>
   <input type="url" id="prepUrl" placeholder="https://…" autocomplete="off">
   <label class="preptick"><input type="checkbox" id="prepCut"><span>✂ Cut it while downloading</span></label>
+  <label class="preptick" id="prepPlayToL" hidden><input type="checkbox" id="prepPlayTo"><span>▶ Play it on <b id="prepPlayToN"></b> when it's ready</span></label>
   <div class="prepcut" id="prepCutBox" hidden><label>START<input type="text" id="prepCutA" inputmode="decimal" placeholder="0:00"></label><label>END<input type="text" id="prepCutB" inputmode="decimal" placeholder="end"></label>
     <p class="hint2">Minutes:seconds (1:23) or just seconds (83). The clip goes straight into your videos; the full video stays in Video prep to trim again.</p></div>
   <div class="prepacts"><button class="pri" id="prepGo">⬇ DOWNLOAD</button><button id="prepLinkX">CANCEL</button></div></div></div>
-<div class="prepov" id="prep" hidden><div class="prepbox prepbig"><div class="prephd"><h3>Video prep</h3><div class="prephb"><button id="prepLibB">📁 LIBRARY</button><button id="prepNew">⬇ LINK</button><button id="prepX" aria-label="Close">✕</button></div></div><div id="prepJobs"></div>
+<div class="prepov" id="prep" hidden><div class="prepbox prepbig"><div class="prephd"><h3>Video prep</h3><div class="prephb"><button id="prepX" aria-label="Close">✕</button></div></div><div id="prepJobs"></div>
   <div id="prepLib" hidden><input type="search" id="plq" placeholder="Search videos and clips…" autocomplete="off"><div id="plList"></div></div><div id="prepEd"></div>
-  <div class="prepacts"><button id="prepMine">✂ EDIT ONE OF MY VIDEOS</button></div><div id="prepPick"></div></div></div>
+<div id="prepPick"></div></div></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
 <div class="toast" id="toast"></div>
 <div class="lock" id="lock"><div class="box"><div class="logo" style="font-size:20px">VIDEO<i>//</i>JOCKEY</div>
@@ -888,7 +906,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15e';
+const BUILD = '2026-11-15f';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -950,7 +968,7 @@ function onMsg(m){
   if (m.t === 'muses') { const el = $('#shP .musep'); if (el && $('#sheet').dataset.mid === m.id) { el.className = m.v.length ? 'muse' : 'musep ok';
       el.innerHTML = m.v.length ? `⚠ Used in ${m.v.length} preset${m.v.length > 1 ? 's' : ''}: <b>${m.v.map(esc).join(', ')}</b>. Those presets will load without it.` : 'Not used in any preset. '; } }
   if (m.t === 'preplib') { PLIB = m.v; libUI(); }
-  if (m.t === 'prepsel') { PREPSEL = m.id; if (m.replace) PREPO[m.id] = Object.assign({speed:1}, m.o || {}, {name:m.name, replace:m.replace, rname:m.name}); else if (PREPO[m.id] && m.name) PREPO[m.id].replace = ''; if (PREPWANT) { PREPWANT = false; $('#prepEd').dataset.id = ''; prepOpen(); } }
+  if (m.t === 'prepsel') { PREPSEL = m.id; PMARK = false; if (m.replace) PREPO[m.id] = Object.assign({speed:1}, PREPO[m.id] || {}, {in:(m.o || {}).in || 0, out:(m.o || {}).out, reverse:!!(m.o || {}).reverse, pingpong:!!(m.o || {}).pingpong, name:m.name, replace:m.replace, rname:m.name}); else if (PREPO[m.id] && m.name) PREPO[m.id].replace = ''; if (PREPWANT) { PREPWANT = false; $('#prepEd').dataset.id = ''; prepOpen(); } }
   if (m.t === 'prepstrip') { PREPSTRIP[m.id] = m.v; if (PREPSEL === m.id && !$('#prep').hidden) { $('#prepEd').dataset.id = ''; prepUI(); } }
   if (m.t === 'prepframe') { ['in', 'out'].forEach(k => { const o = PREPO[m.id]; if (!o) return; const at = +(k === 'out' ? Math.max(0, o.out - 0.05) : o.in).toFixed(2);
     if (Math.abs(at - m.at) < 0.011) { PREPFR[m.id + k] = {at: k === 'out' ? Math.max(0, o.out - 0.05) : o.in, img:m.img}; const im = $(`[data-prepfr="${k}"]`); if (im && PREPSEL === m.id) im.src = 'data:image/jpeg;base64,' + m.img; } }); }
@@ -1130,12 +1148,6 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
     return `<div class="card hide" id="cardM${i}"><div class="ch"><b id="mname${i}">Video</b><button class="tg mup" data-mup="${i}">＋ ADD</button><button class="tg" id="t-${m}vis" data-tog="${m}vis">ON</button></div>
       <div class="cb"><div class="mfrow"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button><button class="mtrimb" data-mtrim="${i}" hidden>✂ TRIM · CROP</button></div>
         <div class="clips mlib" id="mlist${i}" hidden></div>
-        <details class="cuebox" hidden><summary>⏱ Effect cues<span class="cuesum"></span></summary>
-          <div class="cuehd"><button class="qbig cuetog" data-cuetog="${i}" data-tog="M${i}cueon"><b>CUES</b></button><span class="hint2">Hold to pin to Quick controls</span></div>
-          <div class="cuetl" data-cuebar="${i}"><div class="cuescrub" data-cuescrub="${i}"></div><div class="cuelanes"></div><i class="cueph"></i></div><div class="cuetime" data-cuetime="${i}">–</div><p class="hint2">Drag a cue's ends to move START / END, drag its middle to move the whole cue. Drag the top strip to jump the video.</p>
-          <div class="cuel" data-cuel="${i}"></div>
-          <button class="cbtn cueadd" data-cueadd="${i}">＋ ADD CUE AT NOW</button>
-          <p class="hint2">While the video plays, each cue switches its effect on at START and off at END. Times are in the video (min:sec).</p></details>
         <div class="rcbox" hidden>
           <div class="sub pinl"><span>Colour</span></div>
           <div class="cstrip">${SWC.map(c => `<button data-rcsw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="rc:${i}" aria-label="Any colour"></button></div>${hsvBox('rc:' + i)}
@@ -1147,18 +1159,31 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="nzcols">${[1, 2, 3].map(k => `<button class="nzc" data-hsvt="nz:${i}:${k}" data-nzck="${k}"><i></i><span>${['DARK', 'MIDDLE', 'LIGHT'][k - 1]}</span></button>`).join('')}</div>
           ${[1, 2, 3].map(k => hsvBox('nz:' + i + ':' + k)).join('')}
           <div id="g-m${i}nz"></div></div>
-        <div class="mfitbox"><div class="seg sm" data-mfitseg="${i}"><button data-mfit="${i}" data-v="0">FILL SCREEN</button><button data-mfit="${i}" data-v="1">WHOLE PICTURE</button></div>
-          <div class="sub"><span>Size</span><input type="range" data-mzoom="${i}" min="0.2" max="3" step="0.01" value="1"><output id="o-mz${i}"></output></div></div>
-        <div class="seg sm" id="o-${m}mode" style="margin:8px 0"></div>
-        <details class="box mbox mplay"><summary>Playback<span id="sum-m${i}play"></span></summary><div id="g-m${i}play"></div>
+        <details class="box mbox mgrp mframe"><summary>FRAME<span id="sum-m${i}frame"></span></summary>
+          <div class="mfitbox"><div class="seg sm" data-mfitseg="${i}"><button data-mfit="${i}" data-v="0">FILL SCREEN</button><button data-mfit="${i}" data-v="1">WHOLE PICTURE</button></div>
+            <div class="sub"><span>Size</span><input type="range" data-mzoom="${i}" min="0.2" max="3" step="0.01" value="1"><output id="o-mz${i}"></output></div></div>
+          <div class="seg sm" id="o-${m}mode" style="margin:8px 0"></div>
+          <div class="mflip"><button class="btn" id="t-${m}mirror" data-tog="${m}mirror">⇆ MIRROR</button><button class="btn" id="t-${m}flip" data-tog="${m}flip">⇅ FLIP</button></div>
+          <div class="mcropw"><div class="mcroph"><span>CROP · drag the edges</span><button class="mini" data-mcrop="${i}">RESET</button></div>
+            <div class="mcropbox" data-mcropbox="${i}"><img alt=""><i class="mcf"><b data-ce="l"></b><b data-ce="r"></b><b data-ce="t"></b><b data-ce="b"></b></i></div><div id="g-m${i}crop" class="hidsl"></div></div></details>
+        <details class="box mbox mgrp mplay"><summary>TIME<span id="sum-m${i}play"></span></summary>
+          <div class="mtl" data-mtl="${i}"><div class="mtlin"><b class="mtsel"></b><i class="mtph"></i></div><i class="preph h0" data-mth="in"></i><i class="preph h1" data-mth="out"></i></div>
+          <div class="mtt"><span data-mtt="in"></span><span data-mtt="len"></span><span data-mtt="out"></span></div>
+          <div class="mspd">${[['0.25','¼×'],['0.5','½×'],['1','1×'],['2','2×'],['4','4×']].map(([v, l]) => `<button data-mspd="${i}" data-v="${v}">${l}</button>`).join('')}</div>
+          <div id="g-m${i}play" class="mplaysl"></div>
           <div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mplayreset="${i}">NORMAL SPEED · FULL LENGTH</button></div></details>
         <div class="dhost" id="dhost${i}"></div><button class="btn dpick" data-dpick="${i}">✎ DRAW ON THIS LAYER</button>
-        <details class="box mbox" style="margin-top:8px"><summary>Crop<span id="sum-m${i}crop"></span></summary><div id="g-m${i}crop"></div><div class="btns" style="grid-template-columns:1fr;margin-top:6px"><button class="btn" data-mcrop="${i}">RESET CROP</button></div></details>
-        <details class="box mbox mkey" style="margin-top:8px"><summary>Remove background colour<span id="sum-m${i}key"></span></summary>
+        <details class="box mbox mkey" style="margin-top:8px"><summary>LOOK · remove background<span id="sum-m${i}key"></span></summary>
           <div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" id="t-${m}keyon" data-tog="${m}keyon">REMOVE SCREEN</button></div>
           <div class="seg sm" id="o-${m}keycolor" style="margin-bottom:4px"></div>
           <div class="cstrip kstrip" data-kstrip="${i}">${KEYSW.map(c => `<button data-ksw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="key:${i}" aria-label="Any colour"></button></div>${hsvBox('key:' + i)}
           <div id="g-m${i}key"></div></details>
+        <details class="cuebox" hidden><summary>⏱ Effect cues<span class="cuesum"></span></summary>
+          <div class="cuehd"><button class="qbig cuetog" data-cuetog="${i}" data-tog="M${i}cueon"><b>CUES</b></button><span class="hint2">Hold to pin to Quick controls</span></div>
+          <div class="cuetl" data-cuebar="${i}"><div class="cuescrub" data-cuescrub="${i}"></div><div class="cuelanes"></div><i class="cueph"></i></div><div class="cuetime" data-cuetime="${i}">–</div><p class="hint2">Drag a cue's ends to move START / END, drag its middle to move the whole cue. Drag the top strip to jump the video.</p>
+          <div class="cuel" data-cuel="${i}"></div>
+          <button class="cbtn cueadd" data-cueadd="${i}">＋ ADD CUE AT NOW</button>
+          <p class="hint2">While the video plays, each cue switches its effect on at START and off at END. Times are in the video (min:sec).</p></details>
         <div class="mmot" id="box-m${i}obj"><h4>Object motion</h4>
           <div class="ksrow"><span>Moves</span><div class="opts" id="o-M${i}motion"></div></div>
           <div class="ksrow" data-mspin="M${i}"><span>Axis</span><div class="opts" id="o-M${i}maxis"></div><button class="btn mrev" id="t-M${i}mrev" data-tog="M${i}mrev">⟲ REV</button></div>
@@ -1192,9 +1217,12 @@ function mediaCardsUI(p){
     if (!p[m + 'on']) return;
     $('#mname' + i).textContent = mediaName(i);
     const v = $('#t-' + m + 'vis'); v.textContent = p[m + 'vis'] ? 'ON' : 'OFF'; v.classList.toggle('on', !!p[m + 'vis']);
+    ['mirror', 'flip'].forEach(n => { const b = $('#t-' + m + n); if (b) b.classList.toggle('on', !!p[m + n]); });
     const k = $('#t-' + m + 'keyon'); k.textContent = p[m + 'keyon'] ? '✓ SCREEN REMOVED' : 'REMOVE SCREEN'; k.classList.toggle('on', !!p[m + 'keyon']);
     $('#sum-m' + i + 'key').textContent = p[m + 'keyon'] ? 'on' : '';
-    $('#sum-m' + i + 'crop').textContent = ['l','r','t','b'].some(n => +p[m + 'crop' + n] > 0.001) ? 'cropped' : '';
+    { const cr = ['l','r','t','b'].some(n => +p[m + 'crop' + n] > 0.001), z = +(p[m + 'fzoom'] ?? 1);
+      $('#sum-m' + i + 'frame').textContent = [p[m + 'fit'] ? 'whole' : '', Math.abs(z - 1) > 0.01 ? '×' + z.toFixed(2) : '', cr ? 'cropped' : '', p[m + 'mirror'] ? 'mirrored' : '', p[m + 'flip'] ? 'flipped' : ''].filter(Boolean).join(' · ');
+      mCropUI(i); mTimeUI(i); }
     $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
@@ -1353,6 +1381,37 @@ function renderFxps(){
 }
 const MFOPEN = new Set();
 document.addEventListener('toggle', e => { const f = e.target.dataset && e.target.dataset.mfold; if (f === undefined) return; if (e.target.open) MFOPEN.add(f); else MFOPEN.delete(f); }, true);
+/* layer card: crop on a still picture, the time strip, speed */
+function mCropUI(i){ const box = $(`[data-mcropbox="${i}"]`); if (!box) return; const p = S.pars, m = 'M' + i, f = p[m + 'file'];
+  const it = (S.media || []).find(x => x.id === f), img = box.querySelector('img'), src = it && it.thumb ? 'data:image/jpeg;base64,' + it.thumb : '';
+  if (img.getAttribute('src') !== src) { if (src) img.setAttribute('src', src); else img.removeAttribute('src'); }
+  if (MCROP && MCROP.i === i) return; const c = box.querySelector('.mcf');
+  c.style.left = (+p[m + 'cropl'] || 0) * 100 + '%'; c.style.right = (+p[m + 'cropr'] || 0) * 100 + '%'; c.style.top = (+p[m + 'cropt'] || 0) * 100 + '%'; c.style.bottom = (+p[m + 'cropb'] || 0) * 100 + '%'; }
+let MCROP = null, MTDRAG = null; const MSEND = {};
+function mSet(k, v){ S.pars[k] = v; const now = performance.now(); if (now - (MSEND[k] || 0) > 40) { MSEND[k] = now; send({t:'set', p:k, v}); } else { clearTimeout(MSEND[k + 't']); MSEND[k + 't'] = setTimeout(() => send({t:'set', p:k, v:S.pars[k]}), 50); } }
+document.addEventListener('pointerdown', e => { const b = e.target.closest('.mcropbox'); if (!b) return; e.preventDefault(); const i = +b.dataset.mcropbox, r = b.getBoundingClientRect(), m = 'M' + i;
+  let ed = e.target.dataset.ce; if (!ed) { const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height, dd = {l:x, r:1 - x, t:y, b:1 - y}; ed = Object.keys(dd).sort((a, c) => dd[a] - dd[c])[0]; }
+  MCROP = {i, ed, r, m}; try { b.setPointerCapture(e.pointerId); } catch (er) {} mCropMove(e); });
+function mCropMove(e){ const {i, ed, r, m} = MCROP, x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+  const v = Math.max(0, Math.min(0.45, ed === 'l' ? x : ed === 'r' ? 1 - x : ed === 't' ? y : 1 - y)); mSet(m + 'crop' + ed, +v.toFixed(3));
+  const c = $(`[data-mcropbox="${i}"] .mcf`); c.style[{l:'left', r:'right', t:'top', b:'bottom'}[ed]] = v * 100 + '%'; }
+function mTimeUI(i){ const tl = $(`[data-mtl="${i}"]`); if (!tl) return; const p = S.pars, m = 'M' + i, a = +(p[m + 'trimin'] ?? 0), b = +(p[m + 'trimout'] ?? 1), d = (VT[i] || [0, 0])[1];
+  tl.querySelector('.mtsel').style.left = a * 100 + '%'; tl.querySelector('.mtsel').style.width = Math.max(0.5, (b - a) * 100) + '%';
+  tl.querySelector('.h0').style.left = `calc(22px + (100% - 44px) * ${a} - 20px)`; tl.querySelector('.h1').style.left = `calc(22px + (100% - 44px) * ${b})`;
+  const T = k => $(`[data-mtl="${i}"] + .mtt [data-mtt="${k}"]`), sp = +p[m + 'speed'] || 1;
+  if (T('in')) { T('in').textContent = d ? fmtT(a * d) : Math.round(a * 100) + '%'; T('out').textContent = d ? fmtT(b * d) : Math.round(b * 100) + '%'; T('len').textContent = d ? 'plays ' + fmtT((b - a) * d / sp) : ''; }
+  $$(`[data-mspd="${i}"]`).forEach(x => x.classList.toggle('on', Math.abs(+x.dataset.v - sp) < 0.01)); }
+function mTimeTick(i){ const tl = $(`[data-mtl="${i}"]`), v = VT[i]; if (!tl || !v || !v[1]) return; const ph = tl.querySelector('.mtph'); if (ph) ph.style.left = Math.min(100, v[0] / v[1] * 100) + '%'; }
+document.addEventListener('pointerdown', e => { const h = e.target.closest('[data-mth]'); if (!h) return; e.preventDefault(); const tl = h.closest('[data-mtl]'), i = +tl.dataset.mtl;
+  MTDRAG = {i, k:h.dataset.mth, r:tl.querySelector('.mtlin').getBoundingClientRect()}; try { h.setPointerCapture(e.pointerId); } catch (er) {} });
+document.addEventListener('pointermove', e => { if (MCROP) mCropMove(e);
+  if (MTDRAG) { const {i, k, r} = MTDRAG, m = 'M' + i, x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), a = +(S.pars[m + 'trimin'] ?? 0), b = +(S.pars[m + 'trimout'] ?? 1);
+    if (k === 'in') mSet(m + 'trimin', +Math.min(x, b - 0.01).toFixed(4)); else mSet(m + 'trimout', +Math.max(x, a + 0.01).toFixed(4)); mTimeUI(i); } });
+document.addEventListener('pointerup', () => { if (MCROP) { const i = MCROP.i; MCROP = null; ['l','r','t','b'].forEach(n => send({t:'set', p:'M' + i + 'crop' + n, v:+S.pars['M' + i + 'crop' + n] || 0})); }
+  if (MTDRAG) { const m = 'M' + MTDRAG.i; MTDRAG = null; send({t:'set', p:m + 'trimin', v:S.pars[m + 'trimin'] ?? 0}); send({t:'set', p:m + 'trimout', v:S.pars[m + 'trimout'] ?? 1}); } });
+/* the video list: folders (a full video + the clips cut from it), newest first */
+const MBIN = {};
+function binOf(i){ return MBIN[i] || (MBIN[i] = {f:null, q:'', all:false}); }
 function renderMedia(){
   if (!S) return;
   const nm = id => String(id).split('/').pop().replace(/\.[^.]+$/, '');
@@ -1361,16 +1420,27 @@ function renderMedia(){
   const all = (S.media || []).slice().sort((a, b) => (b.mt || 0) - (a.mt || 0));          // newest first
   MS.forEach(i => { const el = $('#mlist' + i); if (!el) return; const m = 'M' + i, vid = S.pars[m + 'kind'] !== 'image', cur = S.pars[m + 'file'];
     const tile = x => `<div class="mtile ${x.id === cur ? 'on' : ''}">
-      <button class="clip ${x.id === cur ? 'on' : ''}" data-mslot="${i}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}</button>
+      <button class="clip ${x.id === cur ? 'on' : ''}" data-mslot="${i}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}${x.full ? '<span class="mfull">FULL</span>' : ''}${x.rng ? `<i class="mrng"><u style="left:${x.rng[0] * 100}%;width:${Math.max(2, (x.rng[1] - x.rng[0]) * 100)}%"></u></i>` : ''}</button>
       <button class="mdots" data-mdots="${esc(x.id)}" data-mslot="${i}" aria-label="More">⋯</button>
       <b class="mname" title="${esc(nm(x.id))}">${esc(nm(x.id))}</b><i class="mdate">${when(x.mt)}</i></div>`;
-    const L = all.filter(x => (x.kind === 'video') === vid), fo = {}, loose = [];
-    L.forEach(x => { const p = String(x.id).split('/'); if (vid && p[0] === 'videos' && p.length > 2) (fo[p[1]] = fo[p[1]] || []).push(x); else loose.push(x); });
-    const names = Object.keys(fo).sort((a, b) => (fo[b][0].mt || 0) - (fo[a][0].mt || 0));
-    el.innerHTML = names.map(f => { const open = MFOPEN.has(f) || fo[f].some(x => x.id === cur);
-        return `<details class="mfold" data-mfold="${esc(f)}" ${open ? 'open' : ''}><summary><span class="mfi">${fo[f][0].thumb ? `<img src="data:image/jpeg;base64,${fo[f][0].thumb}" alt="">` : ''}</span><b>${esc(f)}</b><i>${fo[f].length} clip${fo[f].length > 1 ? 's' : ''} · ${when(fo[f][0].mt)}</i></summary><div class="mfgrid">${fo[f].map(tile).join('')}</div></details>`; }).join('')
-      + (names.length && loose.length ? `<p class="mfsub">${vid ? 'Other videos' : ''}</p>` : '') + loose.map(tile).join('')
-      || `<p class="hint2">No ${vid ? 'videos' : 'pictures'} yet · ＋ ADD</p>`; });
+    const L = all.filter(x => (x.kind === 'video') === vid);
+    if (!vid) { el.innerHTML = L.map(tile).join('') || `<p class="hint2">No pictures yet · ＋ ADD</p>`; return; }
+    const B = binOf(i), fo = {}, loose = [];
+    L.forEach(x => { const p = String(x.id).split('/'); if (p[0] === 'videos' && p.length > 2) (fo[p[1]] = fo[p[1]] || []).push(x); else loose.push(x); });
+    const dl = PREPJ.filter(j => j.url && j.state === 'download').map(j => `<div class="mtile mdl"><div class="clip"><i class="mdlbar" style="width:${j.pct || 0}%"></i><span>⬇ ${j.pct || 0}%</span></div><b class="mname">${esc(j.title)}</b><i class="mdate">downloading</i></div>`).join('');
+    const linkT = `<div class="mtile"><button class="clip mlinkt" data-mlink="${i}"><span>＋</span><b>LINK</b></button><b class="mname">Get a video</b><i class="mdate">paste a link</i></div>`;
+    if (B.f && fo[B.f]) {                       // inside one folder: the full video first, then its clips in order
+      const F = fo[B.f].slice().sort((a, b) => (b.full || 0) - (a.full || 0) || ((a.rng || [0])[0] - (b.rng || [0])[0]) || (a.mt - b.mt));
+      el.innerHTML = `<div class="mfbar"><button data-mfback="${i}">← All videos</button><b>${esc(B.f)}</b><i>${F.length} video${F.length > 1 ? 's' : ''}</i></div>` + F.map(tile).join(''); return; }
+    B.f = null;
+    const q = B.q.trim().toLowerCase(), srch = L.length > 12 ? `<div class="mfsearch"><input type="search" data-mbinq="${i}" placeholder="Search ${L.length} videos…" value="${esc(B.q)}"></div>` : '';
+    if (q) { const H = L.filter(x => x.id.toLowerCase().includes(q)); el.innerHTML = srch + (H.map(tile).join('') || '<p class="hint2">Nothing matches.</p>'); return; }
+    const E = Object.keys(fo).map(f => fo[f].length === 1 ? {t:fo[f][0].mt, x:fo[f][0]} : {t:Math.max(...fo[f].map(x => x.mt || 0)), f}).concat(loose.map(x => ({t:x.mt, x}))).sort((a, b) => (b.t || 0) - (a.t || 0));
+    const shown = B.all ? E : E.slice(0, 12);
+    el.innerHTML = srch + linkT + dl + shown.map(e => { if (e.x) return tile(e.x); const F = fo[e.f], cv = F.find(x => x.full && x.thumb) || F.find(x => x.thumb), on = F.some(x => x.id === cur);
+        return `<div class="mtile mfoldt ${on ? 'on' : ''}"><button class="clip" data-mfold="${esc(e.f)}" data-mslot="${i}">${cv ? `<img src="data:image/jpeg;base64,${cv.thumb}" alt="">` : ''}<span class="mfcnt">${F.length}</span></button><b class="mname">📁 ${esc(e.f)}</b><i class="mdate">${F.length} videos · ${when(e.t)}</i></div>`; }).join('')
+      + (E.length > shown.length ? `<button class="mfmore" data-mfall="${i}">Show all ${E.length}</button>` : '');
+  });
 }
 async function uploadPhoto(file){
   if (!file) return;
@@ -2212,7 +2282,7 @@ document.addEventListener('pointerdown', e => {
 document.addEventListener('pointermove', e => { if (CDRAG && CDRAG.move) CDRAG.move(e); });
 const cueUp = () => { if (!CDRAG) return; const d = CDRAG; CDRAG = null; if (!d.seek) { cuesSet(d.i, d.L); buzz(); } };
 document.addEventListener('pointerup', cueUp); document.addEventListener('pointercancel', cueUp);
-function cueTick(vt){ for (const k in vt) { const i = +k, had = VT[i]; VT[i] = vt[k];
+function cueTick(vt){ for (const k in vt) { const i = +k, had = VT[i]; VT[i] = vt[k]; mTimeTick(i);
     const bar = $(`[data-cuebar="${i}"]`); if (!bar || bar.closest('.cuebox').hidden) continue;
     if (CDRAG && CDRAG.seek && CDRAG.i === i && vt[k] !== VT[i]) continue;
     bar.querySelector('.cueph').style.left = Math.min(100, vt[k][0] / vt[k][1] * 100) + '%';
@@ -2223,8 +2293,9 @@ function glitUI(){ $$('[data-glt]').forEach(el => { const t = el.dataset.glt, r 
     if (el.dataset.sig === sig) return; el.dataset.sig = sig;
     el.innerHTML = `<div class="glsw"><button data-gloff="${t}" class="${on ? '' : 'on'}"><i style="background:#16131c"></i><b>OFF</b></button>${GLIT.map(([n, bg], i) => `<button data-glon="${t}" data-v="${i}" class="${on && c.sty === i ? 'on' : ''}"><i style="background:${bg}"></i><b>${n}</b></button>`).join('')}</div><p class="hint2">Sparkle amount, speed and beat: FX tab → this text → Glitter.</p>`; }); }
 // ---- video prep: link -> background download -> trim / reverse / mirror -> videos
-let PREPJ = [], PREPSEL = null, PREPWANT = false; const PREPSV = {}; const PREPSTRIP = {}, PREPO = {}, PREPFR = {};
+let PREPJ = [], PREPSEL = null, PREPWANT = false, PLSLOT = 0, PMARK = false; const PREPSV = {}; const PREPSTRIP = {}, PREPO = {}, PREPFR = {};
 function prepState(jobs){ const old = Object.fromEntries(PREPJ.map(j => [j.id, j.state])); PREPJ = jobs || [];
+  { const sig = PREPJ.filter(j => j.url && j.state === 'download').map(j => j.id + j.pct).join() + '|' + PREPJ.length; if (sig !== prepState._s && !(document.activeElement && document.activeElement.dataset && document.activeElement.dataset.mbinq)) { prepState._s = sig; renderMedia(); } }
   PREPJ.forEach(j => { const o = old[j.id]; if (o === undefined && j.state === 'download') return;
     if (o === 'download' && j.state === 'ready' && j.url) { toast('⬇ Video downloaded: ' + j.title + ' — tap ✂ to trim'); buzz(30); if (!PREPSEL) PREPSEL = j.id; }
     if (o === 'saving' && j.state === 'done') { toast('✓ Saved to videos: ' + (j.out || '').replace('videos/', '')); buzz(30); }
@@ -2238,13 +2309,14 @@ function prepState(jobs){ const old = Object.fromEntries(PREPJ.map(j => [j.id, j
   pill.hidden = !run && !rdy.length; pill.classList.toggle('rdy', !run && !!rdy.length);
   pill.textContent = run ? (run.state === 'download' ? '⬇ ' : '⚙ ') + (run.pct || 0) + '%' : '✂ ' + rdy.length + ' READY';
   if (!$('#prep').hidden) { const j = PREPJ.find(x => x.id === PREPSEL); if (j && j.pv && !$('#prepVid')) $('#prepEd').dataset.id = ''; prepUI(); prepSaves(j);
+    prepBands(j);
     const v = $('#prepVid'); if (j && v && v.dataset.q !== String(j.pvq || 0)) { v._resume = v.currentTime; v._sk = false; v.dataset.q = j.pvq || 0; v.src = `prep/${j.id}_pv${j.pvq || 0}.mp4`; } } }
 function prepOpen(){ $('#prep').hidden = false; if (!PREPSEL) { const r = PREPJ.slice().reverse().find(j => j.state === 'ready'); PREPSEL = r && r.id; } libShow(!PREPSEL); prepUI(); }
 /* library: every full video you cut clips from, searchable, each with its clips */
 let PLIB = null, PLQ = '', PLMODE = false, PLN = 40; const PLOPEN = new Set();
 function mwhen(t){ if (!t) return ''; const d = new Date(t * 1000), n = new Date(), days = Math.floor((new Date(n.toDateString()) - new Date(d.toDateString())) / 864e5);
   return days === 0 ? 'today ' + d.toTimeString().slice(0, 5) : days === 1 ? 'yesterday' : days < 7 ? days + ' days ago' : d.toLocaleDateString(); }
-function libShow(on){ PLMODE = on; $('#prepLib').hidden = !on; $('#prepEd').hidden = on; $('#prepLibB').classList.toggle('on', on); if (on) { send({t:'prep', do:'lib'}); libUI(); } }
+function libShow(on){ on = false; PLMODE = on; $('#prepLib').hidden = !on; $('#prepEd').hidden = on; if (on) { send({t:'prep', do:'lib'}); libUI(); } }
 function libUI(){ const el = $('#plList'); if (!el || !PLMODE) return; if (!PLIB) { el.innerHTML = '<p class="hint2">Loading…</p>'; return; }
   const q = PLQ.trim().toLowerCase(), thumb = id => { const x = (S.media || []).find(m => m.id === id); return x && x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''; };
   const cn = c => c.split('/').pop().replace(/\.[^.]+$/, ''), L = PLIB.filter(e => !q || (e.title + ' ' + e.folder + ' ' + e.clips.map(cn).join(' ')).toLowerCase().includes(q));
@@ -2254,30 +2326,43 @@ function libUI(){ const el = $('#plList'); if (!el || !PLMODE) return; if (!PLIB
         ${e.clips.length ? `<button class="plx" data-plx="${e.k}" aria-label="Show clips">${open ? '▴' : '▾'}</button>` : ''}
         ${open ? `<div class="plclips">${e.clips.map(c => `<button class="plclip" data-plclip="${esc(c)}"><span class="mfi">${thumb(c)}</span><b>${esc(cn(c))}</b><i>fix this clip</i></button>`).join('')}</div>` : ''}</div>`; }).join('')
     + (L.length > PLN ? `<button class="plmore" data-plmore>Show ${Math.min(40, L.length - PLN)} more of ${L.length - PLN}</button>` : '') || `<p class="hint2">${q ? 'Nothing matches.' : 'No videos yet: get one from a ⬇ LINK.'}</p>`; }
+document.addEventListener('input', e => { const q = e.target.dataset && e.target.dataset.mbinq; if (!q) return; binOf(+q).q = e.target.value; const pos = e.target.selectionStart; renderMedia();
+  const n = $(`[data-mbinq="${q}"]`); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } });
 document.addEventListener('input', e => { if (e.target.id === 'plq') { PLQ = e.target.value; PLN = 40; libUI(); } });
 function prepUI(){
   $('#prepJobs').innerHTML = PREPJ.slice().reverse().filter(j => j.state === 'download' || (j.state === 'fail' && !j.dur)).map(j => `<button class="prepjob ${j.id === PREPSEL ? 'on' : ''}" data-prepsel="${j.id}"><b>${esc(j.title || j.url)}</b>
     <span>${j.state === 'download' ? (j.url ? 'downloading ' + (j.pct || 0) + '%' : 'opening…') : j.state === 'saving' ? 'saving ' + (j.pct || 0) + '%' : j.state === 'ready' ? 'ready to trim · ' + fmtT(j.dur) : j.state === 'done' ? '✓ in videos: ' + esc((j.out || '').replace('videos/', '')) : '✕ ' + esc(j.err || 'failed')}</span>
     <i style="width:${j.state === 'download' || j.state === 'saving' ? (j.pct || 0) : 0}%"></i></button>`).join('');
   const j = PREPJ.find(x => x.id === PREPSEL), ed = $('#prepEd');
-  if (!j || !(j.state === 'ready' || j.state === 'done' || (j.state === 'fail' && j.dur))) { ed.innerHTML = PLMODE ? '' : '<p class="hint2">Pick a video in 📁 LIBRARY or get one from a ⬇ LINK.</p>'; ed.dataset.id = ''; return; }
+  if (!j || !(j.state === 'ready' || j.state === 'done' || (j.state === 'fail' && j.dur))) { ed.innerHTML = PLMODE ? '' : '<p class="hint2">Open a video with ✂ TRIM in its layer (SOURCE).</p>'; ed.dataset.id = ''; return; }
   const o = PREPO[j.id] || (PREPO[j.id] = {in:0, out:j.dur, speed:1, name:j.title});
   if (ed.dataset.id === j.id && ed.innerHTML && (!j.pv || $('#prepVid'))) return prepTL(j);
   ed.dataset.id = j.id; if (!PREPSTRIP[j.id]) send({t:'prep', do:'strip', id:j.id});
   const ar = (j.w && j.h) ? j.w / j.h : 16 / 9, mark = (k, l) => `<button class="prepmk" data-prepmark="${k}">${l}</button>`;
   ed.innerHTML = `<div class="prepcur"><b>${esc(j.title || '')}</b><span>${fmtT(j.dur)}</span></div><div class="prepvid" id="prepBox">${j.pv && location.protocol !== 'https:' ? `<div class="prepframe" data-ar="${ar}"><video id="prepVid" data-q="${j.pvq || 0}" src="prep/${j.id}_pv${j.pvq || 0}.mp4" muted playsinline preload="auto"></video><i class="prepcropv"></i></div><span class="prepnote" id="prepNote"></span>` : `<p class="hint2">${location.protocol === 'https:' ? 'The preview plays on the direct link (USB / Wi-Fi), not over the internet.' : 'Preparing the preview…'}</p>`}</div>
-    <div class="preptr"><button class="prepplay" id="prepPlay" aria-label="Play or pause">❚❚</button><b class="prepnow" data-prept="now">0:00.0</b><span class="prepsp"></span>${mark('in', '⇤ START HERE')}${mark('out', 'END HERE ⇥')}</div>
+    <div class="preptr"><button class="prepplay" id="prepPlay" aria-label="Play or pause">❚❚</button><b class="prepnow" data-prept="now">0:00.0</b><span class="prepsp"></span><button class="prepmk ${PMARK ? 'rec' : ''}" id="prepMark">${PMARK ? '■ MARK END + SAVE' : '✂ MARK START'}</button></div>
     <div class="preptl" data-preptl><div class="prepin"><div class="prepstrip">${(PREPSTRIP[j.id] || []).map(b => b ? `<img src="data:image/jpeg;base64,${b}">` : '<i></i>').join('')}</div>
-      <b class="prepsel"></b><i class="prepph"><u></u></i></div><i class="preph h0" data-preph="in"></i><i class="preph h1" data-preph="out"></i></div>
+      <b class="prepsel"></b><div class="prepbands" data-prepbands></div><i class="prepph"><u></u></i></div><i class="preph h0" data-preph="in"></i><i class="preph h1" data-preph="out"></i></div>
     <div class="preptimes"><label>IN<input type="text" inputmode="decimal" data-prepio="in"></label><span>clip <b data-prept="len"></b></span><label>OUT<input type="text" inputmode="decimal" data-prepio="out"></label></div>
-    <div class="prepgrp"><span class="prepk">LOOK</span><div class="preptg">${[['reverse','⏪ REVERSE'],['pingpong','⇄ PING-PONG'],['mirror','⇆ MIRROR'],['flip','⇅ FLIP']].map(([k, l]) => `<button data-prepo="${k}" class="${o[k] ? 'on' : ''}">${l}</button>`).join('')}</div>
-      <label class="prepspd">SPEED<input type="number" step="0.05" min="0.1" max="8" data-prepv="speed" value="${o.speed}"></label></div>
-    <div class="prepgrp"><span class="prepk">CROP</span><div class="prepcrop">${[['cl','LEFT'],['cr','RIGHT'],['ct','TOP'],['cb','BOTTOM']].map(([k, l]) => `<label>${l}<input type="range" min="0" max="45" step="1" data-prepc="${k}" value="${Math.round((o[k] || 0) * 100)}" style="--p:${(o[k] || 0) * 100 / 0.45}%"></label>`).join('')}</div>
-      <div class="seg sm prepfit">${[['fill','FILL 16:9'],['whole','WHOLE + BARS']].map(([v, l]) => `<button data-prepfit="${v}" class="${(o.fit || 'fill') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>
-    <div class="prepsavebar"><input type="text" maxlength="60" data-prepv="name" value="${esc(o.name || '')}" aria-label="Clip name">${o.replace ? `<button class="pri" data-prepsave="${j.id}" data-preprep="1">↻ REPLACE “${esc(o.rname || '')}”</button><button class="sec" data-prepsave="${j.id}">＋ AS NEW</button>` : `<button class="pri" data-prepsave="${j.id}">✓ SAVE CLIP</button>`}</div>
+    <div class="prepgrp"><span class="prepk">PLAY</span><div class="preptg pt2">${[['reverse','⏪ REVERSE'],['pingpong','⇄ PING-PONG']].map(([k, l]) => `<button data-prepo="${k}" class="${o[k] ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    <div class="prepsavebar" data-prepsavebar></div>
     <div class="prepsaves" data-prepsaves></div>
-    <div class="prepfoot"><span class="hint2">Drag the white line to find a moment · START / END HERE · save · repeat for more clips</span><button class="preplink" data-prepdrop="${j.id}">${j.url ? 'delete download' : 'close video'}</button></div>`;
-  prepFit(); prepTL(j); prepVid(j); prepSaves(j); }
+    <div class="prepfoot"><span class="hint2">Play it, tap ✂ MARK START, then MARK END: the clip is saved. Coloured bands are clips you already cut; tap one to fix it.</span><button class="preplink" data-prepdrop="${j.id}">close</button></div>`;
+  prepFit(); prepTL(j); prepVid(j); prepSaves(j); prepBands(j); prepSaveBar(j); }
+function prepBands(j){ const el = $('[data-prepbands]'); if (!el || !j) return; const d = j.dur || 1, o = PREPO[j.id] || {};
+  el.innerHTML = (j.clips || []).map((c, k) => `<b class="pband ${o.replace === c.id ? 'on' : ''}" data-pband="${esc(c.id)}" style="left:${(c.in || 0) / d * 100}%;width:${Math.max(0.6, ((c.out ?? d) - (c.in || 0)) / d * 100)}%;--h:${(k * 67) % 360}" title="${esc(c.name)}">${esc(c.name.replace(/^.* (\d+)$/, '$1'))}</b>`).join(''); }
+function prepSaveBar(j){ const el = $('[data-prepsavebar]'); if (!el || !j) return; const o = PREPO[j.id] || {};
+  const live = o.replace && MS.some(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'file'] === o.replace);
+  el.innerHTML = o.replace ? `<button class="pri" data-prepsave="${j.id}" data-preprep="1" ${live ? 'disabled' : ''}>${live ? '▶ playing now · stop it to update' : '↻ UPDATE “' + esc(o.rname || '') + '”'}</button><button class="sec" data-prepsave="${j.id}">＋ SAVE AS NEW CLIP</button><button class="sec" data-prepnew="1">✕</button>`
+    : `<button class="pri" data-prepsave="${j.id}">✓ SAVE CLIP</button>`; }
+function prepSaveNow(j, rep){ const o = PREPO[j.id];
+  send({t:'prep', do:'save', id:j.id, o:{in:+o.in.toFixed(2), out:+o.out.toFixed(2), reverse:!!o.reverse, pingpong:!!o.pingpong,
+    name:rep ? o.rname : (j.folder || j.title || 'clip'), auto:!rep, replace:rep && o.replace ? o.replace : ''}});
+  toast(rep ? '↻ Updating “' + o.rname + '”…' : '✂ Saving clip ' + fmtT(o.in) + ' – ' + fmtT(o.out) + '…'); }
+function prepMarkTap(){ const j = PREPJ.find(x => x.id === PREPSEL), v = $('#prepVid'); if (!j || !v) return; const o = PREPO[j.id], t = v._sk && v._want !== undefined ? v._want : v.currentTime;
+  if (!PMARK) { PMARK = true; o.replace = ''; o.in = Math.max(0, Math.min(t, (j.dur || 1) - 0.3)); o.out = j.dur || 1; PFREE = true; if (!pvPlaying()) pvPlay(); toast('Start set at ' + fmtT(o.in) + ' — tap MARK END when it should stop'); }
+  else { if (t <= o.in + 0.2) { toast('The end has to be after the start'); return; } PMARK = false; o.out = t; PFREE = false; PV.t = undefined; prepSaveNow(j, false); }
+  const b = $('#prepMark'); if (b) { b.textContent = PMARK ? '■ MARK END + SAVE' : '✂ MARK START'; b.classList.toggle('rec', PMARK); } prepTL(j); prepSaveBar(j); prepBands(j); }
 function prepFit(){ const f = $('#prepEd .prepframe'), box = $('#prepBox'); if (!f || !box) return; const ar = +f.dataset.ar || 16 / 9, W = box.clientWidth, H = Math.max(160, innerHeight * 0.42);
   const w = Math.min(W, H * ar); f.style.width = w + 'px'; f.style.height = w / ar + 'px'; }
 addEventListener('resize', prepFit);
@@ -2324,7 +2409,10 @@ function prepFrames(j){ const o = PREPO[j.id]; ['in', 'out'].forEach(k => { cons
     if (PREPFR[key] && PREPFR[key].at === at) { const im = $(`[data-prepfr="${k}"]`); if (im) im.src = 'data:image/jpeg;base64,' + PREPFR[key].img; }
     else send({t:'prep', do:'frame', id:j.id, at:+at.toFixed(2)}); }); }
 let PDRAG = null;
-document.addEventListener('pointerdown', e => { const tl = e.target.closest('[data-preptl]'); if (!tl) return;
+document.addEventListener('pointerdown', e => { const pb = e.target.closest('[data-pband]'); if (pb) { const j = PREPJ.find(x => x.id === PREPSEL); if (!j) return; e.preventDefault();
+    const c = (j.clips || []).find(x => x.id === pb.dataset.pband); if (!c) return; const o = PREPO[j.id]; o.in = c.in || 0; o.out = c.out ?? j.dur; o.replace = c.id; o.rname = c.name; PMARK = false;
+    PFREE = false; PV.t = undefined; prepTL(j); prepBands(j); prepSaveBar(j); const v = $('#prepVid'); if (v) pSeek(v, o.in); toast('Fixing “' + c.name + '” — move the edges, then UPDATE'); return; } });
+document.addEventListener('pointerdown', e => { if (e.target.closest('[data-pband]')) return; const tl = e.target.closest('[data-preptl]'); if (!tl) return;
   const j = PREPJ.find(x => x.id === PREPSEL); if (!j) return; e.preventDefault(); try { tl.setPointerCapture(e.pointerId); } catch (er) {}
   const o = PREPO[j.id], r = tl.querySelector('.prepin').getBoundingClientRect(), d = j.dur || 1, tAt = x => Math.max(0, Math.min(d, (x - r.left) / r.width * d)), v = $('#prepVid');
   const h = e.target.dataset.preph || 'scrub', wasPlaying = pvPlaying(); PV.on = false; PV.t = undefined; if (v) { v._held = true; v.pause(); }
@@ -2554,6 +2642,10 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
     send({t:'quick', do:add ? 'add' : 'drop', scope:S.b ? 'preset' : 'all', slot:S.b, item:{k:'vids', t:'m' + sl, ids:[$('#sheet').dataset.mid]}});
     toast(add ? '📌 In the quick video switch · LIVE → Quick controls' : 'Taken out of the quick video switch'); }
   else if (b.dataset.sh === 'mtrim') { send({t:'prep', do:'local', mid:$('#sheet').dataset.mid}); PREPWANT = true; prepOpen(); toast('Opening the video for trimming…'); }
+  else if (b.dataset.sh === 'mren') { const id = $('#sheet').dataset.mid, nI = $('#shI'); nI.style.display = ''; nI.maxLength = 80; nI.value = id.split('/').pop().replace(/\.[^.]+$/, ''); nI.placeholder = 'New name';
+    $('#shP').textContent = 'Presets, layers and quick switches that use it follow the new name.';
+    $('#shA').innerHTML = `<button class="pri" data-sh="mrenok">✓ Rename</button><button data-sh="cancel">Cancel</button>`; setTimeout(() => { nI.focus(); nI.select(); }, 60); return; }
+  else if (b.dataset.sh === 'mrenok') { const v = $('#shI').value.trim(); if (v) send({t:'media', do:'rename', id:$('#sheet').dataset.mid, name:v}); }
   else if (b.dataset.sh === 'mdel') { const id = $('#sheet').dataset.mid; send({t:'media', do:'uses', id});
     const live = MS.filter(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'file'] === id).map(i => tgtName('m' + i));
     $('#shP').innerHTML = (live.length ? `<span class="muse">▶ Playing right now on ${esc(live.join(', '))}: it stops.</span>` : '') + '<span class="musep">Checking your presets…</span>It goes to the "Deleted" folder next to your project, so you can still get it back there.';
@@ -2640,23 +2732,29 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
   if (d.uifont) { store.set('uifont', uiFont(d.uifont)); buzz(); return; }
   if (d.lfold) { const k = d.lfold; if (LFOLD.has(k)) LFOLD.delete(k); else LFOLD.add(k); store.set('lfold', [...LFOLD]); t.closest('.lay').classList.toggle('fold', LFOLD.has(k)); buzz(); return; }
-  if (t.id === 'getvid' || t.id === 'prepNew') { $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; $('#prepCutA').value = ''; $('#prepCutB').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); buzz(); return; }
+  if (d.mlink) { PLSLOT = +d.mlink; $('#prepPlayToL').hidden = false; $('#prepPlayTo').checked = false; $('#prepPlayToN').textContent = tgtName('m' + PLSLOT);
+    $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; $('#prepCutA').value = ''; $('#prepCutB').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); buzz(); return; }
+  if (t.id === 'getvid' || t.id === 'prepNew') { PLSLOT = 0; $('#prepPlayToL').hidden = true; $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; $('#prepCutA').value = ''; $('#prepCutB').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); buzz(); return; }
   if (t.id === 'prepLinkX') { $('#prepLink').hidden = true; return; }
   if (t.id === 'prepGo') { const u = $('#prepUrl').value.trim(); if (!/^https?:\/\//.test(u)) { toast('Paste a full link (https://…)'); return; }
     let trim = null; if ($('#prepCut').checked) { const a = ptime($('#prepCutA').value), b = ptime($('#prepCutB').value);
       if (a === undefined || b === undefined) { toast('Times look wrong: use 1:23 or 83'); return; }
       if (b !== null && b <= (a || 0)) { toast('END has to be after START'); return; }
       if (a !== null || b !== null) trim = {in:a || 0, out:b}; }
-    send(Object.assign({t:'prep', do:'get', url:u}, trim ? {trim} : {})); $('#prepLink').hidden = true; toast('⬇ Downloading in the background — keep playing'); buzz(); return; }
+    send(Object.assign({t:'prep', do:'get', url:u}, trim ? {trim} : {}, PLSLOT && $('#prepPlayTo').checked ? {playto:PLSLOT} : {})); $('#prepLink').hidden = true; toast('⬇ Downloading in the background — keep playing'); buzz(); return; }
   if (t.id === 'prepPill') { prepOpen(); return; }
   if (t.id === 'prepMine') { const vids = (S.media || []).filter(x => x.kind === 'video').slice().reverse(), pk = $('#prepPick');
     pk.innerHTML = pk.innerHTML ? '' : `<p class="hint2">Pick the video to edit. The original stays as it is; you save a new clip.</p><div class="clips preplist">${vids.map(x => `<button class="clip" data-preplocal="${esc(x.id)}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}<span class="vid">✂</span><b>${esc(x.id.split('/').pop().replace(/\.[^.]+$/, ''))}</b></button>`).join('') || '<p class="hint2">No videos yet.</p>'}</div>`; buzz(); return; }
   if (d.preplocal) { send({t:'prep', do:'local', mid:d.preplocal}); $('#prepPick').innerHTML = ''; PREPWANT = true; toast('Opening the video…'); buzz(); return; }
   if (d.qvid) { const sl = +d.qvslot; if (S.pars['M' + sl + 'file'] !== d.qvid) { send({t:'media', do:'play', slot:sl, id:d.qvid}); S.pars['M' + sl + 'file'] = d.qvid; QSIG = ''; renderQuick(); } buzz(); return; }
+  if (d.mfold !== undefined && d.mslot) { binOf(+d.mslot).f = d.mfold; renderMedia(); buzz(); return; }
+  if (d.mfback) { binOf(+d.mfback).f = null; renderMedia(); buzz(); return; }
+  if (d.mfall) { binOf(+d.mfall).all = true; renderMedia(); return; }
+  if (d.mspd) { const k = 'M' + d.mspd + 'speed', v = +d.v; S.pars[k] = v; send({t:'set', p:k, v}); mTimeUI(+d.mspd); build(); buzz(); return; }
   if (d.mdots) { const id = d.mdots, isv = ((S.media || []).find(x => x.id === id) || {}).kind === 'video';
     $('#shI').style.display = 'none'; $('#shT').textContent = id.split('/').pop(); $('#shP').textContent = isv ? 'Video in your list' : 'Picture in your list';
     const sl = +d.mslot, inQ = qList().some(x => x.k === 'vids' && x.t === 'm' + sl && (x.ids || []).includes(id));
-    $('#shA').innerHTML = (isv ? `<button class="pri" data-sh="mtrim">✂ Trim / crop / reverse / mirror</button><button data-sh="${inQ ? 'mqdrop' : 'mqadd'}">${inQ ? '✕ Take out of' : '📌 Add to'} the quick video switch (${esc(tgtName('m' + sl))})</button>` : '') + `<button data-sh="mdel">🗑 Delete from the list</button><button data-sh="cancel">Cancel</button>`;
+    $('#shA').innerHTML = (isv ? `<button class="pri" data-sh="mtrim">✂ Cut clips from it</button><button data-sh="${inQ ? 'mqdrop' : 'mqadd'}">${inQ ? '✕ Take out of' : '📌 Add to'} the quick video switch (${esc(tgtName('m' + sl))})</button>` : '') + `${id.startsWith('videos/') ? '<button data-sh="mren">✎ Rename</button>' : ''}<button data-sh="mdel">🗑 Delete from the list</button><button data-sh="cancel">Cancel</button>`;
     $('#sheet').dataset.mid = id; $('#sheet').dataset.mslot = sl; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); buzz(); return; }
   if (d.mtrim) { const f = S.pars['M' + d.mtrim + 'file']; if (!f) return; send({t:'prep', do:'local', mid:f}); PREPWANT = true; prepOpen(); toast('Opening the video for trimming…'); buzz(); return; }
   if (d.prepmark) { prepMark(d.prepmark); buzz(); return; }
@@ -2672,13 +2770,11 @@ document.addEventListener('click', e => {
   if (d.prepsel) { PREPSEL = d.prepsel; $('#prepEd').dataset.id = ''; prepUI(); return; }
   if (d.prepo) { const o = PREPO[PREPSEL], j = PREPJ.find(x => x.id === PREPSEL), was = pvPlaying(); pvPause(); o[d.prepo] = !o[d.prepo]; PV.dir = o.reverse ? -1 : 1; if (was) pvPlay(); t.classList.toggle('on', o[d.prepo]); prepTL(j); prepVid(j); buzz(); return; }
   if (d.prepsave) { const o = PREPO[d.prepsave], j = PREPJ.find(x => x.id === d.prepsave);
-    send({t:'prep', do:'save', id:d.prepsave, o:{in:+o.in.toFixed(2), out:+o.out.toFixed(2), speed:+o.speed || 1, reverse:!!o.reverse, pingpong:!!o.pingpong, mirror:!!o.mirror, flip:!!o.flip, name:o.name,
-      cl:o.cl || 0, cr:o.cr || 0, ct:o.ct || 0, cb:o.cb || 0, fit:o.fit || 'fill', replace:d.preprep && o.replace ? o.replace : ''}});
-    if (d.preprep) { o.replace = ''; $('#prepEd').dataset.id = ''; prepUI(); }
-    toast('⚙ Saving "' + o.name + '" in the background — trim the next one if you like');
-    const base = String(j && j.title || o.name).slice(0, 50), n = ((j && j.saves) || []).length + 2; o.name = base + ' ' + n; const ni = $('[data-prepv="name"]'); if (ni) ni.value = o.name; buzz(); return; }
+    prepSaveNow(j, !!d.preprep); if (d.preprep) { o.replace = ''; } prepSaveBar(j); buzz(); return; }
+  if (d.prepnew) { const o = PREPO[PREPSEL]; if (o) o.replace = ''; prepBands(PREPJ.find(x => x.id === PREPSEL)); prepSaveBar(PREPJ.find(x => x.id === PREPSEL)); return; }
+  if (t.id === 'prepMark') { prepMarkTap(); buzz(); return; }
   if (d.prepfit) { const o = PREPO[PREPSEL]; o.fit = d.prepfit; $$('[data-prepfit]').forEach(x => x.classList.toggle('on', x === t)); prepVid(PREPJ.find(x => x.id === PREPSEL)); buzz(); return; }
-  if (d.prepdrop) { send({t:'prep', do:'drop', id:d.prepdrop}); delete PREPO[d.prepdrop]; PREPSEL = null; $('#prepEd').dataset.id = ''; buzz(); return; }
+  if (d.prepdrop) { send({t:'prep', do:'drop', id:d.prepdrop}); delete PREPO[d.prepdrop]; PREPSEL = null; $('#prepEd').dataset.id = ''; $('#prep').hidden = true; buzz(); return; }
   if (t.id === 'recx') { send({t:'rec', do:'discard'}); buzz(20); return; }
   if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start'}); buzz(20); return; }
   if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }

@@ -113,7 +113,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
-TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
+TOGGLES = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
 TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
@@ -295,8 +295,16 @@ def _mediaThumb(rel, full, kind):
 
 def mediaMsg():
     """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
-    items = [{'id': rel, 'kind': kind, 'up': rel.startswith('uploads/'), 'mt': int(os.path.getmtime(full))} for rel, full, kind in _mediaFiles()]
-    return {'t': 'media', 'v': items[-80:]}
+    S = _srcRead(); srcs = {os.path.normcase(os.path.abspath(r.get('src') or '')) for r in S.values()}
+    items = []
+    for rel, full, kind in _mediaFiles():
+        it = {'id': rel, 'kind': kind, 'up': rel.startswith('uploads/'), 'mt': int(os.path.getmtime(full))}
+        if os.path.normcase(os.path.abspath(full)) in srcs: it['full'] = 1
+        r = S.get(rel)
+        if r and r.get('dur'):
+            o = r.get('o') or {}; it['rng'] = [round(float(o.get('in', 0)) / r['dur'], 4), round(min(r['dur'], float(o.get('out', r['dur']))) / r['dur'], 4)]
+        items.append(it)
+    return {'t': 'media', 'v': items[-400:]}
 
 def mediaThumbs(send):
     for rel, full, kind in _mediaFiles()[-80:]:
@@ -356,6 +364,59 @@ def mediaDel(mid):
     try: os.remove(full)
     except Exception: pass
 
+def _relOf(full):
+    return 'videos/' + os.path.relpath(full, VIDEODIR).replace('\\', '/')
+def mediaMove(old, new, tries=0):
+    """Rename or move a video inside 'videos'; layers, presets, quick switches and the clip index follow it."""
+    import shutil
+    src, dst = mediaFull(old), mediaFull(new)
+    vd = os.path.abspath(VIDEODIR) + os.sep
+    if not (old.startswith('videos/') and new.startswith('videos/') and os.path.abspath(src).startswith(vd) and os.path.abspath(dst).startswith(vd)): return 'not allowed'
+    if not os.path.isfile(src): return 'not found'
+    if os.path.exists(dst): return 'that name is taken'
+    C = _C(); live = [i for i in range(1, 7) if C.par['M%dfile' % i].eval() == old]
+    if live and tries == 0:                                    # let go of the file first, then move it (Windows locks open files)
+        for i in live: op('/project1/mf%d' % i).par.file = ''
+        run("op('/project1/remote_cb').module.mediaMove(%r, %r, 1)" % (old, new), delayFrames=20); return 'moving'
+    try: os.makedirs(os.path.dirname(dst), exist_ok=True); shutil.move(src, dst)
+    except Exception as e:
+        if tries < 4: run("op('/project1/remote_cb').module.mediaMove(%r, %r, %d)" % (old, new, tries + 1), delayFrames=30); return 'moving'
+        for i in live: mediaPlay(old, slot=i, keep=True)
+        _all({'t': 'toast', 'msg': 'Could not rename it: ' + str(e)[:60]}); return 'failed'
+    for i in range(1, 7):
+        if C.par['M%dfile' % i].eval() == old: mediaPlay(new, slot=i, keep=True)
+    S = _srcRead(); nf = os.path.abspath(dst); of = os.path.normcase(os.path.abspath(src))
+    if old in S: S[new] = S.pop(old)
+    for k in list(S.keys()):
+        r = S[k]
+        if os.path.normcase(os.path.abspath(r.get('src') or '')) == of:
+            r['src'] = nf
+            if k.startswith('~'): S['~' + nf] = S.pop(k)
+    _srcWrite(S)
+    for j in PREP.values():
+        for key in ('raw', 'pv'):
+            if j.get(key) and os.path.normcase(os.path.abspath(j[key])) == of: j[key] = nf
+    E = _E()
+    try:                                                       # presets keep working with the new name
+        t = E._bankTable()
+        for r in range(1, t.numRows):
+            v = t[r, 1].val
+            if not v or old not in v: continue
+            d = json.loads(v); ch = False
+            sl = (d.get('src') or {}).get('mslots') or {}
+            for x in (sl.values() if isinstance(sl, dict) else sl):
+                if isinstance(x, dict) and x.get('file') == old: x['file'] = new; ch = True
+            for q in ((d.get('_meta') or {}).get('quick') or []):
+                if q.get('k') == 'vids' and old in (q.get('ids') or []): q['ids'] = [new if z == old else z for z in q['ids']]; ch = True
+            if ch: t[r, 1] = json.dumps(d)
+        Q = E.readJsonSafe(E.QUICK_FILE, []) or []; ch = False
+        for q in Q:
+            if q.get('k') == 'vids' and old in (q.get('ids') or []): q['ids'] = [new if z == old else z for z in q['ids']]; ch = True
+        if ch: E.writeJsonSafe(E.QUICK_FILE, Q)
+    except Exception as e: print('mediaMove presets', e)
+    _allMedia(); _all(clipsMsg()); _all(prepMsg())
+    return 'ok'
+
 def mediaTrash(mid):
     """Remove a picture / video from the list: moved into 'Deleted' next to the project (not erased, you can get it back)."""
     import shutil
@@ -384,8 +445,14 @@ PREPQ = _keep('PREPQ', [])                      # finished thumbnails / frames w
 PREPDIR = os.path.join(project.folder, 'prep')
 PREPLIB = os.path.join(project.folder, 'tools', 'pylib')
 PREPSIG = {'s': ''}
-def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')), pvq=j.get('pvq', 0),
+def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'folder', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')), pvq=j.get('pvq', 0), clips=_jobClips(j) if j.get('state') == 'ready' else [],
                               saves=[{k: v.get(k) for k in ('name', 'state', 'pct', 'out', 'err', 'note', 'rep')} for v in j.get('saves', [])][-12:])
+def _jobClips(j):
+    f = os.path.normcase(os.path.abspath(j.get('raw') or '')); out = []
+    for rel, r in _srcRead().items():
+        if rel.startswith('~') or os.path.normcase(os.path.abspath(r.get('src') or '')) != f or not os.path.isfile(mediaFull(rel)): continue
+        o = r.get('o') or {}; out.append({'id': rel, 'name': os.path.splitext(rel.split('/')[-1])[0], 'in': o.get('in', 0), 'out': o.get('out')})
+    return sorted(out, key=lambda x: x['in'] or 0)
 def prepMsg(): return {'t': 'prep', 'jobs': [_prepPub(j) for j in sorted(PREP.values(), key=lambda j: j['t'])][-8:]}
 def prepPoll():
     """Main thread: send job changes + finished pictures; keep polling while anything runs."""
@@ -393,13 +460,26 @@ def prepPoll():
     if sig != PREPSIG['s']:
         PREPSIG['s'] = sig; _all(prepMsg())
         PREPSIG['until'] = time.time() + 8
-        fresh = [v for j in PREP.values() for v in j.get('saves', []) if v['state'] == 'done' and not v.get('told')]
+        fresh = [(j, v) for j in PREP.values() for v in j.get('saves', []) if v['state'] == 'done' and not v.get('told')]
         if fresh:
-            for v in fresh: v['told'] = True
+            for j, v in fresh:
+                v['told'] = True
+                raw = j.get('raw') or ''                            # a loose video you cut a clip from joins its clips' folder
+                if raw and os.path.normcase(os.path.dirname(os.path.abspath(raw))) == os.path.normcase(os.path.abspath(VIDEODIR)) and j.get('folder'):
+                    mediaMove(_relOf(raw), 'videos/%s/%s' % (_safeName(j['folder'], 50) or 'Clips', os.path.basename(raw)))
             _allMedia(); _all(clipsMsg())
+        for j in PREP.values():                                  # 'play on this layer when ready'
+            ps = j.get('playto')
+            if not ps or j.get('state') not in ('ready', 'fail'): continue
+            if j.get('state') == 'fail': j.pop('playto', None); continue
+            sv = j.get('saves') or []
+            if sv and sv[0]['state'] == 'saving': continue
+            rel = sv[0].get('out') if sv and sv[0].get('out') else j.get('fullrel')
+            j.pop('playto', None)
+            if rel: _allMedia(); mediaPlay(rel, fit=True, slot=ps); _publish(state(), active_only=True)
     if PREPQ: PREPSIG['until'] = time.time() + 6
     while PREPQ: _all(PREPQ.pop(0))
-    if any(j['state'] == 'download' or j.get('busy') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
+    if any(j['state'] == 'download' or j.get('busy') or j.get('playto') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
         run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
 
 def _prepDownload(j):
@@ -426,7 +506,13 @@ def _prepDownload(j):
         p.wait()
         f = next(iter(sorted(x for x in glob.glob(os.path.join(PREPDIR, j['id'] + '.*')) if not x.endswith(('.part', '.ytdl')))), None)
         if p.returncode != 0 or not f: raise RuntimeError(last.replace('ERROR:', '').strip() or 'download failed')
-        j['raw'] = f; _prepProbe(j); j['folder'] = j.get('title'); j['state'] = 'ready'; j['pct'] = 100
+        j['folder'] = _safeName(j.get('title'), 50) or 'Video'
+        if f.lower().endswith('.mp4'):                            # the full video goes into its own folder in your videos
+            d = os.path.join(VIDEODIR, j['folder']); os.makedirs(d, exist_ok=True)
+            dst = os.path.join(d, j['folder'] + ' (full).mp4'); n = 2
+            while os.path.exists(dst): dst = os.path.join(d, '%s (full) %d.mp4' % (j['folder'], n)); n += 1
+            shutil.move(f, dst); f = dst; j['fullrel'] = _relOf(dst)
+        j['raw'] = f; _prepProbe(j); j['state'] = 'ready'; j['pct'] = 100
         S = _srcRead(); S['~' + f] = {'src': f, 'url': j['url'], 'title': j.get('title'), 'folder': j.get('folder')}; _srcWrite(S)
         tr = j.pop('trim', None)
         if tr:                                                    # start / end given with the link: the clip is made straight away
@@ -507,8 +593,13 @@ def _prepRender(j, o, v):
         name = _safeName(o.get('name') or j.get('title') or 'clip') or 'clip'
         folder = _safeName(j.get('folder') or j.get('title'), 50) or 'Clips'
         d = os.path.join(VIDEODIR, folder); os.makedirs(d, exist_ok=True)   # one folder per full video: all its clips together
-        path = os.path.join(d, name + '.mp4'); n = 2
-        while os.path.exists(path): path = os.path.join(d, '%s %d.mp4' % (name, n)); n += 1
+        if o.get('auto'):                                                  # clips are numbered: 'Title 1', 'Title 2' ...
+            n = 1
+            while os.path.exists(os.path.join(d, '%s %d.mp4' % (name, n))): n += 1
+            path = os.path.join(d, '%s %d.mp4' % (name, n))
+        else:
+            path = os.path.join(d, name + '.mp4'); n = 2
+            while os.path.exists(path): path = os.path.join(d, '%s %d.mp4' % (name, n)); n += 1
         rp = str(o.get('replace') or ''); target = None
         if rp.startswith('videos/'):
             t = os.path.abspath(os.path.join(VIDEODIR, rp[7:]))
@@ -529,7 +620,7 @@ def _prepRender(j, o, v):
             except Exception: v['note'] = 'the old clip was in use, so this one is saved as new'
         if os.path.exists(tmp): shutil.move(tmp, path)
         rel = 'videos/' + os.path.relpath(path, VIDEODIR).replace('\\', '/')
-        S = _srcRead(); S[rel] = {'src': j['raw'], 'url': j.get('url', ''), 'title': j.get('title', ''), 'folder': folder,
+        S = _srcRead(); S[rel] = {'src': j['raw'], 'url': j.get('url', ''), 'title': j.get('title', ''), 'folder': folder, 'dur': j.get('dur'),
                                   'o': {k: o.get(k) for k in ('in', 'out', 'speed', 'reverse', 'pingpong', 'mirror', 'flip', 'cl', 'cr', 'ct', 'cb', 'fit') if o.get(k) is not None}}
         _srcWrite(S)
         v['out'] = rel; v['name'] = os.path.splitext(os.path.basename(path))[0]; v['state'] = 'done'; v['pct'] = 100; v['rep'] = path == target
@@ -581,6 +672,9 @@ def prepHandle(msg, reply):
         if not os.path.isdir(PREPLIB) or not os.path.exists(FFMPEG): return reply({'t': 'err', 'msg': 'Video download tools are not installed yet (tools folder)'})
         jid = secrets.token_hex(4)
         PREP[jid] = j = {'id': jid, 'url': url, 'title': 'Downloading…', 'state': 'download', 'pct': 0, 't': time.time()}
+        try: ps = int(msg.get('playto') or 0)
+        except Exception: ps = 0
+        if 1 <= ps <= 6: j['playto'] = ps
         tr = msg.get('trim') or {}
         try:
             a0 = max(0.0, float(tr.get('in') or 0)); b0 = float(tr['out']) if tr.get('out') not in (None, '') else 1e9
@@ -611,6 +705,8 @@ def prepHandle(msg, reply):
     elif a == 'frame' and j and j.get('raw'): threading.Thread(target=_prepFrame, args=(j, float(msg.get('at', 0))), daemon=True).start()
     elif a == 'save' and j and j['state'] in ('ready', 'done') and j.get('raw'):      # one video, as many clips as you like
         o = msg.get('o') or {}; v = {'name': str(o.get('name') or j.get('title') or 'clip')[:60], 'state': 'saving', 'pct': 0}
+        if o.get('replace') and any(_C().par['M%don' % i].eval() and _C().par['M%dfile' % i].eval() == o['replace'] for i in range(1, 7)):
+            o = dict(o, replace=''); v['note'] = 'that clip is playing, so this one is saved as new'
         j.setdefault('saves', []).append(v)
         threading.Thread(target=_prepRender, args=(j, o, v), daemon=True).start()
     elif a == 'drop' and j:
@@ -1231,6 +1327,8 @@ def _ensurePars():
                 pp = m.page.appendStr('M%dcues' % i, label='M%d video cues' % i)[0]; pp.default = '[]'; pp.val = '[]'
             if not hasattr(C.par, 'M%dcueon' % i):
                 pp = m.page.appendToggle('M%dcueon' % i, label='M%d cues on' % i)[0]; pp.default = True; pp.val = True
+            for nm, lb in (('mirror', 'mirror'), ('flip', 'flip upside down')):
+                if not hasattr(C.par, 'M%d%s' % (i, nm)): m.page.appendToggle('M%d%s' % (i, nm), label='M%d %s' % (i, lb))
             if not hasattr(C.par, 'M%drcol' % i):                       # RECTANGLE layers: a plain colour card
                 pp = m.page.appendStr('M%drcol' % i, label='M%d rectangle colour' % i)[0]; pp.default = '#000000'; pp.val = '#000000'
             P_ = op('/project1'); sw = P_.op('msrc%d' % i)
@@ -1454,6 +1552,12 @@ def handle(msg, reply):
             elif a == 'fit': E.mediaFit(sl or None)
             elif a == 'stop' and sl: mediaStop(sl)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
+            elif a == 'rename':
+                mid = str(msg.get('id', '')); nm = _safeName(msg.get('name'), 80)
+                if not nm or not mid.startswith('videos/'): return reply({'t': 'toast', 'msg': 'Use letters and numbers for the name'})
+                new = mid.rsplit('/', 1)[0] + '/' + nm + os.path.splitext(mid)[1]
+                r = mediaMove(mid, new)
+                return reply({'t': 'toast', 'msg': {'ok': 'Renamed', 'moving': 'Renaming…'}.get(r, 'Not renamed: ' + r)})
             elif a == 'uses':                                    # which presets play this file (asked before deleting it)
                 mid = str(msg.get('id', '')); names = []
                 try:
