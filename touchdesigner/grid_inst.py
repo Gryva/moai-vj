@@ -9,7 +9,10 @@ def onCook(scriptOp):
     n, d = int(C.par.Gridcount.eval()), int(C.par.Griddepth.eval())
     sp, wave, stag = C.par.Gridspace.eval(), C.par.Gridwave.eval(), C.par.Gridstagger.eval()
     react = C.par.Reactivity.eval(); low, kick = S['low'] * react, S['kick'] * react
-    T = absTime.seconds; base = S['angle'] + C.par.Angle.eval()
+    T = absTime.seconds; base = S['angle'] + S.get('angoffv', 0.0) + C.par.Angle.eval()
+    G = max(0.0, min(1.0, float(S.get('gridgrow', 1.0))))          # 0 = all copies sit in the middle one (looks like a single statue), 1 = the full grid
+    Gs = G * G * (3.0 - 2.0 * G)
+    ic = (d // 2) * n * n + (n // 2) * n + (n // 2)                 # the copy that stays: the middle one
     tx, ty, tz, ry, sc = [], [], [], [], []
     idx = 0
     for k in range(d):
@@ -19,9 +22,9 @@ def onCook(scriptOp):
                 y = (j - (n - 1) / 2.0) * sp * 1.15
                 r = math.hypot(x, y)
                 z = -(k - (d - 1) / 2.0) * sp * 1.3 + math.sin(r * 1.2 - T * 3.0) * wave * (0.35 + low)
-                tx.append(x); ty.append(y); tz.append(z)
-                ry.append(base + idx * stag)
-                sc.append(1.0 + kick * 0.18 * math.cos(r * 0.8))
+                tx.append(x * G); ty.append(y * G); tz.append(z * G)
+                ry.append(base + idx * stag * G)
+                sc.append((1.0 + kick * 0.18 * math.cos(r * 0.8)) * (1.0 if idx == ic else Gs))
                 idx += 1
     scriptOp.clear()
     scriptOp.numSamples = len(tx)

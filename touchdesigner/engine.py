@@ -881,7 +881,7 @@ def applyScene(sc):
     if sc == 'grid':                                    # frame the whole grid once when entering
         C = op('/project1/CONTROLS')
         need = C.par.Gridcount.eval() * C.par.Gridspace.eval() * 0.9 + 2.5
-        if C.par.Distance.eval() < need and not CS.get('g') and not SF: C.par.Distance = round(need, 2)   # not while a preset glides in (it has its own camera)
+        if C.par.Distance.eval() < need and not CS.get('g') and not SF and not LX: C.par.Distance = round(need, 2)   # not while a preset glides in (it has its own camera)
 
 def _rows():
     t = op('/project1/FX_STACK')
@@ -2221,6 +2221,7 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
             dark = lambda m: sum(_hex(m.get('rcol', '#000000'), (0, 0, 0))) < 0.2
             if co.get('kind') == 'rect' and nw.get('kind') == 'noise' and dark(co): plan[i] = 'morph'          # a black rectangle IS a noise at brightness 0: the noise simply rises
             elif co.get('kind') == 'noise' and nw.get('kind') == 'rect' and dark(nw): plan[i] = 'morphout'     # ... and the other way round
+            elif plan[i] == 'swap' and nw.get('kind') == 'draw' and k not in ((d.get('_meta') or {}).get('draws') or {}): plan[i] = 'out'; a00[i] = 1.0   # ... and towards an empty drawing the old content just fades away
             elif plan[i] == 'swap' and co.get('kind') == 'draw' and (R.DRAWS.get(i) or {}).get('img') is None: plan[i] = 'in'; a00[i] = 0.0   # an empty drawing shows nothing: the new content just fades in
         elif co: plan[i] = 'out'
         elif nw: plan[i] = 'in'
@@ -2232,10 +2233,15 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
     for i in hold: d2['src']['mslots'][str(i)] = cur[str(i)]      # these keep playing what they have for now
     dr0 = {i: R.DRAWS.get(i) for i in hold}
     m0 = float(C.par.Alphamodel.eval()); mb0 = C.par.Modelblend.eval() if hasattr(C.par, 'Modelblend') else None
-    swapm = bool(newScene or newModel)
+    sc0 = C.par.Scene.eval(); sc1 = d.get('scene') or sc0; gg = None
+    if newScene and not newModel and {sc0, sc1} == {'solid', 'grid'}:      # one statue <-> a grid of them: the copies grow out of / shrink into the middle one, live
+        gg = (0.0, 1.0) if sc1 == 'grid' else (1.0, 0.0)
+    swapm = bool((newScene and gg is None) or newModel)
+    d2['extra'] = dict(d.get('extra') or {})
+    if mb0 is not None: d2['extra']['Modelblend'] = mb0           # the model's blend mode can't glide: it changes at the very end (or under the blend)
+    if gg == (1.0, 0.0): d2['scene'] = sc0; d2['grid'] = {}       # stays a grid until the copies are gone
+    if gg == (0.0, 1.0): S['gridgrow'] = 0.0
     if swapm:
-        d2['extra'] = dict(d.get('extra') or {})
-        if mb0 is not None: d2['extra']['Modelblend'] = mb0
         if newScene: d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}
         if newModel:
             d2['model'] = C.par.Model.eval()
@@ -2267,7 +2273,7 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
         if v == 'morphout': nz[i] = (float(mp(C, i, 'nzbright').eval()), 0.0)
     for i, v in plan.items(): mp(C, i, 'alpha').val = 0.0 if v == 'in' else a0[i]
     m1 = float(C.par.Alphamodel.eval()); C.par.Alphamodel = m0
-    LX.clear(); LX.update(d=d, slot=slot, t0=absTime.seconds, dur=max(0.1, fade), plan=plan, a0=a0, a1=a1, nz=nz, mid=False, swapm=swapm, model=newModel, m0=m0, m1=m1, cur=cur)
+    LX.clear(); LX.update(d=d, slot=slot, t0=absTime.seconds, dur=max(0.1, fade), plan=plan, a0=a0, a1=a1, nz=nz, gg=gg, fxend=[i for i in a00 if a00[i] == 1.0], mid=False, swapm=swapm, model=newModel, m0=m0, m1=m1, cur=cur)
     return True
 def _lxFx(d, i):
     """A layer's own effects + effect colours exactly as the preset has them."""
@@ -2314,6 +2320,7 @@ def lxStep(T):
         mp(C, i, 'alpha').val = x
         if i in LX['nz']: b0_, b1_ = LX['nz'][i]; mp(C, i, 'nzbright').val = b0_ + (b1_ - b0_) * e
     C.par.Alphamodel = LX['m0'] + (LX['m1'] - LX['m0']) * e
+    if LX.get('gg'): S['gridgrow'] = LX['gg'][0] + (LX['gg'][1] - LX['gg'][0]) * e
     if u >= 1.0: _lxFinish()
 def _lxFinish():
     """Everything exactly as the preset says (also when another change cuts in half way)."""
@@ -2322,9 +2329,14 @@ def _lxFinish():
     if not LX['mid']:
         try: _lxMid(C, now=True)
         except Exception as er: print('preset change failed', er)
-    plan = dict(LX['plan']); C.par.Alphamodel = LX['m1']; LX.clear()
+    plan = dict(LX['plan']); C.par.Alphamodel = LX['m1']; gg = LX.get('gg'); fxend = LX.get('fxend') or []; LX.clear()
+    if gg == (1.0, 0.0): _sfSwap(d, False)
+    S['gridgrow'] = 1.0
+    mb = (d.get('extra') or {}).get('Modelblend')
+    if hasattr(C.par, 'Modelblend'): C.par.Modelblend = mb if mb is not None else C.par.Modelblend.default
     for i, v in plan.items():
         if v == 'out': FXT['m%d' % i] = {}; TCOL['m%d' % i] = {}
+    for i in fxend: _lxFx(d, i)
     try: applySrc(d, slot)                                         # the leaving layers go, every level lands on its own value
     except Exception as er: print('preset source failed', er)
 def _ss(u): u = min(1.0, max(0.0, u)); return u * u * (3.0 - 2.0 * u)
