@@ -1163,6 +1163,7 @@ def _songDlT(url):
         for line in p.stdout:
             line = line.strip()
             if line.startswith('TITLE:'): st['title'] = line[6:][:80]
+            if line.startswith('ERROR'): st['why'] = 'YouTube is asking this computer to sign in (bot check) - try another site or put the file in the music folder' if 'not a bot' in line or 'Sign in' in line else line[6:160]
             m = re.search(r'\[download\]\s+([\d.]+)%', line)
             if m: st['pct'] = float(m.group(1))
         p.wait(); st['state'] = 'done' if p.returncode == 0 else 'fail'
@@ -1178,7 +1179,7 @@ def songCmd(msg, reply):
         return
     if a == 'dl':
         url = str(msg.get('url', '')).strip()
-        if url.startswith('http') and url not in SONGDL:
+        if url.startswith('http') and (url not in SONGDL or SONGDL[url]['state'] != 'download'):     # a failed link can be tried again
             import threading; SONGDL[url] = {'state': 'download', 'pct': 0.0, 'title': ''}
             threading.Thread(target=_songDlT, args=(url,), daemon=True).start(); _pollKick()
         _all(songMsg()); return
