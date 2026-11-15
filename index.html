@@ -228,7 +228,7 @@ label.tg{cursor:pointer}
 .offlocal{display:block;margin-top:12px;padding:10px 12px;border:1px solid var(--lime);border-radius:8px;color:var(--lime);font-weight:700;text-decoration:none;word-break:break-all}
 .sl-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.sl-hd b{font-size:12px;letter-spacing:.14em;text-transform:uppercase}
 .sl-add{flex:none;font:700 10px var(--mono);letter-spacing:.08em;padding:7px 10px;border-radius:6px;border:1px solid #c6ff3d88;color:var(--lime);background:none}
-.sl-add.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.sl-rem{border-color:#ff4d4d88;color:#ff6b6b;margin-right:6px}.sl-rem.on{background:#ff3b3b;color:#fff;border-color:#ff3b3b}
+.sl-add.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}.sl-ghost.ok{outline:3px solid var(--lime)}.sl-ghost b{display:block;padding:8px;font-size:11px}
 body.slremoving .sl-it{outline:2px dashed #ff4d4dcc;outline-offset:-2px;position:relative}body.slremoving .sl-it::after{content:"✕";position:absolute;right:6px;top:4px;font:800 16px var(--sans);color:#ff4d4d;z-index:3;text-shadow:0 1px 4px #000}
 body.sladding .pad.full{outline:2px dashed #c6ff3d66;outline-offset:-2px}body.sladding .pad.full .live{display:none}
 body.sladding .pad.full::after{content:"＋";position:absolute;right:8px;bottom:6px;font:700 20px var(--sans);color:var(--lime);z-index:3}
@@ -640,7 +640,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
     <div class="livemain"><div class="presetsbox">
     <div class="pads" id="pads"></div></div>
     <div class="setlist" id="setlist">
-      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span><button class="sl-add sl-rem" id="slRem" aria-pressed="false">－ REMOVE</button><button class="sl-add" id="slAdd" aria-pressed="false">＋ ADD PRESETS</button></div>
+      <div class="sl-hd"><b>Set list</b><span class="sl-next" id="slNext"></span><button class="sl-add" id="slEdit" aria-pressed="false">✎ EDIT SET LIST</button></div>
       <div class="sl-row"><button class="sl-arr" id="slPrev" aria-label="Previous"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="sl-track" id="slTrack"></div><button class="sl-arr" id="slNx" aria-label="Next"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     </div>
     </div>
@@ -943,7 +943,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15m';
+const BUILD = '2026-11-15n';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2575,13 +2575,14 @@ function grpAddMode(g){ GRPADD = g || ''; if (GRPADD && SLADD) slAddMode(false);
   document.body.classList.toggle('sladding', !!GRPADD || SLADD); const bar = $('#grpbar');
   bar.hidden = !GRPADD; if (GRPADD) { bar.querySelector('b').textContent = GRPADD; delete GSHUT[GRPADD]; renderPads(); toast('Tap presets to put them in “' + GRPADD + '”'); } }
 let SLADD = false;
-function slAddMode(on){ if (on && GRPADD) grpAddMode(''); if (on && SLREM) slRemMode(false); SLADD = on; document.body.classList.toggle('sladding', on || !!GRPADD); const b = $('#slAdd'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-  b.textContent = on ? '✓ DONE ADDING' : '＋ ADD PRESETS'; if (on) toast('Tap presets to add them to the set list · the picture stays as it is'); }
-$('#slAdd').addEventListener('click', () => { slAddMode(!SLADD); buzz(8); });
-let SLREM = false;                         // － REMOVE: while on, tapping a set-list preset takes it out (red, like ＋ ADD is green)
-function slRemMode(on){ if (on && SLADD) slAddMode(false); SLREM = on; document.body.classList.toggle('slremoving', on); const b = $('#slRem'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-  b.textContent = on ? '✓ DONE REMOVING' : '－ REMOVE'; if (on) toast('Tap presets in the set list to take them out · the picture stays as it is'); }
-$('#slRem').addEventListener('click', () => { slRemMode(!SLREM); buzz(8); });
+function slAddMode(on){ slEditMode(on); }
+let SLREM = false, SLED = false;
+/* ✎ EDIT SET LIST: tap a preset above = add · tap one in the set list = remove · drag a preset down into the list = add it there · drag one out of the list = remove · drag along = move */
+function slEditMode(on){ if (on && GRPADD) grpAddMode(''); SLED = SLADD = SLREM = on; document.body.classList.toggle('sladding', on || !!GRPADD); document.body.classList.toggle('slremoving', on); document.body.classList.toggle('sledit', on);
+  const b = $('#slEdit'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.textContent = on ? '✓ DONE' : '✎ EDIT SET LIST';
+  if (on) toast('Tap a preset to add it · tap one in the set list to take it out · or drag them in and out'); }
+function slRemMode(on){ slEditMode(on); }
+$('#slEdit').addEventListener('click', () => { slEditMode(!SLED); buzz(8); });
 function qRemove(i){ const list = S.queue.v.slice(), curSlot = list[S.queue.pos], curIdx = S.queue.pos, sl = list.splice(i, 1)[0], p = S.bank[sl - 1];
   S.queue.pos = curIdx === i ? -1 : list.indexOf(curSlot); S.queue.v = list; qSend(); toast('Removed from the set list: ' + (p ? p.name : sl)); if (!list.length) slRemMode(false); }
 $('#grpdone').addEventListener('click', () => { grpAddMode(''); buzz(8); });
@@ -2603,11 +2604,21 @@ function qMark(x){
 }
 const qOver = y => { const r = $('#setlist').getBoundingClientRect(); return y > r.top - 20; };
 document.addEventListener('pointerdown', e => {
-  const it = e.target.closest('.sl-it'); if (!it || !S || SLREM) return;
-  QD.i = +it.dataset.sl; QD.el = it; QD.x0 = e.clientX; QD.y0 = e.clientY; QD.id = e.pointerId; QD.on = false; QD.moved = false;
-  QD.t = setTimeout(() => { QD.on = true; it.classList.add('hold'); buzz(18); }, 380);
+  const it = e.target.closest('.sl-it'); if (!it || !S) return;
+  QD.i = +it.dataset.sl; QD.el = it; QD.x0 = e.clientX; QD.y0 = e.clientY; QD.id = e.pointerId; QD.on = SLED; QD.moved = false;      // editing: drag right away
+  if (!SLED) QD.t = setTimeout(() => { QD.on = true; it.classList.add('hold'); buzz(18); }, 380);
 });
-document.addEventListener('touchmove', e => { if (QD.on) e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', e => { if (QD.on || GD.on) e.preventDefault(); }, {passive:false});
+/* editing: hold a preset above, then drag it down into the set list */
+const GD = {on:false}, LASTP = {x:0, y:0};
+document.addEventListener('pointermove', e => { LASTP.x = e.clientX; LASTP.y = e.clientY;
+  if (!GD.on) return; GD.g.style.left = e.clientX + 'px'; GD.g.style.top = e.clientY + 'px'; const over = qOver(e.clientY); GD.g.classList.toggle('ok', over); qMark(over ? e.clientX : null);
+  const r = $('#slTrack').getBoundingClientRect(); if (over) { if (e.clientX < r.left + 30) $('#slTrack').scrollLeft -= 8; else if (e.clientX > r.right - 30) $('#slTrack').scrollLeft += 8; } });
+function gdStart(slot){ const g = document.createElement('div'); g.className = 'sl-ghost'; g.innerHTML = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : `<b>${esc((S.bank[slot - 1] || {}).name || '')}</b>`;
+  g.style.left = LASTP.x + 'px'; g.style.top = LASTP.y + 'px'; document.body.appendChild(g); Object.assign(GD, {on:true, slot, g}); toast('Drop it into the set list'); }
+const gdEnd = e => { if (!GD.on) return; const over = qOver(e.clientY); qMark(null); GD.g.remove(); GD.on = false;
+  if (over && e.type === 'pointerup') { const v = (S.queue.v || []).slice(), i = qIndexAt(e.clientX), cur = v[S.queue.pos]; v.splice(i, 0, GD.slot); S.queue.v = v; S.queue.pos = v.indexOf(cur); qSend(); toast('Added to the set list at #' + (i + 1)); buzz(10); } };
+document.addEventListener('pointerup', gdEnd); document.addEventListener('pointercancel', gdEnd);
 document.addEventListener('pointermove', e => {
   if (QD.el === undefined || QD.id !== e.pointerId) return;
   const d = Math.hypot(e.clientX - QD.x0, e.clientY - QD.y0);
@@ -2631,9 +2642,10 @@ const qEnd = e => {
       const sl = list.splice(from, 1)[0];
       if (qOver(e.clientY)) { let i = qIndexAt(e.clientX); if (i > from) i--; list.splice(i, 0, sl);
         S.queue.pos = curIdx === from ? i : list.indexOf(curSlot); }
-      else { list.splice(from, 0, sl); toast('To take it out, use － REMOVE'); }      // dragging off the track no longer removes
+      else if (SLED) { S.queue.pos = curIdx === from ? -1 : list.indexOf(curSlot); toast('Removed from the set list'); }
+      else { list.splice(from, 0, sl); toast('To take presets out: ✎ EDIT SET LIST'); }      // outside editing, dragging off the track does nothing
       S.queue.v = list; qSend(); buzz(10);
-    } else if (!QD.moved && e.type === 'pointerup') sheetQ(QD.i);
+    } else if (!QD.moved && e.type === 'pointerup') { if (SLED) qRemove(QD.i); else sheetQ(QD.i); }
   }
   if (QD.ghost) QD.ghost.remove(); qMark(null); $$('.sl-it.hold').forEach(x => x.classList.remove('hold'));
   for (const k in QD) if (k !== 'block') delete QD[k]; QD.on = false; renderQueue();
@@ -2805,6 +2817,7 @@ document.addEventListener('pointerdown', e => {
   const c = e.target.closest('[data-pad],[data-preset],[data-clip],[data-media],[data-fxp],[data-fxt],[data-gtog],[data-qp],[data-qfx],[data-tog],[data-qk],[data-jump],[data-layer]'); if (!c) return;
   held = false; c.classList.add('hold');
   holdT = setTimeout(() => { held = true; c.classList.remove('hold'); buzz(20);
+    if (SLED && c.dataset.pad && S.bank[+c.dataset.pad - 1]) return gdStart(+c.dataset.pad);
     if (c.dataset.fxt) { FXHOLD = performance.now(); return sheetFx(c.dataset.fxt); }
     if (c.dataset.jump && c.dataset.lay && SWAPPABLE(c.dataset.lay)) { FXHOLD = performance.now(); return sheetLayer(c.dataset.lay); }
     if (c.dataset.jump) return;
@@ -2911,7 +2924,7 @@ document.addEventListener('click', e => {
     $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); buzz(); return; }
   if (d.recguide) { store.set('recguide', !store.get('recguide', true)); recFmtSend(); $('#recfmt').click(); return; }
   if (d.recf) { store.set('recfmt', d.recf); recFmtUI(); recFmtSend(); $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); toast('Recording format: ' + {'16:9':'16:9', '9:16':'9:16 (middle cut)', '9:16b':'9:16 (whole picture, blurred fill)'}[d.recf]); buzz(); return; }
-  if (d.sl !== undefined) { if (SLREM) { qRemove(+d.sl); buzz(12); return; } if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }
+  if (d.sl !== undefined) { if (performance.now() - (QD.block || 0) < 400) return; if (SLED) { qRemove(+d.sl); buzz(12); return; } qGo(+d.sl); return; }
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
   if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); hsvFrom(d.cwhich); return; }
   if (d.csw) { ccPick(d.csw, d.v); return; }
