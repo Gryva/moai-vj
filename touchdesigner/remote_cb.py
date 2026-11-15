@@ -385,7 +385,7 @@ PREPDIR = os.path.join(project.folder, 'prep')
 PREPLIB = os.path.join(project.folder, 'tools', 'pylib')
 PREPSIG = {'s': ''}
 def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')), pvq=j.get('pvq', 0),
-                              saves=[{k: v.get(k) for k in ('name', 'state', 'pct', 'out', 'err')} for v in j.get('saves', [])][-12:])
+                              saves=[{k: v.get(k) for k in ('name', 'state', 'pct', 'out', 'err', 'note', 'rep')} for v in j.get('saves', [])][-12:])
 def prepMsg(): return {'t': 'prep', 'jobs': [_prepPub(j) for j in sorted(PREP.values(), key=lambda j: j['t'])][-8:]}
 def prepPoll():
     """Main thread: send job changes + finished pictures; keep polling while anything runs."""
@@ -426,13 +426,29 @@ def _prepDownload(j):
         p.wait()
         f = next(iter(sorted(x for x in glob.glob(os.path.join(PREPDIR, j['id'] + '.*')) if not x.endswith(('.part', '.ytdl')))), None)
         if p.returncode != 0 or not f: raise RuntimeError(last.replace('ERROR:', '').strip() or 'download failed')
-        j['raw'] = f; _prepProbe(j); j['state'] = 'ready'; j['pct'] = 100
+        j['raw'] = f; _prepProbe(j); j['folder'] = j.get('title'); j['state'] = 'ready'; j['pct'] = 100
+        tr = j.pop('trim', None)
+        if tr:                                                    # start / end given with the link: the clip is made straight away
+            v = {'name': str(j.get('title') or 'clip')[:60], 'state': 'saving', 'pct': 0}; j.setdefault('saves', []).append(v)
+            _prepRender(j, dict(tr, name=v['name']), v)
         _prepStrip(j); _prepProxy(j)
     except Exception as e:
         j['state'] = 'fail'; j['err'] = str(e).replace('\n', ' ')[:160]
     j.pop('proc', None)
 
 FFMPEG = os.path.join(project.folder, 'tools', 'ffmpeg.exe')
+SRCIDX = os.path.join(VIDEODIR, '.sources.json')                # which full video + settings each saved clip came from (to trim it again)
+def _safeName(x, n=60): return ''.join(ch for ch in str(x or '') if ch.isalnum() or ch in ' -_').strip()[:n]
+def _srcRead():
+    try:
+        with open(SRCIDX, encoding='utf-8') as fh: return json.load(fh)
+    except Exception: return {}
+def _srcWrite(d):
+    try:
+        os.makedirs(VIDEODIR, exist_ok=True); tmp = SRCIDX + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as fh: json.dump(d, fh, ensure_ascii=False, indent=1)
+        os.replace(tmp, SRCIDX)
+    except Exception: pass
 def _prepRun(cmd, **kw):
     import subprocess
     fl = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)   # never steals the show's frames
@@ -487,10 +503,15 @@ def _prepRender(j, o, v):
         elif rev: fc = '[0:v]%s,reverse[v]' % chain
         else: fc = '[0:v]%s[v]' % chain
         outlen = ln / sp * (2 if pp else 1)
-        name = ''.join(ch for ch in str(o.get('name') or j.get('title') or 'clip') if ch.isalnum() or ch in ' -_').strip()[:60] or 'clip'
-        d = VIDEODIR; os.makedirs(d, exist_ok=True)                          # your clip library (the same 'videos' list as the phone)
+        name = _safeName(o.get('name') or j.get('title') or 'clip') or 'clip'
+        folder = _safeName(j.get('folder') or j.get('title'), 50) or 'Clips'
+        d = os.path.join(VIDEODIR, folder); os.makedirs(d, exist_ok=True)   # one folder per full video: all its clips together
         path = os.path.join(d, name + '.mp4'); n = 2
         while os.path.exists(path): path = os.path.join(d, '%s %d.mp4' % (name, n)); n += 1
+        rp = str(o.get('replace') or ''); target = None
+        if rp.startswith('videos/'):
+            t = os.path.abspath(os.path.join(VIDEODIR, rp[7:]))
+            if t.startswith(os.path.abspath(VIDEODIR) + os.sep) and os.path.isfile(t): target = t
         tmp = os.path.join(PREPDIR, '%s_out%x.mp4' % (j['id'], id(v)))   # made outside the media folder: nothing opens it half-written
         cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-ss', '%.3f' % t0, '-t', '%.3f' % ln, '-i', j['raw'], '-filter_complex', fc, '-map', '[v]', '-an',
                '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-g', '30', '-movflags', '+faststart', '-progress', 'pipe:1', '-nostats', tmp]
@@ -501,8 +522,16 @@ def _prepRender(j, o, v):
             if m: v['pct'] = min(99, int(int(m.group(1)) / 1e6 / max(0.1, outlen) * 100))
         p.wait(); err = p.stderr.read()
         if p.returncode != 0 or not os.path.exists(tmp): raise RuntimeError((err or 'ffmpeg failed').strip().splitlines()[-1][:150])
-        import shutil; shutil.move(tmp, path)
-        v['out'] = 'videos/' + os.path.basename(path); v['name'] = os.path.splitext(os.path.basename(path))[0]; v['state'] = 'done'; v['pct'] = 100
+        import shutil
+        if target:
+            try: os.replace(tmp, target); path = target
+            except Exception: v['note'] = 'the old clip was in use, so this one is saved as new'
+        if os.path.exists(tmp): shutil.move(tmp, path)
+        rel = 'videos/' + os.path.relpath(path, VIDEODIR).replace('\\', '/')
+        S = _srcRead(); S[rel] = {'src': j['raw'], 'url': j.get('url', ''), 'title': j.get('title', ''), 'folder': folder,
+                                  'o': {k: o.get(k) for k in ('in', 'out', 'speed', 'reverse', 'pingpong', 'mirror', 'flip', 'cl', 'cr', 'ct', 'cb', 'fit') if o.get(k) is not None}}
+        _srcWrite(S)
+        v['out'] = rel; v['name'] = os.path.splitext(os.path.basename(path))[0]; v['state'] = 'done'; v['pct'] = 100; v['rep'] = path == target
     except Exception as e:
         v['state'] = 'fail'; v['err'] = str(e)[:160]
 
@@ -515,15 +544,26 @@ def prepHandle(msg, reply):
         if not os.path.isdir(PREPLIB) or not os.path.exists(FFMPEG): return reply({'t': 'err', 'msg': 'Video download tools are not installed yet (tools folder)'})
         jid = secrets.token_hex(4)
         PREP[jid] = j = {'id': jid, 'url': url, 'title': 'Downloading…', 'state': 'download', 'pct': 0, 't': time.time()}
+        tr = msg.get('trim') or {}
+        try:
+            a0 = max(0.0, float(tr.get('in') or 0)); b0 = float(tr['out']) if tr.get('out') not in (None, '') else 1e9
+            if tr and b0 > a0 + 0.1: j['trim'] = {'in': a0, 'out': b0}
+        except Exception: pass
         threading.Thread(target=_prepDownload, args=(j,), daemon=True).start()
     elif a == 'local':                                           # a video already in your list: trim / reverse / mirror it into a new clip
         rel = str(msg.get('mid', '')); hit = next((f for r, f, k in _mediaFiles() if r == rel and k == 'video'), None)
         if not hit: return reply({'t': 'err', 'msg': 'That video was not found'})
         if not os.path.exists(FFMPEG): return reply({'t': 'err', 'msg': 'Video tools are not installed yet (tools folder)'})
-        old = next((x for x in PREP.values() if x.get('raw') == hit and not x.get('url') and x['state'] != 'fail'), None)
-        if old: return reply({'t': 'prepsel', 'id': old['id']})          # already open: no second copy of the same video
-        jid = secrets.token_hex(4)
-        PREP[jid] = j = {'id': jid, 'url': '', 'title': os.path.splitext(os.path.basename(hit))[0][:80], 'state': 'download', 'pct': 50, 't': time.time(), 'raw': hit}
+        rec = _srcRead().get(rel); parts = rel.split('/')
+        title = os.path.splitext(os.path.basename(hit))[0][:80]; folder = parts[1] if len(parts) > 2 else title
+        sel = {'t': 'prepsel', 'name': os.path.splitext(parts[-1])[0]}
+        if rec and os.path.isfile(rec.get('src', '')):              # a clip made here: open the full video again, with the cut you made
+            hit, title, folder = rec['src'], rec.get('title') or title, rec.get('folder') or folder
+            sel.update(o=rec.get('o') or {}, replace=rel)
+        old = next((x for x in PREP.values() if x.get('raw') == hit and x['state'] != 'fail'), None)
+        if old: old['folder'] = folder; sel['id'] = old['id']; return reply(sel)          # already open: no second copy of the same video
+        jid = secrets.token_hex(4); sel['id'] = jid
+        PREP[jid] = j = {'id': jid, 'url': rec.get('url', '') if rec and sel.get('replace') else '', 'title': title, 'folder': folder, 'state': 'download', 'pct': 50, 't': time.time(), 'raw': hit}
         def _loc(j=j):
             try:
                 os.makedirs(PREPDIR, exist_ok=True); _prepProbe(j)
@@ -531,7 +571,7 @@ def prepHandle(msg, reply):
                 j['state'] = 'ready'; j['pct'] = 100; _prepStrip(j); _prepProxy(j)
             except Exception as e: j['state'] = 'fail'; j['err'] = str(e)[:160]
         threading.Thread(target=_loc, daemon=True).start()
-        reply({'t': 'prepsel', 'id': jid})
+        reply(sel)
     elif a == 'strip' and j and j.get('raw'): threading.Thread(target=_prepStrip, args=(j,), daemon=True).start()
     elif a == 'frame' and j and j.get('raw'): threading.Thread(target=_prepFrame, args=(j, float(msg.get('at', 0))), daemon=True).start()
     elif a == 'save' and j and j['state'] in ('ready', 'done') and j.get('raw'):      # one video, as many clips as you like
@@ -540,7 +580,8 @@ def prepHandle(msg, reply):
         threading.Thread(target=_prepRender, args=(j, o, v), daemon=True).start()
     elif a == 'drop' and j:
         PREP.pop(j['id'], None)
-        for f in (j.get('raw'), j.get('pv'), os.path.join(PREPDIR, j['id'] + '_pv.mp4'), os.path.join(PREPDIR, j['id'] + '_sc.mp4')):
+        keep = {r.get('src') for r in _srcRead().values()}
+        for f in (None if j.get('raw') in keep else j.get('raw'), j.get('pv'), os.path.join(PREPDIR, j['id'] + '_pv.mp4'), os.path.join(PREPDIR, j['id'] + '_sc.mp4')):
             try:
                 if f and os.path.dirname(os.path.abspath(f)) == os.path.abspath(PREPDIR): os.remove(f)
             except Exception: pass

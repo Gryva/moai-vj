@@ -539,6 +539,14 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 .off{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:#09080de8;text-align:center;padding:30px}.off.on{display:grid}
 .off b{display:block;font-size:20px;margin-bottom:8px}.off span{color:var(--mute);font-size:14px;line-height:1.5}
 
+.mfold{grid-column:1/-1;border:1px solid var(--line);border-radius:10px;background:#ffffff06}.mfold>summary{display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;list-style:none}.mfold>summary::-webkit-details-marker{display:none}
+.mfold>summary::after{content:'▾';margin-left:auto;opacity:.6;transition:transform .15s}.mfold[open]>summary::after{transform:rotate(180deg)}.mfold>summary b{font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mfold>summary i{font:500 10px var(--mono);font-style:normal;opacity:.6;white-space:nowrap}
+.mfi{flex:none;width:44px;height:25px;border-radius:4px;overflow:hidden;background:#000}.mfi img{width:100%;height:100%;object-fit:cover}.mfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:2px 10px 10px}
+.mfsub{grid-column:1/-1;margin:6px 0 0;font:700 10px var(--sans);letter-spacing:.08em;opacity:.55;text-transform:uppercase}
+.preptick{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-weight:600;font-size:13px}.preptick input{width:20px;height:20px;accent-color:var(--lime)}
+.prepcut{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prepcut label,.preptimes label{display:flex;align-items:center;gap:6px;font:700 10px var(--sans);letter-spacing:.06em}.prepcut input{flex:1;min-width:0;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;color:var(--ink);padding:0 10px;font:600 15px var(--mono)}.prepcut .hint2{grid-column:1/-1;margin:0}
+.preptimes{align-items:center}.preptimes input{width:86px;height:30px;border-radius:7px;border:1px solid var(--line);background:#16131c;color:var(--ink);padding:0 8px;font:600 13px var(--mono);text-align:center}.preptimes input:focus{border-color:var(--lime);outline:0}
+.prepsavebar .sec{height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#16131c;color:var(--ink);font:700 11px var(--sans);letter-spacing:.05em;flex:none}.prepsavebar .pri{max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -792,7 +800,11 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 <nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="prepov" id="prepLink" hidden><div class="prepbox"><h3>Get a video</h3><p class="hint2">Paste a link (YouTube and most video sites). It downloads in the background, you get a message when it is ready to trim.</p>
-  <input type="url" id="prepUrl" placeholder="https://…" autocomplete="off"><div class="prepacts"><button class="pri" id="prepGo">⬇ DOWNLOAD</button><button id="prepLinkX">CANCEL</button></div></div></div>
+  <input type="url" id="prepUrl" placeholder="https://…" autocomplete="off">
+  <label class="preptick"><input type="checkbox" id="prepCut"><span>✂ Cut it while downloading</span></label>
+  <div class="prepcut" id="prepCutBox" hidden><label>START<input type="text" id="prepCutA" inputmode="decimal" placeholder="0:00"></label><label>END<input type="text" id="prepCutB" inputmode="decimal" placeholder="end"></label>
+    <p class="hint2">Minutes:seconds (1:23) or just seconds (83). The clip goes straight into your videos; the full video stays in Video prep to trim again.</p></div>
+  <div class="prepacts"><button class="pri" id="prepGo">⬇ DOWNLOAD</button><button id="prepLinkX">CANCEL</button></div></div></div>
 <div class="prepov" id="prep" hidden><div class="prepbox prepbig"><div class="prephd"><h3>Video prep</h3><button id="prepX" aria-label="Close">✕</button></div><div id="prepJobs"></div><div id="prepEd"></div>
   <div class="prepacts"><button id="prepNew">⬇ GET A VIDEO FROM A LINK</button><button id="prepMine">✂ EDIT ONE OF MY VIDEOS</button></div><div id="prepPick"></div></div></div>
 <div class="sheet" id="sheet"><h3 id="shT"></h3><p id="shP"></p><input type="text" id="shI" maxlength="24" placeholder="Name"><div class="acts" id="shA"></div></div>
@@ -862,7 +874,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15b';
+const BUILD = '2026-11-15c';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -921,7 +933,7 @@ function onMsg(m){
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
   if (m.t === 'prep' || (m.t === 'state' && m.prep)) prepState(m.t === 'prep' ? m.jobs : m.prep);
   if (m.t === 'toast' && m.msg) toast(m.msg);
-  if (m.t === 'prepsel') { PREPSEL = m.id; if (PREPWANT) { PREPWANT = false; $('#prepEd').dataset.id = ''; prepOpen(); } }
+  if (m.t === 'prepsel') { PREPSEL = m.id; if (m.replace) PREPO[m.id] = Object.assign({speed:1}, m.o || {}, {name:m.name, replace:m.replace, rname:m.name}); else if (PREPO[m.id] && m.name) PREPO[m.id].replace = ''; if (PREPWANT) { PREPWANT = false; $('#prepEd').dataset.id = ''; prepOpen(); } }
   if (m.t === 'prepstrip') { PREPSTRIP[m.id] = m.v; if (PREPSEL === m.id && !$('#prep').hidden) { $('#prepEd').dataset.id = ''; prepUI(); } }
   if (m.t === 'prepframe') { ['in', 'out'].forEach(k => { const o = PREPO[m.id]; if (!o) return; const at = +(k === 'out' ? Math.max(0, o.out - 0.05) : o.in).toFixed(2);
     if (Math.abs(at - m.at) < 0.011) { PREPFR[m.id + k] = {at: k === 'out' ? Math.max(0, o.out - 0.05) : o.in, img:m.img}; const im = $(`[data-prepfr="${k}"]`); if (im && PREPSEL === m.id) im.src = 'data:image/jpeg;base64,' + m.img; } }); }
@@ -1322,6 +1334,8 @@ function renderFxps(){
   $('#fxps').innerHTML = (S.fxps || []).map((x, i) => `<button class="fxp" data-fxp="${i}"><b>${esc(x.name)}</b><span class="d">${x.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('')}</span></button>`).join('')
     + `<button class="fxp add" data-fxp="new">＋ SAVE FX</button>`;
 }
+const MFOPEN = new Set();
+document.addEventListener('toggle', e => { const f = e.target.dataset && e.target.dataset.mfold; if (f === undefined) return; if (e.target.open) MFOPEN.add(f); else MFOPEN.delete(f); }, true);
 function renderMedia(){
   if (!S) return;
   const nm = id => String(id).split('/').pop().replace(/\.[^.]+$/, '');
@@ -1329,10 +1343,17 @@ function renderMedia(){
     return days === 0 ? 'today ' + d.toTimeString().slice(0, 5) : days === 1 ? 'yesterday' : days < 7 ? days + ' days ago' : d.toLocaleDateString(); };
   const all = (S.media || []).slice().sort((a, b) => (b.mt || 0) - (a.mt || 0));          // newest first
   MS.forEach(i => { const el = $('#mlist' + i); if (!el) return; const m = 'M' + i, vid = S.pars[m + 'kind'] !== 'image', cur = S.pars[m + 'file'];
-    el.innerHTML = all.filter(x => (x.kind === 'video') === vid).map(x => `<div class="mtile ${x.id === cur ? 'on' : ''}">
+    const tile = x => `<div class="mtile ${x.id === cur ? 'on' : ''}">
       <button class="clip ${x.id === cur ? 'on' : ''}" data-mslot="${i}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}</button>
       <button class="mdots" data-mdots="${esc(x.id)}" data-mslot="${i}" aria-label="More">⋯</button>
-      <b class="mname" title="${esc(nm(x.id))}">${esc(nm(x.id))}</b><i class="mdate">${when(x.mt)}</i></div>`).join('') || `<p class="hint2">No ${vid ? 'videos' : 'pictures'} yet · ＋ ADD</p>`; });
+      <b class="mname" title="${esc(nm(x.id))}">${esc(nm(x.id))}</b><i class="mdate">${when(x.mt)}</i></div>`;
+    const L = all.filter(x => (x.kind === 'video') === vid), fo = {}, loose = [];
+    L.forEach(x => { const p = String(x.id).split('/'); if (vid && p[0] === 'videos' && p.length > 2) (fo[p[1]] = fo[p[1]] || []).push(x); else loose.push(x); });
+    const names = Object.keys(fo).sort((a, b) => (fo[b][0].mt || 0) - (fo[a][0].mt || 0));
+    el.innerHTML = names.map(f => { const open = MFOPEN.has(f) || fo[f].some(x => x.id === cur);
+        return `<details class="mfold" data-mfold="${esc(f)}" ${open ? 'open' : ''}><summary><span class="mfi">${fo[f][0].thumb ? `<img src="data:image/jpeg;base64,${fo[f][0].thumb}" alt="">` : ''}</span><b>${esc(f)}</b><i>${fo[f].length} clip${fo[f].length > 1 ? 's' : ''} · ${when(fo[f][0].mt)}</i></summary><div class="mfgrid">${fo[f].map(tile).join('')}</div></details>`; }).join('')
+      + (names.length && loose.length ? `<p class="mfsub">${vid ? 'Other videos' : ''}</p>` : '') + loose.map(tile).join('')
+      || `<p class="hint2">No ${vid ? 'videos' : 'pictures'} yet · ＋ ADD</p>`; });
 }
 async function uploadPhoto(file){
   if (!file) return;
@@ -2118,6 +2139,15 @@ const glitSw = (attr, cur) => `<div class="glsw">${GLIT.map(([n, bg], i) => `<bu
 function fxfadeUI(){ const v = +((S && S.pars.Fxfade) || 0), fi = $('#fxfadein'); if (fi && document.activeElement !== fi) fi.value = v; }
 // ---- video cues: effects on / off at set times of a video layer
 const VT = {}, CUESIG = {};
+function ptime(x){ x = String(x || '').trim().replace(',', '.'); if (!x) return null;          // '1:23', '83', '1:02:03.5' -> seconds; undefined if it isn't a time
+  if (!/^\d+(\.\d+)?(:\d+(\.\d+)?){0,2}$/.test(x)) return undefined; return x.split(':').reduce((a, b) => a * 60 + parseFloat(b), 0); }
+document.addEventListener('change', e => { const el = e.target; if (!el.dataset || !el.dataset.prepio) return; const j = PREPJ.find(x => x.id === PREPSEL); if (!j) return;
+  const o = PREPO[j.id], d = j.dur || 1, t = ptime(el.value), k = el.dataset.prepio;
+  if (t === undefined || t === null) { toast('Use 1:23 or 83'); el.value = fmtT(o[k]); return; }
+  if (k === 'in') { o.in = Math.max(0, Math.min(t, d - 0.2)); if (o.out <= o.in + 0.2) o.out = d; } else { o.out = Math.min(d, Math.max(t, 0.2)); if (o.in >= o.out - 0.2) o.in = 0; }
+  PFREE = false; el.blur(); prepTL(j); const v = $('#prepVid'); if (v) pSeek(v, k === 'out' ? Math.max(o.in, o.out - 1.5) : o.in); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.prepio) e.target.blur(); });
+document.addEventListener('change', e => { if (e.target.id === 'prepCut') $('#prepCutBox').hidden = !e.target.checked; });
 const fmtT = t => { t = Math.max(0, +t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
 const parseT = v => { v = String(v).trim().replace(',', '.'); const p = v.split(':'); const t = p.length > 1 ? (+p[0] || 0) * 60 + (+p[1] || 0) : +v; return isFinite(t) ? Math.max(0, t) : 0; };
 let CPICK = null;
@@ -2183,7 +2213,7 @@ function prepState(jobs){ const old = Object.fromEntries(PREPJ.map(j => [j.id, j
     if (o === 'saving' && j.state === 'done') { toast('✓ Saved to videos: ' + (j.out || '').replace('videos/', '')); buzz(30); }
     if (o && o !== 'fail' && j.state === 'fail') toast('Video: ' + (j.err || 'failed')); });
   PREPJ.forEach(j => (j.saves || []).forEach((v, k) => { const key = j.id + ':' + k, was = PREPSV[key]; PREPSV[key] = v.state;
-    if (was === 'saving' && v.state === 'done') { toast('✓ Saved to videos: ' + v.name); buzz(30); }
+    if (was === 'saving' && v.state === 'done') { toast(v.note ? '✓ ' + v.name + ' · ' + v.note : (v.rep ? '↻ Replaced: ' : '✓ Saved to videos: ') + v.name); buzz(30); }
     if (was === 'saving' && v.state === 'fail') toast('Clip "' + v.name + '": ' + (v.err || 'failed')); }));
   const sv = PREPJ.flatMap(j => j.saves || []).find(v => v.state === 'saving');
   const pill = $('#prepPill'), run = PREPJ.find(j => j.state === 'download') || (sv && {state:'saving', pct:sv.pct}), rdy = PREPJ.filter(j => j.state === 'ready');
@@ -2206,12 +2236,12 @@ function prepUI(){
     <div class="preptr"><button class="prepplay" id="prepPlay" aria-label="Play or pause">❚❚</button><b class="prepnow" data-prept="now">0:00.0</b><span class="prepsp"></span>${mark('in', '⇤ START HERE')}${mark('out', 'END HERE ⇥')}</div>
     <div class="preptl" data-preptl><div class="prepstrip">${(PREPSTRIP[j.id] || []).map(b => b ? `<img src="data:image/jpeg;base64,${b}">` : '<i></i>').join('')}</div>
       <b class="prepsel"><i class="ph0" data-preph="in"></i><i class="ph1" data-preph="out"></i></b><i class="prepph"><u></u></i></div>
-    <div class="preptimes"><span>IN <b data-prept="in"></b></span><span>clip <b data-prept="len"></b></span><span>OUT <b data-prept="out"></b></span></div>
+    <div class="preptimes"><label>IN<input type="text" inputmode="decimal" data-prepio="in"></label><span>clip <b data-prept="len"></b></span><label>OUT<input type="text" inputmode="decimal" data-prepio="out"></label></div>
     <div class="prepgrp"><span class="prepk">LOOK</span><div class="preptg">${[['reverse','⏪ REVERSE'],['pingpong','⇄ PING-PONG'],['mirror','⇆ MIRROR'],['flip','⇅ FLIP']].map(([k, l]) => `<button data-prepo="${k}" class="${o[k] ? 'on' : ''}">${l}</button>`).join('')}</div>
       <label class="prepspd">SPEED<input type="number" step="0.05" min="0.1" max="8" data-prepv="speed" value="${o.speed}"></label></div>
     <div class="prepgrp"><span class="prepk">CROP</span><div class="prepcrop">${[['cl','LEFT'],['cr','RIGHT'],['ct','TOP'],['cb','BOTTOM']].map(([k, l]) => `<label>${l}<input type="range" min="0" max="45" step="1" data-prepc="${k}" value="${Math.round((o[k] || 0) * 100)}" style="--p:${(o[k] || 0) * 100 / 0.45}%"></label>`).join('')}</div>
       <div class="seg sm prepfit">${[['fill','FILL 16:9'],['whole','WHOLE + BARS']].map(([v, l]) => `<button data-prepfit="${v}" class="${(o.fit || 'fill') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>
-    <div class="prepsavebar"><input type="text" maxlength="60" data-prepv="name" value="${esc(o.name || '')}" aria-label="Clip name"><button class="pri" data-prepsave="${j.id}">✓ SAVE CLIP</button></div>
+    <div class="prepsavebar"><input type="text" maxlength="60" data-prepv="name" value="${esc(o.name || '')}" aria-label="Clip name">${o.replace ? `<button class="pri" data-prepsave="${j.id}" data-preprep="1">↻ REPLACE “${esc(o.rname || '')}”</button><button class="sec" data-prepsave="${j.id}">＋ AS NEW</button>` : `<button class="pri" data-prepsave="${j.id}">✓ SAVE CLIP</button>`}</div>
     <div class="prepsaves" data-prepsaves></div>
     <div class="prepfoot"><span class="hint2">Drag the white line to find a moment · START / END HERE · save · repeat for more clips</span><button class="preplink" data-prepdrop="${j.id}">${j.url ? 'delete download' : 'close video'}</button></div>`;
   prepFit(); prepTL(j); prepVid(j); prepSaves(j); }
@@ -2242,7 +2272,7 @@ function prepVid(j){ const v = $('#prepVid'); if (!v) return; const o = PREPO[j.
   requestAnimationFrame(tick); }
 function prepTL(j){ const o = PREPO[j.id], d = j.dur || 1, sel = $('#prepEd .prepsel'); if (!sel) return;
   sel.style.left = o.in / d * 100 + '%'; sel.style.width = Math.max(0.5, (o.out - o.in) / d * 100) + '%';
-  $('[data-prept="in"]').textContent = fmtT(o.in); $('[data-prept="out"]').textContent = fmtT(o.out); $('[data-prept="len"]').textContent = fmtT((o.out - o.in) / (o.speed || 1) * (o.pingpong ? 2 : 1)); }
+  ['in', 'out'].forEach(k => { const el = $(`[data-prepio="${k}"]`); if (el && document.activeElement !== el) el.value = fmtT(o[k]); }); $('[data-prept="len"]').textContent = fmtT((o.out - o.in) / (o.speed || 1) * (o.pingpong ? 2 : 1)); }
 function prepFrames(j){ const o = PREPO[j.id]; ['in', 'out'].forEach(k => { const at = k === 'out' ? Math.max(0, o.out - 0.05) : o.in, key = j.id + k;
     if (PREPFR[key] && PREPFR[key].at === at) { const im = $(`[data-prepfr="${k}"]`); if (im) im.src = 'data:image/jpeg;base64,' + PREPFR[key].img; }
     else send({t:'prep', do:'frame', id:j.id, at:+at.toFixed(2)}); }); }
@@ -2561,10 +2591,14 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
   if (d.uifont) { store.set('uifont', uiFont(d.uifont)); buzz(); return; }
   if (d.lfold) { const k = d.lfold; if (LFOLD.has(k)) LFOLD.delete(k); else LFOLD.add(k); store.set('lfold', [...LFOLD]); t.closest('.lay').classList.toggle('fold', LFOLD.has(k)); buzz(); return; }
-  if (t.id === 'getvid' || t.id === 'prepNew') { $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); buzz(); return; }
+  if (t.id === 'getvid' || t.id === 'prepNew') { $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; $('#prepCutA').value = ''; $('#prepCutB').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); buzz(); return; }
   if (t.id === 'prepLinkX') { $('#prepLink').hidden = true; return; }
   if (t.id === 'prepGo') { const u = $('#prepUrl').value.trim(); if (!/^https?:\/\//.test(u)) { toast('Paste a full link (https://…)'); return; }
-    send({t:'prep', do:'get', url:u}); $('#prepLink').hidden = true; toast('⬇ Downloading in the background — keep playing'); buzz(); return; }
+    let trim = null; if ($('#prepCut').checked) { const a = ptime($('#prepCutA').value), b = ptime($('#prepCutB').value);
+      if (a === undefined || b === undefined) { toast('Times look wrong: use 1:23 or 83'); return; }
+      if (b !== null && b <= (a || 0)) { toast('END has to be after START'); return; }
+      if (a !== null || b !== null) trim = {in:a || 0, out:b}; }
+    send(Object.assign({t:'prep', do:'get', url:u}, trim ? {trim} : {})); $('#prepLink').hidden = true; toast('⬇ Downloading in the background — keep playing'); buzz(); return; }
   if (t.id === 'prepPill') { prepOpen(); return; }
   if (t.id === 'prepMine') { const vids = (S.media || []).filter(x => x.kind === 'video').slice().reverse(), pk = $('#prepPick');
     pk.innerHTML = pk.innerHTML ? '' : `<p class="hint2">Pick the video to edit. The original stays as it is; you save a new clip.</p><div class="clips preplist">${vids.map(x => `<button class="clip" data-preplocal="${esc(x.id)}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}<span class="vid">✂</span><b>${esc(x.id.split('/').pop().replace(/\.[^.]+$/, ''))}</b></button>`).join('') || '<p class="hint2">No videos yet.</p>'}</div>`; buzz(); return; }
@@ -2583,7 +2617,8 @@ document.addEventListener('click', e => {
   if (d.prepo) { const o = PREPO[PREPSEL], j = PREPJ.find(x => x.id === PREPSEL); o[d.prepo] = !o[d.prepo]; t.classList.toggle('on', o[d.prepo]); prepTL(j); prepVid(j); buzz(); return; }
   if (d.prepsave) { const o = PREPO[d.prepsave], j = PREPJ.find(x => x.id === d.prepsave);
     send({t:'prep', do:'save', id:d.prepsave, o:{in:+o.in.toFixed(2), out:+o.out.toFixed(2), speed:+o.speed || 1, reverse:!!o.reverse, pingpong:!!o.pingpong, mirror:!!o.mirror, flip:!!o.flip, name:o.name,
-      cl:o.cl || 0, cr:o.cr || 0, ct:o.ct || 0, cb:o.cb || 0, fit:o.fit || 'fill'}});
+      cl:o.cl || 0, cr:o.cr || 0, ct:o.ct || 0, cb:o.cb || 0, fit:o.fit || 'fill', replace:d.preprep && o.replace ? o.replace : ''}});
+    if (d.preprep) { o.replace = ''; $('#prepEd').dataset.id = ''; prepUI(); }
     toast('⚙ Saving "' + o.name + '" in the background — trim the next one if you like');
     const base = String(j && j.title || o.name).slice(0, 50), n = ((j && j.saves) || []).length + 2; o.name = base + ' ' + n; const ni = $('[data-prepv="name"]'); if (ni) ni.value = o.name; buzz(); return; }
   if (d.prepfit) { const o = PREPO[PREPSEL]; o.fit = d.prepfit; $$('[data-prepfit]').forEach(x => x.classList.toggle('on', x === t)); prepVid(PREPJ.find(x => x.id === PREPSEL)); buzz(); return; }
@@ -2824,6 +2859,8 @@ $('#savebtn').addEventListener('click', () => {
   });
   d.addEventListener('fullscreenchange', sync); d.addEventListener('webkitfullscreenchange', sync);
 })();
+document.addEventListener('keydown', e => { if (e.code !== 'Space' || $('#prep').hidden || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const v = $('#prepVid'); if (!v) return; e.preventDefault(); e.stopImmediatePropagation(); if (v.paused) v.play().catch(() => {}); else v.pause(); }, true);
 document.addEventListener('keydown', e => { const el = e.target; if (e.key === 'Enter' && el && el.dataset && el.dataset.qtxt) { e.preventDefault(); qtSend(+el.dataset.qtxt); } });
 $('#lockpw').addEventListener('keydown', e => { if (e.key === 'Enter') unlockTry(); });
 $('#tin').addEventListener('input', () => $('#tin')._dirty = true);
