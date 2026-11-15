@@ -594,6 +594,10 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 .nzlive{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;margin:4px 0 0}.nzlive img{width:100%;height:100%;object-fit:cover;display:block}.nzlive span{position:absolute;left:8px;top:7px;font:800 9px var(--sans);letter-spacing:.1em;color:#ff4d4d;background:#000a;padding:3px 6px;border-radius:4px}
 .gpane{margin-top:8px}.gpane.tabhide{display:none}.nzdice{width:100%;margin-top:10px}.nzdirs{display:grid;grid-template-columns:repeat(3,52px);gap:6px;justify-content:center;margin:4px 0 8px}.nzdirs button{height:44px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:20px}.nzdirs button.on{background:var(--lime);color:#0b0a0f}
 body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}body.stacked [data-gtabs],body.stacked .mtabs{display:none}body.stacked .tabp>summary{display:flex}
+.mdate.used{color:var(--lime);opacity:1}.mfsub span{opacity:.6;margin-left:4px}.mtrash{grid-column:1/-1;height:38px;border-radius:9px;border:1px solid var(--line);background:none;font:700 11px var(--sans);letter-spacing:.06em;color:var(--mute);margin-top:4px}
+.mtrempty{margin-left:auto;height:34px;padding:0 12px;border-radius:8px;border:1px solid #ff4d4d88;color:#ff7a7a;font:800 10.5px var(--sans);letter-spacing:.06em;flex:none}
+.mtrrow{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:#16131c;border:1px solid var(--line)}.mtrrow b{font-size:12.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mtrrow i{font:500 10px var(--mono);font-style:normal;opacity:.6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mtrrow button{grid-row:1/3;grid-column:2;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--lime);color:var(--lime);font:800 10.5px var(--sans)}
+.acts .dng{background:#ff3b3b!important;color:#fff!important;border-color:#ff3b3b!important}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -937,7 +941,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15i';
+const BUILD = '2026-11-15j';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -996,6 +1000,7 @@ function onMsg(m){
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
   if (m.t === 'prep' || (m.t === 'state' && m.prep)) prepState(m.t === 'prep' ? m.jobs : m.prep);
   if (m.t === 'toast' && m.msg) toast(m.msg);
+  if (m.t === 'trash') { TRASH = m.v; renderMedia(); }
   if (m.t === 'mframe') { MFR[m.slot] = {file:m.file, img:m.img}; mCropUI(m.slot); NZLIVE[m.slot + 'w'] = 0; const im = $(`[data-nzimg="${m.slot}"]`); if (im && m.live) im.src = 'data:image/jpeg;base64,' + m.img; }
   if (m.t === 'muses') { const el = $('#shP .musep'); if (el && $('#sheet').dataset.mid === m.id) { el.className = m.v.length ? 'muse' : 'musep ok';
       el.innerHTML = m.v.length ? `⚠ Used in ${m.v.length} preset${m.v.length > 1 ? 's' : ''}: <b>${m.v.map(esc).join(', ')}</b>. Those presets will load without it.` : 'Not used in any preset. '; } }
@@ -1476,7 +1481,7 @@ document.addEventListener('pointermove', e => { if (MCROP) mCropMove(e);
 document.addEventListener('pointerup', () => { if (MCROP) { const i = MCROP.i; MCROP = null; ['l','r','t','b'].forEach(n => send({t:'set', p:'M' + i + 'crop' + n, v:+S.pars['M' + i + 'crop' + n] || 0})); }
   if (MTDRAG) { const m = 'M' + MTDRAG.i; MTDRAG = null; send({t:'set', p:m + 'trimin', v:S.pars[m + 'trimin'] ?? 0}); send({t:'set', p:m + 'trimout', v:S.pars[m + 'trimout'] ?? 1}); } });
 /* the video list: folders (a full video + the clips cut from it), newest first */
-const MBIN = {};
+const MBIN = {}; let TRASH = null;
 function binOf(i){ return MBIN[i] || (MBIN[i] = {f:null, q:'', all:false}); }
 function renderMedia(){
   if (!S) return;
@@ -1488,7 +1493,7 @@ function renderMedia(){
     const tile = x => `<div class="mtile ${x.id === cur ? 'on' : ''}">
       <button class="clip ${x.id === cur ? 'on' : ''}" data-mslot="${i}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}${x.full ? '<span class="mfull">FULL</span>' : ''}${x.rng ? `<i class="mrng"><u style="left:${x.rng[0] * 100}%;width:${Math.max(2, (x.rng[1] - x.rng[0]) * 100)}%"></u></i>` : ''}</button>
       <button class="mdots" data-mdots="${esc(x.id)}" data-mslot="${i}" aria-label="More">⋯</button>
-      <b class="mname" title="${esc(nm(x.id))}">${esc(nm(x.id))}</b><i class="mdate">${when(x.mt)}</i></div>`;
+      <b class="mname" title="${esc(nm(x.id))}">${esc(nm(x.id))}</b><i class="mdate ${x.used ? 'used' : ''}">${x.used ? '● preset ' + x.used.slice(0, 4).join(', ') + (x.used.length > 4 ? '…' : '') : when(x.mt)}</i></div>`;
     const L = all.filter(x => (x.kind === 'video') === vid);
     if (!vid) { el.innerHTML = L.map(tile).join('') || `<p class="hint2">No pictures yet · ＋ ADD</p>`; return; }
     const B = binOf(i), fo = {}, loose = [];
@@ -1498,14 +1503,23 @@ function renderMedia(){
     if (B.f && fo[B.f]) {                       // inside one folder: the full video first, then its clips in order
       const F = fo[B.f].slice().sort((a, b) => (b.full || 0) - (a.full || 0) || ((a.rng || [0])[0] - (b.rng || [0])[0]) || (a.mt - b.mt));
       el.innerHTML = `<div class="mfbar"><button data-mfback="${i}">← All videos</button><b>${esc(B.f)}</b><i>${F.length} video${F.length > 1 ? 's' : ''}</i></div>` + F.map(tile).join(''); return; }
+    if (B.f === '\u0001trash') {               // the Trash: kept on disk, out of the list
+      const T = TRASH || [];
+      el.innerHTML = `<div class="mfbar"><button data-mfback="${i}">← All videos</button><b>🗑 Trash</b><i>${T.length} file${T.length === 1 ? '' : 's'} · ${(T.reduce((a, x) => a + x.size, 0) / 1048576).toFixed(0)} MB</i>${T.length ? `<button class="mtrempty" data-trempty="${i}">EMPTY TRASH</button>` : ''}</div>`
+        + (T.map(x => `<div class="mtrrow"><b>${esc(x.id.split('/').pop())}</b><i>${esc(x.id.split('/').slice(0, -1).join(' / ') || 'videos')} · ${(x.size / 1048576).toFixed(1)} MB · ${when(x.mt)}</i><button data-trrest="${esc(x.id)}">↩ PUT BACK</button></div>`).join('') || '<p class="hint2">The Trash is empty.</p>'); return; }
     B.f = null;
     const q = B.q.trim().toLowerCase(), srch = L.length > 12 ? `<div class="mfsearch"><input type="search" data-mbinq="${i}" placeholder="Search ${L.length} videos…" value="${esc(B.q)}"></div>` : '';
     if (q) { const H = L.filter(x => x.id.toLowerCase().includes(q)); el.innerHTML = srch + (H.map(tile).join('') || '<p class="hint2">Nothing matches.</p>'); return; }
     const E = Object.keys(fo).map(f => fo[f].length === 1 ? {t:fo[f][0].mt, x:fo[f][0]} : {t:Math.max(...fo[f].map(x => x.mt || 0)), f}).concat(loose.map(x => ({t:x.mt, x}))).sort((a, b) => (b.t || 0) - (a.t || 0));
-    const shown = B.all ? E : E.slice(0, 12);
-    el.innerHTML = srch + linkT + dl + shown.map(e => { if (e.x) return tile(e.x); const F = fo[e.f], cv = F.find(x => x.full && x.thumb) || F.find(x => x.thumb), on = F.some(x => x.id === cur);
-        return `<div class="mtile mfoldt ${on ? 'on' : ''}"><button class="clip" data-mfold="${esc(e.f)}" data-mslot="${i}">${cv ? `<img src="data:image/jpeg;base64,${cv.thumb}" alt="">` : ''}<span class="mfcnt">${F.length}</span></button><b class="mname">📁 ${esc(e.f)}</b><i class="mdate">${F.length} videos · ${when(e.t)}</i></div>`; }).join('')
-      + (E.length > shown.length ? `<button class="mfmore" data-mfall="${i}">Show all ${E.length}</button>` : '');
+    if (TRASH === null && !renderMedia._ta) { renderMedia._ta = 1; send({t:'media', do:'trashlist'}); }
+    E.forEach(e => e.used = e.x ? !!e.x.used : fo[e.f].some(x => x.used));
+    const U = E.filter(e => e.used), N = E.filter(e => !e.used), shownN = B.all ? N : N.slice(0, Math.max(6, 12 - U.length));
+    const ent = e => { if (e.x) return tile(e.x); const F = fo[e.f], cv = F.find(x => x.full && x.thumb) || F.find(x => x.thumb), on = F.some(x => x.id === cur), nu = F.filter(x => x.used).length;
+        return `<div class="mtile mfoldt ${on ? 'on' : ''}"><button class="clip" data-mfold="${esc(e.f)}" data-mslot="${i}">${cv ? `<img src="data:image/jpeg;base64,${cv.thumb}" alt="">` : ''}<span class="mfcnt">${F.length}</span></button><b class="mname">📁 ${esc(e.f)}</b><i class="mdate ${nu ? 'used' : ''}">${nu ? '● ' + nu + ' of ' + F.length + ' in presets' : F.length + ' videos · ' + when(e.t)}</i></div>`; };
+    const hd = (t, n) => `<p class="mfsub">${t} <span>${n}</span></p>`;
+    el.innerHTML = srch + linkT + dl + (U.length ? hd('In presets', U.length) + U.map(ent).join('') : '') + (N.length ? hd(U.length ? 'Not in any preset' : 'Your videos', N.length) + shownN.map(ent).join('') : '')
+      + (N.length > shownN.length ? `<button class="mfmore" data-mfall="${i}">Show all ${N.length}</button>` : '')
+      + `<button class="mtrash" data-mtrash="${i}">🗑 Trash${TRASH && TRASH.length ? ' · ' + TRASH.length : ''}</button>`;
   });
 }
 async function uploadPhoto(file){
@@ -2736,9 +2750,10 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
     $('#shP').textContent = 'Presets, layers and quick switches that use it follow the new name.';
     $('#shA').innerHTML = `<button class="pri" data-sh="mrenok">✓ Rename</button><button data-sh="cancel">Cancel</button>`; setTimeout(() => { nI.focus(); nI.select(); }, 60); return; }
   else if (b.dataset.sh === 'mrenok') { const v = $('#shI').value.trim(); if (v) send({t:'media', do:'rename', id:$('#sheet').dataset.mid, name:v}); }
+  else if (b.dataset.sh === 'trempty') { send({t:'media', do:'emptytrash'}); }
   else if (b.dataset.sh === 'mdel') { const id = $('#sheet').dataset.mid; send({t:'media', do:'uses', id});
     const live = MS.filter(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'file'] === id).map(i => tgtName('m' + i));
-    $('#shP').innerHTML = (live.length ? `<span class="muse">▶ Playing right now on ${esc(live.join(', '))}: it stops.</span>` : '') + '<span class="musep">Checking your presets…</span>It goes to the "Deleted" folder next to your project, so you can still get it back there.';
+    $('#shP').innerHTML = (live.length ? `<span class="muse">▶ Playing right now on ${esc(live.join(', '))}: it stops.</span>` : '') + '<span class="musep">Checking your presets…</span>It goes to the 🗑 Trash at the bottom of your video list: you can put it back, or empty the Trash to delete it for good.';
     $('#shA').innerHTML = `<button class="pri" data-sh="mdelok">🗑 Yes, delete it</button><button data-sh="cancel">Cancel</button>`; return; }
   else if (b.dataset.sh === 'mdelok') { send({t:'media', do:'trash', id:$('#sheet').dataset.mid}); }
   else if (b.dataset.sh === 'qkfade') { const it = JSON.parse($('#sheet').dataset.qitem || 'null'); if (it) { const k = qid(it); if (b.dataset.v === '') delete QFADE[k]; else QFADE[k] = +b.dataset.v; store.set('qfade', QFADE); QSIG = ''; renderQuick(); toast(b.dataset.v === '' ? 'Uses the FX tab setting' : +b.dataset.v ? 'Fades in ' + b.dataset.v + ' s' : 'Switches instantly'); } }
@@ -2842,6 +2857,11 @@ document.addEventListener('click', e => {
   if (d.mtab) { const i = +d.mtabi; MTAB[i] = MTAB[i] === d.mtab ? null : d.mtab; store.set('mtab', MTAB); mTabsUI(i); if (MTAB[i] === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (MTAB[i] === 'cues') cueUI(i); buzz(); return; }
   if (d.mfr) { MFR[+d.mfr + 'ask'] = S.pars['M' + d.mfr + 'file']; mFrameAsk(+d.mfr); toast('Grabbing the frame playing now…'); buzz(); return; }
   if (d.qkm) { quickDo(d.qkm); return; }
+  if (d.mtrash) { binOf(+d.mtrash).f = '\u0001trash'; send({t:'media', do:'trashlist'}); renderMedia(); buzz(); return; }
+  if (d.trrest) { send({t:'media', do:'restore', id:d.trrest}); buzz(); return; }
+  if (d.trempty) { const T = TRASH || [];
+    $('#shI').style.display = 'none'; $('#shT').textContent = 'Empty the Trash?'; $('#shP').innerHTML = `<span class="muse">${T.length} file${T.length === 1 ? '' : 's'} (${(T.reduce((a, x) => a + x.size, 0) / 1048576).toFixed(0)} MB) will be deleted from the computer for good. This cannot be undone.</span>`;
+    $('#shA').innerHTML = `<button class="pri dng" data-sh="trempty">🗑 Delete them for good</button><button data-sh="cancel">Cancel</button>`; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); buzz(); return; }
   if (d.mfback) { binOf(+d.mfback).f = null; renderMedia(); buzz(); return; }
   if (d.mfall) { binOf(+d.mfall).all = true; renderMedia(); return; }
   if (d.mspd) { const k = 'M' + d.mspd + 'speed', v = +d.v; S.pars[k] = v; send({t:'set', p:k, v}); mTimeUI(+d.mspd); build(); buzz(); return; }

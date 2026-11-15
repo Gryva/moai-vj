@@ -296,10 +296,21 @@ def _mediaThumb(rel, full, kind):
 def mediaMsg():
     """The list only (small enough for every relay); pictures follow one per message (mediaThumbs)."""
     S = _srcRead(); srcs = {os.path.normcase(os.path.abspath(r.get('src') or '')) for r in S.values()}
+    used = {}
+    try:                                                         # which presets play each file
+        t = _E()._bankTable()
+        for r in range(1, t.numRows):
+            v = t[r, 1].val
+            if not v or '"file"' not in v: continue
+            sl = (json.loads(v).get('src') or {}).get('mslots') or {}
+            for x in (sl.values() if isinstance(sl, dict) else sl):
+                if isinstance(x, dict) and x.get('file'): used.setdefault(x['file'], set()).add(r)
+    except Exception: pass
     items = []
     for rel, full, kind in _mediaFiles():
         it = {'id': rel, 'kind': kind, 'up': rel.startswith('uploads/'), 'mt': int(os.path.getmtime(full))}
         if os.path.normcase(os.path.abspath(full)) in srcs: it['full'] = 1
+        if rel in used: it['used'] = sorted(used[rel])
         r = S.get(rel)
         if r and r.get('dur'):
             o = r.get('o') or {}; it['rng'] = [round(float(o.get('in', 0)) / r['dur'], 4), round(min(r['dur'], float(o.get('out', r['dur']))) / r['dur'], 4)]
@@ -424,11 +435,43 @@ def mediaTrash(mid):
     if not hit: return False
     for i in range(1, 7):
         if _C().par['M%dfile' % i].eval() == mid: mediaStop(i)
-    d = os.path.join(project.folder, 'Deleted'); os.makedirs(d, exist_ok=True)
-    dst = os.path.join(d, os.path.basename(hit)); n = 2
-    while os.path.exists(dst): b, e = os.path.splitext(os.path.basename(hit)); dst = os.path.join(d, '%s %d%s' % (b, n, e)); n += 1
+    rel = mid if mid.startswith('videos/') else 'media/' + mid                # keeps its folders, so it can go back where it was
+    dst = os.path.join(TRASHDIR, *rel.split('/')); os.makedirs(os.path.dirname(dst), exist_ok=True); n = 2
+    while os.path.exists(dst): b, e = os.path.splitext(os.path.join(TRASHDIR, *rel.split('/'))); dst = '%s %d%s' % (b, n, e); n += 1
     try: shutil.move(hit, dst); return True
     except Exception: return False
+TRASHDIR = os.path.join(project.folder, 'Deleted')
+def trashList():
+    out = []
+    for dp, dn, fn in os.walk(TRASHDIR):
+        for n in fn:
+            full = os.path.join(dp, n); rel = os.path.relpath(full, TRASHDIR).replace('\\', '/')
+            if os.path.splitext(n)[1].lower() in IMG_EXT or os.path.splitext(n)[1].lower() in VID_EXT:
+                out.append({'id': rel, 'size': os.path.getsize(full), 'mt': int(os.path.getmtime(full))})
+    return {'t': 'trash', 'v': sorted(out, key=lambda x: -x['mt'])}
+def trashRestore(rel):
+    import shutil
+    src = os.path.abspath(os.path.join(TRASHDIR, *str(rel).split('/')))
+    if not src.startswith(os.path.abspath(TRASHDIR) + os.sep) or not os.path.isfile(src): return False
+    p = str(rel).split('/')
+    if p[0] == 'videos' and len(p) > 1: dst = os.path.join(VIDEODIR, *p[1:])
+    elif p[0] == 'media' and len(p) > 1: dst = os.path.join(MEDIADIR, *p[1:])
+    else: dst = os.path.join(VIDEODIR if os.path.splitext(src)[1].lower() in VID_EXT else MEDIADIR, p[-1])   # older deletes: no folder known
+    os.makedirs(os.path.dirname(dst), exist_ok=True); b, e = os.path.splitext(dst); n = 2
+    while os.path.exists(dst): dst = '%s %d%s' % (b, n, e); n += 1
+    try: shutil.move(src, dst); return True
+    except Exception: return False
+def trashEmpty():
+    """Deletes everything in the Trash for good (the phone asks first)."""
+    import shutil; n = 0
+    for x in os.listdir(TRASHDIR) if os.path.isdir(TRASHDIR) else []:
+        f = os.path.join(TRASHDIR, x)
+        try:
+            if os.path.isdir(f): shutil.rmtree(f)
+            else: os.remove(f)
+            n += 1
+        except Exception: pass
+    return n
 
 # ---- video upload: the phone sends JPEG frames (any phone, any codec) in parts; rebuilt here as an MP4
 VUPS = {}
@@ -1494,6 +1537,7 @@ def handle(msg, reply):
             _all({'t': 'bank', 'bank': E.bankList()})
             _all(E.qMsg())
             _publish(state(), active_only=True)
+            if t in ('banksave', 'bankclear'): _all(mediaMsg())             # 'used in presets' changes
             if t not in ('bankrename', 'bankgroup'):
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}
                 _all(th)
@@ -1574,6 +1618,11 @@ def handle(msg, reply):
                 new = mid.rsplit('/', 1)[0] + '/' + nm + os.path.splitext(mid)[1]
                 r = mediaMove(mid, new)
                 return reply({'t': 'toast', 'msg': {'ok': 'Renamed', 'moving': 'Renaming…'}.get(r, 'Not renamed: ' + r)})
+            elif a == 'trashlist': return reply(trashList())
+            elif a == 'restore':
+                ok = trashRestore(str(msg.get('id', ''))); reply({'t': 'toast', 'msg': 'Back in your list' if ok else 'Could not put it back'}); reply(trashList())
+            elif a == 'emptytrash':
+                n = trashEmpty(); reply({'t': 'toast', 'msg': 'Trash emptied (%d deleted for good)' % n}); reply(trashList())
             elif a == 'uses':                                    # which presets play this file (asked before deleting it)
                 mid = str(msg.get('id', '')); names = []
                 try:
@@ -1587,7 +1636,7 @@ def handle(msg, reply):
                 return reply({'t': 'muses', 'id': mid, 'v': names})
             elif a == 'trash':
                 ok = mediaTrash(str(msg.get('id', '')))
-                reply({'t': 'toast', 'msg': 'Moved to the Deleted folder' if ok else 'Could not remove it (in use?)'}); _allMedia()
+                reply({'t': 'toast', 'msg': 'Moved to the Trash' if ok else 'Could not remove it (in use?)'}); _allMedia()
             _allMedia(); _all(clipsMsg()); _publish(state(), active_only=True)
         elif t == 'vup':
             videoPart(msg)
