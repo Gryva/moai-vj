@@ -849,6 +849,7 @@ header .r1 .fps{font:500 12px var(--mono)}
       <div class="agrp"><h2>Beat</h2><div class="vmix" id="g-beat"></div></div>
       <div class="agrp wide"><h2>Input</h2><div class="vmix" id="g-audio"></div></div>
     </div>
+    <p class="hint2" style="margin-top:10px">💾 Reactivity, smoothing, beat sensitivity and beat feel are saved with each preset (SAVE). Input gain, noise gate and range stay the same for every preset - they belong to the room.</p>
     <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="t-Monitor" data-tog="Monitor">🎧 HEADPHONE MONITOR</button></div>
   </section>
 
@@ -980,7 +981,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16c';
+const BUILD = '2026-11-16d';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }

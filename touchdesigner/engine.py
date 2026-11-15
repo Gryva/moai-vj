@@ -1487,7 +1487,19 @@ def snapshot():
         try:
             v = C.par[k].eval(); d['extra'][k] = v if isinstance(v, (bool, str)) else round(float(v), 4)
         except Exception: pass
+    d['audio'] = {k: round(float(C.par[k].eval()), 4) for k in AUDIOPARS if hasattr(C.par, k)}
     return d
+
+AUDIOPARS = ['Reactivity', 'Smoothing', 'Beatsense', 'Beatfeel']        # how strongly / how a preset reacts to the music (input gain, gate, range stay per room)
+AUDIOBASE_FILE = STORE_DIR + '/audiobase.json'
+def _audioBase():
+    """Presets saved before this existed react the way the rig did when it arrived (not like whatever preset was on before)."""
+    b = readJsonSafe(AUDIOBASE_FILE, None)
+    if not isinstance(b, dict):
+        C = op('/project1/CONTROLS'); b = {k: round(float(C.par[k].eval()), 4) for k in AUDIOPARS if hasattr(C.par, k)}
+        try: writeJsonSafe(AUDIOBASE_FILE, b, bak=False, indent=1)
+        except Exception: pass
+    return b
 
 HIST = {'undo': [], 'redo': [], 't': 0.0}
 def histMark(label):
@@ -2056,6 +2068,12 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
             for k, v0 in grid0.items():
                 v1 = float(C.par[k].eval())
                 if abs(v1 - v0) > 1e-4: PG[k] = (v0, v1, T0, fade); C.par[k] = v0
+    au = d.get('audio') or _audioBase()                          # this preset's own audio reactivity
+    for k in AUDIOPARS:
+        if k not in au or not hasattr(C.par, k): continue
+        v0, v1 = float(C.par[k].eval()), float(au[k])
+        if glide and abs(v1 - v0) > 1e-4: PG[k] = (v0, v1, T0, fade)          # eases over the transition
+        else: C.par[k] = v1
     ex = d.get('extra') or {}
     for k in EXTRAPARS:                                          # older presets: back to the default, not the last look's value
         try: C.par[k] = ex[k] if k in ex else C.par[k].default
