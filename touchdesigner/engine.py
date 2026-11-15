@@ -221,8 +221,9 @@ def vidTime(i):
     except Exception: return None
 def _cueSet(i, c, on):
     tg = c.get('tgt', 'layer'); tgt = ('m%d' % i if tg == 'layer' else 'all') if tg in ('layer', 'all') or not tg else tg; k = c.get('k'); fd = float(c.get('fade', 0) or 0)
-    if tgt == 'all': setLayer(k, on=on)
-    else: tSetLayer(tgt, k, on=on)
+    kw = {k_: float(c[k_]) for k_ in ('amt', 'p1') if on and c.get(k_) is not None}     # song blocks keep the effect's own settings
+    if tgt == 'all': setLayer(k, on=on, **kw)
+    else: tSetLayer(tgt, k, on=on, **kw)
     if fd > 0.01: fxFadeToggle(tgt, k, on, fd)
 # ---------------------------------------------------------------- SONG TIMELINE: a music track drives preset changes, effect blocks and slider ramps
 SONG = {'file': '', 'dur': 0.0, 'pos': 0.0, 'play': False, 'keys': {}, 'fxon': {}}
@@ -389,6 +390,10 @@ def pSet(g, k, p1):
     if k == 'spotpulse':                                               # steady*1e12 + speed*1e10 + ripple*1e8 + x*1e6 + y*1e4 + size*100 + strength (each 0-99)
         q = int(round(float(p1))); lo = q % 100000000; hi = q // 100000000
         g.par.vec3valuex = lo // 10000; g.par.vec3valuey = lo % 10000; g.par.vec3valuez = (hi // 10000) * 10000 + ((hi // 100) % 100) * 100 + hi % 100
+        return
+    if k == 'beat':                                                    # mode*1e4 + amount*100 + fall-back (each 0-99)
+        q = int(round(float(p1))); g.par.vec3valuex = (q // 10000) % 10; g.par.vec3valuey = ((q // 100) % 100) / 99.0
+        g.par.vec3valuez = 0.05 + (q % 100) / 99.0 * 1.45
         return
     if k == 'scrapbook':                                               # look + movement: 10000 + look * 100 + movement (each 0-99); older presets: one value for both
         p = float(p1)
@@ -931,6 +936,7 @@ def pushUniforms(T):
         p = op('/project1/fx_' + k).par
         p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
         p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
+        if k == 'beat': p.vec3valuew = T - A['lastkick']                  # time since the last beat
         if k in COLFX: _colPush(k, p, T)
 
 # ------------------------------------------------------------------ effect colours (own colour / solid / linear / radial gradient)
@@ -1148,6 +1154,7 @@ def tUniforms(T):
             p = g.par
             p.vec0valuex = T % TWRAP
             p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
+            if k == 'beat': p.vec3valuew = (T - A['lastkick']) if t not in NR else 99.0
             if k in COLFX:
                 c = TCOL[t].get(k)
                 if not c or c['m'] == 0:

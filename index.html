@@ -980,7 +980,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16a';
+const BUILD = '2026-11-16b';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2392,6 +2392,7 @@ function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('
 document.getElementById('recpill').addEventListener('click', () => { $('#stat2').classList.add('open'); store.set('stat2open', true); $('#stat').classList.remove('open'); store.set('statopen', false); recTick(); buzz(); });
 setInterval(() => REC.on && recTick(), 500);
 const PK = {
+  beat:   [['md', 1e4, 10], ['amt', 100, 100], ['dec', 1, 100]],
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
   dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]],
@@ -2446,7 +2447,7 @@ function sgWave(){
 function sgLanes(){
   const K = sgK(), BN = n => (S && S.bank && S.bank[n - 1] ? S.bank[n - 1].name : 'Preset ' + n), LB = k => ((S && S.layers || []).find(l => l.k === k) || {label:k}).label;
   $('#sglp').innerHTML = '<b>PRESETS</b>' + K.presets.map((k, i) => `<button class="sgk" data-sgk="p${i}" style="left:${sgX(k.t)}%">${esc(BN(k.slot))}</button>`).join('');
-  $('#sglf').innerHTML = '<b>EFFECTS</b>' + K.fx.map((k, i) => `<button class="sgk fx" data-sgk="f${i}" style="left:${sgX(k.t0)}%;width:${Math.max(0.6, sgX(k.t1) - sgX(k.t0))}%;max-width:none">${esc(LB(k.k))}${k.tgt === 'model' ? ' · 3D' : ''}</button>`).join('');
+  $('#sglf').innerHTML = '<b>EFFECTS</b>' + K.fx.map((k, i) => `<button class="sgk fx" data-sgk="f${i}" style="left:${sgX(k.t0)}%;width:${Math.max(0.6, sgX(k.t1) - sgX(k.t0))}%;max-width:none">${esc(LB(k.k))}${k.tgt && k.tgt !== 'all' ? ' · ' + esc(tgtName(k.tgt) || k.tgt) : ''}</button>`).join('');
   $('#sglr').innerHTML = '<b>RAMPS</b>' + K.ramps.map((r, i) => (r.pts || []).map((pt, j) => `<button class="sgk rp" data-sgk="r${i}.${j}" style="left:${sgX(pt[0])}%" title="${esc(r.p)}"></button>`).join('')).join('');
 }
 function sgTick(){ const t = sgPos(); const h = $('#sghead'); if (h) h.style.left = sgX(t) + '%'; const tm = $('#sgtime'); if (tm) tm.textContent = fmtT(t) + ' / ' + fmtT(SG.dur); }
@@ -2474,7 +2475,7 @@ function sgPick(kind){
   if (!SG.file || !S) { toast('Choose a song first'); return; } const t = +sgPos().toFixed(2);
   if (kind === 'p') sgOpen('Preset at ' + fmtT(t), 'Goes to this preset at this moment, with the fade from the autopilot settings (' + (ui.fade || 0) + ' s).',
     S.bank.map((p, i) => p ? `<button data-sh="sgaddp" data-n="${i + 1}">${i + 1} · ${esc(p.name)}</button>` : '').join(''), {t});
-  else if (kind === 'f') sgOpen('Effect from ' + fmtT(t), 'An 8-second block - tap it later to set its end. Whole picture, or only the 3D model.',
+  else if (kind === 'f') sgOpen('Effect from ' + fmtT(t), 'An 8-second block on ' + (FXT_SEL && FXT_SEL !== 'all' ? tgtName(FXT_SEL) : 'the whole picture') + ' (the layer picked in FX), with that effect\'s settings. Tap it later to set its end or change the layer.',
     [...S.layers].sort((a, b) => a.label.localeCompare(b.label)).map(l => `<button data-sh="sgaddf" data-k="${l.k}">${esc(l.label)}</button>`).join(''), {t});
   else sgOpen('Ramp point at ' + fmtT(t), 'Uses the slider\'s value right now. Add two or more points for the same slider and it glides between them.',
     (S.sliders || []).filter(x => S.pars[x.p] !== undefined).map(x => `<button data-sh="sgaddr" data-p="${x.p}">${esc((qLayer ? qLayer(x.p) + ' · ' : '') + x.label)} = ${(+S.pars[x.p]).toFixed(2)}</button>`).join(''), {t});
@@ -2483,20 +2484,27 @@ function sgSheet(id){
   const K = sgK(), t = +sgPos().toFixed(2), ty = id[0];
   if (ty === 'p') { const k = K.presets[+id.slice(1)]; if (!k) return; sgOpen('Preset ' + k.slot + ' at ' + fmtT(k.t), 'Fade ' + (k.fade ?? 1) + ' s.',
     `<button class="pri" data-sh="sgmove">Move to the playhead (${fmtT(t)})</button><button data-sh="sgfade">Use the current fade (${ui.fade || 0} s)</button><button class="dan" data-sh="sgdel">Remove</button>`, {id}); }
-  else if (ty === 'f') { const k = K.fx[+id.slice(1)]; if (!k) return; sgOpen('Effect ' + fmtT(k.t0) + ' → ' + fmtT(k.t1), (k.tgt === 'model' ? 'On the 3D model' : 'On the whole picture') + ' · fade ' + (k.fade || 0) + ' s',
-    `<button class="pri" data-sh="sgend">End at the playhead (${fmtT(t)})</button><button data-sh="sgmove">Start at the playhead</button><button data-sh="sgtgt">${k.tgt === 'model' ? 'Whole picture instead' : 'Only the 3D model'}</button><button data-sh="sgfade">Fade in/out: ${(k.fade || 0) ? 'none' : '0.5 s'}</button><button class="dan" data-sh="sgdel">Remove</button>`, {id}); }
+  else if (ty === 'f') { const k = K.fx[+id.slice(1)]; if (!k) return; sgOpen('Effect ' + fmtT(k.t0) + ' → ' + fmtT(k.t1), 'On ' + ((sgTargets().find(x => x[0] === (k.tgt || 'all')) || [0, k.tgt])[1]) + ' · fade ' + (k.fade || 0) + ' s',
+    `<button class="pri" data-sh="sgend">End at the playhead (${fmtT(t)})</button><button data-sh="sgmove">Start at the playhead</button>` + sgTargets().map(([v, n]) => `<button data-sh="sgtgt" data-v="${v}" class="${(k.tgt || 'all') === v ? 'on' : ''}">${(k.tgt || 'all') === v ? '✓ ' : ''}On: ${esc(n)}</button>`).join('') + `<button data-sh="sgset">Use the effect's settings now</button><button data-sh="sgfade">Fade in/out: ${(k.fade || 0) ? 'none' : '0.5 s'}</button><button class="dan" data-sh="sgdel">Remove</button>`, {id}); }
   else { const [i, j] = id.slice(1).split('.').map(Number), r = K.ramps[i]; if (!r) return; const pt = r.pts[j];
     sgOpen(r.p + ' = ' + (+pt[1]).toFixed(2) + ' at ' + fmtT(pt[0]), 'A point of a slider ramp.', `<button class="pri" data-sh="sgval">Use the slider's value now (${(+S.pars[r.p]).toFixed(2)})</button><button data-sh="sgmove">Move to the playhead</button><button class="dan" data-sh="sgdel">Remove the point</button>`, {id}); }
 }
+function sgTargets(){                       // the layers an effect block can sit on
+  const out = [['all', 'whole picture'], ['model', '3D model']];
+  for (let i = 1; i <= 6; i++) if (S.pars['M' + i + 'on']) out.push(['m' + i, typeof mediaName === 'function' ? mediaName(i) : 'Layer ' + i]);
+  if (S.pars.Texton) out.push(['text', 'Text']); return out; }
+function sgFxSet(k, tg){                    // the effect's settings as they are now on that layer (so the song plays it the same way)
+  const r = tg !== 'all' ? ((S.tfx || {})[tg] || []).find(x => x[0] === k) : null, l = (S.layers || []).find(x => x.k === k);
+  return r ? {amt:+r[2], p1:+r[3]} : l ? {amt:+l.amt, p1:+l.p1} : {}; }
 function songSheetDo(b){
   const K = sgK(), D = JSON.parse($('#sheet').dataset.sg || '{}'), a = b.dataset.sh, t = +sgPos().toFixed(2), id = D.id || '';
   if (a === 'sgaddp') { K.presets.push({t:D.t, slot:+b.dataset.n, fade:+ui.fade || 0}); K.presets.sort((x, y) => x.t - y.t); }
-  else if (a === 'sgaddf') K.fx.push({t0:D.t, t1:Math.min(SG.dur || D.t + 8, D.t + 8), k:b.dataset.k, tgt:'all', fade:0});
+  else if (a === 'sgaddf') { const tg = FXT_SEL && FXT_SEL !== 'all' ? FXT_SEL : 'all'; K.fx.push(Object.assign({t0:D.t, t1:Math.min(SG.dur || D.t + 8, D.t + 8), k:b.dataset.k, tgt:tg, fade:0}, sgFxSet(b.dataset.k, tg))); }
   else if (a === 'sgaddr') { let r = K.ramps.find(x => x.p === b.dataset.p); if (!r) K.ramps.push(r = {p:b.dataset.p, pts:[]}); r.pts.push([D.t, +S.pars[b.dataset.p]]); r.pts.sort((x, y) => x[0] - y[0]); }
   else if (id[0] === 'p') { const i = +id.slice(1); if (a === 'sgdel') K.presets.splice(i, 1); else if (a === 'sgmove') K.presets[i].t = t; else if (a === 'sgfade') K.presets[i].fade = +ui.fade || 0; K.presets.sort((x, y) => x.t - y.t); }
   else if (id[0] === 'f') { const i = +id.slice(1), k = K.fx[i];
     if (a === 'sgdel') K.fx.splice(i, 1); else if (a === 'sgend') { if (t > k.t0) k.t1 = t; else toast('Move the playhead after the start first'); }
-    else if (a === 'sgmove') { const L = k.t1 - k.t0; k.t0 = t; k.t1 = t + L; } else if (a === 'sgtgt') k.tgt = k.tgt === 'model' ? 'all' : 'model'; else if (a === 'sgfade') k.fade = k.fade ? 0 : 0.5; }
+    else if (a === 'sgmove') { const L = k.t1 - k.t0; k.t0 = t; k.t1 = t + L; } else if (a === 'sgtgt') Object.assign(k, {tgt:b.dataset.v}, sgFxSet(k.k, b.dataset.v)); else if (a === 'sgset') Object.assign(k, sgFxSet(k.k, k.tgt || 'all')); else if (a === 'sgfade') k.fade = k.fade ? 0 : 0.5; }
   else if (id[0] === 'r') { const [i, j] = id.slice(1).split('.').map(Number), r = K.ramps[i];
     if (a === 'sgdel') { r.pts.splice(j, 1); if (!r.pts.length) K.ramps.splice(i, 1); } else if (a === 'sgmove') { r.pts[j][0] = t; r.pts.sort((x, y) => x[0] - y[0]); } else if (a === 'sgval') r.pts[j][1] = +S.pars[r.p]; }
   sgSave();
@@ -2699,6 +2707,7 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
       + pkS(l, 'w', 'Width', c.w) + pkS(l, 'h', 'Height', c.h) + pkS(l, 'sf', 'Soft edge', c.sf) + segUI('Show', 'data-pkf="inv" data-v', ['INSIDE','OUTSIDE'], c.inv); }
   if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp) + segUI('Empty corners', 'data-pkf="fill" data-v', ['LEAVE EMPTY','FILL (MIRROR)','ZOOM TO COVER'], c.fill);
   if (k === 'glitter') h += `<div class="sub"><span>Look</span></div>` + glitSw('data-pkf="sty" data-v', c.sty) + pkS(l, 'amt', 'Glitter', c.amt) + pkS(l, 'sp', 'Sparkle speed', c.sp) + segUI('Sparkles', 'data-pkf="beat" data-v', ['STEADY','FLASH WITH THE BEAT'], c.beat);
+  if (k === 'beat') h += segUI('On every beat', 'data-pkf="md" data-v', ['GROW','SHRINK','FLASH','BLINK','SHAKE','SPIN'], c.md) + pkS(l, 'amt', 'How much', c.amt) + pkS(l, 'dec', 'Falls back (short → long)', c.dec);
   if (k === 'dvd') h += pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'sz', 'Size', c.sz) + pkS(l, 'an', 'Angle', c.an) + segUI('On each bounce', 'data-pkf="cc" data-v', ['SAME COLOUR','NEW COLOUR'], c.cc);
   return h + '</div>'; }
 function spDec(p){ p = Math.round(+p || 0); const lo = p % 1e8, hi = Math.floor(p / 1e8); return {x:Math.floor(lo / 1e6) % 100, y:Math.floor(lo / 1e4) % 100, sz:Math.floor(lo / 100) % 100, st:lo % 100, md:Math.floor(hi / 1e4) % 10, sp:Math.floor(hi / 100) % 100, rp:hi % 100}; }
