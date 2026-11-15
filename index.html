@@ -598,6 +598,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
 .mtrempty{margin-left:auto;height:34px;padding:0 12px;border-radius:8px;border:1px solid #ff4d4d88;color:#ff7a7a;font:800 10.5px var(--sans);letter-spacing:.06em;flex:none}
 .mtrrow{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:#16131c;border:1px solid var(--line)}.mtrrow b{font-size:12.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mtrrow i{font:500 10px var(--mono);font-style:normal;opacity:.6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mtrrow button{grid-row:1/3;grid-column:2;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--lime);color:var(--lime);font:800 10.5px var(--sans)}
 .acts .dng{background:#ff3b3b!important;color:#fff!important;border-color:#ff3b3b!important}
+.acts .recopt{grid-column:1/-1;display:block!important;text-align:left;padding:12px 14px!important;height:auto!important}.recopt b{display:block;font-size:14px}.recopt small{display:block;opacity:.75;font-weight:500;font-size:12px;margin-top:3px}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -613,7 +614,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button></div><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button></div><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -941,7 +942,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15j';
+const BUILD = '2026-11-15k';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2315,6 +2316,8 @@ function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; re
 const REC = {on:false, t0:0, file:''};
 function recUI(r){ const was = REC.on; REC.on = !!r.on; REC.file = r.file || REC.file; if (REC.on) REC.t0 = performance.now() - (r.secs || 0) * 1000;
   if (r.discarded) toast('Recording thrown away'); else if (was && !REC.on && REC.file) toast('Saved: recordings/' + REC.file); recTick(); }
+function recFmtUI(){ const b = $('#recfmt'); if (b) b.textContent = {'16:9':'▭ 16:9', '9:16':'▯ 9:16', '9:16b':'▯ 9:16 ⧉'}[store.get('recfmt', '16:9')] || '▭ 16:9'; }
+document.addEventListener('DOMContentLoaded', recFmtUI);
 function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('on', REC.on); const x = $('#recx'); if (x) x.classList.toggle('on', REC.on);
   if (!REC.on) { b.textContent = '● REC'; return; } const s = Math.floor((performance.now() - REC.t0) / 1000); b.textContent = '■ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 setInterval(() => REC.on && recTick(), 500);
@@ -2890,7 +2893,13 @@ document.addEventListener('click', e => {
   if (d.prepfit) { const o = PREPO[PREPSEL]; o.fit = d.prepfit; $$('[data-prepfit]').forEach(x => x.classList.toggle('on', x === t)); prepVid(PREPJ.find(x => x.id === PREPSEL)); buzz(); return; }
   if (d.prepdrop) { send({t:'prep', do:'drop', id:d.prepdrop}); delete PREPO[d.prepdrop]; PREPSEL = null; $('#prepEd').dataset.id = ''; $('#prep').hidden = true; buzz(); return; }
   if (t.id === 'recx') { send({t:'rec', do:'discard'}); buzz(20); return; }
-  if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start'}); buzz(20); return; }
+  if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start', fmt:store.get('recfmt', '16:9')}); buzz(20); return; }
+  if (t.id === 'recfmt') { if (REC.on) { toast('Change the format before you start recording'); return; } const f = store.get('recfmt', '16:9');
+    $('#shI').style.display = 'none'; $('#shT').textContent = 'Recording format'; $('#shP').textContent = 'Only the recording changes; the screen and the stream stay 16:9.';
+    $('#shA').innerHTML = [['16:9', '▭ 16:9 · computer, YouTube', 'The whole picture, 1280×720.'], ['9:16', '▯ 9:16 · phones (Reels, TikTok, Stories)', 'The middle of the picture, 720×1280. The left and right edges are cut off.'], ['9:16b', '▯ 9:16 · phones, whole picture', 'The full picture in the middle of a 720×1280 frame, with a blurred copy filling the top and bottom.']]
+      .map(([v, l, h]) => `<button class="recopt ${v === f ? 'pri' : ''}" data-recf="${v}"><b>${l}</b><small>${h}</small></button>`).join('') + `<button data-sh="cancel">Cancel</button>`;
+    $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); buzz(); return; }
+  if (d.recf) { store.set('recfmt', d.recf); recFmtUI(); $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); toast('Recording format: ' + {'16:9':'16:9', '9:16':'9:16 (middle cut)', '9:16b':'9:16 (whole picture, blurred fill)'}[d.recf]); buzz(); return; }
   if (d.sl !== undefined) { if (!(performance.now() - (QD.block || 0) < 400)) qGo(+d.sl); return; }
   if (d.cmode) { ccSet(d.cmode, {m:+d.v}); hsvFrom(d.cmode); buzz(); return; }
   if (d.cwhich) { CED[d.cwhich] = d.v; ccUI(d.cwhich); hsvFrom(d.cwhich); return; }

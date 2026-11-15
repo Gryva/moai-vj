@@ -1010,17 +1010,23 @@ def audioInputs():
 # ---------------------------------------------------------------- recording the show (what the projector shows, before keystone)
 # Motion-JPEG .mov + the audio input: cheap to encode, so the show keeps 60 fps (H.264 needs a paid TouchDesigner licence).
 REC = {'t0': None, 'file': ''}
-def recMsg(): return {'t': 'rec', 'on': REC['t0'] is not None, 'secs': round(time.time() - REC['t0'], 1) if REC['t0'] else 0, 'file': os.path.basename(REC['file'])}
-def recStart():
+def recMsg(): return {'t': 'rec', 'fmt': REC.get('fmt', '16:9'), 'on': REC['t0'] is not None, 'secs': round(time.time() - REC['t0'], 1) if REC['t0'] else 0, 'file': os.path.basename(REC['file'])}
+def recStart(fmt='16:9'):
     m = op('/project1/rec')
     if m is None or REC['t0'] is not None: return
     d = os.path.join(project.folder, 'recordings'); os.makedirs(d, exist_ok=True)
-    REC['file'] = os.path.join(d, 'VJ_' + time.strftime('%Y-%m-%d_%H-%M-%S') + '.mov')
+    fmt = fmt if fmt in ('16:9', '9:16', '9:16b') else '16:9'; REC['fmt'] = fmt
+    s_, v_ = op('/project1/rec_src'), op('/project1/rec_v')                 # 9:16 for phones: the middle cut out, or the whole picture on a blurred copy
+    if s_ is not None: s_.par.index = 0 if fmt == '16:9' else 1
+    if v_ is not None: v_.par.index = 1 if fmt == '9:16b' else 0
+    REC['file'] = os.path.join(d, 'VJ_' + time.strftime('%Y-%m-%d_%H-%M-%S') + ('' if fmt == '16:9' else '_9x16') + '.mov')
     m.par.file = REC['file']; m.par.record = True; REC['t0'] = time.time()
 def recStop():
     m = op('/project1/rec')
     if m is not None: m.par.record = False
     REC['t0'] = None
+    s_ = op('/project1/rec_src')
+    if s_ is not None: run("op('/project1/rec_src').par.index = 0", delayFrames=10)     # the phone-format chain stops cooking
 def recDiscard():
     """Stop and throw the take away (the file is deleted once the recorder has let go of it)."""
     f = REC['file']; recStop(); REC['file'] = ''
@@ -1516,7 +1522,7 @@ def handle(msg, reply):
             if 1 <= i <= 6 and m is not None:
                 m.par.cuepointunit = 'seconds'; m.par.cuepoint = max(0.0, float(msg.get('sec', 0))); m.par.cuepulse.pulse()
         elif t == 'rec':
-            if msg.get('do') == 'start': recStart()
+            if msg.get('do') == 'start': recStart(str(msg.get('fmt') or '16:9'))
             elif msg.get('do') == 'stop': recStop()
             elif msg.get('do') == 'discard': recDiscard(); _all(dict(recMsg(), discarded=True)); return
             _all(recMsg())
