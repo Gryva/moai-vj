@@ -981,7 +981,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16f';
+const BUILD = '2026-11-16g';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -3372,6 +3372,17 @@ $('#savebtn').addEventListener('click', () => {
   });
   d.addEventListener('fullscreenchange', sync); d.addEventListener('webkitfullscreenchange', sync);
 })();
+// ARROW KEYS on LIVE: left / right = previous / next preset in the group that is showing, up / down = one row up / down
+document.addEventListener('keydown', e => {
+  const dir = {ArrowLeft:-1, ArrowRight:1, ArrowUp:-2, ArrowDown:2}[e.key]; if (!dir || !S || ui.tab !== 'live' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || $('#sheet').classList.contains('on') || !$('#prep').hidden) return;
+  const pads = Array.from($$('#pads .pad[data-pad]')).filter(b => /^\d+$/.test(b.dataset.pad)); if (!pads.length) return;
+  e.preventDefault();
+  let i = pads.findIndex(b => +b.dataset.pad === S.b), n = pads.length, j;
+  if (i < 0) j = dir > 0 ? 0 : n - 1;
+  else if (Math.abs(dir) === 1) j = (i + dir + n) % n;
+  else { const top = pads[0].offsetTop, cols = Math.max(1, pads.filter(b => b.offsetTop === top).length); j = i + (dir > 0 ? cols : -cols); if (j < 0 || j >= n) return; }
+  const b = pads[j]; go(+b.dataset.pad); b.scrollIntoView({block:'nearest', behavior:'smooth'}); });
 document.addEventListener('keydown', e => { if (e.code !== 'Space' || $('#prep').hidden || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const v = $('#prepVid'); if (!v) return; e.preventDefault(); e.stopImmediatePropagation(); if (pvPlaying()) pvPause(); else pvPlay(); }, true);
 document.addEventListener('keydown', e => { const el = e.target; if (e.key === 'Enter' && el && el.dataset && el.dataset.qtxt) { e.preventDefault(); qtSend(+el.dataset.qtxt); } });
