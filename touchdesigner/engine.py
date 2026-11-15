@@ -2216,13 +2216,17 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
     plan = {}
     for i in MSLOTS:
         k = str(i); co, nw = cur.get(k), ms.get(k)
-        if co and nw: plan[i] = 'keep' if (co.get('kind') == nw.get('kind') and (co.get('file') or '') == (nw.get('file') or '') and nw.get('kind') != 'draw') else 'swap'
+        if co and nw:
+            plan[i] = 'keep' if (co.get('kind') == nw.get('kind') and (co.get('file') or '') == (nw.get('file') or '') and nw.get('kind') != 'draw') else 'swap'
+            dark = lambda m: sum(_hex(m.get('rcol', '#000000'), (0, 0, 0))) < 0.2
+            if co.get('kind') == 'rect' and nw.get('kind') == 'noise' and dark(co): plan[i] = 'morph'          # a black rectangle IS a noise at brightness 0: the noise simply rises
+            elif co.get('kind') == 'noise' and nw.get('kind') == 'rect' and dark(nw): plan[i] = 'morphout'     # ... and the other way round
         elif co: plan[i] = 'out'
         elif nw: plan[i] = 'in'
     same = all(v == 'keep' and abs(float(cur[str(i)].get('alpha', 1.0)) - float(ms[str(i)].get('alpha', 1.0))) < 1e-3 for i, v in plan.items())
     if same and not newScene and not newModel: return False       # nothing to overlap
     a0 = {i: float(mp(C, i, 'alpha').eval()) for i in plan if plan[i] != 'in'}
-    hold = [i for i, v in plan.items() if v in ('out', 'swap')]
+    hold = [i for i, v in plan.items() if v in ('out', 'swap', 'morphout')]
     d2 = dict(d); d2['src'] = dict(s_); d2['src']['mslots'] = dict(ms)
     for i in hold: d2['src']['mslots'][str(i)] = cur[str(i)]      # these keep playing what they have for now
     dr0 = {i: R.DRAWS.get(i) for i in hold}
@@ -2244,21 +2248,25 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
         elif v == 'in': _lxFx(d, i)
         else:                                                     # staying layer: its effects glide (set again so the glide starts clean)
             new = {k: [bool(x[0]), float(x[1]), float(x[2])] for k, x in ((d.get('tfx') or {}).get(t) or {}).items()}; T0 = absTime.seconds
-            FXT[t] = {k: list(x) for k, x in new.items()}
+            FXT[t] = {k: list(x) for k, x in new.items()}; mine = []
             for k in set(fx0[i][0]) | set(new):
                 o, n = fx0[i][0].get(k), new.get(k)
                 b0 = o[1] if o and o[0] else 0.0; b1 = n[1] if n and n[0] else 0.0
                 if abs(b0 - b1) < 0.001: continue
                 TFADES[(t, k)] = {'t0': T0, 'dur': fade, 'a0': b0, 'a1': b1, 'p': (n or o)[2], 'end': list(n) if n else None}
-                FXT[t][k] = [True, b0, (n or o)[2]]
+                FXT[t][k] = [True, b0, (n or o)[2]]; mine.append(TFADES[(t, k)])
+            _stagger(mine, T0, fade)                              # effects only the old look has leave one by one, shared ones stay, new ones follow
     for i, v in dr0.items():                                      # the leaving drawings stay until they have faded
         if v is not None: v['new'] = True; R.DRAWS[i] = v
-    a1 = {i: float(mp(C, i, 'alpha').eval()) for i in plan if plan[i] in ('in', 'keep')}
+    a1 = {i: float(mp(C, i, 'alpha').eval()) for i in plan if plan[i] in ('in', 'keep', 'morph')}
+    nz = {}
     for i, v in plan.items():
-        if v == 'swap': a1[i] = float((ms[str(i)] or {}).get('alpha', 1.0))
+        if v in ('swap', 'morphout'): a1[i] = float((ms[str(i)] or {}).get('alpha', 1.0))
+        if v == 'morph': nz[i] = (0.0, float(mp(C, i, 'nzbright').eval())); mp(C, i, 'nzbright').val = 0.0
+        if v == 'morphout': nz[i] = (float(mp(C, i, 'nzbright').eval()), 0.0)
     for i, v in plan.items(): mp(C, i, 'alpha').val = 0.0 if v == 'in' else a0[i]
     m1 = float(C.par.Alphamodel.eval()); C.par.Alphamodel = m0
-    LX.clear(); LX.update(d=d, slot=slot, t0=absTime.seconds, dur=max(0.1, fade), plan=plan, a0=a0, a1=a1, mid=False, swapm=swapm, model=newModel, m0=m0, m1=m1, cur=cur)
+    LX.clear(); LX.update(d=d, slot=slot, t0=absTime.seconds, dur=max(0.1, fade), plan=plan, a0=a0, a1=a1, nz=nz, mid=False, swapm=swapm, model=newModel, m0=m0, m1=m1, cur=cur)
     return True
 def _lxFx(d, i):
     """A layer's own effects + effect colours exactly as the preset has them."""
@@ -2272,7 +2280,8 @@ def _lxMid(C, now=False):
     def sw():
         if swaps:
             d3 = dict(d); d3['src'] = dict(d.get('src') or {}); d3['src']['mslots'] = dict(d3['src'].get('mslots') or {})
-            outs = [i for i, v in plan.items() if v == 'out']
+            outs = [i for i, v in plan.items() if v in ('out', 'morphout')]
+            nzk = {i: float(mp(C, i, 'nzbright').eval()) for i, v in plan.items() if v in ('morph', 'morphout')}
             for i in outs: d3['src']['mslots'][str(i)] = cur[str(i)]
             dr0 = {i: R.DRAWS.get(i) for i in outs}
             keepa = {i: float(mp(C, i, 'alpha').eval()) for i in plan}
@@ -2281,6 +2290,7 @@ def _lxMid(C, now=False):
             for i, v in dr0.items():
                 if v is not None: v['new'] = True; R.DRAWS[i] = v
             for i, a_ in keepa.items(): mp(C, i, 'alpha').val = a_
+            for i, b_ in nzk.items(): mp(C, i, 'nzbright').val = b_
             for i, v in plan.items():
                 if v == 'swap': _lxFx(d, i)
         if swapm:
@@ -2301,6 +2311,7 @@ def lxStep(T):
         elif v == 'out': x = a0[i] * (1.0 - e)
         else: x = a0[i] + (a1[i] - a0[i]) * e                    # content changes under the blend at the middle
         mp(C, i, 'alpha').val = x
+        if i in LX['nz']: b0_, b1_ = LX['nz'][i]; mp(C, i, 'nzbright').val = b0_ + (b1_ - b0_) * e
     C.par.Alphamodel = LX['m0'] + (LX['m1'] - LX['m0']) * e
     if u >= 1.0: _lxFinish()
 def _lxFinish():
