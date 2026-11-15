@@ -1673,6 +1673,54 @@ def bankClear(slot):
     if slot in q['v']: qSet([x for x in q['v'] if x != slot])
     return storeSave('clear %d' % slot)
 
+ARCH_FILE = STORE_DIR + '/archive.json'                  # presets taken off the board but kept (never deleted)
+def _archRead():
+    try: v = readJson(ARCH_FILE); return v if isinstance(v, list) else []
+    except Exception: return []
+def archList(thumbs=False):
+    import base64
+    out = []
+    for e in _archRead():
+        try: m = (json.loads(e['data']).get('_meta') or {})
+        except Exception: m = {}
+        it = {'id': e['id'], 'name': e['name'], 'at': e.get('at', ''), 'group': m.get('group', ''), 'phone': bool(m.get('phone'))}
+        if thumbs:
+            p = '%s/%s' % (THUMB_DIR, os.path.basename(m.get('thumb', ''))) if m.get('thumb') else ''
+            try: it['img'] = base64.b64encode(open(p, 'rb').read()).decode('ascii') if p and os.path.exists(p) else None
+            except Exception: it['img'] = None
+        out.append(it)
+    return out
+def bankArchive(slot):
+    """Take a preset off the board into the archive (with its own copy of the picture) - nothing is deleted."""
+    import shutil
+    slot = int(slot); t = _bankTable()
+    if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+    try: d = json.loads(t[slot, 1].val)
+    except Exception: return False
+    aid = time.strftime('%Y%m%d_%H%M%S') + '_%d' % slot
+    m = dict(d.get('_meta') or {}); src = thumbPath(slot)
+    if os.path.exists(src):
+        fn = 'arch_%s.jpg' % aid
+        try: shutil.copyfile(src, THUMB_DIR + '/' + fn); m['thumb'] = fn
+        except Exception: pass
+    d['_meta'] = m
+    a = _archRead(); a.insert(0, {'id': aid, 'name': t[slot, 0].val, 'data': json.dumps(d), 'at': time.strftime('%Y-%m-%d %H:%M'), 'slot': slot})
+    try: writeJsonSafe(ARCH_FILE, a, indent=1)
+    except Exception as e: _storeAlert('Archive not saved: %s' % e); return False
+    return bankClear(slot)
+def archRestore(aid):
+    """Back onto the board, in the first free slot. -> the slot, or 0."""
+    a = _archRead(); e = next((x for x in a if x['id'] == aid), None)
+    if e is None: return 0
+    t = _bankTable(); o = int(e.get('slot', 0) or 0)
+    slot = o if 1 <= o <= BANK_SLOTS and not t[o, 1].val else next((i for i in range(1, BANK_SLOTS + 1) if not t[i, 1].val), 0)   # its old place if still free
+    if not slot: _storeAlert('No free preset slot - archive another preset first'); return 0
+    t[slot, 0] = e['name']; t[slot, 1] = e['data']
+    if not storeSave('unarchive %d' % slot): return 0
+    try: writeJsonSafe(ARCH_FILE, [x for x in a if x['id'] != aid], indent=1)
+    except Exception: pass
+    return slot
+
 def bankRename(slot, name):
     t = _bankTable()
     if t[slot, 1].val: t[slot, 0] = str(name)[:60]; return storeSave('rename %d' % slot)

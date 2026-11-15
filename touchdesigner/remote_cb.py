@@ -1089,7 +1089,7 @@ def state():
     return {'t': 'state', 'prep': prepMsg()['jobs'], 'rec': recMsg(), 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
             'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
-            'bank': _E().bankList(), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
+            'bank': _E().bankList(), 'archn': len(_E().archList()), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
                        for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
             'audioin': audioInputs(),
@@ -1586,6 +1586,14 @@ def handle(msg, reply):
             ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))
             _all({'t': 'quick', 'v': E.quickAll()})
             if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
+        elif t == 'archive':                                       # presets off the board, kept for later
+            a_ = msg.get('do'); n_ = 0
+            if a_ == 'add': E.bankArchive(int(msg.get('v', 0)))
+            elif a_ == 'restore': n_ = E.archRestore(str(msg.get('id', '')))
+            if a_ in ('add', 'restore'):
+                _all({'t': 'bank', 'bank': E.bankList()}); _all(E.qMsg()); _publish(state(), active_only=True); _all(mediaMsg())
+                if n_: _all({'t': 'thumb', 's': n_, 'img': E.thumbB64(n_)})
+            _all({'t': 'arch', 'v': E.archList(True), 'did': a_, 'slot': n_})
         elif t == 'bankgroupren':                                  # rename a group / take presets out of it
             ok = E.bankRenameGroup(msg.get('old', ''), msg.get('name', ''))
             reply({'t': 'saved', 'n': msg.get('n'), 'ok': bool(ok), 'v': {}})

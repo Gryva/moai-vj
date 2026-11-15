@@ -593,6 +593,7 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 .qkb{color:var(--amber)!important;border-color:#ffd23e66!important}header .r1 .fsb.recb{color:var(--red)}#fsbtn{margin-left:0!important}
 .padacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.padacts .pad.add{min-height:0;height:52px;aspect-ratio:auto}.padacts .pad.add>span{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}header .r1 .prepPill[hidden]{display:none}body:not(.editing) header .r1 .savebtn{display:none}.padacts .pad.add small br{display:none}.padacts .pad.add .plus{font-size:20px}
 .pgchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.pgchips::-webkit-scrollbar{display:none}
+.archempty{padding:28px 12px;color:var(--mut,#8a8796);font:600 13px var(--sans);text-align:center}.pad.arch{opacity:.85}.pgc.archc b{letter-spacing:.06em}
 .pgc{flex:none;position:relative;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--raise);display:flex;align-items:center;gap:8px}.pgc b{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase}.pgc i{font:600 11px var(--mono);font-style:normal;opacity:.6}
 .pgc.on{background:var(--ink);color:#0b0a0f;border-color:var(--ink)}.pgc u{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
 .nzlive{position:relative;aspect-ratio:16/9;border-radius:var(--r2);overflow:hidden;background:#000;margin:4px 0 0}.nzlive img{width:100%;height:100%;object-fit:cover;display:block}.nzlive span{position:absolute;left:8px;top:7px;font:800 10px var(--sans);letter-spacing:.1em;color:var(--red);background:#000a;padding:3px 6px;border-radius:var(--r1)}
@@ -957,7 +958,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15w';
+const BUILD = '2026-11-15x';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1039,6 +1040,7 @@ function onMsg(m){
   else if (m.t === 'm') { lastM = performance.now(); if (m.vt) cueTick(m.vt); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); } if ((m.L || m.LT) && S.quick) quickSync();
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
+  else if (m.t === 'arch') { ARCH = m.v || []; if (S) S.archn = ARCH.length; if (m.did === 'restore' && m.slot) { store.set('pgsel', '*'); toast('Back on the board as preset ' + m.slot); } renderPads(); }
   else if (m.t === 'clips') {
     if (pendingClip && m.v.length) { const known = new Set(Object.keys(LOCALCLIP)), nw = m.v.map(c => c.id).filter(id => !known.has(id)).sort().pop();
       if (nw) { LOCALCLIP[nw] = Object.assign(pendingClip, {start: performance.now(), i: -1}); pendingClip = null; } }
@@ -2098,9 +2100,23 @@ function nowCard(){
   $('#nowname').textContent = p ? p.name : 'No preset on air'; $('#nowsub').textContent = p && p.group ? p.group : '';
   const t = S.b && THUMBS[S.b], im = $('#nowimg'); if (t && im.src !== t) im.src = t; else if (!t) im.removeAttribute('src');
 }
+let ARCH = null;                            // archived presets (loaded when the archive is opened)
+function archView(){
+  if (ARCH === null) { send({t:'archive', do:'list'}); return '<div class="archempty">Loading the archive…</div>'; }
+  if (!ARCH.length) return '<div class="archempty">The archive is empty. Hold a preset → 🗄 Archive preset to put it here.</div>';
+  return `<div class="pads">${ARCH.map(a => `<button class="pad full arch" data-arch="${esc(a.id)}">${a.img ? `<img src="data:image/jpeg;base64,${a.img}" alt="">` : ''}<span class="ov"></span><span class="n">🗄 ${esc(a.at.slice(5))}</span><span class="t">${esc(a.name)}</span></button>`).join('')}</div>`;
+}
+function sheetArch(id){
+  const a = (ARCH || []).find(x => x.id === id); if (!a) return;
+  $('#shI').style.display = 'none'; $('#shT').textContent = '🗄 ' + a.name; $('#shP').textContent = 'Archived ' + a.at + (a.group ? ' · group ' + a.group : '') + '. Bring it back to play it or work on it again.';
+  $('#shA').innerHTML = `<button class="pri" data-sh="unarch">↩ Bring it back to the board</button><button data-sh="cancel">Cancel</button>`;
+  $('#sheet').dataset.aid = id; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+}
 function renderPads(){
   nowCard();
   if (!S) return; S.layers.forEach(l => GROUP[l.k] = l.g);
+  const archN = ARCH ? ARCH.length : (S.archn || 0), archOn = store.get('pgsel', '') === '#arch';
+  const archChip = archN || archOn ? `<button class="pgc archc ${archOn ? 'on' : ''}" data-gtog="#arch"><b>🗄 Archive</b><i>${archN}</i></button>` : '';
   const ic = {solid:'●', particles:'⁘', grid:'▦'};
   let n = 0;
   const pad = (p, slot) => { n++;
@@ -2112,7 +2128,8 @@ function renderPads(){
     + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN PRESET</small></span></button>` : '';
   const groups = presetGroups();
   if (!groups.length) { $('#pads').classList.remove('grouped');
-    $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + `<div class="pads">${S.bank.map((p, i) => p ? pad(p, i + 1) : '').join('')}</div>`; header(); return; }
+    const chipsN = archChip ? `<div class="pgchips"><button class="pgc ${archOn ? '' : 'on'}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}</div>` : '';
+    $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chipsN + (archOn ? archView() : `<div class="pads">${S.bank.map((p, i) => p ? pad(p, i + 1) : '').join('')}</div>`); header(); return; }
   const shut = GSHUT;
   const sec = (g, label) => { const list = S.bank.map((p, i) => p && (p.group || '') === g ? [p, i + 1] : null).filter(Boolean); if (!list.length) return '';
     const live = list.some(([, sl]) => sl === S.b), closed = !!shut[g];
@@ -2121,10 +2138,10 @@ function renderPads(){
   $('#pads').classList.add('grouped');
   const all = groups.concat(['']).filter(g => S.bank.some(p => p && (p.group || '') === g)), cnt = g => S.bank.filter(p => p && (p.group || '') === g).length;
   const onair = S.b && S.bank[S.b - 1] ? (S.bank[S.b - 1].group || '') : null;
-  let sel = GRPADD ? '*' : store.get('pgsel', onair ?? all[0]); if (sel !== '*' && !all.includes(sel)) sel = onair ?? all[0];
-  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${g === sel ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${sel === '*' ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button></div>`;
+  let sel = GRPADD ? '*' : store.get('pgsel', onair ?? all[0]); if (sel !== '*' && sel !== '#arch' && !all.includes(sel)) sel = onair ?? all[0];
+  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${g === sel ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${sel === '*' ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}</div>`;
   const list = S.bank.map((p, i) => p && (sel === '*' || (p.group || '') === sel) ? [p, i + 1] : null).filter(Boolean);
-  $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chips + `<div class="pads">${list.map(([p, sl]) => pad(p, sl)).join('')}</div>`;
+  $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chips + (sel === '#arch' ? archView() : `<div class="pads">${list.map(([p, sl]) => pad(p, sl)).join('')}</div>`);
   header(); renderQuick();
 }
 const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
@@ -2773,7 +2790,7 @@ function sheet(slot, simple){
   $('#shT').textContent = p ? 'Preset ' + slot + ' · ' + p.name : 'Empty pad ' + slot;
   $('#shP').textContent = p ? 'Update replaces it (and its picture) with what is on screen now: effects, statue, text and camera.' : 'Save what is on screen now — layers, scene, model and camera.';
   $('#shI').value = p ? p.name : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Preset ' + slot);
-  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button data-sh="grpmenu">Group: ${esc(p.group || 'none')} ▸</button><button class="dan" data-sh="clear">Delete preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
+  $('#shA').innerHTML = `<button class="pri" data-sh="save">${p ? 'Update to what is on screen' : 'Save current'}</button>` + (p ? `<button data-sh="qadd">＋ Add to set list</button><button data-sh="fxfrom">Use its effects on what's on screen</button><button data-sh="rename">Rename only</button><button data-sh="grpmenu">Group: ${esc(p.group || 'none')} ▸</button><button class="dan" data-sh="arch">🗄 Archive preset</button>` : '') + `<button data-sh="cancel">Cancel</button>`;
   $('#sheet').dataset.slot = slot; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 function sheetFx(k){
@@ -2847,6 +2864,8 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'rs') { if (confirm('Bring back all presets, the set list and FX presets from ' + b.dataset.w + '?\n(What you have now is kept as a restore point.)')) { send({t:'store', do:'restore', f:b.dataset.f}); toast('Restoring…'); } }
   else if (b.dataset.sh === 'bkn') { send({t:'store', do:'backup'}); }
   else if (b.dataset.sh === 'fxfrom') { send({t:'fxp', do:'from', slot, fade:ui.fade}); toast('Effects copied onto what is on screen'); }
+  else if (b.dataset.sh === 'arch') { send({t:'archive', do:'add', v:slot}); toast('Archived · find it under 🗄 ARCHIVE'); }
+  else if (b.dataset.sh === 'unarch') { send({t:'archive', do:'restore', id:$('#sheet').dataset.aid}); toast('Bringing it back…'); }
   else if (b.dataset.sh === 'clear') { if (confirm('Delete preset ' + slot + '? (Backups keep it.)')) bankOp('bankclear', slot, '', 'Deleted ' + slot); }
   closeSheet(); buzz(); });
 
@@ -3061,7 +3080,8 @@ document.addEventListener('click', e => {
   else if (d.qmenu !== undefined) { sheetQk(+d.qmenu); buzz(); }
   else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; const v = !qVal(it);
     if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
-  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); renderPads(); buzz(); }
+  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); if (d.gtog === '#arch') ARCH = null; renderPads(); buzz(); }
+  else if (d.arch) { sheetArch(d.arch); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.ksn !== undefined) { const [dx, dy] = d.ksn.split(',').map(Number), st = KS_FINE ? 0.002 : 0.02, [x, y] = ksPos(KS_SEL); ksSet(KS_SEL, x + dx * st, y + dy * st, true); buzz(5); }
