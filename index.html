@@ -601,6 +601,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
 .acts .dng{background:#ff3b3b!important;color:#fff!important;border-color:#ff3b3b!important}
 .acts .recopt.on b{color:var(--lime)}.acts .recopt{grid-column:1/-1;display:block!important;text-align:left;padding:12px 14px!important;height:auto!important}.recopt b{display:block;font-size:14px}.recopt small{display:block;opacity:.75;font-weight:500;font-size:12px;margin-top:3px}
 .pad.phone::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#000b 0 34.2%,transparent 34.2% 65.8%,#000b 65.8%)}.pad.phone .n,.pad.phone .t,.pad.phone .d,.pad.phone .live{z-index:2}
+header .r1 .savenew{border-color:#ffffff33!important;color:var(--ink)!important}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -616,7 +617,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button></div><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button></div><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn savenew" id="saveNewBtn" aria-label="Save as a new preset">＋ SAVE AS NEW</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -944,7 +945,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15p';
+const BUILD = '2026-11-15q';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2780,6 +2781,8 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
     $('#shP').textContent = 'Presets, layers and quick switches that use it follow the new name.';
     $('#shA').innerHTML = `<button class="pri" data-sh="mrenok">✓ Rename</button><button data-sh="cancel">Cancel</button>`; setTimeout(() => { nI.focus(); nI.select(); }, 60); return; }
   else if (b.dataset.sh === 'mrenok') { const v = $('#shI').value.trim(); if (v) send({t:'media', do:'rename', id:$('#sheet').dataset.mid, name:v}); }
+  else if (b.dataset.sh === 'savenewok') { const slot = +b.dataset.slot, name = ($('#shI').value || '').trim() || 'New look ' + slot;
+    bankOp('banksave', slot, name, 'Saved as new · ' + slot + ' · ' + name); S.b = slot; S.bank[slot - 1] = {name, on:S.layers.filter(l => l.on).map(l => l.k), scene:S.pars.Scene, model:S.pars.Model, group:store.get('recfmt', '16:9') === '9:16' ? 'PHONE' : '', phone:store.get('recfmt', '16:9') === '9:16'}; renderPads(); }
   else if (b.dataset.sh === 'trempty') { send({t:'media', do:'emptytrash'}); }
   else if (b.dataset.sh === 'mdel') { const id = $('#sheet').dataset.mid; send({t:'media', do:'uses', id});
     const live = MS.filter(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'file'] === id).map(i => tgtName('m' + i));
@@ -3145,6 +3148,13 @@ if (window.visualViewport) { const vv = visualViewport, fit = () => { const sh =
   lg.addEventListener('contextmenu', e => e.preventDefault());
 })();
 // SAVE (edit mode): what is on screen goes into the preset that is on air (or a new last preset if none is)
+$('#saveNewBtn').addEventListener('click', () => { if (!S) return; const slot = S.bank.indexOf(null) + 1; if (!slot) { toast('All preset slots are full'); return; }
+  const ph = store.get('recfmt', '16:9') === '9:16', cur = S.b && S.bank[S.b - 1], nI = $('#shI');
+  $('#shT').textContent = ph ? '📱 Save as a new phone preset' : 'Save as a new preset';
+  $('#shP').textContent = (cur ? 'A copy of what is on screen now; “' + cur.name + '” stays as it was. ' : '') + 'It goes into slot ' + slot + (ph ? ' and the PHONE group.' : '.');
+  nI.style.display = ''; nI.maxLength = 40; nI.value = cur ? cur.name + (ph ? ' 📱' : ' 2') : (S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'New look'); nI.placeholder = 'Preset name';
+  $('#shA').innerHTML = `<button class="pri" data-sh="savenewok" data-slot="${slot}">✓ Save as new preset</button><button data-sh="cancel">Cancel</button>`;
+  $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); setTimeout(() => { nI.focus(); nI.select(); }, 60); buzz(); });
 $('#savebtn').addEventListener('click', () => {
   if (!S) return;
   const bank = S.bank || [], cur = S.b && bank[S.b - 1] ? S.b : 0;
