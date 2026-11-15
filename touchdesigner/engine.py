@@ -1,5 +1,5 @@
 # MOAI VJ ENGINE  - runs every frame (fx_engine Execute DAT, synced to this file)
-import numpy as np, math, json, os, time, shutil
+import numpy as np, math, json, os, time, shutil, random
 
 def hexc(h, i):
     """'#rrggbb' -> channel i as 0..1 (used by the background-removal shaders)"""
@@ -1827,9 +1827,18 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     keepText = bool(text and C.par.Texton.eval() and tx.get('Texton') and float(tx.get('Textamount', 1.0)) > 0.001
                     and not op('/project1/fx_text').bypass)
     if keepText: textMorphStart(tx, max(fade, 1.4))              # words stay up and morph into the new ones
-    if fade > 0.01 and newModel:                                   # only a new 3D model hides in a dip; with the same model it stays on screen while the camera glides and the effects cross-fade
+    style = str(C.par.Transtyle.eval()) if hasattr(C.par, 'Transtyle') else 'adaptive'
+    if style == 'cut': fade = 0.0
+    if fade > 0.01 and style in TRMODES:                           # picture transitions: the old look is frozen and the new one comes in over it
+        trStart(style, fade, lambda: _bankApply(d, 0.0, cam, model, text, cut=True, slot=slot))
+        try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))
+        except Exception: pass
+        return True
+    dip = style in ('dip', 'flash') or newModel
+    _dipColour(1.0 if style == 'flash' else 0.0)
+    if fade > 0.01 and dip and style != 'adaptive' or (fade > 0.01 and style == 'adaptive' and newModel):   # only a new 3D model hides in a dip in ADAPTIVE; with the same model it stays on screen while the camera glides and the effects cross-fade
         # statue / style changes hide in a live dip: everything swaps instantly at the darkest point
-        glide = bool(cam and d.get('cam') and not newModel)            # same model: the camera keeps moving smoothly through the dip
+        glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
     else:
@@ -1968,6 +1977,32 @@ def qPrewarm():
 
 # ------------------------------------------------------------------ preset dip (live old look -> dark -> live new look)
 XF = {'on': False, 't0': 0.0, 'dur': 1.0, 'phase': 'out', 'pending': None}
+
+TRMODES = {'crossfade': 1, 'wipe': 2, 'zoom': 3, 'glitch': 4}
+TR = {'on': False}
+def _dipColour(v):
+    b = op('/project1/xf_black')
+    if b is not None and abs(b.par.colorr.eval() - v) > 1e-3: b.par.colorr = b.par.colorg = b.par.colorb = v
+def trStart(style, dur, apply):
+    """Freeze what is on screen, put the new look underneath at once, then reveal it (crossfade / wipe / zoom / glitch)."""
+    h, sw = op('/project1/tr_hold'), op('/project1/tr_sw')
+    if h is None or sw is None: apply(); return
+    if TR.get('pending'): TR['pending']()
+    h.par.active = True; TR.update(on=False, pending=apply, mode=TRMODES.get(style, 1), dur=max(0.1, float(dur)), seed=random.random())
+    run("op('/project1/fx_engine').module._trGo()", delayFrames=2)
+def _trGo():
+    h, sw = op('/project1/tr_hold'), op('/project1/tr_sw')
+    h.par.active = False
+    p, TR['pending'] = TR.get('pending'), None
+    if p:
+        try: p()
+        except Exception as e: print('transition', e)
+    TR.update(on=True, t0=absTime.seconds); sw.par.index = 1
+def trUpdate(T):
+    if not TR.get('on'): return
+    g = op('/project1/tr_mix'); u = min(1.0, (T - TR['t0']) / TR['dur'])
+    g.par.vec0valuex, g.par.vec0valuey, g.par.vec0valuez = TR['mode'], u, TR['seed']
+    if u >= 1.0: TR['on'] = False; op('/project1/tr_sw').par.index = 0
 
 def xfadeStart(dur, pending=None, keeptext=False):
     """Fade the running look down (it keeps moving), run `pending` at the dark point, fade the new look up."""
@@ -2491,6 +2526,7 @@ def onFrameStart(frame):
     _safe('camfeed', camfeedUpdate, C, dt, T)
     _safe('sweep', sweepUpdate)
     _safe('dip', xfadeUpdate, T)
+    _safe('trans', trUpdate, T)
     _safe('camera', camUpdate, C, dt)
     _safe('label', _label, C)
     _safe('text', textAll, C, T)

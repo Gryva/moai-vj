@@ -610,6 +610,8 @@ header .r1 .lk.on,header .r1 .stbk{display:inline-flex}header .r1 .lk.bk{border-
 header .r1 .fps{font:500 12px var(--mono)}
 .st2 .stbar{position:relative}.st2.has:not(.open) .stbar::after{content:'';position:absolute;left:50%;bottom:-9px;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
 .st2.hasrdy:not(.open) .stbar::after{background:var(--lime);box-shadow:0 0 6px var(--lime);animation:recp 1.6s ease-in-out infinite}
+.trstyles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:6px 0}.trstyles button{height:var(--h2);border-radius:var(--r2);border:1px solid var(--line);background:var(--raise);font:700 11px var(--sans);letter-spacing:.06em;padding:0 4px}.trstyles button.on{background:var(--lime);color:#0b0a0f;border-color:var(--lime)}
+@media (max-width:520px){.trstyles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:var(--r2);overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:var(--r2);border:1px solid var(--line);background:var(--raise);font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -637,6 +639,7 @@ header .r1 .fps{font:500 12px var(--mono)}
     <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button>
       <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
     <div class="appanel" id="apPanel" hidden>
+      <h4>Transition style</h4><div class="trstyles" id="trStyle"></div><p class="hint2" id="trHint"></p>
       <h4>Transition between presets</h4><div class="tinrow"><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fadein"><i>s</i></span><span class="hint2">0 = cut</span></div>
       <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button><button data-apm="group">THIS GROUP · IN ORDER</button></div>
       <div id="apLost" hidden></div>
@@ -953,7 +956,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15s';
+const BUILD = '2026-11-15t';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2704,10 +2707,17 @@ function sheetBackups(){
     + `<button data-sh="cancel">Close</button>`;
   $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-function apSummary(){                    // "1s fade · 10s" on the small settings button
+const TRS = [['adaptive', 'ADAPTIVE', 'Same 3D model: the camera glides to the new angle while the effects cross-fade, the object stays on screen. A new model dips to black.'],
+  ['crossfade', 'CROSSFADE', 'The old look melts into the new one.'], ['dip', 'DIP TO BLACK', 'Fades out to black, the new look fades in.'], ['flash', 'FLASH', 'A white flash, the new look comes out of it.'],
+  ['wipe', 'WIPE', 'A bright edge sweeps across and reveals the new look.'], ['zoom', 'ZOOM THROUGH', 'The old look rushes past the camera, the new one settles in.'],
+  ['glitch', 'GLITCH', 'Blocks jump between the two looks with colour tearing.'], ['cut', 'CUT', 'Instant, no transition (the time below is ignored).']];
+function trUI(){ const cur = (S && S.pars.Transtyle) || 'adaptive', el = $('#trStyle'); if (!el) return;
+  if (!el.firstChild) el.innerHTML = TRS.map(([v, l]) => `<button data-trs="${v}">${l}</button>`).join('');
+  $$('#trStyle [data-trs]').forEach(b => b.classList.toggle('on', b.dataset.trs === cur)); const h = TRS.find(x => x[0] === cur); $('#trHint').textContent = h ? h[2] : ''; }
+function apSummary(){ trUI();                    // "1s fade · 10s" on the small settings button
   if (!S) return; const at = +S.pars.Autotime || 30, f = ui.fade + ' s';
   const am = S.pars.Automode;
-  $('#apSum').textContent = (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : am === 'group' ? 'group in order · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
+  $('#apSum').textContent = (((S.pars.Transtyle || 'adaptive') !== 'adaptive') ? (TRS.find(x => x[0] === S.pars.Transtyle) || ['', ''])[1].toLowerCase() + ' · ' : '') + (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : am === 'group' ? 'group in order · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
   $$('#apMode [data-apm]').forEach(b => b.classList.toggle('on', b.dataset.apm === (S.pars.Automode || 'random')));
   $$('#apLost [data-aplost]').forEach(b => b.classList.toggle('on', +b.dataset.aplost === (S.pars.Aplost ? 1 : 0)));
 }
@@ -2899,6 +2909,7 @@ document.addEventListener('click', e => {
   if (d.mfold !== undefined && d.mslot) { binOf(+d.mslot).f = d.mfold; renderMedia(); buzz(); return; }
   if (d.mtab) { const i = +d.mtabi; MTAB[i] = MTAB[i] === d.mtab ? null : d.mtab; store.set('mtab', MTAB); mTabsUI(i); if (MTAB[i] === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (MTAB[i] === 'cues') cueUI(i); buzz(); return; }
   if (d.mfr) { MFR[+d.mfr + 'ask'] = S.pars['M' + d.mfr + 'file']; mFrameAsk(+d.mfr); toast('Grabbing the frame playing now…'); buzz(); return; }
+  if (d.trs) { S.pars.Transtyle = d.trs; send({t:'set', p:'Transtyle', v:d.trs}); apSummary(); toast('Transition: ' + (TRS.find(x => x[0] === d.trs) || ['', d.trs])[1].toLowerCase()); buzz(); return; }
   if (d.qkm) { quickDo(d.qkm); return; }
   if (d.mtrash) { binOf(+d.mtrash).f = '\u0001trash'; send({t:'media', do:'trashlist'}); renderMedia(); buzz(); return; }
   if (d.trrest) { send({t:'media', do:'restore', id:d.trrest}); buzz(); return; }
