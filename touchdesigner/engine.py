@@ -2002,16 +2002,8 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
-    elif fade > 0.01 and (newSrc or newScene or newModel):        # new videos / scene style / 3D model: the old fades out still moving, the new fades in - never black
-        mA0 = float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0
-        d2 = d
-        if newScene or newModel: d2 = dict(d)
-        if newScene: d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}       # the style itself changes at the quiet point
-        if newModel:                                              # the old model keeps its own pose and fades out while the camera moves on
-            d2['model'] = C.par.Model.eval()
-            d2['obj'] = {k: C.par[k].eval() for k in OBJKEYS if hasattr(C.par, k)}; d2['obj']['angle'] = S['angle']
-        _bankApply(d2, fade, cam, model, text, cut=False, slot=slot, src=not newSrc)
-        srcFadeStart(d, slot, fade, src=newSrc, scene=newScene or newModel, mA0=mA0, model=newModel)
+    elif fade > 0.01 and (newSrc or newScene or newModel):        # new videos / scene style / 3D model: the old look (still moving) cross-fades into the new one - never black
+        trStart('crossfade', fade, lambda: _bankApply(d, fade, cam, model, text, cut=False, slot=slot))
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
     try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
@@ -2257,6 +2249,8 @@ def _trGo():
     if p:
         try: p()
         except Exception as e: print('transition', e)
+    g = op('/project1/tr_mix')
+    if g is not None: g.par.vec0valuex, g.par.vec0valuey, g.par.vec0valuez = TR['mode'], 0.0, TR['seed']   # starts on the old look (never a frame of the new one / black)
     TR.update(on=True, t0=absTime.seconds); sw.par.index = 1
 def trUpdate(T):
     h = op('/project1/tr_hold')
