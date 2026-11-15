@@ -1542,7 +1542,11 @@ def handle(msg, reply):
             if msg.get('do') == 'start': REC['guide'] = bool(msg.get('guide', REC.get('guide', True))); recStart(str(msg.get('fmt') or '16:9'))
             elif msg.get('do') == 'guide': REC['guide'] = bool(msg.get('guide', True)); recGuide(REC.get('fmt', '16:9'))
             elif msg.get('do') == 'fmt':
-                f = str(msg.get('fmt') or '16:9'); REC['fmt'] = f if f in ('16:9', '9:16', '9:16b') else '16:9'; REC['auto'] = False; REC['guide'] = bool(msg.get('guide', True)); recGuide(REC['fmt'])
+                f = str(msg.get('fmt') or '16:9'); f = f if f in ('16:9', '9:16', '9:16b') else '16:9'; REC['auto'] = False; REC['guide'] = bool(msg.get('guide', True))
+                if REC['t0'] is not None and f != REC.get('fmt'):          # mid-take: this file ends, a new one starts in the new format
+                    recStop(); REC['fmt'] = f; run("op('/project1/remote_cb').module.recStart(%r); op('/project1/remote_cb').module._all(op('/project1/remote_cb').module.recMsg())" % f, delayFrames=4)
+                    _all({'t': 'toast', 'msg': 'Saved that part · recording goes on in ' + ('16:9' if f == '16:9' else '9:16') + ' as a new file'})
+                REC['fmt'] = f; recGuide(f)
             elif msg.get('do') == 'stop': recStop()
             elif msg.get('do') == 'discard': recDiscard(); _all(dict(recMsg(), discarded=True)); return
             _all(recMsg())

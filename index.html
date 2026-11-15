@@ -944,7 +944,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15o';
+const BUILD = '2026-11-15p';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2320,6 +2320,9 @@ function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; re
 const REC = {on:false, t0:0, file:''};
 function recUI(r){ const was = REC.on; REC.on = !!r.on; REC.file = r.file || REC.file; if (REC.on) REC.t0 = performance.now() - (r.secs || 0) * 1000;
   if (r.discarded) toast('Recording thrown away'); else if (was && !REC.on && REC.file) toast('Saved: recordings/' + REC.file); recTick(); }
+function recFmtMenu(){ recFmtMenu._open = true; $('#recfmt').click(); }
+(() => { let tm = null; document.addEventListener('pointerdown', e => { if (e.target.id !== 'recfmt') return; tm = setTimeout(() => { recFmtMenu._held = performance.now(); buzz(20); recFmtMenu(); }, 500); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearTimeout(tm))); })();
 function recFmtSend(){ send({t:'rec', do:'fmt', fmt:store.get('recfmt', '16:9'), guide:store.get('recguide', true)}); }
 function recFmtUI(){ const b = $('#recfmt'); if (b) b.textContent = {'16:9':'▭ 16:9', '9:16':'▯ 9:16', '9:16b':'▯ 9:16 ⧉'}[store.get('recfmt', '16:9')] || '▭ 16:9'; }
 document.addEventListener('DOMContentLoaded', recFmtUI);
@@ -2919,8 +2922,10 @@ document.addEventListener('click', e => {
   if (d.prepdrop) { send({t:'prep', do:'drop', id:d.prepdrop}); delete PREPO[d.prepdrop]; PREPSEL = null; $('#prepEd').dataset.id = ''; $('#prep').hidden = true; buzz(); return; }
   if (t.id === 'recx') { send({t:'rec', do:'discard'}); buzz(20); return; }
   if (t.id === 'recbtn') { send({t:'rec', do: REC.on ? 'stop' : 'start', fmt:store.get('recfmt', '16:9'), guide:store.get('recguide', true)}); buzz(20); return; }
-  if (t.id === 'recfmt') { if (REC.on) { toast('Change the format before you start recording'); return; } const f = store.get('recfmt', '16:9');
-    $('#shI').style.display = 'none'; $('#shT').textContent = 'Recording format'; $('#shP').textContent = 'Only the recording changes; the screen and the stream stay 16:9.';
+  if (t.id === 'recfmt' && !recFmtMenu._open) { if (performance.now() - (recFmtMenu._held || 0) < 600) return; const nf = store.get('recfmt', '16:9') === '16:9' ? '9:16' : '16:9';     // tap: 16:9 <-> 9:16 (hold: all options)
+    store.set('recfmt', nf); recFmtUI(); recFmtSend(); toast(nf === '9:16' ? '▯ 9:16 · phone frame on the screen' + (REC.on ? ' · new file' : '') : '▭ 16:9' + (REC.on ? ' · new file' : '')); buzz(); return; }
+  if (t.id === 'recfmt') { recFmtMenu._open = false; const f = store.get('recfmt', '16:9');
+    $('#shI').style.display = 'none'; $('#shT').textContent = 'Recording format'; $('#shP').textContent = 'Tap the format button to switch 16:9 ↔ 9:16 (also while recording: a new file starts). Only the recording changes; the stream stays 16:9.';
     $('#shA').innerHTML = [['16:9', '▭ 16:9 · computer, YouTube', 'The whole picture, 1280×720.'], ['9:16', '▯ 9:16 · phones (Reels, TikTok, Stories)', 'The middle of the picture, 720×1280. The left and right edges are cut off.'], ['9:16b', '▯ 9:16 · phones, whole picture', 'The full picture in the middle of a 720×1280 frame, with a blurred copy filling the top and bottom.']]
       .map(([v, l, h]) => `<button class="recopt ${v === f ? 'pri' : ''}" data-recf="${v}"><b>${l}</b><small>${h}</small></button>`).join('')
       + `<button class="recopt ${store.get('recguide', true) ? 'on' : ''}" data-recguide="1"><b>${store.get('recguide', true) ? '☑' : '☐'} Show the frame and REC marker on the screen</b><small>On the projector window: the 9:16 frame (green stripes, red while recording) with the sides dimmed to 40 %, and a blinking ● REC while recording. Never in the recording or the stream, but the audience sees it on the projector.</small></button><button data-sh="cancel">Cancel</button>`;
