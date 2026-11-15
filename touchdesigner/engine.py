@@ -1610,7 +1610,7 @@ def bankList():
         try: d = json.loads(data)
         except Exception: out.append(None); continue
         out.append({'name': nm, 'on': [k for k, v in d.get('layers', {}).items() if v[0]], 'scene': d.get('scene', 'solid'), 'model': d.get('model', ''),
-                    'group': (d.get('_meta') or {}).get('group', '')})
+                    'group': (d.get('_meta') or {}).get('group', ''), 'phone': bool((d.get('_meta') or {}).get('phone'))})
     return out
 
 def bankSave(slot, name=None):
@@ -1624,6 +1624,11 @@ def bankSave(slot, name=None):
     try: g0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('group', '') if t[slot, 1].val else ''
     except Exception: g0 = ''
     if g0: meta['group'] = g0                                   # updating a preset keeps its group
+    try:
+        if op('/project1/remote_cb').module.REC.get('fmt') == '9:16':       # saved while the 9:16 frame is on: a phone preset
+            meta['phone'] = True
+            if not g0: meta['group'] = 'PHONE'
+    except Exception: pass
     try: q0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('quick') if t[slot, 1].val else None
     except Exception: q0 = None
     if q0: meta['quick'] = q0                                    # ... and its quick controls
@@ -1827,6 +1832,8 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam, model, text, cut=True, slot=slot), keeptext=keepText)
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
+    try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
+    except Exception: pass
     return True
 
 def _bankApply(d, fade, cam, model, text, cut, slot=None):
@@ -2505,8 +2512,14 @@ def autopilotUpdate(C, T):
         try: op('/project1/remote_cb').module._all(qMsg())
         except Exception: pass
         return
-    q = [x for x in qState()['v'] if _bankTable()[x, 1].val]
     mode = C.par.Automode.eval() if hasattr(C.par, 'Automode') else 'random'
+    if mode == 'group':                                          # the on-air preset's group, in order
+        bl = bankList(); g = (bl[b - 1] or {}).get('group', '') if b and bl[b - 1] else None
+        ring = [i + 1 for i, x in enumerate(bl) if x and g is not None and x.get('group', '') == g]
+        if len(ring) >= 2:
+            nxt = ring[(ring.index(b) + 1) % len(ring)] if b in ring else ring[0]
+            bankLoad(nxt, fade=fd, cam=True, model=True, text=True); return
+    q = [x for x in qState()['v'] if _bankTable()[x, 1].val]
     allp = [i for i in range(1, BANK_SLOTS + 1) if _bankTable()[i, 1].val]
     pool = sorted(set(q)) if (mode == 'setrand' and len(set(q)) >= 2) else allp   # set list - random / every preset
     if len(pool) < 2: return

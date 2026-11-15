@@ -600,6 +600,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
 .mtrrow{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:#16131c;border:1px solid var(--line)}.mtrrow b{font-size:12.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mtrrow i{font:500 10px var(--mono);font-style:normal;opacity:.6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mtrrow button{grid-row:1/3;grid-column:2;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--lime);color:var(--lime);font:800 10.5px var(--sans)}
 .acts .dng{background:#ff3b3b!important;color:#fff!important;border-color:#ff3b3b!important}
 .acts .recopt.on b{color:var(--lime)}.acts .recopt{grid-column:1/-1;display:block!important;text-align:left;padding:12px 14px!important;height:auto!important}.recopt b{display:block;font-size:14px}.recopt small{display:block;opacity:.75;font-weight:500;font-size:12px;margin-top:3px}
+.pad.phone::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#000b 0 34.2%,transparent 34.2% 65.8%,#000b 65.8%)}.pad.phone .n,.pad.phone .t,.pad.phone .d,.pad.phone .live{z-index:2}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -628,7 +629,7 @@ body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}b
       <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
     <div class="appanel" id="apPanel" hidden>
       <h4>Transition between presets</h4><div class="tinrow"><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fadein"><i>s</i></span><span class="hint2">0 = cut</span></div>
-      <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button></div>
+      <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button><button data-apm="group">THIS GROUP · IN ORDER</button></div>
       <div id="apLost" hidden></div>
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
     </div>
@@ -943,7 +944,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15n';
+const BUILD = '2026-11-15o';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -999,7 +1000,8 @@ function onMsg(m){
   if (m.t === 'hist') { HISTORY = {u:m.u || [], r:m.r || 0}; histUI(); return; }
   if (m.t === 'hosts') { if (Array.isArray(m.v) && m.v.length) { const nw = JSON.stringify(m.v) !== JSON.stringify(HOSTS); HOSTS = m.v; if (nw) { store.set('hosts', HOSTS); setTimeout(wsPrefer, 50); } } linkBadge(); return; }
   if (m.t === 'rec' || (m.t === 'state' && m.rec)) recUI(m.t === 'rec' ? m : m.rec);
-  if (m.t === 'state' && !recFmtSend._s) { recFmtSend._s = 1; setTimeout(recFmtSend, 300); }
+  if (m.t === 'state' && !recFmtSend._s) { recFmtSend._s = 1; setTimeout(() => send({t:'rec', do:'guide', guide:store.get('recguide', true)}), 300); }
+  if ((m.t === 'rec' || (m.t === 'state' && m.rec)) && (m.fmt || (m.rec && m.rec.fmt))) { const f = m.fmt || m.rec.fmt; if (f !== store.get('recfmt', '16:9')) { store.set('recfmt', f); recFmtUI(); if (m.t === 'rec' && !m.on) toast(f === '9:16' ? '📱 Phone preset: recording switched to 9:16' : 'Recording back to 16:9'); } }
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
   if (m.t === 'prep' || (m.t === 'state' && m.prep)) prepState(m.t === 'prep' ? m.jobs : m.prep);
   if (m.t === 'toast' && m.msg) toast(m.msg);
@@ -2090,7 +2092,7 @@ function renderPads(){
   const pad = (p, slot) => { n++;
     const dots = p.on.slice(0, 8).map(k => `<i style="background:${GC[GROUP[k]] || '#888'}"></i>`).join('');
     const img = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : '';
-    return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`; };
+    return `<button class="pad full ${slot === S.b ? 'on' : ''} ${p.phone ? 'phone' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${slot} ${p.phone ? '📱' : ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`; };
   const free = S.bank.indexOf(null) + 1;
   const adds = free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE WHAT IS ON SCREEN</small></span></button>`
     + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN PRESET</small></span></button>` : '';
@@ -2692,14 +2694,15 @@ function sheetBackups(){
 function apSummary(){                    // "1s fade · 10s" on the small settings button
   if (!S) return; const at = +S.pars.Autotime || 30, f = ui.fade + ' s';
   const am = S.pars.Automode;
-  $('#apSum').textContent = (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
+  $('#apSum').textContent = (am === 'setlist' ? 'set list in order · ' : am === 'setrand' ? 'set list random · ' : am === 'group' ? 'group in order · ' : '') + (ui.fade > 0 ? f + ' fade' : 'cut') + ' · ' + (at >= 60 ? (at / 60) + 'm' : at + 's');
   $$('#apMode [data-apm]').forEach(b => b.classList.toggle('on', b.dataset.apm === (S.pars.Automode || 'random')));
   $$('#apLost [data-aplost]').forEach(b => b.classList.toggle('on', +b.dataset.aplost === (S.pars.Aplost ? 1 : 0)));
 }
 $('#apMore').addEventListener('click', () => { const open = $('#apPanel').hidden; $('#apPanel').hidden = !open; $('#apMore').setAttribute('aria-expanded', open); buzz(); });   // only opens / closes the settings
 $('#apBtn').addEventListener('click', () => { if (!S) return; const on = !S.pars.Autopilot; S.pars.Autopilot = on; applyPars(S.pars); send({t:'set', p:'Autopilot', v:on}); toast(on ? 'Autopilot on' : 'Autopilot off'); buzz(); });
 $('#apMode').addEventListener('click', e => { const b = e.target.closest('[data-apm]'); if (!b || !S) return; const v = b.dataset.apm;
-  if (v !== 'random' && !(S.queue && S.queue.v && S.queue.v.length)) toast('The set list is empty: turn it on → ＋ ADD PRESETS');
+  if ((v === 'setlist' || v === 'setrand') && !(S.queue && S.queue.v && S.queue.v.length)) toast('The set list is empty: ✎ EDIT SET LIST to add presets');
+  if (v === 'group') toast('Autopilot plays the group of the preset on air, in order (e.g. PHONE)');
   S.pars.Automode = v; send({t:'set', p:'Automode', v}); apSummary(); buzz(); });
 $('#apLost').addEventListener('click', e => { const b = e.target.closest('[data-aplost]'); if (!b || !S) return; const v = b.dataset.aplost === '1';
   S.pars.Aplost = v; send({t:'set', p:'Aplost', v}); apSummary(); toast(v ? 'If the remote drops for 15 s, autopilot takes over' : 'If the remote drops, the look stays as it is'); buzz(); });
@@ -2920,7 +2923,7 @@ document.addEventListener('click', e => {
     $('#shI').style.display = 'none'; $('#shT').textContent = 'Recording format'; $('#shP').textContent = 'Only the recording changes; the screen and the stream stay 16:9.';
     $('#shA').innerHTML = [['16:9', '▭ 16:9 · computer, YouTube', 'The whole picture, 1280×720.'], ['9:16', '▯ 9:16 · phones (Reels, TikTok, Stories)', 'The middle of the picture, 720×1280. The left and right edges are cut off.'], ['9:16b', '▯ 9:16 · phones, whole picture', 'The full picture in the middle of a 720×1280 frame, with a blurred copy filling the top and bottom.']]
       .map(([v, l, h]) => `<button class="recopt ${v === f ? 'pri' : ''}" data-recf="${v}"><b>${l}</b><small>${h}</small></button>`).join('')
-      + `<button class="recopt ${store.get('recguide', true) ? 'on' : ''}" data-recguide="1"><b>${store.get('recguide', true) ? '☑' : '☐'} Show the 9:16 frame on the screen</b><small>With 9:16 · middle: a thin frame on the projector window and the sides dimmed to 40 %, so you see what the phone will show. Never in the recording or the stream — but the audience sees it on the projector.</small></button><button data-sh="cancel">Cancel</button>`;
+      + `<button class="recopt ${store.get('recguide', true) ? 'on' : ''}" data-recguide="1"><b>${store.get('recguide', true) ? '☑' : '☐'} Show the frame and REC marker on the screen</b><small>On the projector window: the 9:16 frame (green stripes, red while recording) with the sides dimmed to 40 %, and a blinking ● REC while recording. Never in the recording or the stream, but the audience sees it on the projector.</small></button><button data-sh="cancel">Cancel</button>`;
     $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); buzz(); return; }
   if (d.recguide) { store.set('recguide', !store.get('recguide', true)); recFmtSend(); $('#recfmt').click(); return; }
   if (d.recf) { store.set('recfmt', d.recf); recFmtUI(); recFmtSend(); $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); toast('Recording format: ' + {'16:9':'16:9', '9:16':'9:16 (middle cut)', '9:16b':'9:16 (whole picture, blurred fill)'}[d.recf]); buzz(); return; }

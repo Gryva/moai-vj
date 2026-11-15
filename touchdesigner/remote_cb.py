@@ -1020,15 +1020,27 @@ def recStart(fmt='16:9'):
     if s_ is not None: s_.par.index = 0 if fmt == '16:9' else 1
     if v_ is not None: v_.par.index = 1 if fmt == '9:16b' else 0
     REC['file'] = os.path.join(d, 'VJ_' + time.strftime('%Y-%m-%d_%H-%M-%S') + ('' if fmt == '16:9' else '_9x16') + '.mov')
-    m.par.file = REC['file']; m.par.record = True; REC['t0'] = time.time()
+    m.par.file = REC['file']; m.par.record = True; REC['t0'] = time.time(); recGuide(fmt)
 def recGuide(fmt):
     """The 9:16 frame + dimmed sides on the projector window only (OUT, the stream and the recording stay clean)."""
-    s_ = op('/project1/disp_src')
-    if s_ is not None: s_.par.index = 1 if fmt == '9:16' and REC.get('guide', True) else 0
+    s_, g_ = op('/project1/disp_src'), op('/project1/disp_guide')
+    frame, rec = fmt == '9:16', REC['t0'] is not None
+    on = REC.get('guide', True) and (frame or rec)
+    if s_ is not None: s_.par.index = 1 if on else 0
+    if g_ is not None:
+        w = 720 * 9 / 16 / 1280.0; x0 = (1 - w) / 2
+        g_.par.vec0valuex, g_.par.vec0valuey, g_.par.vec0valuez, g_.par.vec0valuew = (1.0 if frame else 0.0), (1.0 if rec else 0.0), x0, 1 - x0
+def recAuto(phone):
+    """A phone preset switches the recording (and the frame on screen) to 9:16; the next normal preset switches back."""
+    if REC['t0'] is not None: return                              # never change the format in the middle of a take
+    if phone and REC.get('fmt') != '9:16': REC['fmt'] = '9:16'; REC['auto'] = True
+    elif not phone and REC.get('auto'): REC['fmt'] = '16:9'; REC['auto'] = False
+    else: return
+    recGuide(REC['fmt']); _all(recMsg())
 def recStop():
     m = op('/project1/rec')
     if m is not None: m.par.record = False
-    REC['t0'] = None
+    REC['t0'] = None; recGuide(REC.get('fmt', '16:9'))
     s_ = op('/project1/rec_src')
     if s_ is not None: run("op('/project1/rec_src').par.index = 0", delayFrames=10)     # the phone-format chain stops cooking
 def recDiscard():
@@ -1528,8 +1540,9 @@ def handle(msg, reply):
                 m.par.cuepointunit = 'seconds'; m.par.cuepoint = max(0.0, float(msg.get('sec', 0))); m.par.cuepulse.pulse()
         elif t == 'rec':
             if msg.get('do') == 'start': REC['guide'] = bool(msg.get('guide', REC.get('guide', True))); recStart(str(msg.get('fmt') or '16:9'))
+            elif msg.get('do') == 'guide': REC['guide'] = bool(msg.get('guide', True)); recGuide(REC.get('fmt', '16:9'))
             elif msg.get('do') == 'fmt':
-                f = str(msg.get('fmt') or '16:9'); REC['fmt'] = f if f in ('16:9', '9:16', '9:16b') else '16:9'; REC['guide'] = bool(msg.get('guide', True)); recGuide(REC['fmt'])
+                f = str(msg.get('fmt') or '16:9'); REC['fmt'] = f if f in ('16:9', '9:16', '9:16b') else '16:9'; REC['auto'] = False; REC['guide'] = bool(msg.get('guide', True)); recGuide(REC['fmt'])
             elif msg.get('do') == 'stop': recStop()
             elif msg.get('do') == 'discard': recDiscard(); _all(dict(recMsg(), discarded=True)); return
             _all(recMsg())
