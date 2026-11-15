@@ -1015,12 +1015,16 @@ def recStart(fmt='16:9'):
     m = op('/project1/rec')
     if m is None or REC['t0'] is not None: return
     d = os.path.join(project.folder, 'recordings'); os.makedirs(d, exist_ok=True)
-    fmt = fmt if fmt in ('16:9', '9:16', '9:16b') else '16:9'; REC['fmt'] = fmt
+    fmt = fmt if fmt in ('16:9', '9:16', '9:16b') else '16:9'; REC['fmt'] = fmt; recGuide(fmt)
     s_, v_ = op('/project1/rec_src'), op('/project1/rec_v')                 # 9:16 for phones: the middle cut out, or the whole picture on a blurred copy
     if s_ is not None: s_.par.index = 0 if fmt == '16:9' else 1
     if v_ is not None: v_.par.index = 1 if fmt == '9:16b' else 0
     REC['file'] = os.path.join(d, 'VJ_' + time.strftime('%Y-%m-%d_%H-%M-%S') + ('' if fmt == '16:9' else '_9x16') + '.mov')
     m.par.file = REC['file']; m.par.record = True; REC['t0'] = time.time()
+def recGuide(fmt):
+    """The 9:16 frame + dimmed sides on the projector window only (OUT, the stream and the recording stay clean)."""
+    s_ = op('/project1/disp_src')
+    if s_ is not None: s_.par.index = 1 if fmt == '9:16' and REC.get('guide', True) else 0
 def recStop():
     m = op('/project1/rec')
     if m is not None: m.par.record = False
@@ -1414,6 +1418,7 @@ def _histLabel(m):
 def lostCheck():
     """Called once a second by the engine: remote silent for 15 s and the option is on -> autopilot carries the show."""
     C = _C()
+    return                                                    # autopilot only ever comes on when you switch it on yourself
     if not LOST['t'] or LOST['fired'] or not getattr(C.par, 'Aplost', None) or not C.par.Aplost.eval(): return
     if time.time() - LOST['t'] > 15 and not C.par.Autopilot.eval():
         C.par.Autopilot = True; LOST['fired'] = True
@@ -1522,7 +1527,9 @@ def handle(msg, reply):
             if 1 <= i <= 6 and m is not None:
                 m.par.cuepointunit = 'seconds'; m.par.cuepoint = max(0.0, float(msg.get('sec', 0))); m.par.cuepulse.pulse()
         elif t == 'rec':
-            if msg.get('do') == 'start': recStart(str(msg.get('fmt') or '16:9'))
+            if msg.get('do') == 'start': REC['guide'] = bool(msg.get('guide', REC.get('guide', True))); recStart(str(msg.get('fmt') or '16:9'))
+            elif msg.get('do') == 'fmt':
+                f = str(msg.get('fmt') or '16:9'); REC['fmt'] = f if f in ('16:9', '9:16', '9:16b') else '16:9'; REC['guide'] = bool(msg.get('guide', True)); recGuide(REC['fmt'])
             elif msg.get('do') == 'stop': recStop()
             elif msg.get('do') == 'discard': recDiscard(); _all(dict(recMsg(), discarded=True)); return
             _all(recMsg())
