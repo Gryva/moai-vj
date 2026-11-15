@@ -1715,7 +1715,7 @@ def bankList():
         try: d = json.loads(data)
         except Exception: out.append(None); continue
         out.append({'name': nm, 'on': [k for k, v in d.get('layers', {}).items() if v[0]], 'scene': d.get('scene', 'solid'), 'model': d.get('model', ''),
-                    'group': (d.get('_meta') or {}).get('group', ''), 'phone': bool((d.get('_meta') or {}).get('phone'))})
+                    'group': (d.get('_meta') or {}).get('group', ''), 'phone': bool((d.get('_meta') or {}).get('phone')), 'ord': (d.get('_meta') or {}).get('ord')})
     return out
 
 def bankSave(slot, name=None):
@@ -1729,6 +1729,9 @@ def bankSave(slot, name=None):
     try: g0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('group', '') if t[slot, 1].val else ''
     except Exception: g0 = ''
     if g0: meta['group'] = g0                                   # updating a preset keeps its group
+    try: o0 = (json.loads(t[slot, 1].val).get('_meta') or {}).get('ord') if t[slot, 1].val else None
+    except Exception: o0 = None
+    if o0 is not None: meta['ord'] = o0                         # ... and its place in the order you dragged it to
     try:
         if op('/project1/remote_cb').module.REC.get('fmt') == '9:16':       # saved while the 9:16 frame is on: a phone preset
             meta['phone'] = True
@@ -1811,6 +1814,17 @@ def archRestore(aid):
     try: writeJsonSafe(ARCH_FILE, [x for x in a if x['id'] != aid], indent=1)
     except Exception: pass
     return slot
+
+def bankOrder(slots):
+    """The order you dragged the presets into (on the board, inside a group, for the arrow keys and GROUP IN ORDER)."""
+    t = _bankTable(); n = 0
+    for k, sl in enumerate(slots):
+        try:
+            sl = int(sl)
+            if not 1 <= sl <= BANK_SLOTS or not t[sl, 1].val: continue
+            d = json.loads(t[sl, 1].val); m = dict(d.get('_meta') or {}); m['ord'] = k; d['_meta'] = m; t[sl, 1] = json.dumps(d); n += 1
+        except Exception: pass
+    return storeSave('order') if n else False
 
 def bankRename(slot, name):
     t = _bankTable()
@@ -2838,6 +2852,7 @@ def autopilotUpdate(C, T):
     if mode == 'group':                                          # the on-air preset's group, in order
         bl = bankList(); g = (bl[b - 1] or {}).get('group', '') if b and bl[b - 1] else None
         ring = [i + 1 for i, x in enumerate(bl) if x and g is not None and x.get('group', '') == g]
+        ring.sort(key=lambda sl: (bl[sl - 1].get('ord') if bl[sl - 1].get('ord') is not None else sl, sl))       # the order you dragged them into
         if len(ring) >= 2:
             nxt = ring[(ring.index(b) + 1) % len(ring)] if b in ring else ring[0]
             bankLoad(nxt, fade=fd, cam=True, model=True, text=True); return

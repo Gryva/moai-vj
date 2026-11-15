@@ -1711,6 +1711,8 @@ def handle(msg, reply):
             _all({'t': 'quick', 'v': E.quickAll()})
             if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
         elif t == 'song': songCmd(msg, reply)
+        elif t == 'bankorder' and isinstance(msg.get('v'), list):
+            E.bankOrder(msg['v'][:128]); _all({'t': 'bank', 'bank': E.bankList()})
         elif t == 'drawget': reply(drawImgMsg(int(msg.get('slot', 0) or 0)))
         elif t == 'archive':                                       # presets off the board, kept for later
             a_ = msg.get('do'); n_ = 0

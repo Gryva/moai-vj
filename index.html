@@ -593,6 +593,7 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 .qkb{color:var(--amber)!important;border-color:#ffd23e66!important}header .r1 .fsb.recb{color:var(--red)}#fsbtn{margin-left:0!important}
 .padacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.padacts .pad.add{min-height:0;height:52px;aspect-ratio:auto}.padacts .pad.add>span{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}header .r1 .prepPill[hidden]{display:none}body:not(.editing) header .r1 .savebtn{display:none}.padacts .pad.add small br{display:none}.padacts .pad.add .plus{font-size:20px}
 .pgchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.pgchips::-webkit-scrollbar{display:none}
+body.arranging #pads .pad.full{outline:2px dashed #ffd23e88;outline-offset:-2px;touch-action:none;cursor:grab}body.arranging #pads .pad .live{display:none}.pad.arrdrag{opacity:.55;outline:2px solid #fff!important;transform:scale(.96)}.pgc.arrc.on{background:var(--amber);color:#0b0a0f}
 .archempty{padding:28px 12px;color:var(--mut,#8a8796);font:600 13px var(--sans);text-align:center}.pad.arch{opacity:.85}.pgc.archc b{letter-spacing:.06em}
 .sgtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sgtop select{flex:1 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:600 13px var(--sans)}
 .sgtop input{flex:2 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--sunk,#0d0c12);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:500 13px var(--sans)}
@@ -981,7 +982,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16g';
+const BUILD = '2026-11-16h';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2130,6 +2131,21 @@ function nowCard(){
   $('#nowname').textContent = p ? p.name : 'No preset on air'; $('#nowsub').textContent = p && p.group ? p.group : '';
   const t = S.b && THUMBS[S.b], im = $('#nowimg'); if (t && im.src !== t) im.src = t; else if (!t) im.removeAttribute('src');
 }
+let ARR = false;                            // ARRANGE mode: drag the presets into the order you like
+const padSort = L => L.slice().sort((a, b) => (a[0].ord ?? a[1]) - (b[0].ord ?? b[1]) || a[1] - b[1]);
+(() => { let D = null; const P = () => $('#pads');
+  const padOf = t => { const b = t && t.closest && t.closest('#pads .pad[data-pad]'); return b && /^\d+$/.test(b.dataset.pad) ? b : null; };
+  document.addEventListener('pointerdown', e => { if (!ARR) return; const b = padOf(e.target); if (!b) return; e.stopPropagation(); e.preventDefault(); D = {el:b, x:e.clientX, y:e.clientY, moved:false}; }, true);
+  document.addEventListener('pointermove', e => { if (!D) return; if (!D.moved && Math.hypot(e.clientX - D.x, e.clientY - D.y) < 8) return; D.moved = true; D.el.classList.add('arrdrag');
+    const o = padOf(document.elementFromPoint(e.clientX, e.clientY)); if (!o || o === D.el) return;
+    const r = o.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2; o.parentNode.insertBefore(D.el, after ? o.nextSibling : o); }, true);
+  const end = e => { if (!D) return; e.stopPropagation(); const d = D; D = null; d.el.classList.remove('arrdrag'); if (!d.moved) return;
+    const v = Array.from(P().querySelectorAll('.pad[data-pad]')).map(b => +b.dataset.pad).filter(n => n > 0);
+    v.forEach((sl, k) => { if (S.bank[sl - 1]) S.bank[sl - 1].ord = k; }); send({t:'bankorder', v}); buzz(8); };
+  document.addEventListener('pointerup', end, true); document.addEventListener('pointercancel', end, true);
+  document.addEventListener('click', e => { if (ARR && padOf(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
+  document.addEventListener('touchmove', e => { if (D) e.preventDefault(); }, {passive:false});
+})();
 let ARCH = null;                            // archived presets (loaded when the archive is opened)
 function archView(){
   if (ARCH === null) { send({t:'archive', do:'list'}); return '<div class="archempty">Loading the archive…</div>'; }
@@ -2158,8 +2174,8 @@ function renderPads(){
     + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN PRESET</small></span></button>` : '';
   const groups = presetGroups();
   if (!groups.length) { $('#pads').classList.remove('grouped');
-    const chipsN = archChip ? `<div class="pgchips"><button class="pgc ${archOn ? '' : 'on'}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}</div>` : '';
-    $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chipsN + (archOn ? archView() : `<div class="pads">${S.bank.map((p, i) => p ? pad(p, i + 1) : '').join('')}</div>`); header(); return; }
+    const chipsN = `<div class="pgchips"><button class="pgc ${archOn ? '' : 'on'}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}<button class="pgc arrc ${ARR ? 'on' : ''}" data-arr="1"><b>${ARR ? '✓ DONE' : '⇅ ARRANGE'}</b></button></div>`;
+    $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chipsN + (archOn ? archView() : `<div class="pads">${padSort(S.bank.map((p, i) => p ? [p, i + 1] : null).filter(Boolean)).map(([p, sl]) => pad(p, sl)).join('')}</div>`); header(); return; }
   const shut = GSHUT;
   const sec = (g, label) => { const list = S.bank.map((p, i) => p && (p.group || '') === g ? [p, i + 1] : null).filter(Boolean); if (!list.length) return '';
     const live = list.some(([, sl]) => sl === S.b), closed = !!shut[g];
@@ -2169,8 +2185,8 @@ function renderPads(){
   const all = groups.concat(['']).filter(g => S.bank.some(p => p && (p.group || '') === g)), cnt = g => S.bank.filter(p => p && (p.group || '') === g).length;
   const onair = S.b && S.bank[S.b - 1] ? (S.bank[S.b - 1].group || '') : null;
   let sel = GRPADD ? '*' : store.get('pgsel', onair ?? all[0]); if (sel !== '*' && sel !== '#arch' && !all.includes(sel)) sel = onair ?? all[0];
-  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${g === sel ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${sel === '*' ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}</div>`;
-  const list = S.bank.map((p, i) => p && (sel === '*' || (p.group || '') === sel) ? [p, i + 1] : null).filter(Boolean);
+  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${g === sel ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${sel === '*' ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}<button class="pgc arrc ${ARR ? 'on' : ''}" data-arr="1"><b>${ARR ? '✓ DONE' : '⇅ ARRANGE'}</b></button></div>`;
+  const list = padSort(S.bank.map((p, i) => p && (sel === '*' || (p.group || '') === sel) ? [p, i + 1] : null).filter(Boolean));
   $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chips + (sel === '#arch' ? archView() : `<div class="pads">${list.map(([p, sl]) => pad(p, sl)).join('')}</div>`);
   header(); renderQuick();
 }
@@ -3223,6 +3239,7 @@ document.addEventListener('click', e => {
     if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); if (d.gtog === '#arch') ARCH = null; renderPads(); buzz(); }
   else if (d.arch) { sheetArch(d.arch); buzz(); }
+  else if (d.arr) { ARR = !ARR; document.body.classList.toggle('arranging', ARR); renderPads(); toast(ARR ? 'Drag the presets into the order you like' : 'Order saved'); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.ksn !== undefined) { const [dx, dy] = d.ksn.split(',').map(Number), st = KS_FINE ? 0.002 : 0.02, [x, y] = ksPos(KS_SEL); ksSet(KS_SEL, x + dx * st, y + dy * st, true); buzz(5); }
