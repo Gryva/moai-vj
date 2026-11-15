@@ -1825,6 +1825,10 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     try: slot = int(slot)
     except Exception: return False
     if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
+    if SF:                                                        # a new change during a source fade: the half-faded layers get the new preset's own values
+        if SF.get('phase') == 1:
+            for i, a in SF['a0'].items(): mp(op('/project1/CONTROLS'), i, 'alpha').val = a
+        SF.clear()
     try: d = json.loads(t[slot, 1].val)
     except Exception as e:
         storeLog('preset %d is unreadable: %s' % (slot, e)); _storeAlert('Preset %d is damaged - use Undo / a restore point' % slot)
@@ -1855,7 +1859,10 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
-    elif fade > 0.01 and (newScene or newSrc):
+    elif fade > 0.01 and newSrc and not newScene:                  # new videos / pictures: they fade out and the new ones fade in, everything keeps moving
+        _bankApply(d, fade, cam, model, text, cut=False, slot=slot, src=False)
+        srcFadeStart(d, slot, fade)
+    elif fade > 0.01 and newScene:
         trStart('crossfade', min(fade, 1.5), lambda: _bankApply(d, fade, cam, model, text, cut=False, slot=slot))
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
@@ -1863,10 +1870,11 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     except Exception: pass
     return True
 
-def _bankApply(d, fade, cam, model, text, cut, slot=None):
+def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
     C = op('/project1/CONTROLS'); T = absTime.seconds
-    try: applySrc(d, slot)
-    except Exception as er: print('preset source failed', er)
+    if src:
+        try: applySrc(d, slot)
+        except Exception as er: print('preset source failed', er)
     old = {r['key']: (_isOn(r), float(r['amt']), float(r['p1'])) for r in layers()}
     S['colfade'] = fade
     applyLook(d, text=text)                                      # writes the table (instant values)
@@ -2011,6 +2019,27 @@ def qPrewarm():
 
 # ------------------------------------------------------------------ preset dip (live old look -> dark -> live new look)
 XF = {'on': False, 't0': 0.0, 'dur': 1.0, 'phase': 'out', 'pending': None}
+
+SF = {}
+def srcFadeStart(d, slot, fade):
+    """Live source change: the old media layers fade out (still playing), the new ones are put in at the quiet point and fade in."""
+    C = op('/project1/CONTROLS')
+    SF.clear(); SF.update(d=d, slot=slot, t0=absTime.seconds, half=max(0.05, fade * 0.5), phase=1,
+                          a0={i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()})
+def srcFadeStep(T):
+    if not SF: return
+    C = op('/project1/CONTROLS'); u = min(1.0, (T - SF['t0']) / SF['half']); e = u * u * (3.0 - 2.0 * u)
+    if SF['phase'] == 1:
+        for i, a in SF['a0'].items(): mp(C, i, 'alpha').val = a * (1.0 - e)
+        if u >= 1.0:
+            try: applySrc(SF['d'], SF['slot'])
+            except Exception as er: print('preset source failed', er)
+            SF['a1'] = {i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()}
+            for i in SF['a1']: mp(C, i, 'alpha').val = 0.0
+            SF.update(phase=2, t0=T)
+    else:
+        for i, a in SF['a1'].items(): mp(C, i, 'alpha').val = a * e
+        if u >= 1.0: SF.clear()
 
 TRMODES = {'crossfade': 1, 'wipe': 2, 'zoom': 3, 'glitch': 4}
 TR = {'on': False}
@@ -2567,6 +2596,7 @@ def onFrameStart(frame):
     _safe('sweep', sweepUpdate)
     _safe('dip', xfadeUpdate, T)
     _safe('trans', trUpdate, T)
+    if SF: _safe('srcfade', srcFadeStep, T)
     if PG or S.get('angoff'): _safe('pose', poseGlideStep, C, T)
     _safe('camera', camUpdate, C, dt)
     _safe('label', _label, C)
