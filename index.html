@@ -980,7 +980,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16b';
+const BUILD = '2026-11-16c';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1063,6 +1063,7 @@ function onMsg(m){
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
   else if (m.t === 'song') songMsgIn(m);
+  else if (m.t === 'drawimg') drawImgIn(m);
   else if (m.t === 'arch') { ARCH = m.v || []; if (S) S.archn = ARCH.length; if (m.did === 'restore' && m.slot) { store.set('pgsel', '*'); toast('Back on the board as preset ' + m.slot); } renderPads(); }
   else if (m.t === 'clips') {
     if (pendingClip && m.v.length) { const known = new Set(Object.keys(LOCALCLIP)), nw = m.v.map(c => c.id).filter(id => !known.has(id)).sort().pop();
@@ -1660,7 +1661,12 @@ function drawShape(o){
   if (o.f && o.t !== 'pen' && o.t !== 'line' && o.t !== 'arrow') { dcx.fillStyle = drawStyle(o.c); dcx.fill(); }
   dcx.stroke();
 }
-function drawRender(){ dcx.fillStyle = '#000'; dcx.fillRect(0, 0, 640, 360); DR.ops.forEach(drawShape); if (DR.cur) drawShape(DR.cur); }
+function drawRender(){ dcx.fillStyle = '#000'; dcx.fillRect(0, 0, 640, 360); const bg = DRBG[DR.slot]; if (bg && bg.complete) dcx.drawImage(bg, 0, 0, 640, 360); DR.ops.forEach(drawShape); if (DR.cur) drawShape(DR.cur); }
+const DRBG = {};                              // drawing layer -> the picture that is on screen now (a preset's drawing); strokes go on top
+function drawImgIn(m){
+  const i = +m.slot; if (!i) return;
+  if (!m.img) { DRBG[i] = null; if (DR.slot === i) { DR.ops = []; drawSave(); drawRender(); } return; }
+  const im = new Image(); im.onload = () => { DRBG[i] = im; if (DR.slot === i) { DR.ops = []; drawSave(); drawRender(); } }; im.src = 'data:image/png;base64,' + m.img; }
 const DR_LIVE = {v:store.get('drawlive', true), pend:false, force:false};
 function drawLiveUI(){ $$('[data-dlive]').forEach(b => b.classList.toggle('on', (b.dataset.dlive === '1') === DR_LIVE.v)); $$('.dshow').forEach(b => { b.hidden = DR_LIVE.v; b.classList.toggle('pend', !!DR_LIVE.pend); }); }
 drawLiveUI();
@@ -1678,7 +1684,7 @@ function drawPick(i){                     // which drawing layer the pad is draw
   if (!ops) { ops = store.get('drawmig', 0) ? [] : store.get('draw', []); store.set('drawmig', 1); }
   DR.ops = ops;
   const h = $('#dhost' + i); if (h) h.appendChild($('#dpadwrap'));
-  drawRender(); if (S) mediaCardsUI(S.pars);     // no send here: the layer keeps the drawing it has (a preset's) until you draw
+  drawRender(); send({t:'drawget', slot:i}); if (S) mediaCardsUI(S.pars);     // the pad shows the drawing that is on screen; no send here: the layer keeps the drawing it has (a preset's) until you draw
 }
 const dpos = e => { const r = dcv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 640), Math.round((e.clientY - r.top) / r.height * 360)]; };
 dcv.addEventListener('pointerdown', e => { dcv.setPointerCapture(e.pointerId); const [x, y] = dpos(e);
@@ -3159,7 +3165,7 @@ document.addEventListener('click', e => {
   else if (d.dfs !== undefined) { drawFull(d.dfs === '1'); buzz(8); }
   else if (d.dtools) { const w = $('#dpadwrap'); w.classList.toggle('notools'); store.set('dnotools', w.classList.contains('notools') ? 1 : 0); setTimeout(drawFit, 30); buzz(6); }
   else if (d.du) { DR.ops.pop(); drawRender(); drawSend(); drawSave(); buzz(); }
-  else if (d.dc) { DR.ops = []; drawRender(); drawSend(); drawSave(); buzz(15); }
+  else if (d.dc) { DR.ops = []; DRBG[DR.slot] = null; drawRender(); drawSend(); drawSave(); buzz(15); }
 
   else if (t.id === 'camflip') { CAMF.facing = CAMF.facing === 'user' ? 'environment' : 'user'; if (CAMF.on) { camStop(false); camStart(); } else toast(CAMF.facing === 'user' ? 'Selfie camera' : 'Back camera'); buzz(); }
   else if (d.layer && CPICK) { const P = CPICK, L = cuesOf(P.i); if (L[P.n]) { L[P.n].k = d.layer; cuesSet(P.i, L); } cuePickEnd(true); buzz(); }

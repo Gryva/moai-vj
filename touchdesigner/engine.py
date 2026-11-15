@@ -1640,6 +1640,7 @@ def applySrc(d, slot=None):
                 if im.shape[2] == 3: im = R.drawRGBA(im)
                 else: im = cv2.cvtColor(im, cv2.COLOR_BGRA2RGBA)
                 R.DRAWS[int(k)] = {'img': np.ascontiguousarray(im[::-1]), 'new': True}
+    run("op('/project1/remote_cb').module.drawTell()", delayFrames=2)          # the phones' drawing pads show the preset's drawing
 
 def drawPath(slot): return '%s/td/drawings/p%d.png' % (project.folder, int(slot))
 

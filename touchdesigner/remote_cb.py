@@ -199,6 +199,24 @@ def drawRGBA(bgr):
     col = np.where(a > 0, rgb * 255.0 / np.maximum(a, 1.0), 0)
     return np.concatenate([col, a], axis=2).clip(0, 255).astype(np.uint8)
 
+def drawImgMsg(slot):
+    """A drawing layer's picture for the phone's drawing pad (colour on black PNG, the way the pad draws)."""
+    m = {'t': 'drawimg', 'slot': slot, 'img': None}
+    img = (DRAWS.get(slot) or {}).get('img')
+    if img is None: return m
+    try:
+        import cv2, numpy as np, base64
+        a = img[::-1].astype(np.float32); rgb = a[..., :3] * (a[..., 3:4] / 255.0)
+        bgr = cv2.cvtColor(np.clip(rgb, 0, 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+        if bgr.shape[1] != 1280: bgr = cv2.resize(bgr, (1280, 720), interpolation=cv2.INTER_AREA)
+        ok, buf = cv2.imencode('.png', bgr)
+        if ok: m['img'] = base64.b64encode(buf.tobytes()).decode('ascii')
+    except Exception as e: print('drawing for the pad failed', e)
+    return m
+def drawTell():
+    C = _C()
+    for i in range(1, 7):
+        if C.par['M%don' % i].eval() and C.par['M%dkind' % i].eval() == 'draw': _all(drawImgMsg(i))
 def drawFrame(payload):
     """The phone sends its whole drawing as a PNG whenever it changes (black = empty). Only while Draw is on."""
     payload = streamCheck(payload)
@@ -1692,6 +1710,7 @@ def handle(msg, reply):
             _all({'t': 'quick', 'v': E.quickAll()})
             if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
         elif t == 'song': songCmd(msg, reply)
+        elif t == 'drawget': reply(drawImgMsg(int(msg.get('slot', 0) or 0)))
         elif t == 'archive':                                       # presets off the board, kept for later
             a_ = msg.get('do'); n_ = 0
             if a_ == 'add': E.bankArchive(int(msg.get('v', 0)))
