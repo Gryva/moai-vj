@@ -956,7 +956,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15u';
+const BUILD = '2026-11-15v';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2332,7 +2332,10 @@ function mirEnc(c){ return c.m + c.side * 10 + c.pos * 100; }
 function sbDec(p){ p = +p; if (p >= 10000) { const q = Math.round(p) - 10000; return {look:Math.floor(q / 100), mv:q % 100}; } const v = Math.round(Math.max(0, Math.min(1, p)) * 99); return {look:v, mv:v}; }
 const REC = {on:false, t0:0, file:''};
 function recUI(r){ const was = REC.on; REC.on = !!r.on; REC.file = r.file || REC.file; if (REC.on) REC.t0 = performance.now() - (r.secs || 0) * 1000;
-  if (r.discarded) toast('Recording thrown away'); else if (was && !REC.on && REC.file) toast('Saved: recordings/' + REC.file); recTick(); }
+  const cv = +r.conv || 0;
+  if (r.discarded) toast('Recording thrown away'); else if (was && !REC.on && REC.file) toast('Saved - making the MP4: recordings/' + REC.file.replace(/\.mov$/i, '.mp4'));
+  else if (REC.conv > 0 && cv === 0 && !REC.on) toast('MP4 ready in recordings');
+  REC.conv = cv; recTick(); }
 function recFmtMenu(){ recFmtMenu._open = true; $('#recfmt').click(); }
 (() => { let tm = null; document.addEventListener('pointerdown', e => { if (e.target.id !== 'recfmt') return; tm = setTimeout(() => { recFmtMenu._held = performance.now(); buzz(20); recFmtMenu(); }, 500); });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearTimeout(tm))); })();

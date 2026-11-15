@@ -521,7 +521,7 @@ def prepPoll():
             if rel: _allMedia(); mediaPlay(rel, fit=True, slot=ps); _publish(state(), active_only=True)
     if PREPQ: PREPSIG['until'] = time.time() + 6
     while PREPQ: _all(PREPQ.pop(0))
-    if any(j['state'] == 'download' or j.get('busy') or j.get('playto') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
+    if any(j['state'] == 'download' or j.get('busy') or j.get('playto') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or RECCONV or time.time() < PREPSIG.get('until', 0):
         run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
 
 def _prepDownload(j):
@@ -1009,7 +1009,7 @@ def audioInputs():
 # ---------------------------------------------------------------- recording the show (what the projector shows, before keystone)
 # Motion-JPEG .mov + the audio input: cheap to encode, so the show keeps 60 fps (H.264 needs a paid TouchDesigner licence).
 REC = {'t0': None, 'file': ''}
-def recMsg(): return {'t': 'rec', 'fmt': REC.get('fmt', '16:9'), 'on': REC['t0'] is not None, 'secs': round(time.time() - REC['t0'], 1) if REC['t0'] else 0, 'file': os.path.basename(REC['file'])}
+def recMsg(): return {'t': 'rec', 'fmt': REC.get('fmt', '16:9'), 'on': REC['t0'] is not None, 'secs': round(time.time() - REC['t0'], 1) if REC['t0'] else 0, 'file': os.path.basename(REC['file']), 'conv': len(RECCONV)}
 def recStart(fmt='16:9'):
     m = op('/project1/rec')
     if m is None or REC['t0'] is not None: return
@@ -1036,16 +1036,48 @@ def recAuto(phone):
     elif not phone and REC.get('auto'): REC['fmt'] = '16:9'; REC['auto'] = False
     else: return
     recGuide(REC['fmt']); _all(recMsg())
-def recStop():
+def recStop(conv=True):
     m = op('/project1/rec')
+    f = REC['file'] if REC['t0'] is not None else ''
     if m is not None: m.par.record = False
+    if conv and f: run("op('/project1/remote_cb').module._recConv(%r, 6)" % f, delayFrames=30)     # once the recorder has let go of the file
     REC['t0'] = None; recGuide(REC.get('fmt', '16:9'))
     s_ = op('/project1/rec_src')
     if s_ is not None: run("op('/project1/rec_src').par.index = 0", delayFrames=10)     # the phone-format chain stops cooking
 def recDiscard():
     """Stop and throw the take away (the file is deleted once the recorder has let go of it)."""
-    f = REC['file']; recStop(); REC['file'] = ''
+    f = REC['file']; recStop(conv=False); REC['file'] = ''
     if f: run("op('/project1/remote_cb').module._recDel(%r, 5)" % f, delayFrames=20)
+RECCONV = set()
+def _recConv(f, tries):
+    """Finished takes become .mp4 (H.264 + AAC) in the background; the big .mov is removed once the .mp4 checks out."""
+    if not os.path.exists(f) or not os.path.exists(FFMPEG): return
+    try:
+        with open(f, 'rb+'): pass                                  # still held by the recorder: try again a bit later
+    except Exception:
+        if tries > 0: run("op('/project1/remote_cb').module._recConv(%r, %d)" % (f, tries - 1), delayFrames=60)
+        return
+    import threading
+    RECCONV.add(f); _all(recMsg())
+    threading.Thread(target=_recConvT, args=(f,), daemon=True).start()
+    run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
+def _recConvT(f):
+    out = os.path.splitext(f)[0] + '.mp4'; tmp = os.path.splitext(f)[0] + '_conv.mp4'
+    try:
+        r = _prepRun([FFMPEG, '-y', '-v', 'error', '-i', f, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-threads', '2',
+                      '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', tmp])
+        if r.returncode == 0 and os.path.exists(tmp) and os.path.getsize(tmp) > 1024:
+            os.replace(tmp, out)
+            try: os.remove(f)
+            except Exception: pass
+        else:
+            print('recording convert failed', f, (r.stderr or b'')[-300:])
+            try: os.remove(tmp)
+            except Exception: pass
+    except Exception as e: print('recording convert failed', f, e)
+    finally:
+        RECCONV.discard(f); PREPQ.append(recMsg())
+
 def _recDel(f, tries):
     try:
         if os.path.exists(f) and os.path.dirname(os.path.abspath(f)) == os.path.abspath(os.path.join(project.folder, 'recordings')): os.remove(f)
