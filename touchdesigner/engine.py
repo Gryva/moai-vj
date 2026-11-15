@@ -151,6 +151,8 @@ def audioUpdate(C, dt, T):
     A['rise'] = rise
     # ---- kick envelope: smooth rise (~30 ms) then a release set by Beat feel (120 .. 650 ms)
     since = T - A['lastkick']
+    if A['lastkick'] != A.get('pk0'): A['pk0'] = A['lastkick']; S['pulse'] = 1.0            # BEAT PULSE: jumps on each beat, eases back down
+    else: S['pulse'] = S.get('pulse', 0.0) * math.exp(-dt / max(0.03, float(C.par.Pulsedecay.eval()) if hasattr(C.par, 'Pulsedecay') else 0.35))
     tgt = 1.0 if since < 0.045 else 0.0
     S['kick'] = _ease(S['kick'], tgt, 0.028 if tgt > S['kick'] else 0.12 + 0.53 * feel, dt)
     react = C.par.Reactivity.eval()
@@ -218,10 +220,79 @@ def vidTime(i):
         return (float(m.index) / r, n / r) if n > 1 else None
     except Exception: return None
 def _cueSet(i, c, on):
-    tgt = 'm%d' % i if c.get('tgt', 'layer') == 'layer' else 'all'; k = c.get('k'); fd = float(c.get('fade', 0) or 0)
+    tg = c.get('tgt', 'layer'); tgt = ('m%d' % i if tg == 'layer' else 'all') if tg in ('layer', 'all') or not tg else tg; k = c.get('k'); fd = float(c.get('fade', 0) or 0)
     if tgt == 'all': setLayer(k, on=on)
     else: tSetLayer(tgt, k, on=on)
     if fd > 0.01: fxFadeToggle(tgt, k, on, fd)
+# ---------------------------------------------------------------- SONG TIMELINE: a music track drives preset changes, effect blocks and slider ramps
+SONG = {'file': '', 'dur': 0.0, 'pos': 0.0, 'play': False, 'keys': {}, 'fxon': {}}
+def songPos(T=None):
+    if not SONG.get('play'): return SONG['pos']
+    T = absTime.seconds if T is None else T
+    return SONG['p0'] + (T - SONG['t0'])
+def songPlay(on, pos=None):
+    C = op('/project1/CONTROLS'); f = op('/project1/AUDIO/file_in')
+    if pos is None: pos = songPos()
+    pos = max(0.0, min(float(pos), max(0.0, SONG['dur'] - 0.05) if SONG['dur'] else float(pos)))
+    SONG['pos'] = pos
+    if on and SONG['file']:
+        f.par.play = False; f.par.repeat = 'off'; f.par.cuepoint = pos; f.par.cuepointunit = 'seconds'; f.par.cuepulse.pulse()
+        f.par.play = True; C.par.Source = 'file'
+        SONG.update(play=True, p0=pos, t0=absTime.seconds, last=pos - 1e-3)
+        ks = [k for k in (SONG['keys'].get('presets') or []) if float(k['t']) <= pos + 1e-3]       # starting mid-song: the preset that should be on
+        if ks: bankLoad(int(max(ks, key=lambda k: float(k['t']))['slot']), 0.0)
+        _songFx(pos, force=True)
+    else:
+        SONG['play'] = False; f.par.play = False
+        if C.par.Source.eval() == 'file': C.par.Source = 'device'
+        _songFxOff()
+    return True
+def _songFxOff():
+    for key, on in list(SONG['fxon'].items()):
+        if on:
+            try: _cueSet(0, dict(key[1]), False)
+            except Exception: pass
+    SONG['fxon'] = {}
+def _songFx(pos, force=False):
+    live = set()
+    for n, c in enumerate(SONG['keys'].get('fx') or []):
+        key = (n, tuple(sorted((k, v) for k, v in c.items() if isinstance(v, (str, int, float)))))
+        live.add(key); act = float(c.get('t0', 0)) <= pos < float(c.get('t1', 0))
+        if force or act != SONG['fxon'].get(key, False):
+            if act or SONG['fxon'].get(key): 
+                try: _cueSet(0, c, act)
+                except Exception: pass
+            SONG['fxon'][key] = act
+    for key in [k for k in SONG['fxon'] if k not in live]:
+        if SONG['fxon'].pop(key):
+            try: _cueSet(0, dict(key[1]), False)
+            except Exception: pass
+def songUpdate(C, T):
+    pos = songPos(T); last = SONG.get('last', pos)
+    if SONG['dur'] and pos >= SONG['dur']:                        # the end: stop (and stop a song recording)
+        songPlay(False, SONG['dur'])
+        if SONG.pop('rec', False):
+            try: op('/project1/remote_cb').module.recStop()
+            except Exception: pass
+        _songTell(); return
+    hit = [k for k in (SONG['keys'].get('presets') or []) if last < float(k['t']) <= pos]
+    if hit:
+        k = max(hit, key=lambda k: float(k['t'])); bankLoad(int(k['slot']), float(k.get('fade', 1.0)))
+        SONG['fxon'] = {}; _songFx(pos, force=True)                # a preset resets the effects: the song's blocks go back on
+    else: _songFx(pos)
+    for r in SONG['keys'].get('ramps') or []:                     # slider ramps: straight lines between the points
+        pts = sorted((float(a), float(b)) for a, b in (r.get('pts') or []))
+        if not pts or not hasattr(C.par, r.get('p', '')) or pos < pts[0][0] - 0.001: continue
+        v = pts[-1][1]
+        for (ta, va), (tb, vb) in zip(pts, pts[1:]):
+            if ta <= pos <= tb: v = va + (vb - va) * ((pos - ta) / max(1e-3, tb - ta)); break
+        if pos <= pts[-1][0] + 0.05 or SONG.get('rampend', {}).get(r['p']) != v:
+            C.par[r['p']] = v; SONG.setdefault('rampend', {})[r['p']] = v
+    SONG['last'] = pos
+def _songTell():
+    try: R = op('/project1/remote_cb').module; R._all(R.songMsg())
+    except Exception: pass
+
 def cueUpdate(C):
     live = set()
     for i in MSLOTS:
@@ -1393,8 +1464,8 @@ def poseGlideStep(C, T):
         u = min(1.0, (T - a['t0']) / max(0.01, a['dur'])); S['angoffv'] = a['v'] * (1.0 - u * u * (3.0 - 2.0 * u))
         if u >= 1.0: S['angoff'] = None; S['angoffv'] = 0.0
 OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat',
-           'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
-MODEL3D = {'Modelx': 0.0, 'Modely': 0.0, 'Modelz': 0.0, 'Modelscale': 1.0, 'Modelturn': 0.0, 'Modeltilt': 0.0}
+           'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt', 'Beatpulse', 'Pulsedecay']
+MODEL3D = {'Modelx': 0.0, 'Modely': 0.0, 'Modelz': 0.0, 'Modelscale': 1.0, 'Modelturn': 0.0, 'Modeltilt': 0.0, 'Beatpulse': 0.0, 'Pulsedecay': 0.35}
 
 def snapshot():
     C = op('/project1/CONTROLS')
@@ -2550,7 +2621,8 @@ def obj3d(C, name):
     if name.startswith('tg') and name[2:].isdigit():
         n = int(name[2:]); return 0.0, 0.0, f(tpn(n, 'Textdepth')), f(tpn(n, 'Textoscale')) or 1.0, f(tpn(n, 'Textoturn')), f(tpn(n, 'Textotilt'))
     if name == 'draw_geo': return 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
-    return f('Modelx'), f('Modely'), f('Modelz'), f('Modelscale') or 1.0, f('Modelturn'), f('Modeltilt')   # models + animations
+    bp = 1.0 + f('Beatpulse') * S.get('pulse', 0.0) * float(C.par.Reactivity.eval())                # beat pulse: bigger on the beat
+    return f('Modelx'), f('Modely'), f('Modelz'), (f('Modelscale') or 1.0) * bp, f('Modelturn'), f('Modeltilt')   # models + animations
 
 def _label(C):
     show = bool(C.par.Showlabel.eval())
@@ -2678,6 +2750,7 @@ def onFrameStart(frame):
     _safe('noise', noiseUpdate, C, T)
     _safe('blend', blendUpdate, C)
     _safe('cues', cueUpdate, C)
+    if SONG.get('play'): _safe('song', songUpdate, C, T)
     _safe('dvd', dvdCorners)
     if TFADES: _safe('tfade', tFadeStep, T)
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)

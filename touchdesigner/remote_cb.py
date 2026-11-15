@@ -71,6 +71,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('T2mspeed', 'Spin speed (°/s)', 0, 180, 1, 'tmot2'), ('T2mamt', 'Amount', 0, 2, 0.01, 'tmot2'),
     ('T3mspeed', 'Spin speed (°/s)', 0, 180, 1, 'tmot3'), ('T3mamt', 'Amount', 0, 2, 0.01, 'tmot3'),
     ('Modelx', 'Left / right', -3, 3, 0.01, 'mobj'), ('Modely', 'Up / down', -2, 2, 0.01, 'mobj'), ('Modelz', 'Depth (back / front)', -4, 4, 0.05, 'mobj'),
+    ('Beatpulse', 'Beat pulse (bigger on the beat)', 0, 0.6, 0.01, 'mobj'), ('Pulsedecay', 'Pulse falls back in (s)', 0.05, 1.5, 0.01, 'mobj'),
     ('Modelscale', 'Size', 0.2, 3, 0.01, 'mobj'), ('Modelturn', 'Turn', -180, 180, 1, 'mobj'), ('Modeltilt', 'Tilt', -90, 90, 1, 'mobj'),
     ('T3amount', 'Amount', 0, 1, 0.01, 'text3'), ('T3size', 'Size', 0.3, 2.5, 0.01, 'text3'), ('T3glow', 'Glow', 0, 1.5, 0.01, 'text3'), ('T3speed', 'Speed', 0, 3, 0.01, 'text3'), ('T3react', 'Beat reaction', 0, 2, 0.01, 'text3'),
     ('Speed', 'Spin speed', -180, 180, 1, 'motion'),
@@ -520,8 +521,14 @@ def prepPoll():
             j.pop('playto', None)
             if rel: _allMedia(); mediaPlay(rel, fit=True, slot=ps); _publish(state(), active_only=True)
     if PREPQ: PREPSIG['until'] = time.time() + 6
-    while PREPQ: _all(PREPQ.pop(0))
-    if any(j['state'] == 'download' or j.get('busy') or j.get('playto') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or RECCONV or time.time() < PREPSIG.get('until', 0):
+    while PREPQ:
+        q_ = PREPQ.pop(0)
+        if isinstance(q_, tuple):
+            if q_[0] == 'songready': songLoaded(q_[1], q_[2])
+            elif q_[0] == 'songdl': _all(songMsg())
+        else: _all(q_)
+    if any(v['state'] == 'download' for v in SONGDL.values()): _all(songMsg())
+    if any(j['state'] == 'download' or j.get('busy') or j.get('playto') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or RECCONV or any(v['state'] == 'download' for v in SONGDL.values()) or time.time() < PREPSIG.get('until', 0):
         run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
 
 def _prepDownload(j):
@@ -1019,6 +1026,7 @@ def recStart(fmt='16:9'):
     if s_ is not None: s_.par.index = 0 if fmt == '16:9' else 1
     if v_ is not None: v_.par.index = 1 if fmt == '9:16b' else 0
     REC['file'] = os.path.join(d, 'VJ_' + time.strftime('%Y-%m-%d_%H-%M-%S') + ('' if fmt == '16:9' else '_9x16') + '.mov')
+    if op('/project1/AUDIO/source') is not None and m.par.audiochop.eval() != op('/project1/AUDIO/source'): m.par.audiochop = '/project1/AUDIO/source'
     m.par.file = REC['file']; m.par.record = True; REC['t0'] = time.time(); recGuide(fmt)
 def recGuide(fmt):
     """The 9:16 frame + dimmed sides on the projector window only (OUT, the stream and the recording stay clean)."""
@@ -1077,6 +1085,101 @@ def _recConvT(f):
     except Exception as e: print('recording convert failed', f, e)
     finally:
         RECCONV.discard(f); PREPQ.append(recMsg())
+
+# ---------------------------------------------------------------- SONG: music tracks for the song timeline (music/, keyframes in <song>.vj.json)
+MUSICDIR = os.path.join(project.folder, 'music')
+AUD_EXT = ('.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.opus')
+SONGDL = {}                                                     # url -> {'state', 'pct', 'title'}
+def _songFiles():
+    os.makedirs(MUSICDIR, exist_ok=True)
+    return sorted((f for f in os.listdir(MUSICDIR) if f.lower().endswith(AUD_EXT)), key=lambda f: -os.path.getmtime(os.path.join(MUSICDIR, f)))
+def _songInfo(fn):
+    """Duration + a 600-point loudness outline (cached next to the song)."""
+    cache = os.path.join(MUSICDIR, os.path.splitext(fn)[0] + '.wave.json')
+    try:
+        d = json.load(open(cache, encoding='utf-8'))
+        if d.get('m') == os.path.getmtime(os.path.join(MUSICDIR, fn)): return d
+    except Exception: pass
+    import array
+    r = _prepRun([FFMPEG, '-v', 'error', '-i', os.path.join(MUSICDIR, fn), '-ac', '1', '-ar', '2000', '-f', 's16le', '-'])
+    a = array.array('h', r.stdout or b''); n = len(a); dur = n / 2000.0; pk = []
+    if n:
+        step = max(1, n // 600)
+        for k in range(0, n, step):
+            seg = a[k:k + step]; pk.append(round(max(abs(min(seg)), abs(max(seg))) / 32768.0, 3))
+    d = {'m': os.path.getmtime(os.path.join(MUSICDIR, fn)), 'dur': round(dur, 2), 'peaks': pk[:600]}
+    try: json.dump(d, open(cache, 'w', encoding='utf-8'))
+    except Exception: pass
+    return d
+def _songKeysPath(fn): return os.path.join(MUSICDIR, os.path.splitext(fn)[0] + '.vj.json')
+def songMsg(full=False):
+    E = _E(); S_ = E.SONG
+    m = {'t': 'song', 'files': _songFiles(), 'file': S_['file'], 'dur': S_['dur'], 'pos': round(E.songPos(), 3), 'play': bool(S_['play']),
+         'rec': bool(S_.get('rec')), 'keys': S_['keys'], 'dl': [dict(v, url=k) for k, v in SONGDL.items() if v['state'] != 'done']}
+    if full: m['peaks'] = S_.get('peaks', [])
+    return m
+def _songLoadT(fn):
+    try: info = _songInfo(fn)
+    except Exception as e: info = {'dur': 0.0, 'peaks': []}; print('song info failed', e)
+    PREPQ.append(('songready', fn, info))
+def songLoaded(fn, info):
+    E = _E(); E.songPlay(False, 0.0)
+    try: keys = json.load(open(_songKeysPath(fn), encoding='utf-8'))
+    except Exception: keys = {}
+    E.SONG.update(file=fn, dur=float(info.get('dur') or 0), pos=0.0, keys=keys if isinstance(keys, dict) else {}, peaks=info.get('peaks', []), fxon={})
+    C = _C(); C.par.File = os.path.join(MUSICDIR, fn).replace('\\', '/')
+    f_ = op('/project1/AUDIO/file_in')
+    if f_ is not None and f_.par.file.mode == ParMode.CONSTANT: f_.par.file = C.par.File.eval()
+    _all(songMsg(True))
+def _songDlT(url):
+    import sys, shutil, subprocess, re
+    st = SONGDL[url]
+    try:
+        py = sys.executable if os.path.basename(sys.executable).lower().startswith('python') else None
+        py = py or shutil.which('python') or shutil.which('py')
+        env = dict(os.environ, PYTHONPATH=PREPLIB, PYTHONIOENCODING='utf-8')
+        cmd = [py, '-m', 'yt_dlp', '-x', '--audio-format', 'mp3', '--audio-quality', '2', '-o', os.path.join(MUSICDIR, '%(title).80s.%(ext)s'),
+               '--no-playlist', '--newline', '--no-warnings', '--js-runtimes', 'node', '--ffmpeg-location', FFMPEG, '--print', 'before_dl:TITLE:%(title)s', '--no-simulate', url]
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env, text=True, encoding='utf-8', errors='replace',
+                             creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0))
+        for line in p.stdout:
+            line = line.strip()
+            if line.startswith('TITLE:'): st['title'] = line[6:][:80]
+            m = re.search(r'\[download\]\s+([\d.]+)%', line)
+            if m: st['pct'] = float(m.group(1))
+        p.wait(); st['state'] = 'done' if p.returncode == 0 else 'fail'
+    except Exception as e: st['state'] = 'fail'; print('song download failed', e)
+    PREPQ.append(('songdl', url))
+def songCmd(msg, reply):
+    E = _E(); a = msg.get('do')
+    if a == 'list': reply(songMsg(True)); return
+    if a == 'load':
+        fn = os.path.basename(str(msg.get('file', '')))
+        if fn in _songFiles():
+            import threading; threading.Thread(target=_songLoadT, args=(fn,), daemon=True).start(); _pollKick()
+        return
+    if a == 'dl':
+        url = str(msg.get('url', '')).strip()
+        if url.startswith('http') and url not in SONGDL:
+            import threading; SONGDL[url] = {'state': 'download', 'pct': 0.0, 'title': ''}
+            threading.Thread(target=_songDlT, args=(url,), daemon=True).start(); _pollKick()
+        _all(songMsg()); return
+    if not E.SONG['file']: return
+    if a == 'play': E.songPlay(True, msg.get('pos'))
+    elif a == 'pause': E.songPlay(False)
+    elif a == 'seek':
+        if E.SONG['play']: E.songPlay(True, float(msg.get('pos', 0)))
+        else: E.SONG['pos'] = max(0.0, min(float(msg.get('pos', 0)), E.SONG['dur']))
+    elif a == 'rec':                                             # the whole song from the start, recorded with the song as its sound
+        if REC['t0'] is None: recStart(REC.get('fmt', '16:9'))
+        E.SONG['rec'] = True; E.songPlay(True, 0.0)
+    elif a == 'keys' and isinstance(msg.get('keys'), dict):
+        k = msg['keys']; E.SONG['keys'] = k
+        try: _E().writeJsonSafe(_songKeysPath(E.SONG['file']), k, bak=False, indent=1)
+        except Exception as e: print('song keys not saved', e)
+        if E.SONG['play']: E._songFx(E.songPos(), force=True)
+    _all(songMsg()); _all(recMsg())
+def _pollKick(): run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
 
 def _recDel(f, tries):
     try:
@@ -1369,6 +1472,8 @@ def _ensurePars():
         pg = C.par.Opmodel.page                         # per layer opacity + blend mode
         for n_ in ('Allalpha', 'Allcontrast'):                       # whole picture: opacity (fade to black) + contrast
             if not hasattr(C.par, n_): pp = C.par.Opmodel.page.appendFloat(n_, label=n_)[0]; pp.default = 1.0; pp.val = 1.0
+        for n_, dv in (('Beatpulse', 0.0), ('Pulsedecay', 0.35)):
+            if not hasattr(C.par, n_): pp = C.par.Opmodel.page.appendFloat(n_, label=n_)[0]; pp.default = dv; pp.val = dv
         if not hasattr(C.par, 'Fxfade'): pp = pg.appendFloat('Fxfade', label='Effect fade (s)')[0]; pp.default = 0.0; pp.val = 0.0
         for n, dv in [('M%dalpha' % i, 1.0) for i in range(1, 7)] + [('Alphamodel', 1.0), ('Alphadraw', 1.0)] + [('M%dcontrast' % i, 1.0) for i in range(1, 7)] + [('Contrastmodel', 1.0), ('Contrastdraw', 1.0)]:
             if not hasattr(C.par, n): pp = pg.appendFloat(n, label=n)[0]; pp.default = dv; pp.val = dv
@@ -1586,6 +1691,7 @@ def handle(msg, reply):
             ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))
             _all({'t': 'quick', 'v': E.quickAll()})
             if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
+        elif t == 'song': songCmd(msg, reply)
         elif t == 'archive':                                       # presets off the board, kept for later
             a_ = msg.get('do'); n_ = 0
             if a_ == 'add': E.bankArchive(int(msg.get('v', 0)))

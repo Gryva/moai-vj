@@ -360,7 +360,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:32px;border:0;border-radiu
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
 .bar div{width:100%;border-radius:var(--r1);background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(7,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(8,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:var(--r1)}nav button.on{color:var(--ink);background:var(--panel2)}
 
 /* text tab */
@@ -594,6 +594,16 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 .padacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.padacts .pad.add{min-height:0;height:52px;aspect-ratio:auto}.padacts .pad.add>span{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}header .r1 .prepPill[hidden]{display:none}body:not(.editing) header .r1 .savebtn{display:none}.padacts .pad.add small br{display:none}.padacts .pad.add .plus{font-size:20px}
 .pgchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.pgchips::-webkit-scrollbar{display:none}
 .archempty{padding:28px 12px;color:var(--mut,#8a8796);font:600 13px var(--sans);text-align:center}.pad.arch{opacity:.85}.pgc.archc b{letter-spacing:.06em}
+.sgtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sgtop select{flex:1 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:600 13px var(--sans)}
+.sgtop input{flex:2 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--sunk,#0d0c12);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:500 13px var(--sans)}
+.sgdl{font:600 11px var(--mono);color:var(--amber);margin:6px 0;min-height:4px}
+.sgtl{position:relative;margin-top:8px;border:1px solid var(--line);border-radius:var(--r2);background:#08070c;overflow:hidden;touch-action:none;user-select:none}
+#sgwave{display:block;width:100%;height:96px}
+.sglane{position:relative;height:34px;border-top:1px solid var(--line)}.sglane>b{position:absolute;left:6px;top:9px;font:700 9px var(--mono);letter-spacing:.12em;opacity:.45;pointer-events:none}
+.sgk{position:absolute;top:4px;height:26px;min-width:8px;transform:translateX(-50%);border:0;border-radius:6px;padding:0 6px;font:700 10px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;color:#0b0a0f;background:var(--lime)}
+.sgk.fx{transform:none;background:#7b2cffcc;color:#fff;border-radius:4px}.sgk.rp{width:12px;min-width:12px;padding:0;border-radius:50%;height:12px;top:11px;background:var(--cyan,#22e6ff)}
+.sghead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#ff3b3b;pointer-events:none;box-shadow:0 0 8px #ff3b3b}
+.sgtr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.sgtime{font:700 14px var(--mono);font-variant-numeric:tabular-nums}.sgplay{min-width:96px}.sgrec{color:var(--red)!important;border-color:#ff3b3b66!important}.sgrec.on{background:var(--red);color:#fff!important}
 .pgc{flex:none;position:relative;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--raise);display:flex;align-items:center;gap:8px}.pgc b{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase}.pgc i{font:600 11px var(--mono);font-style:normal;opacity:.6}
 .pgc.on{background:var(--ink);color:#0b0a0f;border-color:var(--ink)}.pgc u{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
 .nzlive{position:relative;aspect-ratio:16/9;border-radius:var(--r2);overflow:hidden;background:#000;margin:4px 0 0}.nzlive img{width:100%;height:100%;object-fit:cover;display:block}.nzlive span{position:absolute;left:8px;top:7px;font:800 10px var(--sans);letter-spacing:.1em;color:var(--red);background:#000a;padding:3px 6px;border-radius:var(--r1)}
@@ -813,6 +823,18 @@ header .r1 .fps{font:500 12px var(--mono)}
   </div>
   </section>
 
+  <section class="view" id="v-song">
+    <div class="sgtop"><select id="sgsel" aria-label="Song"><option value="">Choose a song…</option></select>
+      <input id="sgurl" placeholder="…or paste a music link" inputmode="url"><button class="cbtn" id="sgdl">⬇ GET</button></div>
+    <div class="sgdl" id="sgdlst"></div>
+    <div class="sgtl" id="sgtl"><canvas id="sgwave" width="1200" height="120"></canvas>
+      <div class="sglane" id="sglp"><b>PRESETS</b></div><div class="sglane" id="sglf"><b>EFFECTS</b></div><div class="sglane" id="sglr"><b>RAMPS</b></div>
+      <div class="sghead" id="sghead"></div></div>
+    <div class="sgtr"><button class="cbtn" id="sg0" aria-label="To the start">⏮</button><button class="cbtn sgplay" id="sgplay">▶ PLAY</button><span class="sgtime" id="sgtime">0:00.0 / 0:00.0</span>
+      <span class="hsp"></span><button class="cbtn" id="sgaddp">＋ PRESET</button><button class="cbtn" id="sgaddf">＋ EFFECT</button><button class="cbtn" id="sgaddr">＋ RAMP</button><button class="cbtn sgrec" id="sgrec">● REC SONG</button></div>
+    <p class="hint2" id="sghint">Drag on the song to move the playhead. ＋ adds at the playhead. Tap a marker to move, change or remove it. ● REC SONG plays the whole song from the start and records it (with the song as sound).</p>
+  </section>
+
   <section class="view" id="v-audio">
     <div class="ain">
       <div class="ainhd"><h2>Sound input</h2><span id="ainlv">-- dB</span></div>
@@ -866,7 +888,7 @@ header .r1 .fps{font:500 12px var(--mono)}
 
 <div id="weak">Signal weak · reconnecting… (controls still work when it comes back)</div>
 <div id="rail" aria-hidden="true"><i></i></div>
-<nav id="nav"><button data-v="live">LIVE</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
+<nav id="nav"><button data-v="live">LIVE</button><button data-v="song">SONG</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="prepov" id="prepLink" hidden><div class="prepbox"><h3>Get a video</h3><p class="hint2">Paste a link (YouTube and most video sites). It downloads in the background, you get a message when it is ready to trim.</p>
   <input type="url" id="prepUrl" placeholder="https://…" autocomplete="off">
@@ -958,7 +980,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15x';
+const BUILD = '2026-11-16a';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1040,6 +1062,7 @@ function onMsg(m){
   else if (m.t === 'm') { lastM = performance.now(); if (m.vt) cueTick(m.vt); meters(m); if (m.pars) applyPars(m.pars); if (m.L) applyLayers(m.L); if (m.LT) { S.tfx = m.LT; if (FXT_SEL !== 'all') applyTarget(); fxTargets(); } if ((m.L || m.LT) && S.quick) quickSync();
     if (m.b !== undefined && m.b !== S.b) { S.b = m.b; renderPads(); } $('#fps').textContent = m.fps + ' fps'; }
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
+  else if (m.t === 'song') songMsgIn(m);
   else if (m.t === 'arch') { ARCH = m.v || []; if (S) S.archn = ARCH.length; if (m.did === 'restore' && m.slot) { store.set('pgsel', '*'); toast('Back on the board as preset ' + m.slot); } renderPads(); }
   else if (m.t === 'clips') {
     if (pendingClip && m.v.length) { const known = new Set(Object.keys(LOCALCLIP)), nw = m.v.map(c => c.id).filter(id => !known.has(id)).sort().pop();
@@ -2397,6 +2420,87 @@ function cuePickEnd(ok){ const P = CPICK; CPICK = null; document.body.classList.
   if (ok) toast('Cue effect set'); }
 function cuesOf(i){ try { return JSON.parse(S.pars['M' + i + 'cues'] || '[]') || []; } catch (e) { return []; } }
 function cuesSet(i, L){ const v = JSON.stringify(L); S.pars['M' + i + 'cues'] = v; send({t:'set', p:'M' + i + 'cues', v}); CUESIG[i] = ''; cueUI(i); }
+
+/* ---------------- SONG: a music track as the timeline - preset changes, effect blocks, slider ramps ---------------- */
+const SG = {files:[], file:'', dur:0, pos:0, play:false, at:0, keys:{}, peaks:[], asked:false, dl:[]};
+function sgPos(){ return SG.play ? Math.min(SG.dur || 1e9, SG.pos + (performance.now() - SG.at) / 1000) : SG.pos; }
+function sgK(){ const k = SG.keys || {}; k.presets = k.presets || []; k.fx = k.fx || []; k.ramps = k.ramps || []; return SG.keys = k; }
+function songMsgIn(m){
+  const nf = m.file !== SG.file; Object.assign(SG, {files:m.files || [], file:m.file || '', dur:+m.dur || 0, pos:+m.pos || 0, play:!!m.play, at:performance.now(), keys:m.keys || {}, dl:m.dl || [], rec:!!m.rec});
+  if (m.peaks) SG.peaks = m.peaks; else if (nf) SG.peaks = [];
+  songUI(); }
+function songUI(){
+  const sel = $('#sgsel'); if (!sel) return;
+  const want = '<option value="">Choose a song…</option>' + SG.files.map(f => `<option value="${esc(f)}">${esc(f.replace(/\.[^.]+$/, ''))}</option>`).join('');
+  if (sel._w !== want) { sel.innerHTML = want; sel._w = want; } sel.value = SG.file;
+  $('#sgdlst').textContent = SG.dl.map(d => d.state === 'fail' ? '✕ download failed' : '⬇ ' + (d.title || 'getting the song') + ' ' + Math.round(d.pct || 0) + '%').join(' · ');
+  $('#sgplay').textContent = SG.play ? '⏸ PAUSE' : '▶ PLAY'; $('#sgrec').classList.toggle('on', !!SG.rec && SG.play);
+  sgWave(); sgLanes(); sgTick(); }
+function sgX(t){ return SG.dur ? Math.max(0, Math.min(1, t / SG.dur)) * 100 : 0; }
+function sgWave(){
+  const c = $('#sgwave'); if (!c) return; const w = c.width = Math.max(300, c.clientWidth * (devicePixelRatio || 1)), h = c.height = 96 * (devicePixelRatio || 1), g = c.getContext('2d');
+  g.clearRect(0, 0, w, h); const P = SG.peaks || []; if (!P.length) { g.fillStyle = '#ffffff33'; g.font = (12 * (devicePixelRatio || 1)) + 'px sans-serif'; g.fillText(SG.file ? 'Reading the song…' : 'No song loaded', 10, h / 2); return; }
+  g.fillStyle = '#c6ff3d88'; const bw = w / P.length;
+  P.forEach((v, i) => { const y = Math.max(1, v * h * 0.9); g.fillRect(i * bw, (h - y) / 2, Math.max(1, bw - 0.5), y); });
+}
+function sgLanes(){
+  const K = sgK(), BN = n => (S && S.bank && S.bank[n - 1] ? S.bank[n - 1].name : 'Preset ' + n), LB = k => ((S && S.layers || []).find(l => l.k === k) || {label:k}).label;
+  $('#sglp').innerHTML = '<b>PRESETS</b>' + K.presets.map((k, i) => `<button class="sgk" data-sgk="p${i}" style="left:${sgX(k.t)}%">${esc(BN(k.slot))}</button>`).join('');
+  $('#sglf').innerHTML = '<b>EFFECTS</b>' + K.fx.map((k, i) => `<button class="sgk fx" data-sgk="f${i}" style="left:${sgX(k.t0)}%;width:${Math.max(0.6, sgX(k.t1) - sgX(k.t0))}%;max-width:none">${esc(LB(k.k))}${k.tgt === 'model' ? ' · 3D' : ''}</button>`).join('');
+  $('#sglr').innerHTML = '<b>RAMPS</b>' + K.ramps.map((r, i) => (r.pts || []).map((pt, j) => `<button class="sgk rp" data-sgk="r${i}.${j}" style="left:${sgX(pt[0])}%" title="${esc(r.p)}"></button>`).join('')).join('');
+}
+function sgTick(){ const t = sgPos(); const h = $('#sghead'); if (h) h.style.left = sgX(t) + '%'; const tm = $('#sgtime'); if (tm) tm.textContent = fmtT(t) + ' / ' + fmtT(SG.dur); }
+setInterval(() => { if (ui.tab === 'song') { if (!SG.asked && S) { SG.asked = true; send({t:'song', do:'list'}); } if (SG.play) sgTick(); } }, 100);
+function sgSave(){ send({t:'song', do:'keys', keys:sgK()}); sgLanes(); }
+(() => { const tl = $('#sgtl'); if (!tl) return; let drag = false;
+  const at = e => { const r = tl.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * SG.dur; };
+  tl.addEventListener('pointerdown', e => { if (e.target.closest('.sgk') || !SG.dur) return; drag = true; tl.setPointerCapture(e.pointerId); SG.pos = at(e); SG.at = performance.now(); sgTick(); });
+  tl.addEventListener('pointermove', e => { if (!drag) return; SG.pos = at(e); SG.at = performance.now(); sgTick(); });
+  const up = e => { if (!drag) return; drag = false; SG.pos = at(e); SG.at = performance.now(); sgTick(); send({t:'song', do:'seek', pos:SG.pos}); buzz(4); };
+  tl.addEventListener('pointerup', up); tl.addEventListener('pointercancel', () => drag = false);
+  tl.addEventListener('click', e => { const b = e.target.closest('[data-sgk]'); if (b) sgSheet(b.dataset.sgk); });
+  $('#sgsel').addEventListener('change', e => { if (e.target.value) { send({t:'song', do:'load', file:e.target.value}); SG.peaks = []; toast('Loading the song…'); } });
+  $('#sgdl').addEventListener('click', () => { const u = $('#sgurl').value.trim(); if (!/^https?:\/\//.test(u)) { toast('Paste a link first'); return; } send({t:'song', do:'dl', url:u}); $('#sgurl').value = ''; toast('Getting the song…'); buzz(); });
+  $('#sgplay').addEventListener('click', () => { if (!SG.file) { toast('Choose a song first'); return; } send({t:'song', do:SG.play ? 'pause' : 'play', pos:sgPos()}); buzz(); });
+  $('#sg0').addEventListener('click', () => { SG.pos = 0; SG.at = performance.now(); sgTick(); send({t:'song', do:'seek', pos:0}); buzz(); });
+  $('#sgrec').addEventListener('click', () => { if (!SG.file) { toast('Choose a song first'); return; } if (SG.rec && SG.play) { send({t:'rec', do:'stop'}); send({t:'song', do:'pause'}); return; }
+    if (confirm('Play "' + SG.file.replace(/\.[^.]+$/, '') + '" from the start and record it?')) { send({t:'song', do:'rec'}); toast('Recording the song…'); } buzz(); });
+  $('#sgaddp').addEventListener('click', () => sgPick('p')); $('#sgaddf').addEventListener('click', () => sgPick('f')); $('#sgaddr').addEventListener('click', () => sgPick('r'));
+  addEventListener('resize', () => ui.tab === 'song' && sgWave());
+})();
+function sgOpen(t, p, html, data){ $('#shI').style.display = 'none'; $('#shT').textContent = t; $('#shP').textContent = p; $('#shA').innerHTML = html + '<button data-sh="cancel">Cancel</button>';
+  $('#sheet').dataset.sg = JSON.stringify(data || {}); $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
+function sgPick(kind){
+  if (!SG.file || !S) { toast('Choose a song first'); return; } const t = +sgPos().toFixed(2);
+  if (kind === 'p') sgOpen('Preset at ' + fmtT(t), 'Goes to this preset at this moment, with the fade from the autopilot settings (' + (ui.fade || 0) + ' s).',
+    S.bank.map((p, i) => p ? `<button data-sh="sgaddp" data-n="${i + 1}">${i + 1} · ${esc(p.name)}</button>` : '').join(''), {t});
+  else if (kind === 'f') sgOpen('Effect from ' + fmtT(t), 'An 8-second block - tap it later to set its end. Whole picture, or only the 3D model.',
+    [...S.layers].sort((a, b) => a.label.localeCompare(b.label)).map(l => `<button data-sh="sgaddf" data-k="${l.k}">${esc(l.label)}</button>`).join(''), {t});
+  else sgOpen('Ramp point at ' + fmtT(t), 'Uses the slider\'s value right now. Add two or more points for the same slider and it glides between them.',
+    (S.sliders || []).filter(x => S.pars[x.p] !== undefined).map(x => `<button data-sh="sgaddr" data-p="${x.p}">${esc((qLayer ? qLayer(x.p) + ' · ' : '') + x.label)} = ${(+S.pars[x.p]).toFixed(2)}</button>`).join(''), {t});
+}
+function sgSheet(id){
+  const K = sgK(), t = +sgPos().toFixed(2), ty = id[0];
+  if (ty === 'p') { const k = K.presets[+id.slice(1)]; if (!k) return; sgOpen('Preset ' + k.slot + ' at ' + fmtT(k.t), 'Fade ' + (k.fade ?? 1) + ' s.',
+    `<button class="pri" data-sh="sgmove">Move to the playhead (${fmtT(t)})</button><button data-sh="sgfade">Use the current fade (${ui.fade || 0} s)</button><button class="dan" data-sh="sgdel">Remove</button>`, {id}); }
+  else if (ty === 'f') { const k = K.fx[+id.slice(1)]; if (!k) return; sgOpen('Effect ' + fmtT(k.t0) + ' → ' + fmtT(k.t1), (k.tgt === 'model' ? 'On the 3D model' : 'On the whole picture') + ' · fade ' + (k.fade || 0) + ' s',
+    `<button class="pri" data-sh="sgend">End at the playhead (${fmtT(t)})</button><button data-sh="sgmove">Start at the playhead</button><button data-sh="sgtgt">${k.tgt === 'model' ? 'Whole picture instead' : 'Only the 3D model'}</button><button data-sh="sgfade">Fade in/out: ${(k.fade || 0) ? 'none' : '0.5 s'}</button><button class="dan" data-sh="sgdel">Remove</button>`, {id}); }
+  else { const [i, j] = id.slice(1).split('.').map(Number), r = K.ramps[i]; if (!r) return; const pt = r.pts[j];
+    sgOpen(r.p + ' = ' + (+pt[1]).toFixed(2) + ' at ' + fmtT(pt[0]), 'A point of a slider ramp.', `<button class="pri" data-sh="sgval">Use the slider's value now (${(+S.pars[r.p]).toFixed(2)})</button><button data-sh="sgmove">Move to the playhead</button><button class="dan" data-sh="sgdel">Remove the point</button>`, {id}); }
+}
+function songSheetDo(b){
+  const K = sgK(), D = JSON.parse($('#sheet').dataset.sg || '{}'), a = b.dataset.sh, t = +sgPos().toFixed(2), id = D.id || '';
+  if (a === 'sgaddp') { K.presets.push({t:D.t, slot:+b.dataset.n, fade:+ui.fade || 0}); K.presets.sort((x, y) => x.t - y.t); }
+  else if (a === 'sgaddf') K.fx.push({t0:D.t, t1:Math.min(SG.dur || D.t + 8, D.t + 8), k:b.dataset.k, tgt:'all', fade:0});
+  else if (a === 'sgaddr') { let r = K.ramps.find(x => x.p === b.dataset.p); if (!r) K.ramps.push(r = {p:b.dataset.p, pts:[]}); r.pts.push([D.t, +S.pars[b.dataset.p]]); r.pts.sort((x, y) => x[0] - y[0]); }
+  else if (id[0] === 'p') { const i = +id.slice(1); if (a === 'sgdel') K.presets.splice(i, 1); else if (a === 'sgmove') K.presets[i].t = t; else if (a === 'sgfade') K.presets[i].fade = +ui.fade || 0; K.presets.sort((x, y) => x.t - y.t); }
+  else if (id[0] === 'f') { const i = +id.slice(1), k = K.fx[i];
+    if (a === 'sgdel') K.fx.splice(i, 1); else if (a === 'sgend') { if (t > k.t0) k.t1 = t; else toast('Move the playhead after the start first'); }
+    else if (a === 'sgmove') { const L = k.t1 - k.t0; k.t0 = t; k.t1 = t + L; } else if (a === 'sgtgt') k.tgt = k.tgt === 'model' ? 'all' : 'model'; else if (a === 'sgfade') k.fade = k.fade ? 0 : 0.5; }
+  else if (id[0] === 'r') { const [i, j] = id.slice(1).split('.').map(Number), r = K.ramps[i];
+    if (a === 'sgdel') { r.pts.splice(j, 1); if (!r.pts.length) K.ramps.splice(i, 1); } else if (a === 'sgmove') { r.pts[j][0] = t; r.pts.sort((x, y) => x[0] - y[0]); } else if (a === 'sgval') r.pts[j][1] = +S.pars[r.p]; }
+  sgSave();
+}
 function cueUI(i){
   const L = cuesOf(i), on = S.pars['M' + i + 'cueon'] !== false, box = $(`[data-cuel="${i}"]`); if (!box) return;
   const tb = $(`[data-cuetog="${i}"]`); if (tb) tb.classList.toggle('on', on);
@@ -2806,7 +2910,8 @@ function sheetFx(k){
 }
 const closeSheet = () => { delete $('#sheet').dataset.lk; delete $('#sheet').dataset.qitem; delete $('#sheet').dataset.qsc; delete $('#sheet').dataset.fxk; delete $('#sheet').dataset.grp; delete $('#sheet').dataset.qi; delete $('#sheet').dataset.mode; $('#shI').style.display = ''; $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); $('#shI').blur(); };
 $('#scrim').addEventListener('click', closeSheet);
-$('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
+$('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (b && b.dataset.sh.startsWith('sg')) { songSheetDo(b); closeSheet(); buzz(); return; } }, true);
+$('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]'); if (!b || b.dataset.sh.startsWith('sg')) return; const slot = +$('#sheet').dataset.slot, name = $('#shI').value.trim();
   const qi = +$('#sheet').dataset.qi, fk = $('#sheet').dataset.fxk;
   if (b.dataset.sh === 'lrename' || b.dataset.sh === 'lrenreset') { const k = $('#sheet').dataset.lk, n = NAMEPAR(k);
     const v = b.dataset.sh === 'lrenreset' ? '' : $('#shI').value.trim().slice(0, 24);
