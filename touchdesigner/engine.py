@@ -1829,7 +1829,9 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     if keepText: textMorphStart(tx, max(fade, 1.4))              # words stay up and morph into the new ones
     if fade > 0.01 and (newModel or newScene or newSrc):
         # statue / style changes hide in a live dip: everything swaps instantly at the darkest point
-        xfadeStart(fade, lambda: _bankApply(d, 0.0, cam, model, text, cut=True, slot=slot), keeptext=keepText)
+        glide = bool(cam and d.get('cam') and not newModel)            # same model: the camera keeps moving smoothly through the dip
+        if glide: camGlide(d['cam'], fade)
+        xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
     try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
@@ -1868,13 +1870,22 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None):
         try: C.par[k] = ex[k] if k in ex else C.par[k].default
         except Exception: pass
     if cam and d.get('cam'):
-        for k, v in d['cam'].items():
-            try: C.par[k] = v
-            except Exception: pass
         if cut:
-            CS['cur'] = None; CS['pan'] = float(C.par.Pan.eval()); CS['blend_until'] = 0.0; CS['orb'] = 0.0
-        else:
-            CS['blend_until'] = T + max(fade, 0.3)
+            for k, v in d['cam'].items():
+                try: C.par[k] = v
+                except Exception: pass
+            CS['cur'] = None; CS['pan'] = float(C.par.Pan.eval()); CS['blend_until'] = 0.0; CS['orb'] = 0.0; CS.pop('g', None)
+        else: camGlide(d['cam'], max(fade, 0.3))
+
+def camGlide(cam, dur):
+    """Move the camera to a preset's angle over the whole transition, eased, instead of snapping or drifting."""
+    C = op('/project1/CONTROLS'); T = absTime.seconds
+    if CS.get('cur') is None: CS['cur'] = {k: getattr(C.par, k).eval() for k in CAMKEYS}
+    b0 = dict(CS['cur']); b0['_pan'] = CS.get('pan', float(C.par.Pan.eval()))
+    for k, v in cam.items():
+        try: C.par[k] = v
+        except Exception: pass
+    CS['g'] = {'b0': b0, 't0': T, 'dur': max(0.05, float(dur))}; CS['blend_until'] = 0.0
 
 # ------------------------------------------------------------------ set list: presets in playing order, ◀ ▶ on the phone
 QUEUE_FILE = project.folder + '/td/queue.json'
@@ -2672,13 +2683,25 @@ def camUpdate(C, dt):
     if CS['cur'] is None:
         CS['cur'] = dict(tgt)
     cur = CS['cur']
-    if T < CS.get('blend_until', 0.0):
-        a = 1.0 - math.exp(-dt * 4.0 / max(0.01, C.par.Transition.eval()))
+    g = CS.get('g')
+    if g:                                                        # preset change: timed glide to the new angle
+        u = min(1.0, (T - g['t0']) / g['dur']); e = u * u * (3.0 - 2.0 * u)
+        for k in CAMKEYS:
+            a0, a1 = g['b0'].get(k, tgt[k]), tgt[k]
+            if k == 'Orbit': a1 = a0 + ((a1 - a0 + 180.0) % 360.0 - 180.0)          # the short way round
+            cur[k] = a0 + (a1 - a0) * e
+        CS['pan'] = g['b0']['_pan'] + (float(C.par.Pan.eval()) - g['b0']['_pan']) * e
+        if u >= 1.0: CS.pop('g', None)
+        a = 0.0
     else:
-        a = 1.0 - math.exp(-dt / max(0.005, C.par.Response.eval()))
-    for k in CAMKEYS:
-        cur[k] += (tgt[k] - cur[k]) * a
-    pan = CS.get('pan', 0.0); pan += (C.par.Pan.eval() - pan) * a; CS['pan'] = pan
+        if T < CS.get('blend_until', 0.0):
+            a = 1.0 - math.exp(-dt * 4.0 / max(0.01, C.par.Transition.eval()))
+        else:
+            a = 1.0 - math.exp(-dt / max(0.005, C.par.Response.eval()))
+        for k in CAMKEYS:
+            cur[k] += (tgt[k] - cur[k]) * a
+    pan = CS.get('pan', 0.0)
+    if a: pan += (C.par.Pan.eval() - pan) * a; CS['pan'] = pan
 
     react = C.par.Reactivity.eval()
     kick, low, ac = S['kick'] * react, S['low'] * react, cur['Audiocam']

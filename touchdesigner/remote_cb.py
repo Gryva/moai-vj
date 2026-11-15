@@ -34,7 +34,6 @@ for _i in range(1, 7):
                       (_m + 'nzreact', 'Reacts to music', 0, 2, 0.01, 'm%dnz' % _i), (_m + 'nzbright', 'Brightness', 0, 2, 0.01, 'm%dnz' % _i),
                       (_m + 'nzsteps', 'Flat bands (0 = smooth)', 0, 12, 1, 'm%dnz' % _i), (_m + 'nzseed', 'Variation', 0, 100, 1, 'm%dnz' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
-    ('Master', 'Brightness', 0, 1.5, 0.01, 'master'),
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autofade', 'Autopilot transition', 0, 600, 0.1, 'apfade'),     # set by the phone's transition buttons
     ('Swapfade', 'Linked layer switch', 0, 3, 0.05, 'swapfade'),    # 0 = instant cut; set by the phone's link menu
