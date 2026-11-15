@@ -1827,7 +1827,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     keepText = bool(text and C.par.Texton.eval() and tx.get('Texton') and float(tx.get('Textamount', 1.0)) > 0.001
                     and not op('/project1/fx_text').bypass)
     if keepText: textMorphStart(tx, max(fade, 1.4))              # words stay up and morph into the new ones
-    if fade > 0.01 and (newModel or newScene or newSrc):
+    if fade > 0.01 and newModel:                                   # only a new 3D model hides in a dip; with the same model it stays on screen while the camera glides and the effects cross-fade
         # statue / style changes hide in a live dip: everything swaps instantly at the darkest point
         glide = bool(cam and d.get('cam') and not newModel)            # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
