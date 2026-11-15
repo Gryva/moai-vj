@@ -805,7 +805,7 @@ def applyScene(sc):
     if sc == 'grid':                                    # frame the whole grid once when entering
         C = op('/project1/CONTROLS')
         need = C.par.Gridcount.eval() * C.par.Gridspace.eval() * 0.9 + 2.5
-        if C.par.Distance.eval() < need: C.par.Distance = round(need, 2)
+        if C.par.Distance.eval() < need and not CS.get('g') and not SF: C.par.Distance = round(need, 2)   # not while a preset glides in (it has its own camera)
 
 def _rows():
     t = op('/project1/FX_STACK')
@@ -1828,6 +1828,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     if SF:                                                        # a new change during a source fade: the half-faded layers get the new preset's own values
         if SF.get('phase') == 1:
             for i, a in SF['a0'].items(): mp(op('/project1/CONTROLS'), i, 'alpha').val = a
+            if SF.get('scene'): op('/project1/CONTROLS').par.Alphamodel = SF['m0']
         SF.clear()
     try: d = json.loads(t[slot, 1].val)
     except Exception as e:
@@ -1836,6 +1837,9 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     C = op('/project1/CONTROLS')
     newModel = bool(model and d.get('model') and d['model'] != C.par.Model.eval())
     newScene = bool(d.get('scene') and d['scene'] != C.par.Scene.eval())
+    if not newScene and C.par.Scene.eval() == 'grid':            # grid to grid with a different number of copies: also swapped at the quiet point
+        try: newScene = any(int(round(float(v))) != int(round(float(C.par[p_].eval()))) for p_, v in (d.get('grid') or {}).items() if p_ in ('Gridcount', 'Griddepth'))
+        except Exception: pass
     s_ = d.get('src') or {}
     newSrc = (sorted(m.get('file', '') for m in (s_.get('mslots') or {}).values()) != sorted(mp(C, i, 'file').eval() for i in MSLOTS if mp(C, i, 'on').eval())) \
              or (s_.get('camsrc', 'off') != C.par.Camsrc.eval() and not getattr(op('/project1/remote_cb').module, 'CAMERA_REMOVED', False))
@@ -1859,11 +1863,12 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
-    elif fade > 0.01 and newSrc and not newScene:                  # new videos / pictures: they fade out and the new ones fade in, everything keeps moving
-        _bankApply(d, fade, cam, model, text, cut=False, slot=slot, src=False)
-        srcFadeStart(d, slot, fade)
-    elif fade > 0.01 and newScene:
-        trStart('crossfade', min(fade, 1.5), lambda: _bankApply(d, fade, cam, model, text, cut=False, slot=slot))
+    elif fade > 0.01 and (newSrc or newScene):                    # new videos / a new scene style (solid / particles / grid): the old fades out still moving, the new fades in
+        mA0 = float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0
+        d2 = d
+        if newScene: d2 = dict(d); d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}       # the style itself changes at the quiet point
+        _bankApply(d2, fade, cam, model, text, cut=False, slot=slot, src=not newSrc)
+        srcFadeStart(d, slot, fade, src=newSrc, scene=newScene, mA0=mA0)
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
     try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
@@ -1876,6 +1881,7 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
         try: applySrc(d, slot)
         except Exception as er: print('preset source failed', er)
     old = {r['key']: (_isOn(r), float(r['amt']), float(r['p1'])) for r in layers()}
+    grid0 = {p_: float(C.par[p_].eval()) for p_ in ('Gridspace', 'Gridwave', 'Gridstagger') if hasattr(C.par, p_)} if C.par.Scene.eval() == 'grid' else {}
     S['colfade'] = fade
     applyLook(d, text=text)                                      # writes the table (instant values)
     S['colfade'] = 0.0
@@ -1915,6 +1921,10 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
         off = ((ang0 - S['angle'] + 180.0) % 360.0) - 180.0
         S['angoff'] = {'v': off, 't0': T0, 'dur': fade} if abs(off) > 0.05 else None
         S['angoffv'] = off if abs(off) > 0.05 else 0.0
+        if grid0 and C.par.Scene.eval() == 'grid':               # same grid: spacing / wave glide too
+            for k, v0 in grid0.items():
+                v1 = float(C.par[k].eval())
+                if abs(v1 - v0) > 1e-4: PG[k] = (v0, v1, T0, fade); C.par[k] = v0
     ex = d.get('extra') or {}
     for k in EXTRAPARS:                                          # older presets: back to the default, not the last look's value
         try: C.par[k] = ex[k] if k in ex else C.par[k].default
@@ -2021,24 +2031,33 @@ def qPrewarm():
 XF = {'on': False, 't0': 0.0, 'dur': 1.0, 'phase': 'out', 'pending': None}
 
 SF = {}
-def srcFadeStart(d, slot, fade):
-    """Live source change: the old media layers fade out (still playing), the new ones are put in at the quiet point and fade in."""
+def srcFadeStart(d, slot, fade, src=True, scene=False, mA0=1.0):
+    """Live change of what can't glide: the old media layers / scene style fade out (still playing), the new ones are put in at the quiet point and fade in."""
     C = op('/project1/CONTROLS')
-    SF.clear(); SF.update(d=d, slot=slot, t0=absTime.seconds, half=max(0.05, fade * 0.5), phase=1,
-                          a0={i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()})
+    SF.clear(); SF.update(d=d, slot=slot, t0=absTime.seconds, half=max(0.05, fade * 0.5), phase=1, src=src, scene=scene,
+                          a0={i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()} if src else {},
+                          m0=mA0, m1=float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0)
 def srcFadeStep(T):
     if not SF: return
     C = op('/project1/CONTROLS'); u = min(1.0, (T - SF['t0']) / SF['half']); e = u * u * (3.0 - 2.0 * u)
     if SF['phase'] == 1:
         for i, a in SF['a0'].items(): mp(C, i, 'alpha').val = a * (1.0 - e)
+        if SF['scene']: C.par.Alphamodel = SF['m0'] * (1.0 - e)
         if u >= 1.0:
-            try: applySrc(SF['d'], SF['slot'])
-            except Exception as er: print('preset source failed', er)
-            SF['a1'] = {i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()}
+            if SF['src']:
+                try: applySrc(SF['d'], SF['slot'])
+                except Exception as er: print('preset source failed', er)
+            if SF['scene']:
+                for p_, v in (SF['d'].get('grid') or {}).items():
+                    try: C.par[p_] = v
+                    except Exception: pass
+                if SF['d'].get('scene'): C.par.Scene = SF['d']['scene']
+            SF['a1'] = {i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()} if SF['src'] else {}
             for i in SF['a1']: mp(C, i, 'alpha').val = 0.0
             SF.update(phase=2, t0=T)
     else:
         for i, a in SF['a1'].items(): mp(C, i, 'alpha').val = a * e
+        if SF['scene']: C.par.Alphamodel = SF['m1'] * e
         if u >= 1.0: SF.clear()
 
 TRMODES = {'crossfade': 1, 'wipe': 2, 'zoom': 3, 'glitch': 4}
