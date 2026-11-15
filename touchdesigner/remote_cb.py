@@ -427,6 +427,7 @@ def _prepDownload(j):
         f = next(iter(sorted(x for x in glob.glob(os.path.join(PREPDIR, j['id'] + '.*')) if not x.endswith(('.part', '.ytdl')))), None)
         if p.returncode != 0 or not f: raise RuntimeError(last.replace('ERROR:', '').strip() or 'download failed')
         j['raw'] = f; _prepProbe(j); j['folder'] = j.get('title'); j['state'] = 'ready'; j['pct'] = 100
+        S = _srcRead(); S['~' + f] = {'src': f, 'url': j['url'], 'title': j.get('title'), 'folder': j.get('folder')}; _srcWrite(S)
         tr = j.pop('trim', None)
         if tr:                                                    # start / end given with the link: the clip is made straight away
             v = {'name': str(j.get('title') or 'clip')[:60], 'state': 'saving', 'pct': 0}; j.setdefault('saves', []).append(v)
@@ -535,6 +536,42 @@ def _prepRender(j, o, v):
     except Exception as e:
         v['state'] = 'fail'; v['err'] = str(e)[:160]
 
+def _openSrc(hit, title, folder, url=''):
+    import threading, secrets
+    old = next((x for x in PREP.values() if x.get('raw') == hit and x['state'] != 'fail'), None)
+    if old: old['folder'] = folder or old.get('folder'); old['t'] = time.time(); return old['id']          # already open: no second copy of the same video
+    jid = secrets.token_hex(4)
+    PREP[jid] = j = {'id': jid, 'url': url, 'title': title, 'folder': folder, 'state': 'download', 'pct': 50, 't': time.time(), 'raw': hit}
+    def _loc(j=j):
+        try:
+            os.makedirs(PREPDIR, exist_ok=True); _prepProbe(j)
+            if not j.get('dur'): raise RuntimeError('could not read that video')
+            j['state'] = 'ready'; j['pct'] = 100; _prepStrip(j); _prepProxy(j)
+        except Exception as e: j['state'] = 'fail'; j['err'] = str(e)[:160]
+    threading.Thread(target=_loc, daemon=True).start()
+    return jid
+def _libKey(src):
+    import hashlib; return hashlib.sha1(src.encode('utf-8', 'replace')).hexdigest()[:12]
+def prepLib():
+    """Every full video you have cut clips from (or downloaded), with its clips: the Video prep library."""
+    S = _srcRead(); lib = {}
+    def ent(src, title, folder, url):
+        e = lib.get(src)
+        if not e:
+            try: mt = os.path.getmtime(src)
+            except Exception: mt = 0
+            e = lib[src] = {'k': _libKey(src), 'title': title or os.path.splitext(os.path.basename(src))[0], 'folder': folder or '', 'url': url or '', 'clips': [], 'ok': os.path.isfile(src), 'mt': int(mt)}
+        return e
+    for rel, r in S.items():
+        if not r.get('src'): continue
+        e = ent(r['src'], r.get('title'), r.get('folder'), r.get('url'))
+        if not rel.startswith('~') and os.path.isfile(os.path.join(VIDEODIR, rel[7:])): e['clips'].append(rel); e['mt'] = max(e['mt'], int(os.path.getmtime(os.path.join(VIDEODIR, rel[7:]))))
+    for j in PREP.values():
+        if j.get('raw') and j['state'] != 'fail': e = ent(j['raw'], j.get('title'), j.get('folder'), j.get('url')); e['job'] = j['id']; e['mt'] = max(e['mt'], int(j.get('t') or 0))
+    v = [e for e in lib.values() if e['ok'] or e['clips']]
+    v.sort(key=lambda e: -e['mt'])
+    return {'t': 'preplib', 'v': v[:400]}
+
 def prepHandle(msg, reply):
     import threading, re, secrets
     a = msg.get('do'); j = PREP.get(str(msg.get('id', '')))
@@ -560,18 +597,16 @@ def prepHandle(msg, reply):
         if rec and os.path.isfile(rec.get('src', '')):              # a clip made here: open the full video again, with the cut you made
             hit, title, folder = rec['src'], rec.get('title') or title, rec.get('folder') or folder
             sel.update(o=rec.get('o') or {}, replace=rel)
-        old = next((x for x in PREP.values() if x.get('raw') == hit and x['state'] != 'fail'), None)
-        if old: old['folder'] = folder; sel['id'] = old['id']; return reply(sel)          # already open: no second copy of the same video
-        jid = secrets.token_hex(4); sel['id'] = jid
-        PREP[jid] = j = {'id': jid, 'url': rec.get('url', '') if rec and sel.get('replace') else '', 'title': title, 'folder': folder, 'state': 'download', 'pct': 50, 't': time.time(), 'raw': hit}
-        def _loc(j=j):
-            try:
-                os.makedirs(PREPDIR, exist_ok=True); _prepProbe(j)
-                if not j.get('dur'): raise RuntimeError('could not read that video')
-                j['state'] = 'ready'; j['pct'] = 100; _prepStrip(j); _prepProxy(j)
-            except Exception as e: j['state'] = 'fail'; j['err'] = str(e)[:160]
-        threading.Thread(target=_loc, daemon=True).start()
+        sel['id'] = _openSrc(hit, title, folder, rec.get('url', '') if rec and sel.get('replace') else '')
         reply(sel)
+    elif a == 'lib': reply(prepLib())
+    elif a == 'opensrc':                                         # from the library: a full video, by its key
+        k = str(msg.get('k', ''))
+        S = _srcRead(); hit = None; info = {}
+        for r in list(S.values()) + [{'src': x.get('raw'), 'title': x.get('title'), 'folder': x.get('folder'), 'url': x.get('url')} for x in PREP.values() if x.get('raw')]:
+            if r.get('src') and _libKey(r['src']) == k: hit, info = r['src'], r; break
+        if not hit or not os.path.isfile(hit): return reply({'t': 'err', 'msg': 'That video is not there any more'})
+        reply({'t': 'prepsel', 'id': _openSrc(hit, info.get('title') or os.path.splitext(os.path.basename(hit))[0], info.get('folder') or '', info.get('url') or '')})
     elif a == 'strip' and j and j.get('raw'): threading.Thread(target=_prepStrip, args=(j,), daemon=True).start()
     elif a == 'frame' and j and j.get('raw'): threading.Thread(target=_prepFrame, args=(j, float(msg.get('at', 0))), daemon=True).start()
     elif a == 'save' and j and j['state'] in ('ready', 'done') and j.get('raw'):      # one video, as many clips as you like
@@ -580,7 +615,8 @@ def prepHandle(msg, reply):
         threading.Thread(target=_prepRender, args=(j, o, v), daemon=True).start()
     elif a == 'drop' and j:
         PREP.pop(j['id'], None)
-        keep = {r.get('src') for r in _srcRead().values()}
+        S = _srcRead(); keep = {r.get('src') for k, r in S.items() if not k.startswith('~')}
+        if j.get('raw') not in keep and S.pop('~' + str(j.get('raw')), None): _srcWrite(S)
         for f in (None if j.get('raw') in keep else j.get('raw'), j.get('pv'), os.path.join(PREPDIR, j['id'] + '_pv.mp4'), os.path.join(PREPDIR, j['id'] + '_sc.mp4')):
             try:
                 if f and os.path.dirname(os.path.abspath(f)) == os.path.abspath(PREPDIR): os.remove(f)
