@@ -31,7 +31,7 @@ vec2 RES(){ return uTD2DInfos[0].res.zw; }
 
 void main(){
   vec4 a = uAudio; vec2 uv = vUV.st; vec3 c = tex(uv);
-  float h = 0.08 + uP.x * 0.25 - a.w * 0.03;
-  c *= smoothstep(h - 0.002, h + 0.002, uv.y) * smoothstep(h - 0.002, h + 0.002, 1.0 - uv.y);
+  float h = clamp(uP.x, 0.0, 1.0) * 0.128;      // CINEMA bars: 0 = none ... 1 = full 2.39:1 widescreen (never further)
+  if (h > 0.0005) c *= smoothstep(h - 0.002, h + 0.002, uv.y) * smoothstep(h - 0.002, h + 0.002, 1.0 - uv.y);
   fragColor = TDOutputSwizzle(outc(uv, c));
 }

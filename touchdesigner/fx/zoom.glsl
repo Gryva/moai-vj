@@ -22,18 +22,9 @@ vec3 rgb2hsv(vec3 c){ vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0); vec4 p = mix(
 float ASP(){ vec2 r = RES(); return r.x / r.y; }
 #define OUT(c) fragColor = TDOutputSwizzle(outc(vUV.st, (c)))
 
-// INFINITE ZOOM  nested copies flying towards you. uP.x = speed
+// ZOOM  a plain zoom into the middle. uP.x = how far (1 = none ... 4 = 4x). Older presets stored a speed 0..1: those read as 1 + value
 void main(){
-  vec4 a = uAudio; float t = fract(uTime * (0.08 + 0.25 * uP.x) + a.w * 0.05);
-  vec3 acc = vec3(0.0);
-  // copies keep growing until the statue has fully left the frame (8x), then fade - no early cut-off
-  for (int k = -3; k < 6; k++) {
-    float s = pow(2.0, float(k) - t);
-    vec2 p = (vUV.st - 0.5) * s + 0.5;
-    if (p.x >= 0.0 && p.x <= 1.0 && p.y >= 0.0 && p.y <= 1.0) {
-      float fade = smoothstep(0.0, 1.0, 1.0 - (float(k) - t) / 6.0) * smoothstep(0.125, 0.2, s);
-      acc = max(acc, tex(p) * fade);
-    }
-  }
-  OUT(acc);
+  float k = uP.x < 1.0 ? 1.0 + uP.x : uP.x;
+  vec2 p = (vUV.st - 0.5) / max(1.0, k) + 0.5;
+  OUT(tex(p));
 }
