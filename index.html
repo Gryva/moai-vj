@@ -371,7 +371,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .ain{margin:12px 0 4px;padding:12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--panel)}
 .ainhd{display:flex;align-items:baseline;justify-content:space-between}.ainhd h2{margin:0 0 8px}#ainlv{font:600 12px var(--mono);color:var(--mute)}#ainlv.hot{color:var(--lime)}#ainlv.low{color:var(--amber)}
 .ainseg{flex-wrap:wrap;margin-bottom:8px}.ainseg button{flex:1 1 30%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#t-Automic{width:100%;display:flex;flex-direction:column;gap:2px;align-items:center}#t-Automic small{font:500 10px var(--sans);letter-spacing:.06em;opacity:.7;text-transform:none}
+#t-Automic,#t-Trreplay{width:100%;display:flex;flex-direction:column;gap:2px;align-items:center}#t-Automic small,#t-Trreplay small{font:500 10px var(--sans);letter-spacing:.06em;opacity:.7;text-transform:none}
 .qrec{margin:8px 0 0;padding:0}.qrec[hidden]{display:none}
 .qtxt .qtrow button{padding:0 16px;border-radius:var(--r2);background:var(--hot);color:#fff;font:700 12px var(--sans);letter-spacing:.1em}
 .capsb{padding:0 16px;border-radius:var(--r2);border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 12px var(--sans);letter-spacing:.1em}.capsb.on{background:var(--ink);color:var(--bg)}
@@ -652,7 +652,7 @@ header .r1 .fps{font:500 12px var(--mono)}
     <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button>
       <button class="apmore" id="apMore" aria-expanded="false"><span id="apSum">1s fade · 10s</span><i>▾</i></button></div>
     <div class="appanel" id="apPanel" hidden>
-      <h4>Transition style</h4><div class="trstyles" id="trStyle"></div><p class="hint2" id="trHint"></p>
+      <h4>Transition style</h4><div class="trstyles" id="trStyle"></div><p class="hint2" id="trHint"></p><button class="btn" id="t-Trreplay" data-tog="Trreplay" style="margin-top:8px">↺ KEEP THE OLD LOOK MOVING<small>replays its last second (back and forth) while the new look comes in · off = the old look is held still</small></button>
       <h4>Transition between presets</h4><div class="tinrow"><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fadein"><i>s</i></span><span class="hint2">0 = cut</span></div>
       <h4>Autopilot plays</h4><div class="seg sm" id="apMode"><button data-apm="random">RANDOM</button><button data-apm="setlist">SET LIST · IN ORDER</button><button data-apm="setrand">SET LIST · RANDOM</button><button data-apm="group">THIS GROUP · IN ORDER</button></div>
       <div id="apLost" hidden></div>
@@ -982,7 +982,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16h';
+const BUILD = '2026-11-16i';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1947,7 +1947,7 @@ function applyPars(p){
     $('#animLoopBox').hidden = !a; if (a) $$('[data-aloop]').forEach(b => b.classList.toggle('on', b.dataset.aloop === (cur.loop || 'loop'))); }
   $$('[data-mstyle]').forEach(b => b.classList.toggle('on', b.dataset.mstyle === p.Modelstyle));
   $$('[data-preset]').forEach(b => b.classList.toggle('on', +b.dataset.preset === p.Presetslot));
-  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Statue','Drawon','Automic'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
+  ['Autospin','Spinrev','Showlabel','Texton','Monitor','Statue','Drawon','Automic','Trreplay'].forEach(t => $('#t-' + t).classList.toggle('on', !!p[t])); mediaCardsUI(p);
   $('#spinrow').hidden = p.Motion !== 'spin';
   syncText(p); clipUI(p); ccUI('text'); ksDraw(); keyUI(p);
   $('#t-Statue').textContent = p.Statue === false ? 'OFF' : 'ON';

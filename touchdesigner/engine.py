@@ -2280,7 +2280,8 @@ def trUpdate(T):
     g = op('/project1/tr_mix'); el = T - TR['t0']; u = min(1.0, el / TR['dur'])
     g.par.vec0valuex, g.par.vec0valuey, g.par.vec0valuez = TR['mode'], u, TR['seed']
     n = TR.get('n', 1); f = (el * 30.0) % (2.0 * n)               # old look: plays back and forth through its last moments at half speed, never stops
-    h.par.outputindex = -(f if f <= n else 2.0 * n - f)
+    C_ = op('/project1/CONTROLS'); rp = hasattr(C_.par, 'Trreplay') and C_.par.Trreplay.eval()       # optional: off = the old look is simply held
+    h.par.outputindex = -(f if f <= n else 2.0 * n - f) if rp else 0
     if u >= 1.0: TR['on'] = False; op('/project1/tr_sw').par.index = 0; _trRec(h, True)
 
 def xfadeStart(dur, pending=None, keeptext=False):
