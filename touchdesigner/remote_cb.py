@@ -1454,6 +1454,17 @@ def handle(msg, reply):
             elif a == 'fit': E.mediaFit(sl or None)
             elif a == 'stop' and sl: mediaStop(sl)
             elif a == 'del': mediaDel(str(msg.get('id', '')))
+            elif a == 'uses':                                    # which presets play this file (asked before deleting it)
+                mid = str(msg.get('id', '')); names = []
+                try:
+                    t = E._bankTable()
+                    for r in range(1, t.numRows):
+                        v = t[r, 1].val
+                        if not v or mid not in v: continue
+                        sl = (json.loads(v).get('src') or {}).get('mslots') or {}
+                        if any(isinstance(x, dict) and x.get('file') == mid for x in (sl.values() if isinstance(sl, dict) else sl)): names.append('%d · %s' % (r, t[r, 0].val or 'Preset'))
+                except Exception: pass
+                return reply({'t': 'muses', 'id': mid, 'v': names})
             elif a == 'trash':
                 ok = mediaTrash(str(msg.get('id', '')))
                 reply({'t': 'toast', 'msg': 'Moved to the Deleted folder' if ok else 'Could not remove it (in use?)'}); _allMedia()
