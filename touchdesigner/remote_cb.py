@@ -384,7 +384,8 @@ PREPQ = _keep('PREPQ', [])                      # finished thumbnails / frames w
 PREPDIR = os.path.join(project.folder, 'prep')
 PREPLIB = os.path.join(project.folder, 'tools', 'pylib')
 PREPSIG = {'s': ''}
-def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')))
+def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')),
+                              saves=[{k: v.get(k) for k in ('name', 'state', 'pct', 'out', 'err')} for v in j.get('saves', [])][-12:])
 def prepMsg(): return {'t': 'prep', 'jobs': [_prepPub(j) for j in sorted(PREP.values(), key=lambda j: j['t'])][-8:]}
 def prepPoll():
     """Main thread: send job changes + finished pictures; keep polling while anything runs."""
@@ -392,13 +393,13 @@ def prepPoll():
     if sig != PREPSIG['s']:
         PREPSIG['s'] = sig; _all(prepMsg())
         PREPSIG['until'] = time.time() + 8
-        if any(j['state'] == 'done' and not j.get('told') for j in PREP.values()):
-            for j in PREP.values():
-                if j['state'] == 'done': j['told'] = True
+        fresh = [v for j in PREP.values() for v in j.get('saves', []) if v['state'] == 'done' and not v.get('told')]
+        if fresh:
+            for v in fresh: v['told'] = True
             _allMedia(); _all(clipsMsg())
     if PREPQ: PREPSIG['until'] = time.time() + 6
     while PREPQ: _all(PREPQ.pop(0))
-    if any(j['state'] in ('download', 'saving') for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
+    if any(j['state'] == 'download' or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
         run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
 
 def _prepDownload(j):
@@ -442,13 +443,15 @@ def _prepProbe(j):
     m = re.search(r'Duration:\s*(\d+):(\d+):([\d.]+)', e); dur = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 0.0
     f = re.search(r'([\d.]+)\s*fps', e); wh = re.search(r'Video:.*?(\d{2,5})x(\d{2,5})', e)
     j.update(dur=round(dur, 2), fps=float(f.group(1)) if f else 30.0, w=int(wh.group(1)) if wh else 0, h=int(wh.group(2)) if wh else 0)
+    j['h264'] = bool(re.search(r'Video:\s*h264', e))
 def _prepShot(j, t, w):
     import base64
     r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-ss', '%.3f' % max(0.0, t), '-i', j['raw'], '-frames:v', '1', '-vf', 'scale=%d:-2' % w,
                   '-q:v', '5', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-'])
     return base64.b64encode(r.stdout).decode('ascii') if r.stdout else ''
 def _prepProxy(j):
-    """A light 360p copy just for watching / trimming on the phone."""
+    """Something the phone can play for trimming: the video itself when it is ordinary H.264 MP4, else a light 360p copy."""
+    if j.get('h264') and j['raw'].lower().endswith('.mp4') and (j.get('h') or 0) <= 1100: j['pv'] = j['raw']; return
     out = os.path.join(PREPDIR, j['id'] + '_pv.mp4')
     r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-i', j['raw'], '-vf', 'scale=-2:360,fps=30', '-an', '-c:v', 'libx264', '-preset', 'veryfast',
                   '-crf', '30', '-g', '15', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out])
@@ -459,7 +462,7 @@ def _prepFrame(j, t):
     b = _prepShot(j, t, 320)
     if b: PREPQ.append({'t': 'prepframe', 'id': j['id'], 'at': t, 'img': b})
 
-def _prepRender(j, o):
+def _prepRender(j, o, v):
     """Trim + speed + reverse / ping-pong + mirror, filled to 1280x720 H.264, into media/videos (ffmpeg, its own process)."""
     import subprocess, re
     try:
@@ -468,7 +471,12 @@ def _prepRender(j, o):
         sp = max(0.1, min(8.0, float(o.get('speed', 1) or 1))); rev, pp = bool(o.get('reverse')), bool(o.get('pingpong'))
         if (rev or pp) and ln > 60: raise ValueError('reverse / ping-pong: keep the clip under 60 s')
         fps = min(60.0, j.get('fps') or 30.0)
-        vf = ['scale=1280:720:force_original_aspect_ratio=increase', 'crop=1280:720', 'fps=%g' % (min(fps, 30.0) if (rev or pp) else fps)]
+        cl, cr, ct, cb = (max(0.0, min(0.45, float(o.get(k, 0) or 0))) for k in ('cl', 'cr', 'ct', 'cb'))
+        vf = []
+        if cl + cr + ct + cb > 0.001: vf.append('crop=trunc(iw*%.4f/2)*2:trunc(ih*%.4f/2)*2:trunc(iw*%.4f):trunc(ih*%.4f)' % (1 - cl - cr, 1 - ct - cb, cl, ct))
+        if o.get('fit') == 'whole': vf += ['scale=1280:720:force_original_aspect_ratio=decrease', 'pad=1280:720:(ow-iw)/2:(oh-ih)/2:black']
+        else: vf += ['scale=1280:720:force_original_aspect_ratio=increase', 'crop=1280:720']
+        vf.append('fps=%g' % (min(fps, 30.0) if (rev or pp) else fps))
         if o.get('mirror'): vf.append('hflip')
         if o.get('flip'): vf.append('vflip')
         if abs(sp - 1.0) > 0.001: vf.append('setpts=PTS/%g' % sp)
@@ -481,20 +489,20 @@ def _prepRender(j, o):
         d = VIDEODIR; os.makedirs(d, exist_ok=True)                          # your clip library (the same 'videos' list as the phone)
         path = os.path.join(d, name + '.mp4'); n = 2
         while os.path.exists(path): path = os.path.join(d, '%s %d.mp4' % (name, n)); n += 1
-        tmp = os.path.join(PREPDIR, j['id'] + '_out.mp4')               # made outside the media folder: nothing opens it half-written
+        tmp = os.path.join(PREPDIR, '%s_out%x.mp4' % (j['id'], id(v)))   # made outside the media folder: nothing opens it half-written
         cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-ss', '%.3f' % t0, '-t', '%.3f' % ln, '-i', j['raw'], '-filter_complex', fc, '-map', '[v]', '-an',
                '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-g', '30', '-movflags', '+faststart', '-progress', 'pipe:1', '-nostats', tmp]
         fl = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=fl)
         for line in p.stdout:
             m = re.match(r'out_time_us=(\d+)', line.strip())
-            if m: j['pct'] = min(99, int(int(m.group(1)) / 1e6 / max(0.1, outlen) * 100))
+            if m: v['pct'] = min(99, int(int(m.group(1)) / 1e6 / max(0.1, outlen) * 100))
         p.wait(); err = p.stderr.read()
         if p.returncode != 0 or not os.path.exists(tmp): raise RuntimeError((err or 'ffmpeg failed').strip().splitlines()[-1][:150])
         import shutil; shutil.move(tmp, path)
-        j['out'] = 'videos/' + os.path.basename(path); j['state'] = 'done'; j['pct'] = 100
+        v['out'] = 'videos/' + os.path.basename(path); v['name'] = os.path.splitext(os.path.basename(path))[0]; v['state'] = 'done'; v['pct'] = 100
     except Exception as e:
-        j['state'] = 'fail'; j['err'] = str(e)[:160]
+        v['state'] = 'fail'; v['err'] = str(e)[:160]
 
 def prepHandle(msg, reply):
     import threading, re, secrets
@@ -522,9 +530,10 @@ def prepHandle(msg, reply):
         reply({'t': 'prepsel', 'id': jid})
     elif a == 'strip' and j and j.get('raw'): threading.Thread(target=_prepStrip, args=(j,), daemon=True).start()
     elif a == 'frame' and j and j.get('raw'): threading.Thread(target=_prepFrame, args=(j, float(msg.get('at', 0))), daemon=True).start()
-    elif a == 'save' and j and j['state'] in ('ready', 'done', 'fail') and j.get('raw'):
-        j.update(state='saving', pct=0, err=None, told=False)
-        threading.Thread(target=_prepRender, args=(j, msg.get('o') or {}), daemon=True).start()
+    elif a == 'save' and j and j['state'] in ('ready', 'done') and j.get('raw'):      # one video, as many clips as you like
+        o = msg.get('o') or {}; v = {'name': str(o.get('name') or j.get('title') or 'clip')[:60], 'state': 'saving', 'pct': 0}
+        j.setdefault('saves', []).append(v)
+        threading.Thread(target=_prepRender, args=(j, o, v), daemon=True).start()
     elif a == 'drop' and j:
         PREP.pop(j['id'], None)
         for f in (j.get('raw'), j.get('pv')):

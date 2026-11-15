@@ -1737,6 +1737,11 @@ def _qclean(it):
     elif k == 'swap':
         a, b = str(it.get('a', '')), str(it.get('b', ''))
         if visPar(a) and visPar(b) and a != b: return {'k': 'swap', 'a': a, 'b': b}
+    elif k == 'vids':                                              # a layer's video switcher: tap a clip to play it on that layer
+        t = str(it.get('t', ''))
+        if t in ('m1', 'm2', 'm3', 'm4', 'm5', 'm6'):
+            ids = [str(x)[:200] for x in (it.get('ids') or []) if isinstance(x, str)][:16]
+            return {'k': 'vids', 't': t, 'ids': ids}
     elif k == 'fx':
         t, e, f = str(it.get('t', '')), str(it.get('e', '')), str(it.get('f', ''))
         if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and f in ('amt', 'p1', 'on'):
@@ -1762,7 +1767,18 @@ def quickEdit(do, scope, item, slot=None, d=0):
         if not 1 <= slot <= BANK_SLOTS or not t[slot, 1].val: return False
         dd = json.loads(t[slot, 1].val); m = dict(dd.get('_meta') or {}); cur = list(m.get('quick') or [])
     ids = [_qid(x) for x in cur]; i = ids.index(_qid(it)) if _qid(it) in ids else -1
-    if do == 'pin' and i < 0 and len(cur) < QUICK_MAX: cur.append(it)
+    if it['k'] == 'vids' and do in ('pin', 'add', 'drop'):          # the switcher is one item per layer; clips are added / taken out of it
+        old = cur[i] if i >= 0 else {'k': 'vids', 't': it['t'], 'ids': []}
+        ids = list(old.get('ids') or [])
+        for x in it['ids']:
+            if do == 'drop' and x in ids: ids.remove(x)
+            elif do != 'drop' and x not in ids: ids.append(x)
+        new = {'k': 'vids', 't': it['t'], 'ids': ids[:16]}
+        if i >= 0:
+            if ids: cur[i] = new
+            else: cur.pop(i)
+        elif ids and len(cur) < QUICK_MAX: cur.append(new)
+    elif do == 'pin' and i < 0 and len(cur) < QUICK_MAX: cur.append(it)
     elif do == 'unpin' and i >= 0: cur.pop(i)
     elif do == 'move' and i >= 0:
         j = max(0, min(len(cur) - 1, i + (1 if d > 0 else -1))); cur.insert(j, cur.pop(i))
