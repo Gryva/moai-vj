@@ -384,7 +384,7 @@ PREPQ = _keep('PREPQ', [])                      # finished thumbnails / frames w
 PREPDIR = os.path.join(project.folder, 'prep')
 PREPLIB = os.path.join(project.folder, 'tools', 'pylib')
 PREPSIG = {'s': ''}
-def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')),
+def _prepPub(j): return dict({k: j.get(k) for k in ('id', 'url', 'title', 'state', 'pct', 'dur', 'fps', 'w', 'h', 'out', 'err')}, pv=bool(j.get('pv')), pvq=j.get('pvq', 0),
                               saves=[{k: v.get(k) for k in ('name', 'state', 'pct', 'out', 'err')} for v in j.get('saves', [])][-12:])
 def prepMsg(): return {'t': 'prep', 'jobs': [_prepPub(j) for j in sorted(PREP.values(), key=lambda j: j['t'])][-8:]}
 def prepPoll():
@@ -399,7 +399,7 @@ def prepPoll():
             _allMedia(); _all(clipsMsg())
     if PREPQ: PREPSIG['until'] = time.time() + 6
     while PREPQ: _all(PREPQ.pop(0))
-    if any(j['state'] == 'download' or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
+    if any(j['state'] == 'download' or j.get('busy') or any(v['state'] == 'saving' for v in j.get('saves', [])) for j in PREP.values()) or PREPQ or time.time() < PREPSIG.get('until', 0):
         run("op('/project1/remote_cb').module.prepPoll()", delayMilliSeconds=400)
 
 def _prepDownload(j):
@@ -451,11 +451,13 @@ def _prepShot(j, t, w):
     return base64.b64encode(r.stdout).decode('ascii') if r.stdout else ''
 def _prepProxy(j):
     """Something the phone can play for trimming: the video itself when it is ordinary H.264 MP4, else a light 360p copy."""
-    if j.get('h264') and j['raw'].lower().endswith('.mp4') and (j.get('h') or 0) <= 1100: j['pv'] = j['raw']; return
-    out = os.path.join(PREPDIR, j['id'] + '_pv.mp4')
-    r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-i', j['raw'], '-vf', 'scale=-2:360,fps=30', '-an', '-c:v', 'libx264', '-preset', 'veryfast',
-                  '-crf', '30', '-g', '15', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out])
-    if r.returncode == 0 and os.path.exists(out): j['pv'] = out
+    if j.get('h264') and j['raw'].lower().endswith('.mp4') and (j.get('h') or 0) <= 1100: j['pv'] = j['raw']   # plays at once...
+    out = os.path.join(PREPDIR, j['id'] + '_sc.mp4'); j['busy'] = True                                          # ...then a light copy made for smooth scrubbing
+    try:
+        r = _prepRun([FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', '-i', j['raw'], '-vf', 'scale=-2:360,fps=30', '-an', '-c:v', 'libx264', '-preset', 'ultrafast',
+                      '-tune', 'fastdecode', '-crf', '30', '-g', '3', '-bf', '0', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out])
+        if r.returncode == 0 and os.path.exists(out): j['pv'] = out; j['pvq'] = 1
+    finally: j['busy'] = False
 def _prepStrip(j, n=12):
     PREPQ.append({'t': 'prepstrip', 'id': j['id'], 'v': [_prepShot(j, (k + 0.5) / n * (j['dur'] or 1), 160) for k in range(n)]})
 def _prepFrame(j, t):
@@ -518,6 +520,8 @@ def prepHandle(msg, reply):
         rel = str(msg.get('mid', '')); hit = next((f for r, f, k in _mediaFiles() if r == rel and k == 'video'), None)
         if not hit: return reply({'t': 'err', 'msg': 'That video was not found'})
         if not os.path.exists(FFMPEG): return reply({'t': 'err', 'msg': 'Video tools are not installed yet (tools folder)'})
+        old = next((x for x in PREP.values() if x.get('raw') == hit and not x.get('url') and x['state'] != 'fail'), None)
+        if old: return reply({'t': 'prepsel', 'id': old['id']})          # already open: no second copy of the same video
         jid = secrets.token_hex(4)
         PREP[jid] = j = {'id': jid, 'url': '', 'title': os.path.splitext(os.path.basename(hit))[0][:80], 'state': 'download', 'pct': 50, 't': time.time(), 'raw': hit}
         def _loc(j=j):
@@ -536,7 +540,7 @@ def prepHandle(msg, reply):
         threading.Thread(target=_prepRender, args=(j, o, v), daemon=True).start()
     elif a == 'drop' and j:
         PREP.pop(j['id'], None)
-        for f in (j.get('raw'), j.get('pv')):
+        for f in (j.get('raw'), j.get('pv'), os.path.join(PREPDIR, j['id'] + '_pv.mp4'), os.path.join(PREPDIR, j['id'] + '_sc.mp4')):
             try:
                 if f and os.path.dirname(os.path.abspath(f)) == os.path.abspath(PREPDIR): os.remove(f)
             except Exception: pass
