@@ -2053,7 +2053,7 @@ def srcFadeStep(T):
                 except Exception as er: print('preset source failed', er)
             if SF['scene']:                                        # the old picture rushes past the camera (still moving) as the new statue / grid settles in
                 d_, md = SF['d'], SF.get('model')
-                trStart('zoom', min(0.9, max(0.45, SF['half'])), lambda: _sfSwap(d_, md))
+                trStart('crossfade', min(1.5, max(0.5, SF['half'])), lambda: _sfSwap(d_, md))
             SF['a1'] = {i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()} if SF['src'] else {}
             for i in SF['a1']: mp(C, i, 'alpha').val = 0.0
             SF.update(phase=2, t0=T)
@@ -2082,7 +2082,7 @@ def _sfSwap(d, model):
         if 'angle' in ob: S['angle'] = float(ob['angle'])
         S['angoff'] = None; S['angoffv'] = 0.0; S['mfade'] = None
 
-TRMODES = {'crossfade': 1, 'wipe': 2, 'zoom': 3, 'glitch': 4}
+TRMODES = {'crossfade': 1, 'wipe': 2, 'zoom': 3, 'glitch': 4, 'clock': 5, 'iris': 6, 'doors': 7, 'curtain': 8, 'diamond': 9, 'lucas': 10}
 TR = {'on': False}
 def _dipColour(v):
     b = op('/project1/xf_black')
@@ -2092,11 +2092,12 @@ def trStart(style, dur, apply):
     h, sw = op('/project1/tr_hold'), op('/project1/tr_sw')
     if h is None or sw is None: apply(); return
     if TR.get('pending'): TR['pending']()
-    h.par.active = True; TR.update(on=False, pending=apply, mode=TRMODES.get(style, 1), dur=max(0.1, float(dur)), seed=random.random())
+    h.par.active = True; h.cook(force=True)                    # grab the picture now (nothing else pulls the cache, it would hold an old / black frame)
+    TR.update(on=False, pending=apply, mode=TRMODES.get(style, 1), dur=max(0.1, float(dur)), seed=random.random())
     run("op('/project1/fx_engine').module._trGo()", delayFrames=2)
 def _trGo():
     h, sw = op('/project1/tr_hold'), op('/project1/tr_sw')
-    h.par.active = False
+    h.cook(force=True); h.par.active = False
     p, TR['pending'] = TR.get('pending'), None
     if p:
         try: p()

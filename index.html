@@ -956,7 +956,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15t';
+const BUILD = '2026-11-15u';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2707,10 +2707,12 @@ function sheetBackups(){
     + `<button data-sh="cancel">Close</button>`;
   $('#sheet').dataset.mode = 'bk'; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
-const TRS = [['adaptive', 'ADAPTIVE', 'Same 3D model: the camera glides to the new angle while the effects cross-fade, the object stays on screen. A new model dips to black.'],
+const TRS = [['adaptive', 'ADAPTIVE', 'Same 3D model: the camera glides to the new angle while the effects cross-fade, the object stays on screen. A new model or grid blends in 50/50 - never black.'],
   ['crossfade', 'CROSSFADE', 'The old look melts into the new one.'], ['dip', 'DIP TO BLACK', 'Fades out to black, the new look fades in.'], ['flash', 'FLASH', 'A white flash, the new look comes out of it.'],
   ['wipe', 'WIPE', 'A bright edge sweeps across and reveals the new look.'], ['zoom', 'ZOOM THROUGH', 'The old look rushes past the camera, the new one settles in.'],
-  ['glitch', 'GLITCH', 'Blocks jump between the two looks with colour tearing.'], ['cut', 'CUT', 'Instant, no transition (the time below is ignored).']];
+  ['glitch', 'GLITCH', 'Blocks jump between the two looks with colour tearing.'],
+  ['lucas', 'LUCAS WIPE', 'Star Wars style: a hard edge slides across.'], ['clock', 'CLOCK WIPE', 'A hand sweeps round like a clock.'], ['iris', 'IRIS', 'A circle opens from the middle.'],
+  ['doors', 'DOORS', 'Opens from the middle out to both sides.'], ['curtain', 'CURTAIN', 'Black bars lead the new look open from the middle.'], ['diamond', 'DIAMOND', 'A diamond opens from the middle.'], ['cut', 'CUT', 'Instant, no transition (the time below is ignored).']];
 function trUI(){ const cur = (S && S.pars.Transtyle) || 'adaptive', el = $('#trStyle'); if (!el) return;
   if (!el.firstChild) el.innerHTML = TRS.map(([v, l]) => `<button data-trs="${v}">${l}</button>`).join('');
   $$('#trStyle [data-trs]').forEach(b => b.classList.toggle('on', b.dataset.trs === cur)); const h = TRS.find(x => x[0] === cur); $('#trHint').textContent = h ? h[2] : ''; }
