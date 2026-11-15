@@ -581,6 +581,19 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 .mtabs button{position:relative;height:40px;border-radius:9px;font:800 11.5px var(--sans);letter-spacing:.1em;color:var(--mute,#9a94a8)}.mtabs button[hidden]{display:none}.mtabs button.on{background:var(--lime);color:#0b0a0f}
 .mtabs button i{position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:50%;background:transparent}.mtabs button i.on{background:var(--hot,#ff4d4d)}.mtabs button.on i.on{background:#0b0a0f}
 .tabp>summary{display:none}.tabp.tabhide{display:none!important}.tabp{margin-top:6px!important;border-top-left-radius:6px}
+html.coarse input[type=range]{pointer-events:none}html.coarse .ctl,html.coarse .sub{touch-action:pan-y}
+.hg{display:flex;align-items:center;gap:6px;padding:0;border-radius:10px;transition:background .2s}.hg:has(.stat.open){padding:3px 6px 3px 0;background:#ffffff08;box-shadow:inset 0 0 0 1px var(--line)}
+header .r1 .stat{height:36px;padding:0 8px;border-radius:8px}header .r1 .fsb,header .r1 .savebtn,header .r1 .edit,header .r1 .prepPill,header .r1 .golocal,header .r1 .stbk{height:36px;border-radius:8px;font:700 11px var(--sans);letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:4px;margin:0}
+header .r1 .fsb{min-width:36px;width:auto;padding:0 10px}header .r1 #undoB,header .r1 #redoB,header .r1 #fsbtn,header .r1 #rlbtn{width:36px;padding:0;font-size:17px}header .r1 .stbk{padding:0 10px;border:1px solid var(--line);color:var(--mute)}
+header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.st2:not(.open)~.tbk:not(.on){display:none!important}header .r1 .golocal{padding:0 10px}header .r1 .prepPill{padding:0 12px;border-radius:8px}
+.qkb{color:#ffd23e!important;border-color:#ffd23e66!important}header .r1 .fsb.recb{color:#ff4d5e}#fsbtn{margin-left:0!important}
+.padacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.padacts .pad.add{min-height:0;height:52px;aspect-ratio:auto}.padacts .pad.add>span{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}header .r1 .prepPill[hidden]{display:none}body:not(.editing) header .r1 .savebtn{display:none}.padacts .pad.add small br{display:none}.padacts .pad.add .plus{font-size:20px}
+.pgchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.pgchips::-webkit-scrollbar{display:none}
+.pgc{flex:none;position:relative;height:42px;padding:0 14px;border-radius:21px;border:1px solid var(--line);background:#16131c;display:flex;align-items:center;gap:8px}.pgc b{font:800 11.5px var(--sans);letter-spacing:.08em;text-transform:uppercase}.pgc i{font:600 11px var(--mono);font-style:normal;opacity:.6}
+.pgc.on{background:var(--ink);color:#0b0a0f;border-color:var(--ink)}.pgc u{width:8px;height:8px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 8px #ff4d4d}
+.nzlive{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;margin:4px 0 0}.nzlive img{width:100%;height:100%;object-fit:cover;display:block}.nzlive span{position:absolute;left:8px;top:7px;font:800 9px var(--sans);letter-spacing:.1em;color:#ff4d4d;background:#000a;padding:3px 6px;border-radius:4px}
+.gpane{margin-top:8px}.gpane.tabhide{display:none}.nzdice{width:100%;margin-top:10px}.nzdirs{display:grid;grid-template-columns:repeat(3,52px);gap:6px;justify-content:center;margin:4px 0 8px}.nzdirs button{height:44px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:20px}.nzdirs button.on{background:var(--lime);color:#0b0a0f}
+body.stacked .gpane.tabhide,body.stacked .tabp.tabhide{display:block!important}body.stacked [data-gtabs],body.stacked .mtabs{display:none}body.stacked .tabp>summary{display:flex}
 .prepph{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none;z-index:3}.prepph u{position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
 .prepvid{display:flex;justify-content:center;background:#000;border-radius:10px;overflow:hidden;margin:8px 0 0;position:relative}.prepframe{position:relative;overflow:hidden}.prepframe video{width:100%;height:100%;display:block;object-fit:fill;aspect-ratio:auto;border-radius:0}
 .preptr{display:flex;align-items:center;gap:6px;margin:8px 0 0}.preptr .prepplay{position:static;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:#16131c;font-size:14px;flex:none}.prepnow{font:600 15px var(--mono);min-width:76px}.prepsp{flex:1}
@@ -596,7 +609,7 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button><button class="stat st2" id="stat2" aria-label="Reload and record"><i class="stbar"></i></button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⚡ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ EDIT</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button></div><button class="prepPill" id="prepPill" hidden></button><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -824,6 +837,7 @@ body.cuepicking .lt button{outline:2px dashed #c6ff3d66;outline-offset:-2px}body
     <h2>Picture</h2><div id="g-projlook"></div>
     <div class="btns" style="grid-template-columns:1fr"><button class="btn" data-act="ksall">RESET ALL OUTPUT SETTINGS</button></div>
     <p class="hint2">Saved on the computer, not in presets: the setup stays the same when you change looks.</p>
+    <h2>Card layout</h2><div class="seg sm"><button data-layout="tabs">TABS (one part at a time)</button><button data-layout="stacked">STACKED (everything under each other)</button></div><p class="hint2">Tabs keep long cards short. Stacked shows every part at once, the old way.</p>
     <h2>Remote font</h2><div class="seg sm" id="uifonts" style="flex-wrap:wrap"></div><p class="hint2">Only this remote (this tablet / phone) changes. Condensed fonts fit more on the buttons.</p>
   </div>
   </section>
@@ -865,6 +879,7 @@ document.addEventListener('change', e => { const el = e.target, v = Math.max(0, 
   else if (el.id === 'fxfadein') { S.pars.Fxfade = v; send({t:'set', p:'Fxfade', v}); toast(v ? 'Effects fade in ' + v + ' s' : 'Effects switch instantly'); }
   else if (el.id === 'qkfadein') { const it = JSON.parse($('#sheet').dataset.qitem || 'null'); if (!it) return; const k = qid(it);
     if (String(el.value).trim() === '') delete QFADE[k]; else QFADE[k] = v; store.set('qfade', QFADE); QSIG = ''; renderQuick(); toast(String(el.value).trim() === '' ? 'Uses the FX tab setting' : v ? 'Fades in ' + v + ' s' : 'Switches instantly'); } });
+document.addEventListener('DOMContentLoaded', () => { layoutSet(store.get('layout', 'tabs')); gtabsUI(); });
 document.addEventListener('DOMContentLoaded', () => { const h = $('#uifonts'); if (h) h.innerHTML = UIFONTS.map(([f, l]) => `<button data-uifont="${f}" style="font-family:'${f}'">${l}</button>`).join(''); uiFont(store.get('uifont', 'Space Grotesk')); });
 document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -901,6 +916,18 @@ function sha256raw(ascii){
 }
 
 const KEYSW = ['#00ff00','#0047ff','#000000','#ffffff','#ff0000','#ff00ff','#ffff00','#00ffff'];   // background colours to remove
+/* touch screens: a slider only moves once the finger clearly goes sideways; an up/down swipe over it scrolls the page */
+(() => { if (!matchMedia('(pointer:coarse)').matches) return; document.documentElement.classList.add('coarse'); let G = null;
+  const val = (el, x) => { const r = el.getBoundingClientRect(), mn = +el.min || 0, mx = +(el.max || 100), st = el.step === 'any' ? 0 : +(el.step || 1), k = Math.max(0, Math.min(1, (x - r.left - 13) / Math.max(1, r.width - 26)));
+    let v = mn + k * (mx - mn); if (st) v = Math.round((v - mn) / st) * st + mn; return Math.max(mn, Math.min(mx, +v.toFixed(6))); };
+  document.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') return; const x = e.clientX, y = e.clientY; let hit = null;
+    for (const el of document.querySelectorAll('input[type=range]')) { if (el.disabled) continue; const r = el.getBoundingClientRect(); if (r.width && x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 8 && y <= r.bottom + 8) { hit = el; break; } }
+    if (hit) G = {el:hit, x, y, on:false, id:e.pointerId}; }, true);
+  document.addEventListener('pointermove', e => { if (!G || e.pointerId !== G.id) return; const dx = e.clientX - G.x, dy = e.clientY - G.y;
+    if (!G.on) { if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { G = null; return; } if (Math.abs(dx) < 8) return; G.on = true; G.el.dispatchEvent(new Event('pointerdown')); }
+    const v = val(G.el, e.clientX); if (+G.el.value !== v) { G.el.value = v; G.el.dispatchEvent(new Event('input', {bubbles:true})); } }, true);
+  const end = e => { if (!G || e.pointerId !== G.id) return; if (G.on) { G.el.dispatchEvent(new Event('change', {bubbles:true})); G.el.dispatchEvent(new Event('pointerup')); } G = null; };
+  document.addEventListener('pointerup', end, true); document.addEventListener('pointercancel', end, true); })();
 const store = { get(k, d){ try { const v = localStorage.getItem('mvj_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
                 set(k, v){ try { localStorage.setItem('mvj_' + k, JSON.stringify(v)); } catch(e){} } };
 const GC = {warp:'#3ef0ff', style:'#b06bff', post:'#ff4d2e', glitter:'#ff5fd2'};
@@ -910,7 +937,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15g';
+const BUILD = '2026-11-15i';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -969,7 +996,7 @@ function onMsg(m){
   if (m.t === 'state') setTimeout(fxfadeUI, 0);
   if (m.t === 'prep' || (m.t === 'state' && m.prep)) prepState(m.t === 'prep' ? m.jobs : m.prep);
   if (m.t === 'toast' && m.msg) toast(m.msg);
-  if (m.t === 'mframe') { MFR[m.slot] = {file:m.file, img:m.img}; mCropUI(m.slot); }
+  if (m.t === 'mframe') { MFR[m.slot] = {file:m.file, img:m.img}; mCropUI(m.slot); NZLIVE[m.slot + 'w'] = 0; const im = $(`[data-nzimg="${m.slot}"]`); if (im && m.live) im.src = 'data:image/jpeg;base64,' + m.img; }
   if (m.t === 'muses') { const el = $('#shP .musep'); if (el && $('#sheet').dataset.mid === m.id) { el.className = m.v.length ? 'muse' : 'musep ok';
       el.innerHTML = m.v.length ? `⚠ Used in ${m.v.length} preset${m.v.length > 1 ? 's' : ''}: <b>${m.v.map(esc).join(', ')}</b>. Those presets will load without it.` : 'Not used in any preset. '; } }
   if (m.t === 'preplib') { PLIB = m.v; libUI(); }
@@ -1142,7 +1169,9 @@ function mediaName(i){                    // "Video 2" = the 2nd video layer (or
 }
 const NZT = ['smooth', 'clouds', 'ridges', 'cells', 'marble', 'waves', 'static', 'plasma'];
 const NZCM = [['two', '2 COLOURS'], ['three', '3 COLOURS'], ['rainbow', 'RAINBOW'], ['mono', 'GREY']];
-function nzUI(i, p){ const m = 'M' + i;
+function nzSlots(i){ const c = $('#cardM' + i); if (!c) return; c.querySelectorAll('.nzslot').forEach(sl => { if (sl.firstChild) return; const r = $('#s-M' + i + sl.dataset.nzs); const ctl = r && r.closest('.ctl'); if (ctl) sl.appendChild(ctl); }); }
+function nzUI(i, p){ const m = 'M' + i; nzSlots(i);
+  $$(`#cardM${i} [data-nzset]`).forEach(b => { const v = +(p[m + b.dataset.k] ?? -99); b.classList.toggle('on', b.dataset.k === 'nzdetail' ? Math.abs(v - +b.dataset.v) <= 1.5 : Math.abs(v - +b.dataset.v) < 0.5); });
   $$(`[data-nzt="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'nztype'] || 'clouds')));
   $$(`[data-nzcm="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'nzcmode'] || 'three')));
   const cm = p[m + 'nzcmode'] || 'three', box = $('#cardM' + i + ' .nzcols');
@@ -1159,11 +1188,21 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="sub"><span>Opacity</span><input type="range" data-rcop="${i}" min="0" max="1" step="0.01" value="1"></div>
           <p class="hint2">Size and place it with Crop below and in VIEW (zoom, move, turn). Put it under a text layer to make the words easier to read.</p></div>
         <div class="nzbox" hidden>
-          <div class="sub pinl"><span>Pattern</span></div><div class="seg sm nzseg" style="flex-wrap:wrap">${NZT.map(t => `<button data-nzt="${i}" data-v="${t}">${t.toUpperCase()}</button>`).join('')}</div>
-          <div class="sub pinl"><span>Colours</span></div><div class="seg sm nzseg">${NZCM.map(([v, l]) => `<button data-nzcm="${i}" data-v="${v}">${l}</button>`).join('')}</div>
-          <div class="nzcols">${[1, 2, 3].map(k => `<button class="nzc" data-hsvt="nz:${i}:${k}" data-nzck="${k}"><i></i><span>${['DARK', 'MIDDLE', 'LIGHT'][k - 1]}</span></button>`).join('')}</div>
-          ${[1, 2, 3].map(k => hsvBox('nz:' + i + ':' + k)).join('')}
-          <div id="g-m${i}nz"></div></div>
+          <div class="nzlive"><img data-nzimg="${i}" alt=""><span>● LIVE</span></div>
+          <div class="mtabs" data-gtabs="nz${i}">${[['pat','PATTERN'],['col','COLOUR'],['mot','MOTION']].map(([k, l]) => `<button data-gtab="${k}" data-gtabk="nz${i}">${l}</button>`).join('')}</div>
+          <div class="gpane" data-gpane="nz${i}:pat"><div class="seg sm nzseg" style="flex-wrap:wrap">${NZT.map(t => `<button data-nzt="${i}" data-v="${t}">${t.toUpperCase()}</button>`).join('')}</div>
+            <div class="nzslot" data-nzs="nzscale"></div>
+            <div class="sub pinl"><span>Detail</span></div><div class="seg sm" data-nzseg="nzdetail">${[[2,'SOFT'],[5,'MEDIUM'],[8,'RICH']].map(([v, l]) => `<button data-nzset="${i}" data-k="nzdetail" data-v="${v}">${l}</button>`).join('')}</div>
+            <div class="sub pinl"><span>Colour bands</span></div><div class="seg sm" data-nzseg="nzsteps">${[[0,'SMOOTH'],[3,'3'],[6,'6'],[12,'12']].map(([v, l]) => `<button data-nzset="${i}" data-k="nzsteps" data-v="${v}">${l}</button>`).join('')}</div>
+            <button class="btn nzdice" data-nzdice="${i}">🎲 NEW VARIATION</button></div>
+          <div class="gpane" data-gpane="nz${i}:col"><div class="seg sm nzseg">${NZCM.map(([v, l]) => `<button data-nzcm="${i}" data-v="${v}">${l}</button>`).join('')}</div>
+            <div class="nzcols">${[1, 2, 3].map(k => `<button class="nzc" data-hsvt="nz:${i}:${k}" data-nzck="${k}"><i></i><span>${['DARK', 'MIDDLE', 'LIGHT'][k - 1]}</span></button>`).join('')}</div>
+            ${[1, 2, 3].map(k => hsvBox('nz:' + i + ':' + k)).join('')}
+            <div class="nzslot" data-nzs="nzcontrast"></div></div>
+          <div class="gpane" data-gpane="nz${i}:mot"><div class="nzslot" data-nzs="nzspeed"></div>
+            <div class="sub pinl"><span>Direction</span></div><div class="nzdirs">${[['↖',315],['↑',270],['↗',225],['←',0],['',-1],['→',180],['↙',45],['↓',90],['↘',135]].map(([a, v]) => v < 0 ? '<i></i>' : `<button data-nzset="${i}" data-k="nzdir" data-v="${v}">${a}</button>`).join('')}</div>
+            <div class="nzslot" data-nzs="nzwarp"></div><div class="nzslot" data-nzs="nzreact"></div></div>
+          <div id="g-m${i}nz" class="hidsl"></div></div>
         <div class="mtabs" data-mtabs="${i}">${[["frame","FRAME"],["time","TIME"],["look","LOOK"],["cues","CUES"]].map(([k, l]) => `<button data-mtab="${k}" data-mtabi="${i}">${l}<i></i></button>`).join("")}</div>
         <details class="box mbox mgrp mframe tabp"><summary>FRAME<span id="sum-m${i}frame"></span></summary>
           <div class="mfitbox"><div class="seg sm" data-mfitseg="${i}"><button data-mfit="${i}" data-v="0">FILL SCREEN</button><button data-mfit="${i}" data-v="1">WHOLE PICTURE</button></div>
@@ -1238,7 +1277,7 @@ function mediaCardsUI(p){
     lib.hidden = dr || nz || rc || !lopen; mfb.hidden = dr || nz || rc;
     { const cb = c.querySelector('.cuebox'); cb.hidden = p[m + 'kind'] !== 'video' || !f; if (!cb.hidden) cueUI(i); c.querySelector('.mtrimb').hidden = cb.hidden; }
     c.querySelector('.rcbox').hidden = !rc; if (rc) { $$(`[data-rcsw="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'rcol'] || '#000000'))); const o = c.querySelector('[data-rcop]'); if (o && !(touching['rcop' + i] > performance.now())) { o.value = p[m + 'alpha'] ?? 1; o._show && o._show(); } } mfb.classList.toggle('open', !lib.hidden);
-    c.querySelector('.nzbox').hidden = !nz; if (nz) nzUI(i, p);
+    c.querySelector('.nzbox').hidden = !nz; if (nz) { nzUI(i, p); gtabsUI(); }
     c.querySelector('.mplay').hidden = !vid;
     c.querySelector('.mfitbox').hidden = dr || nz || !f || p[m + 'mode'] === 'object';
     $$(`[data-mfit="${i}"]`).forEach(b => b.classList.toggle('on', (+b.dataset.v === 1) === !!p[m + 'fit']));
@@ -1389,19 +1428,28 @@ function renderFxps(){
 const MFOPEN = new Set();
 document.addEventListener('toggle', e => { const f = e.target.dataset && e.target.dataset.mfold; if (f === undefined) return; if (e.target.open) MFOPEN.add(f); else MFOPEN.delete(f); }, true);
 /* layer card: crop on a still picture, the time strip, speed */
-const MTAB = {}, MTABSEL = {frame:'.mframe', time:'.mplay', look:'.mkey', cues:'.cuebox'}, MFR = {};
+const GT = store.get('gtabs', {});
+function gtabsUI(){ $$('[data-gtabs]').forEach(bar => { const k = bar.dataset.gtabs, bs = [...bar.querySelectorAll('[data-gtab]')], cur = GT[k] || (bs[0] && bs[0].dataset.gtab);
+  bs.forEach(b => b.classList.toggle('on', b.dataset.gtab === cur)); $$(`[data-gpane^="${k}:"]`).forEach(p => p.classList.toggle('tabhide', p.dataset.gpane !== k + ':' + cur)); }); }
+function layoutSet(v){ store.set('layout', v); document.body.classList.toggle('stacked', v === 'stacked'); $$('[data-layout]').forEach(b => b.classList.toggle('on', b.dataset.layout === v)); MS.forEach(i => mTabsUI(i)); }
+const MTAB = store.get('mtab', {}), MTABSEL = {frame:'.mframe', time:'.mplay', look:'.mkey', cues:'.cuebox'}, MFR = {};
 function mTabsUI(i){ const c = $('#cardM' + i); if (!c) return; let cur = MTAB[i] || null;
   for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]), b = c.querySelector(`[data-mtab="${k}"]`); if (!el || !b) continue;
     b.hidden = el.hidden; if (el.hidden && cur === k) cur = MTAB[i] = null;
     const sm = el.querySelector('summary span'); b.querySelector('i').classList.toggle('on', !!(sm && sm.textContent.trim())); }
+  if (document.body.classList.contains('stacked')) { for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]); if (el) el.classList.remove('tabhide'); } return; }
   for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]), b = c.querySelector(`[data-mtab="${k}"]`); if (!el) continue;
     const on = k === cur; b.classList.toggle('on', on); el.classList.toggle('tabhide', !on); if (el.open !== on) { el._tabset = true; el.open = on; } } }
 document.addEventListener('toggle', e => { const el = e.target; if (!el.classList || !el.classList.contains('tabp')) return; if (el._tabset) { el._tabset = false; return; }
   if (el.open) { const c = el.closest('[id^="cardM"]'); if (!c) return; const i = +c.id.slice(5); for (const k in MTABSEL) if (el.matches(MTABSEL[k])) MTAB[i] = k; mTabsUI(i); } }, true);
-function mFrameAsk(i){ if (S.pars['M' + i + 'file']) send({t:'media', do:'frame', slot:i}); }
+function mFrameAsk(i){ send({t:'media', do:'frame', slot:i}); }
+const NZLIVE = {};                         // noise layers: a small live picture while the card is on screen
+setInterval(() => { if (!S || ui.tab !== 'source' || document.hidden) return; MS.forEach(i => { const im = $(`[data-nzimg="${i}"]`); if (!im || !S.pars['M' + i + 'on'] || S.pars['M' + i + 'kind'] !== 'noise') return;
+  const r = im.getBoundingClientRect(); if (!r.width || r.bottom < 0 || r.top > innerHeight) return; if (performance.now() - (NZLIVE[i] || 0) < 1500 && NZLIVE[i + 'w']) return;
+  NZLIVE[i] = performance.now(); NZLIVE[i + 'w'] = 1; send({t:'media', do:'frame', slot:i, live:1}); }); }, 450);
 function mCropUI(i){ const box = $(`[data-mcropbox="${i}"]`); if (!box) return; const p = S.pars, m = 'M' + i, f = p[m + 'file'];
-  const it = (S.media || []).find(x => x.id === f), img = box.querySelector('img'), fr = MFR[i] && MFR[i].file === f ? MFR[i].img : '', src = fr ? 'data:image/jpeg;base64,' + fr : it && it.thumb ? 'data:image/jpeg;base64,' + it.thumb : '';
-  if (MTAB[i] === 'frame' && f && (!MFR[i] || MFR[i].file !== f) && MFR[i + 'ask'] !== f) { MFR[i + 'ask'] = f; mFrameAsk(i); }
+  const fk = f || p[m + 'kind'], it = (S.media || []).find(x => x.id === f), img = box.querySelector('img'), fr = MFR[i] && MFR[i].file === fk ? MFR[i].img : '', src = fr ? 'data:image/jpeg;base64,' + fr : it && it.thumb ? 'data:image/jpeg;base64,' + it.thumb : '';
+  if (MTAB[i] === 'frame' && fk && (!MFR[i] || MFR[i].file !== fk) && MFR[i + 'ask'] !== fk) { MFR[i + 'ask'] = fk; mFrameAsk(i); }
   if (img.getAttribute('src') !== src) { if (src) img.setAttribute('src', src); else img.removeAttribute('src'); }
   if (MCROP && MCROP.i === i) return; const c = box.querySelector('.mcf');
   c.style.left = (+p[m + 'cropl'] || 0) * 100 + '%'; c.style.right = (+p[m + 'cropr'] || 0) * 100 + '%'; c.style.top = (+p[m + 'cropt'] || 0) * 100 + '%'; c.style.bottom = (+p[m + 'cropb'] || 0) * 100 + '%'; }
@@ -1624,7 +1672,7 @@ function build(){
   ACC = {audio:'var(--vio)', kick:'var(--lime)', camera:'var(--cyan)', move:'var(--cyan)', motion:'var(--hot)', master:'var(--ink)', grid:'var(--lime)', beat:'var(--lime)', model:'var(--hot)', text:'var(--hot)', text2:'var(--hot)', text3:'var(--hot)', textpos:'var(--hot)', text2pos:'var(--hot)', text3pos:'var(--hot)', tmot1:'var(--cyan)', tmot2:'var(--cyan)', tmot3:'var(--cyan)', mobj:'var(--cyan)', proj:'var(--cyan)', projlook:'var(--cyan)', tobj1:'var(--cyan)', tobj2:'var(--cyan)', tobj3:'var(--cyan)', camfeed:'var(--hot)', clip:'var(--lime)', draw:'var(--vio)', motion2:'var(--hot)', anim:'var(--lime)', key:'var(--lime)', obj:'var(--cyan)'};
   MS.forEach(i => ACC['m' + i + 'mot'] = 'var(--cyan)');
   S.sliders.forEach(s => { const host = $('#g-' + s.group); if (!host) return;
-    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group]}"></div>`); });
+    host.insertAdjacentHTML('beforeend', `<div class="ctl"><div class="top" data-qp="${s.p}"><span>${s.label}</span><output id="o-${s.p}"></output></div><input type="range" id="s-${s.p}" data-p="${s.p}" min="${s.min}" max="${s.max}" step="${s.step}" style="--acc:${ACC[s.group] || 'var(--lime)'}"></div>`); });
   EL.sl = {}; $$('input[data-p]').forEach(el => { EL.sl[el.dataset.p] = el; bindSlider(el, el.dataset.p, v => send({t:'set', p:el.dataset.p, v})); });
   EL.layerBtns = [...$$('[data-layer]')]; EL.models = [...$$('[data-model]')]; EL.scene = [...$$('[data-scene]')];
   airSig = null; uiPrefs();
@@ -1779,9 +1827,28 @@ async function refreshRemote(){
   const o = document.createElement('div'); o.className = 'fsback'; o.innerHTML = '<div><b>⛶</b>Updated · tap anywhere to go back to full screen</div>';
   o.addEventListener('pointerup', () => { o.remove(); try { document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(() => {}); } catch (e) {} });
   document.body.appendChild(o); })();
+function quickMenu(step){ const vl = MS.filter(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'kind'] === 'video');
+  $('#shI').style.display = 'none'; $('#shT').textContent = '⚡ Quick';
+  if (!step) { $('#shP').textContent = 'The things people ask for in the middle of a show.';
+    $('#shA').innerHTML = `<button class="pri" data-qkm="vid">⬇ Get a video from a link</button><button data-qkm="cue" ${vl.length ? '' : 'disabled'}>⏱ Add an effect cue now</button>`
+      + `<button data-qkm="save">＋ Save what is on screen as a new preset</button><button data-qkm="clean">◻ New clean preset</button><button data-qkm="mode">${EDIT ? '▶ Back to SHOW mode' : '✎ SETUP mode (build looks)'}</button><button data-sh="cancel">Cancel</button>`; }
+  else { $('#shP').textContent = step === 'vid' ? 'Which layer should play it when it is ready?' : 'Which video gets the cue (at the moment it is playing now)?';
+    $('#shA').innerHTML = vl.map(i => `<button data-qkm="${step}:${i}">${esc(tgtName('m' + i))}${mediaFile(i)}</button>`).join('') + (step === 'vid' ? `<button data-qkm="vid:0">Just download it (no layer)</button>` : '') + `<button data-sh="cancel">Cancel</button>`; }
+  $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
+function quickDo(v){ const [a, n] = v.split(':'), close = () => { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); };
+  if (a === 'vid' && n === undefined) return quickMenu('vid');
+  if (a === 'cue' && n === undefined) { const vl = MS.filter(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'kind'] === 'video'); if (vl.length === 1) return quickDo('cue:' + vl[0]); return quickMenu('cue'); }
+  close();
+  if (a === 'vid') { PLSLOT = +n; $('#prepPlayToL').hidden = !PLSLOT; $('#prepPlayTo').checked = !!PLSLOT; if (PLSLOT) $('#prepPlayToN').textContent = tgtName('m' + PLSLOT);
+    $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; $('#prepCutA').value = ''; $('#prepCutB').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); }
+  else if (a === 'cue') { const b = $(`[data-cueadd="${n}"]`); if (b) { b.click(); toast('⏱ Cue added on ' + tgtName('m' + n) + ' at ' + fmtT((VT[+n] || [0])[0]) + ' · change it in SETUP → SOURCE → CUES'); } }
+  else if (a === 'save') saveNew();
+  else if (a === 'clean') { send({t:'clean'}); toast('Clean preset added at the end'); }
+  else if (a === 'mode') setEdit(!EDIT);
+  buzz(); }
 function setEdit(on){
   EDIT = on; document.body.classList.toggle('editing', on);
-  $('#editbtn').textContent = on ? '✓ DONE' : '✎ EDIT';
+  $('#editbtn').textContent = on ? '▶ SHOW' : '✎ SETUP';
   if (!on) ui.tab = 'live';
   uiPrefs(); $('main').scrollTop = 0;
 }
@@ -2008,18 +2075,23 @@ function renderPads(){
     const img = THUMBS[slot] ? `<img src="${THUMBS[slot]}" alt="">` : '';
     return `<button class="pad full ${slot === S.b ? 'on' : ''}" data-pad="${slot}">${img}<span class="ov"></span><span class="n">${slot} ${ic[p.scene] || ''}</span><span class="live">ON AIR</span><span class="t">${esc(p.name)}</span><span class="d">${dots}</span><span class="fx"></span></button>`; };
   const free = S.bank.indexOf(null) + 1;
-  const adds = free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE<br>WHAT IS ON SCREEN</small></span></button>`
-    + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN<br>PRESET</small></span></button>` : '';
+  const adds = free ? `<button class="pad add" data-pad="new"><span><span class="plus">＋</span><small>HOLD = SAVE WHAT IS ON SCREEN</small></span></button>`
+    + `<button class="pad add clean" data-pad="clean"><span><span class="plus">◻</span><small>NEW CLEAN PRESET</small></span></button>` : '';
   const groups = presetGroups();
   if (!groups.length) { $('#pads').classList.remove('grouped');
-    $('#pads').innerHTML = S.bank.map((p, i) => p ? pad(p, i + 1) : '').join('') + adds; header(); return; }
+    $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + `<div class="pads">${S.bank.map((p, i) => p ? pad(p, i + 1) : '').join('')}</div>`; header(); return; }
   const shut = GSHUT;
   const sec = (g, label) => { const list = S.bank.map((p, i) => p && (p.group || '') === g ? [p, i + 1] : null).filter(Boolean); if (!list.length) return '';
     const live = list.some(([, sl]) => sl === S.b), closed = !!shut[g];
     return `<div class="pgroup${closed ? ' shut' : ''}"><button class="pgh" data-gtog="${esc(g)}"><b>${esc(label)}</b><i>${list.length}</i><span>▾</span></button>`
       + `<div class="pads">${closed ? '' : list.map(([p, sl]) => pad(p, sl)).join('')}</div></div>`; };
   $('#pads').classList.add('grouped');
-  $('#pads').innerHTML = groups.map(g => sec(g, g)).join('') + sec('', 'No group') + `<div class="pads">${adds}</div>`;
+  const all = groups.concat(['']).filter(g => S.bank.some(p => p && (p.group || '') === g)), cnt = g => S.bank.filter(p => p && (p.group || '') === g).length;
+  const onair = S.b && S.bank[S.b - 1] ? (S.bank[S.b - 1].group || '') : null;
+  let sel = GRPADD ? '*' : store.get('pgsel', onair ?? all[0]); if (sel !== '*' && !all.includes(sel)) sel = onair ?? all[0];
+  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${g === sel ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${sel === '*' ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button></div>`;
+  const list = S.bank.map((p, i) => p && (sel === '*' || (p.group || '') === sel) ? [p, i + 1] : null).filter(Boolean);
+  $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chips + `<div class="pads">${list.map(([p, sl]) => pad(p, sl)).join('')}</div>`;
   header(); renderQuick();
 }
 const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
@@ -2713,7 +2785,7 @@ document.addEventListener('pointerdown', e => {
     if (c.dataset.layer) { FXHOLD = performance.now(); return sheetPin({k:'fx', t:FXT_SEL, e:c.dataset.layer, f:'on'}); }   // hold an effect = pin the effect itself
     if (c.dataset.qp || c.dataset.qfx || c.dataset.tog) { FXHOLD = performance.now();
       return sheetPin(c.dataset.qfx ? {k:'fx', t:FXT_SEL, e:c.dataset.qfx, f:c.dataset.qf} : c.dataset.tog ? {k:'tog', p:c.dataset.tog} : {k:'par', p:c.dataset.qp}); }
-    if (c.dataset.gtog !== undefined) { FXHOLD = performance.now(); if (c.dataset.gtog) sheetGroupHdr(c.dataset.gtog); return; }   // hold a layer = its menu (copy / paste / clear)
+    if (c.dataset.gtog !== undefined) { FXHOLD = performance.now(); if (c.dataset.gtog && c.dataset.gtog !== '*') sheetGroupHdr(c.dataset.gtog); return; }   // hold a layer = its menu (copy / paste / clear)
     if (c.dataset.fxp) { if (c.dataset.fxp === 'new') return; const i = +c.dataset.fxp, cur = S.fxps[i];
       const nn = prompt('Rename this FX preset (leave empty to delete it):', cur.name);
       if (nn === null) return; if (nn.trim()) send({t:'fxp', do:'rename', i, name:nn.trim()}); else if (confirm('Delete "' + cur.name + '"?')) send({t:'fxp', do:'del', i}); return; }
@@ -2748,6 +2820,7 @@ document.addEventListener('click', e => {
   if (h && S && !e.target.closest('button, label, input')) { const c = h.parentElement;
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
+  if (d.layout) { layoutSet(d.layout); buzz(); return; }
   if (d.uifont) { store.set('uifont', uiFont(d.uifont)); buzz(); return; }
   if (d.lfold) { const k = d.lfold; if (LFOLD.has(k)) LFOLD.delete(k); else LFOLD.add(k); store.set('lfold', [...LFOLD]); t.closest('.lay').classList.toggle('fold', LFOLD.has(k)); buzz(); return; }
   if (d.mlink) { PLSLOT = +d.mlink; $('#prepPlayToL').hidden = false; $('#prepPlayTo').checked = false; $('#prepPlayToN').textContent = tgtName('m' + PLSLOT);
@@ -2766,8 +2839,9 @@ document.addEventListener('click', e => {
   if (d.preplocal) { send({t:'prep', do:'local', mid:d.preplocal}); $('#prepPick').innerHTML = ''; PREPWANT = true; toast('Opening the video…'); buzz(); return; }
   if (d.qvid) { const sl = +d.qvslot; if (S.pars['M' + sl + 'file'] !== d.qvid) { send({t:'media', do:'play', slot:sl, id:d.qvid}); S.pars['M' + sl + 'file'] = d.qvid; QSIG = ''; renderQuick(); } buzz(); return; }
   if (d.mfold !== undefined && d.mslot) { binOf(+d.mslot).f = d.mfold; renderMedia(); buzz(); return; }
-  if (d.mtab) { const i = +d.mtabi; MTAB[i] = MTAB[i] === d.mtab ? null : d.mtab; mTabsUI(i); if (MTAB[i] === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (MTAB[i] === 'cues') cueUI(i); buzz(); return; }
+  if (d.mtab) { const i = +d.mtabi; MTAB[i] = MTAB[i] === d.mtab ? null : d.mtab; store.set('mtab', MTAB); mTabsUI(i); if (MTAB[i] === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (MTAB[i] === 'cues') cueUI(i); buzz(); return; }
   if (d.mfr) { MFR[+d.mfr + 'ask'] = S.pars['M' + d.mfr + 'file']; mFrameAsk(+d.mfr); toast('Grabbing the frame playing now…'); buzz(); return; }
+  if (d.qkm) { quickDo(d.qkm); return; }
   if (d.mfback) { binOf(+d.mfback).f = null; renderMedia(); buzz(); return; }
   if (d.mfall) { binOf(+d.mfall).all = true; renderMedia(); return; }
   if (d.mspd) { const k = 'M' + d.mspd + 'speed', v = +d.v; S.pars[k] = v; send({t:'set', p:k, v}); mTimeUI(+d.mspd); build(); buzz(); return; }
@@ -2828,6 +2902,9 @@ document.addEventListener('click', e => {
   if (d.cl) { const box = e.target.closest('[data-clones]'), c = clDec(+box.dataset.clones); c[d.cl] = +d.v; clSet(box, c);
     if (d.cl === 'lay') { airSig = ''; onAir(); buzz(); return; }
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.nzset) { const pn = 'M' + d.nzset + d.k, v = +d.v; S.pars[pn] = v; send({t:'set', p:pn, v}); nzUI(+d.nzset, S.pars); buzz(); return; }
+  if (d.nzdice) { const pn = 'M' + d.nzdice + 'nzseed', v = 1 + Math.floor(Math.random() * 99); S.pars[pn] = v; send({t:'set', p:pn, v}); toast('🎲 New variation'); buzz(); return; }
+  if (d.gtab) { GT[d.gtabk] = d.gtab; store.set('gtabs', GT); gtabsUI(); buzz(); return; }
   if (d.nzt || d.nzcm) { const i = d.nzt || d.nzcm, pn = 'M' + i + (d.nzt ? 'nztype' : 'nzcmode'); S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); nzUI(+i, S.pars); buzz(); return; }
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
@@ -2842,6 +2919,7 @@ document.addEventListener('click', e => {
   else if (d.step) step(+d.step);
   else if (t.id === 'camgo') { CAMF.on ? camStop() : camStart(); }
   else if (t.id === 'cliprec') clipRecTap();
+  else if (t.id === 'quickB') { quickMenu(); buzz(); }
   else if (t.id === 'editbtn') { setEdit(!EDIT); buzz(15); }
   else if (d.dt) { DR.tool = d.dt; $$('[data-dt]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
   else if (d.ds) { DR.size = +d.ds; $$('[data-ds]').forEach(b => b.classList.toggle('on', b === t)); buzz(); }
@@ -2888,7 +2966,7 @@ document.addEventListener('click', e => {
   else if (d.qmenu !== undefined) { sheetQk(+d.qmenu); buzz(); }
   else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; const v = !qVal(it);
     if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
-  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; if (GSHUT[d.gtog]) delete GSHUT[d.gtog]; else GSHUT[d.gtog] = 1; store.set('gshut', GSHUT); renderPads(); buzz(); }
+  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); renderPads(); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
   else if (d.ksn !== undefined) { const [dx, dy] = d.ksn.split(',').map(Number), st = KS_FINE ? 0.002 : 0.02, [x, y] = ksPos(KS_SEL); ksSet(KS_SEL, x + dx * st, y + dy * st, true); buzz(5); }

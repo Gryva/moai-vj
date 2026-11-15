@@ -30,7 +30,7 @@ for _i in range(1, 7):
                       (_m + 'trimout', 'End', 0, 1, 0.005, 'm%dplay' % _i),
                       (_m + 'nzscale', 'Size of the pattern', 0.3, 20, 0.05, 'm%dnz' % _i), (_m + 'nzspeed', 'Speed', 0, 3, 0.01, 'm%dnz' % _i),
                       (_m + 'nzdetail', 'Detail', 1, 8, 1, 'm%dnz' % _i), (_m + 'nzwarp', 'Swirl', 0, 2, 0.01, 'm%dnz' % _i),
-                      (_m + 'nzcontrast', 'Contrast', 0.2, 4, 0.01, 'm%dnz' % _i), (_m + 'nzdir', 'Direction', 0, 360, 1, 'm%dnz' % _i),
+                      (_m + 'nzcontrast', 'Colour sharpness', 0.2, 4, 0.01, 'm%dnz' % _i), (_m + 'nzdir', 'Direction', 0, 360, 1, 'm%dnz' % _i),
                       (_m + 'nzreact', 'Reacts to music', 0, 2, 0.01, 'm%dnz' % _i), (_m + 'nzbright', 'Brightness', 0, 2, 0.01, 'm%dnz' % _i),
                       (_m + 'nzsteps', 'Flat bands (0 = smooth)', 0, 12, 1, 'm%dnz' % _i), (_m + 'nzseed', 'Variation', 0, 100, 1, 'm%dnz' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
@@ -1554,6 +1554,13 @@ def handle(msg, reply):
             elif a == 'del': mediaDel(str(msg.get('id', '')))
             elif a == 'frame' and sl:                             # a picture of what the layer shows now (for cropping)
                 f = C.par['M%dfile' % sl].eval(); full = mediaFull(f)
+                if C.par['M%dkind' % sl].eval() in ('noise', 'rect', 'draw') or msg.get('live'):     # made in TD: a small picture of the layer itself
+                    import base64; P_ = op('/project1'); src = P_.op('msrc%d' % sl); t = P_.op('mprev%d' % sl)
+                    if src is None: return
+                    if t is None:
+                        t = P_.create(td.fitTOP, 'mprev%d' % sl); t.nodeX = src.nodeX; t.nodeY = src.nodeY - 150
+                        t.par.outputresolution = 'custom'; t.par.resolutionw = 320; t.par.resolutionh = 180; t.inputConnectors[0].connect(src)
+                    return reply({'t': 'mframe', 'slot': sl, 'file': f or C.par['M%dkind' % sl].eval(), 'live': 1, 'img': base64.b64encode(t.saveByteArray('.jpg')).decode('ascii')})
                 if not f or not os.path.isfile(full) or not os.path.exists(FFMPEG): return
                 x = E.vidTime(sl) if C.par['M%dkind' % sl].eval() == 'video' else None
                 def _mf(full=full, t=(x[0] if x else 0.0), sl=sl, f=f):
