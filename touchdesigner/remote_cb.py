@@ -1050,7 +1050,7 @@ def recDiscard():
     if f: run("op('/project1/remote_cb').module._recDel(%r, 5)" % f, delayFrames=20)
 RECCONV = set()
 def _recConv(f, tries):
-    """Finished takes become .mp4 (H.264 + AAC) in the background; the big .mov is removed once the .mp4 checks out."""
+    """Finished takes become small .mp4 files (H.264 + AAC, compressed for sharing) in the background; the big .mov is removed once the .mp4 checks out."""
     if not os.path.exists(f) or not os.path.exists(FFMPEG): return
     try:
         with open(f, 'rb+'): pass                                  # still held by the recorder: try again a bit later
@@ -1064,8 +1064,8 @@ def _recConv(f, tries):
 def _recConvT(f):
     out = os.path.splitext(f)[0] + '.mp4'; tmp = os.path.splitext(f)[0] + '_conv.mp4'
     try:
-        r = _prepRun([FFMPEG, '-y', '-v', 'error', '-i', f, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-threads', '2',
-                      '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', tmp])
+        r = _prepRun([FFMPEG, '-y', '-v', 'error', '-i', f, '-c:v', 'libx264', '-preset', 'faster', '-crf', '24', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', '-threads', '2',
+                      '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', tmp])
         if r.returncode == 0 and os.path.exists(tmp) and os.path.getsize(tmp) > 1024:
             os.replace(tmp, out)
             try: os.remove(f)
