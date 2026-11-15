@@ -1858,17 +1858,21 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         return True
     dip = style in ('dip', 'flash') or newModel
     _dipColour(1.0 if style == 'flash' else 0.0)
-    if fade > 0.01 and dip and style != 'adaptive' or (fade > 0.01 and style == 'adaptive' and newModel):   # only a new 3D model hides in a dip in ADAPTIVE; with the same model it stays on screen while the camera glides and the effects cross-fade
+    if fade > 0.01 and dip and style != 'adaptive':              # DIP / FLASH: everything swaps at the darkest point (ADAPTIVE never goes to black)
         # statue / style changes hide in a live dip: everything swaps instantly at the darkest point
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
-    elif fade > 0.01 and (newSrc or newScene):                    # new videos / a new scene style (solid / particles / grid): the old fades out still moving, the new fades in
+    elif fade > 0.01 and (newSrc or newScene or newModel):        # new videos / scene style / 3D model: the old fades out still moving, the new fades in - never black
         mA0 = float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0
         d2 = d
-        if newScene: d2 = dict(d); d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}       # the style itself changes at the quiet point
+        if newScene or newModel: d2 = dict(d)
+        if newScene: d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}       # the style itself changes at the quiet point
+        if newModel:                                              # the old model keeps its own pose and fades out while the camera moves on
+            d2['model'] = C.par.Model.eval()
+            d2['obj'] = {k: C.par[k].eval() for k in OBJKEYS if hasattr(C.par, k)}; d2['obj']['angle'] = S['angle']
         _bankApply(d2, fade, cam, model, text, cut=False, slot=slot, src=not newSrc)
-        srcFadeStart(d, slot, fade, src=newSrc, scene=newScene, mA0=mA0)
+        srcFadeStart(d, slot, fade, src=newSrc, scene=newScene or newModel, mA0=mA0, model=newModel)
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
     try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
@@ -2031,10 +2035,10 @@ def qPrewarm():
 XF = {'on': False, 't0': 0.0, 'dur': 1.0, 'phase': 'out', 'pending': None}
 
 SF = {}
-def srcFadeStart(d, slot, fade, src=True, scene=False, mA0=1.0):
+def srcFadeStart(d, slot, fade, src=True, scene=False, mA0=1.0, model=False):
     """Live change of what can't glide: the old media layers / scene style fade out (still playing), the new ones are put in at the quiet point and fade in."""
     C = op('/project1/CONTROLS')
-    SF.clear(); SF.update(d=d, slot=slot, t0=absTime.seconds, half=max(0.05, fade * 0.5), phase=1, src=src, scene=scene,
+    SF.clear(); SF.update(d=d, slot=slot, t0=absTime.seconds, half=max(0.05, fade * 0.5), phase=1, src=src, scene=scene, model=model,
                           a0={i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()} if src else {},
                           m0=mA0, m1=float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0)
 def srcFadeStep(T):
@@ -2042,23 +2046,41 @@ def srcFadeStep(T):
     C = op('/project1/CONTROLS'); u = min(1.0, (T - SF['t0']) / SF['half']); e = u * u * (3.0 - 2.0 * u)
     if SF['phase'] == 1:
         for i, a in SF['a0'].items(): mp(C, i, 'alpha').val = a * (1.0 - e)
-        if SF['scene']: C.par.Alphamodel = SF['m0'] * (1.0 - e)
+        if SF['scene']: C.par.Alphamodel = SF['m0'] + (SF['m1'] - SF['m0']) * e      # the statue stays on screen (never a dip)
         if u >= 1.0:
             if SF['src']:
                 try: applySrc(SF['d'], SF['slot'])
                 except Exception as er: print('preset source failed', er)
-            if SF['scene']:
-                for p_, v in (SF['d'].get('grid') or {}).items():
-                    try: C.par[p_] = v
-                    except Exception: pass
-                if SF['d'].get('scene'): C.par.Scene = SF['d']['scene']
+            if SF['scene']:                                        # the old picture rushes past the camera (still moving) as the new statue / grid settles in
+                d_, md = SF['d'], SF.get('model')
+                trStart('zoom', min(0.9, max(0.45, SF['half'])), lambda: _sfSwap(d_, md))
             SF['a1'] = {i: float(mp(C, i, 'alpha').eval()) for i in MSLOTS if mp(C, i, 'on').eval()} if SF['src'] else {}
             for i in SF['a1']: mp(C, i, 'alpha').val = 0.0
             SF.update(phase=2, t0=T)
     else:
         for i, a in SF['a1'].items(): mp(C, i, 'alpha').val = a * e
-        if SF['scene']: C.par.Alphamodel = SF['m1'] * e
         if u >= 1.0: SF.clear()
+
+def _sfSwap(d, model):
+    """The part of a preset that can't glide: scene style (solid / particles / grid), grid size, and a new 3D model in its own pose."""
+    C = op('/project1/CONTROLS')
+    for p_, v in (d.get('grid') or {}).items():
+        try: C.par[p_] = v
+        except Exception: pass
+    if d.get('scene'): C.par.Scene = d['scene']
+    if model and d.get('model'):
+        S['modelcut'] = True; C.par.Model = d['model']
+        for k in GLIDEPOSE: PG.pop(k, None)
+        ob = d.get('obj') or {}
+        if 'Spinaxis' not in ob: C.par.Spinaxis = 'y'
+        if 'Spinrev' not in ob: C.par.Spinrev = False
+        for k, v in MODEL3D.items():
+            if k not in ob: C.par[k] = v
+        for k, v in ob.items():
+            try: C.par[k] = v
+            except Exception: pass
+        if 'angle' in ob: S['angle'] = float(ob['angle'])
+        S['angoff'] = None; S['angoffv'] = 0.0; S['mfade'] = None
 
 TRMODES = {'crossfade': 1, 'wipe': 2, 'zoom': 3, 'glitch': 4}
 TR = {'on': False}
