@@ -479,6 +479,7 @@ header .now{display:none}   /* the preset on air shows on its tile and the LIVE 
 .ksrow{display:flex;align-items:center;gap:8px;margin-top:8px}.ksrow>span{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);flex:none;width:50px}.ksrow .opts{flex:1;margin:0}
 .tpos{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px}.tpos button{margin:0!important;font-size:15px}
 .sppad{position:relative;aspect-ratio:16/9;background:#ffffff0d;border:1px solid #ffffff22;border-radius:var(--r2);margin:4px 0 10px;touch-action:none;overflow:hidden}.sppad i{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid var(--lime);border-radius:50%;box-shadow:0 0 12px var(--lime);pointer-events:none}
+.recpill{flex:none;height:var(--h1);padding:0 12px;border-radius:var(--r1);border:0;background:var(--red);color:#fff;font:700 13px var(--mono);letter-spacing:.06em;font-variant-numeric:tabular-nums;white-space:nowrap;animation:recp 1.2s ease-in-out infinite}
 .recb{color:var(--red);font-weight:700;letter-spacing:.06em;width:auto!important;padding:0 10px}.recb.on{background:var(--red);color:#fff;animation:recp 1.2s ease-in-out infinite}@keyframes recp{50%{opacity:.6}}
 .fxfrow{display:flex;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap}.fxfrow>span{font-size:12px;opacity:.7}.fxfrow .seg{flex:1}
 .shsub{margin:4px 0 2px;font-size:12px;opacity:.7;width:100%}.qfseg{width:100%;flex-wrap:wrap;margin-bottom:6px}
@@ -627,7 +628,7 @@ header .r1 .fps{font:500 12px var(--mono)}
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="prepPill tbk" id="prepPill" hidden></button></div><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn savenew" id="saveNewBtn" aria-label="Save as a new preset">＋ <span class="lng">SAVE AS </span>NEW</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="recpill" id="recpill" hidden aria-label="Recording time - tap for the record controls">● REC 0:00</button><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="prepPill tbk" id="prepPill" hidden></button></div><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn savenew" id="saveNewBtn" aria-label="Save as a new preset">＋ <span class="lng">SAVE AS </span>NEW</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -956,7 +957,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-15v';
+const BUILD = '2026-11-15w';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1098,7 +1099,7 @@ function linkBadge(){ const b = $('#lk'); if (!b) return;
   if (b.textContent !== t) b.textContent = t; b.classList.add('on');
   const bk = !linkUp || !LOCAL || MODE === 'relay' || (HOSTS || []).some(h => (LINKRANK[h.k] ?? 2) < (LINKRANK[hostKind(WSH)] ?? 2));
   b.classList.toggle('bk', bk); const sb = $('#stbar'); if (sb) { sb.classList.toggle('bad', !linkUp); sb.classList.toggle('bk', linkUp && bk); } }
-document.getElementById('stat2').addEventListener('click', () => { const o = !$('#stat2').classList.contains('open'); $('#stat2').classList.toggle('open', o); store.set('stat2open', o); if (o) { $('#stat').classList.remove('open'); store.set('statopen', false); } buzz(); });   // one group open at a time
+document.getElementById('stat2').addEventListener('click', () => { const o = !$('#stat2').classList.contains('open'); $('#stat2').classList.toggle('open', o); store.set('stat2open', o); if (o) { $('#stat').classList.remove('open'); store.set('statopen', false); } typeof recTick === 'function' && recTick(); buzz(); });   // one group open at a time
 if (store.get('stat2open', false)) $('#stat2').classList.add('open');
 document.getElementById('stat').addEventListener('click', () => { const o = !$('#stat').classList.contains('open'); $('#stat').classList.toggle('open', o); store.set('statopen', o); if (o) { $('#stat2').classList.remove('open'); store.set('stat2open', false); } buzz(); });
 if (store.get('statopen', false) && !store.get('stat2open', false)) $('#stat').classList.add('open');
@@ -2343,7 +2344,12 @@ function recFmtSend(){ send({t:'rec', do:'fmt', fmt:store.get('recfmt', '16:9'),
 function recFmtUI(){ const b = $('#recfmt'); if (b) b.textContent = {'16:9':'▭ 16:9', '9:16':'▯ 9:16', '9:16b':'▯ 9:16 ⧉'}[store.get('recfmt', '16:9')] || '▭ 16:9'; }
 document.addEventListener('DOMContentLoaded', recFmtUI);
 function recTick(){ const b = $('#recbtn'); if (!b) return; b.classList.toggle('on', REC.on); const x = $('#recx'); if (x) x.classList.toggle('on', REC.on);
-  if (!REC.on) { b.textContent = '● REC'; return; } const s = Math.floor((performance.now() - REC.t0) / 1000); b.textContent = '■ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  const pl = $('#recpill');
+  if (!REC.on) { b.textContent = '● REC'; if (pl) pl.hidden = true; return; }
+  const s = Math.floor((performance.now() - REC.t0) / 1000), tm = (s >= 3600 ? Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') : Math.floor(s / 60)) + ':' + String(s % 60).padStart(2, '0');
+  b.textContent = '■ ' + tm;
+  if (pl) { pl.textContent = '● REC ' + tm; pl.hidden = $('#stat2').classList.contains('open'); } }
+document.getElementById('recpill').addEventListener('click', () => { $('#stat2').classList.add('open'); store.set('stat2open', true); $('#stat').classList.remove('open'); store.set('statopen', false); recTick(); buzz(); });
 setInterval(() => REC.on && recTick(), 500);
 const PK = {
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
