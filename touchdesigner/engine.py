@@ -1459,18 +1459,6 @@ def _bankTable():
 
 GLIDEPOSE = ['Angle', 'Tilt', 'Motionamt', 'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
 PG = {}
-def _ss(u): u = min(1.0, max(0.0, u)); return u * u * (3.0 - 2.0 * u)
-def mgainStep(T):
-    """0..1 strength of the statue's own movement (spin, bob, sway...) through a preset change: down, quiet while it travels, gently back up."""
-    m = S.get('mg')
-    if not m: S['mgain'] = 1.0; return 1.0
-    el = T - m['t0']; d = m['dur']; a = max(0.3, 0.3 * d); b = max(a, 0.7 * d); c = max(1.5, 0.8 * d)
-    if el < a: g = m['g0'] * (1.0 - _ss(el / a))
-    elif el < b: g = 0.0
-    else:
-        g = _ss((el - b) / c)
-        if el - b >= c: S['mg'] = None
-    S['mgain'] = g; return g
 def poseGlideStep(C, T):
     for k in list(PG):
         v0, v1, t0, dur = PG[k]; u = min(1.0, (T - t0) / max(0.01, dur)); e = u * u * (3.0 - 2.0 * u)
@@ -2014,8 +2002,16 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
         glide = bool(cam and d.get('cam') and not newModel and style == 'adaptive')     # same model: the camera keeps moving smoothly through the dip
         if glide: camGlide(d['cam'], fade)
         xfadeStart(fade, lambda: _bankApply(d, 0.0, cam and not glide, model, text, cut=True, slot=slot), keeptext=keepText)
-    elif fade > 0.01 and (newSrc or newScene or newModel):        # new videos / scene style / 3D model: the old look (still moving) cross-fades into the new one - never black
-        trStart('crossfade', fade, lambda: _bankApply(d, fade, cam, model, text, cut=False, slot=slot))
+    elif fade > 0.01 and (newSrc or newScene or newModel):        # new videos / scene style / 3D model: the old fades out still moving, the new fades in - never black
+        mA0 = float(C.par.Alphamodel.eval()) if hasattr(C.par, 'Alphamodel') else 1.0
+        d2 = d
+        if newScene or newModel: d2 = dict(d)
+        if newScene: d2['scene'] = C.par.Scene.eval(); d2['grid'] = {}       # the style itself changes at the quiet point
+        if newModel:                                              # the old model keeps its own pose and fades out while the camera moves on
+            d2['model'] = C.par.Model.eval()
+            d2['obj'] = {k: C.par[k].eval() for k in OBJKEYS if hasattr(C.par, k)}; d2['obj']['angle'] = S['angle']
+        _bankApply(d2, fade, cam, model, text, cut=False, slot=slot, src=not newSrc)
+        srcFadeStart(d, slot, fade, src=newSrc, scene=newScene or newModel, mA0=mA0, model=newModel)
     else:
         _bankApply(d, fade, cam, model, text, cut=fade <= 0.01, slot=slot)
     try: op('/project1/remote_cb').module.recAuto(bool((d.get('_meta') or {}).get('phone')))   # phone presets switch the recording to 9:16
@@ -2050,7 +2046,6 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
     pose0 = {k: float(C.par[k].eval()) for k in GLIDEPOSE if hasattr(C.par, k)} if glide else {}
     mot0 = (str(C.par.Motion.eval()), float(C.par.Motionamt.eval()))
     ang0 = S['angle']
-    mk0 = tuple(str(C.par[k].eval()) for k in ('Motion', 'Spinaxis', 'Spinrev', 'Autospin', 'Speed', 'Motionamt')); ax0 = str(C.par.Spinaxis.eval())
     if 'Spinaxis' not in ob: C.par.Spinaxis = 'y'                # older presets: spin turns around Y
     if 'Spinrev' not in ob: C.par.Spinrev = False
     for k, v in MODEL3D.items():                                 # older presets: the models sit where they always did
@@ -2064,22 +2059,15 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
         for k, v0 in pose0.items():
             v1 = float(C.par[k].eval())
             if abs(v1 - v0) > 1e-4: PG[k] = (v0, v1, T0, fade); C.par[k] = v0
-        axchg = str(C.par.Spinaxis.eval()) != ax0                  # spin on another axis: the old turn eases away on its own axis, the new one starts from zero
-        a0s = ((ang0 + 180.0) % 360.0) - 180.0
-        S['axold'] = {'ax': ax0, 'v': a0s, 't0': T0, 'dur': fade} if axchg and abs(a0s) > 0.05 else None
-        if axchg: ang0 = 0.0
         if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin': S['angle'] = ang0      # still spinning: carry on from where it is, never turn back
         S['mfade'] = {'m': mot0[0], 'a': mot0[1], 't0': T0, 'dur': fade} if str(C.par.Motion.eval()) != mot0[0] else None
         off = ((ang0 - S['angle'] + 180.0) % 360.0) - 180.0
-        if PG or abs(off) > 0.05 or S['axold'] or mk0 != tuple(str(C.par[k].eval()) for k in ('Motion', 'Spinaxis', 'Spinrev', 'Autospin', 'Speed', 'Motionamt')):
-            S['mg'] = {'t0': T0, 'dur': fade, 'g0': S.get('mgain', 1.0)}   # the statue's own movement calms down, it travels to the new pose, then the movement comes back gradually
         S['angoff'] = {'v': off, 't0': T0, 'dur': fade} if abs(off) > 0.05 else None
         S['angoffv'] = off if abs(off) > 0.05 else 0.0
         if grid0 and C.par.Scene.eval() == 'grid':               # same grid: spacing / wave glide too
             for k, v0 in grid0.items():
                 v1 = float(C.par[k].eval())
                 if abs(v1 - v0) > 1e-4: PG[k] = (v0, v1, T0, fade); C.par[k] = v0
-    if not glide: S['mg'] = None; S['axold'] = None; S['mgain'] = 1.0
     au = d.get('audio') or _audioBase()                          # this preset's own audio reactivity
     for k in AUDIOPARS:
         if k not in au or not hasattr(C.par, k): continue
@@ -2249,7 +2237,6 @@ def _trRec(h, on):
     """tr_hold keeps recording the last TRCACHE frames of the look on screen, so a transition can keep the old look moving."""
     if int(h.par.cachesize.eval()) != TRCACHE: h.par.cachesize = TRCACHE
     if not h.par.alwayscook.eval(): h.par.alwayscook = True
-    if not h.par.interp.eval(): h.par.interp = True
     if on and not h.par.active.eval(): TR['recf'] = absTime.frame
     h.par.active = on
     if on: h.par.outputindex = 0
@@ -2270,8 +2257,6 @@ def _trGo():
     if p:
         try: p()
         except Exception as e: print('transition', e)
-    g = op('/project1/tr_mix')
-    if g is not None: g.par.vec0valuex, g.par.vec0valuey, g.par.vec0valuez = TR['mode'], 0.0, TR['seed']   # starts on the old look (never a frame of the new one / black)
     TR.update(on=True, t0=absTime.seconds); sw.par.index = 1
 def trUpdate(T):
     h = op('/project1/tr_hold')
@@ -2280,8 +2265,8 @@ def trUpdate(T):
         return
     g = op('/project1/tr_mix'); el = T - TR['t0']; u = min(1.0, el / TR['dur'])
     g.par.vec0valuex, g.par.vec0valuey, g.par.vec0valuez = TR['mode'], u, TR['seed']
-    n = TR.get('n', 1); P = max(1.2, min(TR['dur'], 3.0))          # old look: drifts slowly back through its last moments (eased, blended between frames) - no stops, no jumps
-    h.par.outputindex = -n * 0.5 * (1.0 - math.cos(math.pi * el / P))
+    n = TR.get('n', 1); f = (el * 30.0) % (2.0 * n)               # old look: plays back and forth through its last moments at half speed, never stops
+    h.par.outputindex = -(f if f <= n else 2.0 * n - f)
     if u >= 1.0: TR['on'] = False; op('/project1/tr_sw').par.index = 0; _trRec(h, True)
 
 def xfadeStart(dur, pending=None, keeptext=False):
@@ -2614,12 +2599,6 @@ def _models(C, dt, T, react, grid):
         a = motionOffsets(C, T, mreact, mf['m'], mf['a'])
         o_ry, o_rx, o_rz, o_ty = (a[0] + (o_ry - a[0]) * e, a[1] + (o_rx - a[1]) * e, a[2] + (o_rz - a[2]) * e, a[3] + (o_ty - a[3]) * e)
         if u >= 1.0: S['mfade'] = None
-    mgn = S.get('mgain', 1.0)
-    if mgn < 0.999: o_ry, o_rx, o_rz, o_ty = o_ry * mgn, o_rx * mgn, o_rz * mgn, o_ty * mgn
-    axo = S.get('axold'); axv = 0.0
-    if axo:
-        u = (T - axo['t0']) / max(0.01, axo['dur']); axv = axo['v'] * (1.0 - _ss(u))
-        if u >= 1.0: S['axold'] = None
     ax = C.par.Spinaxis.eval() if hasattr(C.par, 'Spinaxis') else 'y'   # spin axis: y = turn, x = tumble, z = roll
     for g in [op('/project1/moai_geo'), op('/project1/moai_particles'), op('/project1/draw_geo'), ag] + [op('/project1/mg%d' % i) for i in S.get('objs', [])] + [op('/project1/tg%d' % n) for n in S.get('tobjs', [])]:
         if g is None: continue
@@ -2637,9 +2616,8 @@ def _models(C, dt, T, react, grid):
         else:
             spin = 0.0 if (grid and g.name == 'moai_geo') else S['angle'] + S.get('angoffv', 0.0)
             base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
-            ox, oy, oz = (axv if axo and axo['ax'] == a_ and not (grid and g.name == 'moai_geo') else 0.0 for a_ in 'xyz')
-            applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry + oy)
-            g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0) + ox; g.par.rz = o_rz + (spin if ax == 'z' else 0.0) + oz
+            applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
+            g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
             if o_ty: g.par.ty = g.par.ty.eval() + o_ty
         x, y, z, sc, tu, ti = obj3d(C, g.name)                     # each 3D layer's own place in the scene (VIEW tab)
         g.par.tx = x; g.par.tz = z
@@ -2804,9 +2782,8 @@ def onFrameStart(frame):
     if PRELOAD['todo'] is None or PRELOAD['todo']: _safe('preload', preloadStep)
     _safe('audio', audioUpdate, C, dt, T)
     react = C.par.Reactivity.eval()
-    mgn = mgainStep(T)
     if C.par.Autospin.eval() and C.par.Motion.eval() == 'spin':
-        sd = (-1.0 if C.par.Spinrev.eval() else 1.0) * mgn          # spin direction (statues, animations, pictures, drawings)
+        sd = -1.0 if C.par.Spinrev.eval() else 1.0                  # spin direction (statues, animations, pictures, drawings)
         S['angle'] = (S['angle'] + sd * (C.par.Speed.eval() + C.par.Spinboost.eval() * S['low'] * (0.0 if 'model' in noReact(C) else react)) * dt) % 360.0
     sc = C.par.Scene.eval()
     if sc != S['scene']:
