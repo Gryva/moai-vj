@@ -2213,7 +2213,7 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
     if not isinstance(ms, dict): return False                     # older presets: the simple way
     cur = {str(i): mediaSlotData(C, i) for i in MSLOTS if mp(C, i, 'on').eval()}
     if not cur and not ms: return False                           # no layers on either side
-    plan = {}
+    plan = {}; a00 = {}
     for i in MSLOTS:
         k = str(i); co, nw = cur.get(k), ms.get(k)
         if co and nw:
@@ -2221,6 +2221,7 @@ def _lxStart(d, slot, fade, cam, model, text, newScene, newModel):
             dark = lambda m: sum(_hex(m.get('rcol', '#000000'), (0, 0, 0))) < 0.2
             if co.get('kind') == 'rect' and nw.get('kind') == 'noise' and dark(co): plan[i] = 'morph'          # a black rectangle IS a noise at brightness 0: the noise simply rises
             elif co.get('kind') == 'noise' and nw.get('kind') == 'rect' and dark(nw): plan[i] = 'morphout'     # ... and the other way round
+            elif plan[i] == 'swap' and co.get('kind') == 'draw' and (R.DRAWS.get(i) or {}).get('img') is None: plan[i] = 'in'; a00[i] = 0.0   # an empty drawing shows nothing: the new content just fades in
         elif co: plan[i] = 'out'
         elif nw: plan[i] = 'in'
     same = all(v == 'keep' and abs(float(cur[str(i)].get('alpha', 1.0)) - float(ms[str(i)].get('alpha', 1.0))) < 1e-3 for i, v in plan.items())
