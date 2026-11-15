@@ -601,7 +601,7 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 #sgwave{display:block;width:100%;height:96px}
 .sglane{position:relative;height:34px;border-top:1px solid var(--line)}.sglane>b{position:absolute;left:6px;top:9px;font:700 9px var(--mono);letter-spacing:.12em;opacity:.45;pointer-events:none}
 .sgk{position:absolute;top:4px;height:26px;min-width:8px;transform:translateX(-50%);border:0;border-radius:6px;padding:0 6px;font:700 10px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;color:#0b0a0f;background:var(--lime)}
-.sgk.fx{transform:none;background:#7b2cffcc;color:#fff;border-radius:4px}.sgk.rp{width:12px;min-width:12px;padding:0;border-radius:50%;height:12px;top:11px;background:var(--cyan,#22e6ff)}
+.sgk.fx{transform:none;background:#7b2cffcc;color:#fff;border-radius:4px;box-shadow:inset 6px 0 0 #ffffff55,inset -6px 0 0 #ffffff55;padding:0 10px}.sgk.drag{outline:2px solid #fff;z-index:2}.sgk{touch-action:none;cursor:grab}.sgk.rp{width:12px;min-width:12px;padding:0;border-radius:50%;height:12px;top:11px;background:var(--cyan,#22e6ff)}
 .sghead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#ff3b3b;pointer-events:none;box-shadow:0 0 8px #ff3b3b}
 .sgtr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.sgtime{font:700 14px var(--mono);font-variant-numeric:tabular-nums}.sgplay{min-width:96px}.sgrec{color:var(--red)!important;border-color:#ff3b3b66!important}.sgrec.on{background:var(--red);color:#fff!important}
 .pgc{flex:none;position:relative;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--raise);display:flex;align-items:center;gap:8px}.pgc b{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase}.pgc i{font:600 11px var(--mono);font-style:normal;opacity:.6}
@@ -832,7 +832,7 @@ header .r1 .fps{font:500 12px var(--mono)}
       <div class="sghead" id="sghead"></div></div>
     <div class="sgtr"><button class="cbtn" id="sg0" aria-label="To the start">⏮</button><button class="cbtn sgplay" id="sgplay">▶ PLAY</button><span class="sgtime" id="sgtime">0:00.0 / 0:00.0</span>
       <span class="hsp"></span><button class="cbtn" id="sgaddp">＋ PRESET</button><button class="cbtn" id="sgaddf">＋ EFFECT</button><button class="cbtn" id="sgaddr">＋ RAMP</button><button class="cbtn sgrec" id="sgrec">● REC SONG</button></div>
-    <p class="hint2" id="sghint">Drag on the song to move the playhead. ＋ adds at the playhead. Tap a marker to move, change or remove it. ● REC SONG plays the whole song from the start and records it (with the song as sound).</p>
+    <p class="hint2" id="sghint">Drag on the song to move the playhead. ＋ adds at the playhead. Drag a marker to move it - grab an effect block by its end to move only its start or end. Tap a marker to change or remove it. ● REC SONG plays the whole song from the start and records it (with the song as sound).</p>
   </section>
 
   <section class="view" id="v-audio">
@@ -981,7 +981,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16d';
+const BUILD = '2026-11-16e';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2462,11 +2462,31 @@ setInterval(() => { if (ui.tab === 'song') { if (!SG.asked && S) { SG.asked = tr
 function sgSave(){ send({t:'song', do:'keys', keys:sgK()}); sgLanes(); }
 (() => { const tl = $('#sgtl'); if (!tl) return; let drag = false;
   const at = e => { const r = tl.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * SG.dur; };
-  tl.addEventListener('pointerdown', e => { if (e.target.closest('.sgk') || !SG.dur) return; drag = true; tl.setPointerCapture(e.pointerId); SG.pos = at(e); SG.at = performance.now(); sgTick(); });
+  tl.addEventListener('pointerdown', e => { const mk = e.target.closest('.sgk'); if (mk && SG.dur) { sgDragStart(e, mk); return; } if (mk || !SG.dur) return; drag = true; tl.setPointerCapture(e.pointerId); SG.pos = at(e); SG.at = performance.now(); sgTick(); });
   tl.addEventListener('pointermove', e => { if (!drag) return; SG.pos = at(e); SG.at = performance.now(); sgTick(); });
   const up = e => { if (!drag) return; drag = false; SG.pos = at(e); SG.at = performance.now(); sgTick(); send({t:'song', do:'seek', pos:SG.pos}); buzz(4); };
   tl.addEventListener('pointerup', up); tl.addEventListener('pointercancel', () => drag = false);
-  tl.addEventListener('click', e => { const b = e.target.closest('[data-sgk]'); if (b) sgSheet(b.dataset.sgk); });
+  // markers: drag to move (effect blocks: grab an end to move just the start or the end), tap to open
+  let MD = null;
+  window.sgDragStart = (e, mk) => { e.preventDefault(); tl.setPointerCapture(e.pointerId); const r = mk.getBoundingClientRect(), id = mk.dataset.sgk, K = sgK();
+    const edge = id[0] === 'f' ? (e.clientX - r.left < Math.min(18, r.width / 3) ? 'start' : r.right - e.clientX < Math.min(18, r.width / 3) ? 'end' : 'move') : 'move';
+    const orig = JSON.parse(JSON.stringify(K)); MD = {id, edge, x0:e.clientX, moved:false, orig}; };
+  const mdMove = e => { if (!MD) return; const dx = e.clientX - MD.x0; if (!MD.moved && Math.abs(dx) < 6) return; MD.moved = true;
+    const W = tl.getBoundingClientRect().width, dt = dx / W * SG.dur, K = sgK(), O = MD.orig, id = MD.id, cl = v => Math.max(0, Math.min(SG.dur, +v.toFixed(2)));
+    let show = 0;
+    if (id[0] === 'p') { const i = +id.slice(1); K.presets[i].t = show = cl(O.presets[i].t + dt); }
+    else if (id[0] === 'f') { const i = +id.slice(1), o = O.fx[i], k = K.fx[i];
+      if (MD.edge === 'start') k.t0 = show = Math.min(cl(o.t0 + dt), k.t1 - 0.1);
+      else if (MD.edge === 'end') k.t1 = show = Math.max(cl(o.t1 + dt), k.t0 + 0.1);
+      else { const L = o.t1 - o.t0; k.t0 = show = Math.max(0, Math.min(SG.dur - L, +(o.t0 + dt).toFixed(2))); k.t1 = +(k.t0 + L).toFixed(2); } }
+    else { const [i, j] = id.slice(1).split('.').map(Number); K.ramps[i].pts[j][0] = show = cl(O.ramps[i].pts[j][0] + dt); }
+    sgLanes(); const el = tl.querySelector(`[data-sgk="${id}"]`); if (el) el.classList.add('drag');
+    $('#sgtime').textContent = (MD.edge === 'end' ? 'END ' : MD.edge === 'start' ? 'START ' : '') + fmtT(show) + ' / ' + fmtT(SG.dur); };
+  tl.addEventListener('pointermove', mdMove);
+  tl.addEventListener('pointerup', e => { if (!MD) return; const m = MD; MD = null;
+    if (!m.moved) { sgSheet(m.id); return; }
+    const K = sgK(); K.presets.sort((x, y) => x.t - y.t); K.ramps.forEach(r => r.pts.sort((x, y) => x[0] - y[0])); sgSave(); sgTick(); buzz(6); });
+  tl.addEventListener('pointercancel', () => { if (MD) { SG.keys = MD.orig; MD = null; sgLanes(); } });
   $('#sgsel').addEventListener('change', e => { if (e.target.value) { send({t:'song', do:'load', file:e.target.value}); SG.peaks = []; toast('Loading the song…'); } });
   $('#sgdl').addEventListener('click', () => { const u = $('#sgurl').value.trim(); if (!/^https?:\/\//.test(u)) { toast('Paste a link first'); return; } send({t:'song', do:'dl', url:u}); $('#sgurl').value = ''; toast('Getting the song…'); buzz(); });
   $('#sgplay').addEventListener('click', () => { if (!SG.file) { toast('Choose a song first'); return; } send({t:'song', do:SG.play ? 'pause' : 'play', pos:sgPos()}); buzz(); });
