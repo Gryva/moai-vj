@@ -520,6 +520,18 @@ def _cardShape(geo, tex):
     if abs(card.par.sizex.eval() - sx) > 1e-3 or abs(card.par.sizey.eval() - sy) > 1e-3:
         card.par.sizex = sx; card.par.sizey = sy
 
+def _cloneUpdate(C, i, g):
+    """GIF / picture in 3D: thickness (stacked slices) and clone layouts, drawn as instances of the one card (mi<n> makes the list)."""
+    mi = op('/project1/mi%d' % i)
+    if mi is None or not hasattr(C.par, 'M%dlay' % i): return
+    lay = str(mp(C, i, 'lay').eval()); th = float(mp(C, i, 'thick').eval())
+    need = lay != 'single' or th > 0.005
+    if bool(g.par.instancing.eval()) != need: g.par.instancing = need
+    if not need: return
+    sig = (lay, th, float(mp(C, i, 'edge').eval()), int(mp(C, i, 'cnt').eval()), float(mp(C, i, 'lsp').eval()))
+    anim = lay != 'single' or any(abs(float(mp(C, i, k).eval())) > 1e-4 for k in ('lspin', 'lwave', 'lturn'))
+    if anim or sig != S.get('misig%d' % i): mi.cook(force=True); S['misig%d' % i] = sig
+
 def objUpdate(C):
     """Media layers in 3D OBJECT mode and the drawing are cards in the 3D scene, alongside (not instead of) the models."""
     objs = []
@@ -528,7 +540,7 @@ def objUpdate(C):
         g = op('/project1/mg%d' % i); on = mediaActive(C, i, 'object')
         if g is None: continue
         if g.render != on: g.render = on
-        if on: objs.append(i); _cardShape(g, op('/project1/mk%d' % i))
+        if on: objs.append(i); _cardShape(g, op('/project1/mk%d' % i)); _cloneUpdate(C, i, g)
         src = op('/project1/msrc%d' % i); dr = {'draw': 1, 'noise': 2, 'rect': 3}.get(mp(C, i, 'kind').eval(), 0)   # drawings show the phone drawing, noise its generator
         if src is not None and int(src.par.index.eval()) != dr: src.par.index = dr
         sw = op('/project1/mfeed%d' % i)                             # a 3D object is drawn by its own render pass (mr<n>),
@@ -1650,7 +1662,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'cues', 'cueon', 'mirror', 'flip']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()

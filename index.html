@@ -442,6 +442,9 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.lays{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0 0 8px}.lays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;border-radius:var(--r1);border:1px solid var(--line);background:var(--panel);color:var(--mute)}
+.lays svg{width:26px;height:26px;fill:currentColor}.lays em{font:700 9px var(--sans);font-style:normal;letter-spacing:.06em}.lays button.on{border-color:var(--ink);color:var(--ink);background:var(--raise)}
+.mclone[hidden]{display:none}
 .rcprev{width:min(100%,320px);aspect-ratio:16/9;border-radius:var(--r1);margin:4px auto 10px;display:flex;align-items:center;justify-content:center;overflow:hidden;
   background:repeating-conic-gradient(#ffffff10 0 25%,transparent 0 50%) 0 0/16px 16px,#08070c;border:1px solid var(--line)}.rcprev i{display:block;transition:all .15s}
 .rcfill{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.rcfill button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:var(--r1);border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 9px var(--sans);letter-spacing:.06em}
@@ -1077,10 +1080,11 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17f';
+const BUILD = '2026-11-17g';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
+const LAYS = [['single','ONE','<circle cx="12" cy="12" r="3.2"/>'],['grid','GRID','<circle cx="6" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="18" cy="18" r="1.6"/>'],['line','LINE','<circle cx="4" cy="12" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="20" cy="12" r="1.6"/>'],['zigzag','ZIGZAG','<circle cx="4" cy="15" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="15" cy="15" r="1.6"/><circle cx="20" cy="9" r="1.6"/>'],['circle','CIRCLE','<circle cx="20.0" cy="12.0" r="1.6"/><circle cx="17.7" cy="17.7" r="1.6"/><circle cx="12.0" cy="20.0" r="1.6"/><circle cx="6.3" cy="17.7" r="1.6"/><circle cx="4.0" cy="12.0" r="1.6"/><circle cx="6.3" cy="6.3" r="1.6"/><circle cx="12.0" cy="4.0" r="1.6"/><circle cx="17.7" cy="6.3" r="1.6"/>'],['rings','RINGS','<circle cx="12" cy="12" r="1.6"/><circle cx="17.0" cy="12.0" r="1.3"/><circle cx="14.5" cy="16.3" r="1.3"/><circle cx="9.5" cy="16.3" r="1.3"/><circle cx="7.0" cy="12.0" r="1.3"/><circle cx="9.5" cy="7.7" r="1.3"/><circle cx="14.5" cy="7.7" r="1.3"/><circle cx="21.6" cy="15.0" r="1.1"/><circle cx="18.8" cy="19.3" r="1.1"/><circle cx="14.2" cy="21.8" r="1.1"/><circle cx="9.0" cy="21.6" r="1.1"/><circle cx="4.7" cy="18.8" r="1.1"/><circle cx="2.2" cy="14.2" r="1.1"/><circle cx="2.4" cy="9.0" r="1.1"/><circle cx="5.2" cy="4.7" r="1.1"/><circle cx="9.8" cy="2.2" r="1.1"/><circle cx="15.0" cy="2.4" r="1.1"/><circle cx="19.3" cy="5.2" r="1.1"/><circle cx="21.8" cy="9.8" r="1.1"/>'],['spiral','SPIRAL','<circle cx="13.3" cy="12.0" r="1.2"/><circle cx="10.3" cy="13.6" r="1.2"/><circle cx="12.3" cy="9.0" r="1.2"/><circle cx="14.2" cy="14.8" r="1.2"/><circle cx="8.0" cy="11.3" r="1.2"/><circle cx="15.8" cy="9.6" r="1.2"/><circle cx="10.7" cy="16.7" r="1.2"/><circle cx="9.6" cy="7.4" r="1.2"/><circle cx="17.2" cy="13.9" r="1.2"/><circle cx="6.6" cy="14.2" r="1.2"/><circle cx="14.6" cy="6.4" r="1.2"/><circle cx="13.9" cy="18.1" r="1.2"/><circle cx="6.2" cy="8.6" r="1.2"/><circle cx="18.8" cy="10.5" r="1.2"/>'],['scatter','SCATTER','<circle cx="5" cy="6" r="1.4"/><circle cx="15" cy="4" r="1.1"/><circle cx="19" cy="11" r="1.8"/><circle cx="9" cy="13" r="1.2"/><circle cx="4" cy="19" r="1.6"/><circle cx="14" cy="18" r="1.3"/><circle cx="20" cy="20" r="1"/>'],['wall','WALL','<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="3" y="9.5" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><rect x="9.5" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="16" width="5" height="5" rx="1"/>']];
 const RFILLS = [['solid','SOLID'],['linear','LINEAR'],['radial','RADIAL'],['conic','CONIC'],['stripes','STRIPES'],['glass','GLASS']];
 const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
@@ -1388,6 +1392,10 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="ksrow" data-mspin="M${i}"><span>Axis</span><div class="opts" id="o-M${i}maxis"></div><button class="btn mrev" id="t-M${i}mrev" data-tog="M${i}mrev">⟲ REV</button></div>
           <div id="g-m${i}mot"></div>
           <p class="hint2">Place it (move, depth, size, turn) in VIEW → tap this layer.</p></div>
+        <div class="mmot mclone" id="box-m${i}cl"><h4>Thickness</h4><div id="g-m${i}thick"></div>
+          <h4>Clones</h4><div class="lays">${LAYS.map(([v, l, d]) => `<button data-tp="M${i}lay" data-tv="${v}"><svg viewBox="0 0 24 24">${d}</svg><em>${l}</em></button>`).join('')}</div>
+          <div id="g-m${i}clone"></div>
+          <p class="hint2">All copies play the same GIF in step. For different GIFs at once, put each on its own layer.</p></div>
       </div></div>`; }).join('');
   $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div><div class="blrow" data-op="m${i}"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="M${i}blend" data-tv="${v}" class="${(S && S.pars && S.pars['M' + i + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
@@ -1438,6 +1446,9 @@ function mediaCardsUI(p){
       mCropUI(i); mTimeUI(i); }
     mTabsUI(i);
     $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
+    { const cb = $('#box-m' + i + 'cl'); if (cb) { cb.hidden = p[m + 'mode'] !== 'object'; const lay = p[m + 'lay'] || 'single';
+      cb.querySelectorAll('[data-tp="M' + i + 'lay"]').forEach(b => b.classList.toggle('on', b.dataset.tv === lay));
+      cb.querySelectorAll('#g-m' + i + 'clone .ctl').forEach(c => c.hidden = lay === 'single'); } }
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
     $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');

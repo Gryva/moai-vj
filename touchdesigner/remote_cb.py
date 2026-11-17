@@ -37,7 +37,11 @@ for _i in range(1, 7):
                       (_m + 'rflow', 'Flow (moves the colours)', 0, 2, 0.01, 'm%drc' % _i), (_m + 'rbeat', 'Flash on the beat', 0, 1, 0.01, 'm%drc' % _i),
                       (_m + 'rw', 'Width', 0.02, 1, 0.005, 'm%drs' % _i), (_m + 'rh', 'Height', 0.02, 1, 0.005, 'm%drs' % _i),
                       (_m + 'rround', 'Round corners', 0, 1, 0.01, 'm%drs' % _i), (_m + 'rline', 'Outline only (0 = filled)', 0, 1, 0.01, 'm%drs' % _i),
-                      (_m + 'rsoft', 'Soft edge', 0, 1, 0.01, 'm%drs' % _i)]
+                      (_m + 'rsoft', 'Soft edge', 0, 1, 0.01, 'm%drs' % _i),
+                      (_m + 'thick', 'Thickness (0 = flat)', 0, 1, 0.01, 'm%dthick' % _i), (_m + 'edge', 'Darker sides', 0, 1, 0.01, 'm%dthick' % _i),
+                      (_m + 'cnt', 'How many', 2, 64, 1, 'm%dclone' % _i), (_m + 'lsp', 'Spacing', 0.2, 3, 0.01, 'm%dclone' % _i),
+                      (_m + 'lspin', 'Turn the whole layout (°/s)', -90, 90, 1, 'm%dclone' % _i), (_m + 'lwave', 'Float (wave)', 0, 1, 0.01, 'm%dclone' % _i),
+                      (_m + 'lturn', 'Rock left / right', 0, 1, 0.01, 'm%dclone' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autofade', 'Autopilot transition', 0, 600, 0.1, 'apfade'),     # set by the phone's transition buttons
@@ -124,7 +128,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['Trreplay', 'Textcrawl', 'T2crawl', 'T3crawl'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'lay', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -1579,6 +1583,9 @@ def _ensurePars():
                 if not hasattr(C.par, 'M%d%s' % (i, nm)): m.page.appendToggle('M%d%s' % (i, nm), label='M%d %s' % (i, lb))
             if not hasattr(C.par, 'M%drcol' % i):                       # RECTANGLE layers: a plain colour card
                 pp = m.page.appendStr('M%drcol' % i, label='M%d rectangle colour' % i)[0]; pp.default = '#000000'; pp.val = '#000000'
+            for n_, dv in (('thick', 0.0), ('edge', 0.5), ('cnt', 9.0), ('lsp', 1.0), ('lspin', 0.0), ('lwave', 0.0), ('lturn', 0.0)):   # GIF thickness + clone layouts
+                if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendFloat('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
+            if not hasattr(C.par, 'M%dlay' % i): pp = m.page.appendStr('M%dlay' % i, label='M%d layout' % i)[0]; pp.default = 'single'; pp.val = 'single'
             for n_, dv in (('rcol2', '#ff3da8'), ('rfill', 'solid')):         # RECTANGLE depth: gradients, shape, motion
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendStr('M%d%s' % (i, n_), label='M%d rect %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
             for n_, dv in (('rang', 0.0), ('rstripes', 8.0), ('rflow', 0.0), ('rbeat', 0.0), ('rw', 1.0), ('rh', 1.0), ('rround', 0.0), ('rline', 0.0), ('rsoft', 0.0)):
