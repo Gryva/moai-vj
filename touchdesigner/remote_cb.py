@@ -1545,6 +1545,11 @@ def _ensurePars():
         if 'free' not in sa.menuNames: sa.menuNames = list(sa.menuNames) + ['free']; sa.menuLabels = list(sa.menuLabels) + ['Free']
         for n_ in ('Axtilt', 'Axlean'):
             if not hasattr(C.par, n_): pp = C.par.Tilt.page.appendFloat(n_, label=n_)[0]; pp.default = 0.0; pp.val = 0.0
+        try:                                                   # every shipped font can be picked (the menu only takes listed names)
+            for pre in ('Text', 'T2', 'T3'):
+                fp = C.par[pre + 'font']; add = [k for k in _E().TFONTFILES if k not in fp.menuNames]
+                if add: fp.menuNames = list(fp.menuNames) + add; fp.menuLabels = list(fp.menuLabels) + add
+        except Exception as er: print('font menu', er)
         for pre in ('Text', 'T2', 'T3'):                       # TYPE: alignment, spacing, Star Wars crawl
             pg = C.par[pre + 'size'].page
             if not hasattr(C.par, pre + 'align'): pp = pg.appendStr(pre + 'align', label=pre + ' align')[0]; pp.default = 'center'; pp.val = 'center'

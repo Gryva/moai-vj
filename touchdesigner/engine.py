@@ -735,7 +735,15 @@ TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Text
            'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
            'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': '',
            'Textalign': 'center', 'Textletter': 0.0, 'Textword': 0.0, 'Textline': 1.0, 'Textcrawl': False, 'Textctilt': 0.6, 'Textcspeed': 0.5, 'Textfill': 'colour'}   # older presets: these
-TFONTFILES = {'Inter Tight': 'InterTight-ExtraBold.ttf', 'Inter Tight Semi': 'InterTight-SemiBold.ttf', 'Bangers': 'Bangers-Regular.ttf', 'Permanent Marker': 'PermanentMarker-Regular.ttf', 'Caveat Brush': 'CaveatBrush-Regular.ttf',
+TFONTFILES = {'Inter Tight Light': 'InterTight-Light.ttf', 'Inter Tight Regular': 'InterTight-Regular.ttf', 'Inter Tight Semi': 'InterTight-SemiBold.ttf',
+              'Inter Tight Bold': 'InterTight-Bold.ttf', 'Inter Tight': 'InterTight-ExtraBold.ttf', 'Inter Tight Black': 'InterTight-Black.ttf',
+              'Space Grotesk Light': 'SpaceGrotesk-Light.ttf', 'Space Grotesk Bold': 'SpaceGrotesk-Bold.ttf', 'Archivo Black': 'ArchivoBlack-Regular.ttf',
+              'Anton': 'Anton-Regular.ttf', 'Bebas Neue': 'BebasNeue-Regular.ttf',
+              'Playfair Display': 'PlayfairDisplay-Regular.ttf', 'Playfair Display Black': 'PlayfairDisplay-Black.ttf', 'Playfair Black Italic': 'PlayfairDisplay-BlackItalic.ttf',
+              'DM Serif Display': 'DMSerifDisplay-Regular.ttf', 'Instrument Serif': 'InstrumentSerif-Regular.ttf', 'Instrument Serif Italic': 'InstrumentSerif-Italic.ttf',
+              'Space Mono Bold': 'SpaceMono-Bold.ttf', 'JetBrains Mono Light': 'JetBrainsMono-Light.ttf', 'JetBrains Mono ExtraBold': 'JetBrainsMono-ExtraBold.ttf',
+              'Unbounded Light': 'Unbounded-Light.ttf', 'Unbounded Black': 'Unbounded-Black.ttf', 'Syne ExtraBold': 'Syne-ExtraBold.ttf',
+              'Bangers': 'Bangers-Regular.ttf', 'Permanent Marker': 'PermanentMarker-Regular.ttf', 'Caveat Brush': 'CaveatBrush-Regular.ttf',
               'Monoton': 'Monoton-Regular.ttf', 'Pacifico': 'Pacifico-Regular.ttf', 'Press Start 2P': 'PressStart2P-Regular.ttf',
               'Rubik Glitch': 'RubikGlitch-Regular.ttf', 'Bungee Shade': 'BungeeShade-Regular.ttf', 'Shrikhand': 'Shrikhand-Regular.ttf',
               'Rock Salt': 'RockSalt-Regular.ttf'}                # shipped in td/fonts (open licences), no install needed
@@ -811,7 +819,8 @@ def textUpdate(C, T, n=1):
         if p.resolutionw.eval() != rw or p.resolutionh.eval() != rh: p.outputresolution = 'custom'; p.resolutionw = rw; p.resolutionh = rh
         if crawl: ax, ay, px, py, fpx, fit, wrap = 'left', 'top', 0, -rh * 0.02, 64.0 * size, 'nofit', False
         elif ty['align'] in ('left', 'right', 'center') and not small: ax = ty['align']
-        if ty['align'] == 'justify': wrap = False                    # justified lines are broken here, not by the text box
+        if ty['align'] in ('justify', 'stairs', 'free'): wrap = False        # these lines are built here, not by the text box
+        if ty['align'] in ('stairs', 'free') and not small: ax = 'center'                    # justified lines are broken here, not by the text box
         p.alignx = 'left' if ty['align'] == 'justify' and not small else ax; p.aligny = ay
         p.positionx = (rw * 0.04 if crawl else px); p.positiony = py
         p.fontsizex = fpx * (size if small else 1.0); p.fontautosize = fit; p.wordwrap = wrap
@@ -902,6 +911,7 @@ def crawlRestart(n=1): TXN[n]['ct0'] = absTime.seconds
 def _tCompose(tt, full, ty, width):
     """Word spacing (extra spaces) and justified lines (broken to the width and spread to both edges)."""
     gap = ' ' * (1 + int(round(max(0.0, ty['word']) * 2)))
+    if ty['align'] in ('stairs', 'free'): return _tFree(tt, full, ty, gap)
     paras = [' '.join(l.split()) if l.strip() else '' for l in full.split('\n')]
     if ty['align'] != 'justify': return '\n'.join(gap.join(l.split(' ')) if l else '' for l in paras) or ' '
     try: sw = max(1.0, float(tt.evalTextSize(' ')[0]))
@@ -917,6 +927,20 @@ def _tCompose(tt, full, ty, width):
             else: line.append(w_)
         out.append(gap.join(line))                                   # the last line of a paragraph stays as it is
     return '\n'.join(out) or ' '
+def _tFree(tt, full, ty, gap):
+    """STAIRS: each line starts where the line above ended. FREE: the spaces you type stay (lines move right).
+    Every line is padded with spaces to the same width, so the block stays centred as one piece."""
+    try: sw = max(1.0, float(tt.evalTextSize(' ')[0])); W = lambda t_: float(tt.evalTextSize(t_)[0]) if t_ else 0.0
+    except Exception: return full or ' '
+    rows, x = [], 0.0
+    for l in full.split('\n'):
+        body = gap.join(l.split())
+        if ty['align'] == 'stairs':
+            rows.append((x, body)); x += W(body) + (sw * 0.6 if body else 0.0)
+        else:
+            lead = len(l) - len(l.lstrip(' ')); rows.append((lead * sw, body))
+    mx = max([a + W(b) for a, b in rows] + [1.0])
+    return '\n'.join(' ' * int(round(a / sw)) + b + ' ' * max(0, int(round((mx - a - W(b)) / sw))) for a, b in rows) or ' '
 def _tJust(line, gap, width, W, sw):
     if len(line) < 2: return gap.join(line)
     extra = max(0, int((width - W(gap.join(line))) / sw)); g_ = len(line) - 1

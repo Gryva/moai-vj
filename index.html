@@ -419,6 +419,49 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
   .liveside .apmore{justify-content:center;padding:9px}.liveside .setlist .sl-track{min-width:0}
   #v-live .pads{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
+@font-face{font-family:'Inter Tight Light';src:url(fonts/InterTight-Light.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Inter Tight Regular';src:url(fonts/InterTight-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Inter Tight Semi';src:url(fonts/InterTight-SemiBold.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Inter Tight Bold';src:url(fonts/InterTight-Bold.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Inter Tight';src:url(fonts/InterTight-ExtraBold.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Inter Tight Black';src:url(fonts/InterTight-Black.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Space Grotesk Light';src:url(fonts/SpaceGrotesk-Light.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Space Grotesk Bold';src:url(fonts/SpaceGrotesk-Bold.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Archivo Black';src:url(fonts/ArchivoBlack-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Anton';src:url(fonts/Anton-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Bebas Neue';src:url(fonts/BebasNeue-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Playfair Display';src:url(fonts/PlayfairDisplay-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Playfair Display Black';src:url(fonts/PlayfairDisplay-Black.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Playfair Black Italic';src:url(fonts/PlayfairDisplay-BlackItalic.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'DM Serif Display';src:url(fonts/DMSerifDisplay-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Instrument Serif';src:url(fonts/InstrumentSerif-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Instrument Serif Italic';src:url(fonts/InstrumentSerif-Italic.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Space Mono Bold';src:url(fonts/SpaceMono-Bold.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'JetBrains Mono Light';src:url(fonts/JetBrainsMono-Light.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'JetBrains Mono ExtraBold';src:url(fonts/JetBrainsMono-ExtraBold.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.typo{display:flex;flex-direction:column;gap:8px}
+.fpick{width:100%;display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r1);background:var(--panel);border:1px solid var(--line);color:var(--ink);text-align:left}
+.fpick.open{border-color:var(--ink)}.fpick .fpa{font-size:28px;line-height:1;min-width:46px;text-align:center}.fpick .fpt{flex:1;display:flex;flex-direction:column;gap:2px}
+.fpick .fpt b{font:700 14px var(--sans);letter-spacing:.01em;text-transform:none}.fpick .fpt small{font:600 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}.fpick i{font-style:normal;color:var(--mute)}
+.fpanel{border:1px solid var(--line);border-radius:var(--r1);background:#0000002e;padding:8px}.fpanel[hidden]{display:none}
+.fgrp{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}.fgrp button{flex:1 0 auto;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--mute);font:700 10px var(--sans);letter-spacing:.1em;text-transform:uppercase}
+.fgrp button.on{background:var(--ink);color:var(--bg);border-color:transparent}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.ftile{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;border-radius:var(--r1);background:var(--panel);border:1px solid var(--line);color:var(--ink)}
+.ftile span{font-size:30px;line-height:1.05}.ftile small{font:600 10px var(--sans);color:var(--mute);text-transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ftile em{position:absolute;top:4px;right:6px;font:700 9px var(--sans);font-style:normal;color:var(--mute)}.ftile.cur{border-color:var(--ink);background:var(--raise)}.ftile.on{outline:2px solid var(--ink)}
+.fwts{display:flex;flex-wrap:wrap;gap:4px}.fwts[hidden]{display:none}.fwts button{flex:1 0 auto;padding:8px 10px;border-radius:var(--r1);border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:13px;text-transform:none}
+.fwts button.on{background:var(--ink);color:var(--bg);border-color:transparent}
+.tyal{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);border-radius:var(--r1);overflow:hidden}
+.tyal button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 6px;background:var(--panel);border:0;border-right:1px solid var(--line);color:var(--mute)}.tyal button:last-child{border-right:0}
+.tyal svg{width:20px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.tyal em{font:600 9px var(--sans);font-style:normal;letter-spacing:.06em;text-transform:uppercase}
+.tyal button.on{background:var(--ink);color:var(--bg)}
+.tmore{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase}
+.tmore i{font-style:normal;transition:transform .15s}.tmore.open{color:var(--ink);border-style:solid}.tmore.open i{transform:rotate(90deg)}
+.tmorep{padding:2px 0 4px}.tmorep[hidden]{display:none}.tmorep h4{margin:12px 0 6px;font:700 10px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
 @font-face{font-family:'Bangers';src:url(fonts/Bangers-Regular.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Permanent Marker';src:url(fonts/PermanentMarker-Regular.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Caveat Brush';src:url(fonts/CaveatBrush-Regular.ttf) format('truetype');font-display:swap}
@@ -718,10 +761,18 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Direction</h2><div class="opts" id="o-Textdir"></div>
     <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
     <div class="tadir" data-tadir="Text"><span>Moves</span><div class="opts" id="o-Textadir"></div></div>
-    <h2>Font</h2><div class="opts" id="o-Textfont"></div>
-    <h2>Type</h2><div class="opts talign" id="o-Textalign"></div><h2>Fill the letters with</h2><div class="opts" id="o-Textfill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p><div id="g-ttype1"></div>
-    <div class="trow tcrawl"><button class="btn" id="t-Textcrawl" data-tog="Textcrawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="1">↺ RESTART</button></div>
-    <div class="tcrawlg" data-crawlg="Text"><div id="g-tcrawl1"></div></div>
+    <h2>Typography</h2><div class="typo" data-typo="Text">
+      <div class="tyrow"><button class="fpick" data-fpick="Text"></button></div>
+      <div class="fpanel" data-fpanel="Text" hidden></div>
+      <div class="fwts" data-fwts="Text"></div>
+      <div class="tyal" id="o-Textalign"></div>
+      <button class="tmore" data-tmore="Text"><span>Spacing · Fill · Star Wars crawl</span><i>▸</i></button>
+      <div class="tmorep" data-tmorep="Text" hidden>
+        <div id="g-ttype1"></div>
+        <h4>Fill the letters with</h4><div class="opts" id="o-Textfill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p>
+        <h4>Star Wars crawl</h4><div class="trow tcrawl"><button class="btn" id="t-Textcrawl" data-tog="Textcrawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="1">↺ RESTART</button></div>
+        <div class="tcrawlg" data-crawlg="Text"><div id="g-tcrawl1"></div></div>
+      </div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text"></div>
     <h2>Colour</h2><div id="tcolbox"></div>
     <h2>Space</h2><div class="opts" id="o-Textspace"></div><p class="hint2 tsph" data-tsph="Text"></p>
@@ -740,10 +791,18 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Direction</h2><div class="opts" id="o-T2dir"></div>
     <h2>Animation</h2><div class="opts" id="o-T2anim"></div>
     <div class="tadir" data-tadir="T2"><span>Moves</span><div class="opts" id="o-T2adir"></div></div>
-    <h2>Font</h2><div class="opts" id="o-T2font"></div>
-    <h2>Type</h2><div class="opts talign" id="o-T2align"></div><h2>Fill the letters with</h2><div class="opts" id="o-T2fill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p><div id="g-ttype2"></div>
-    <div class="trow tcrawl"><button class="btn" id="t-T2crawl" data-tog="T2crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="2">↺ RESTART</button></div>
-    <div class="tcrawlg" data-crawlg="T2"><div id="g-tcrawl2"></div></div>
+    <h2>Typography</h2><div class="typo" data-typo="T2">
+      <div class="tyrow"><button class="fpick" data-fpick="T2"></button></div>
+      <div class="fpanel" data-fpanel="T2" hidden></div>
+      <div class="fwts" data-fwts="T2"></div>
+      <div class="tyal" id="o-T2align"></div>
+      <button class="tmore" data-tmore="T2"><span>Spacing · Fill · Star Wars crawl</span><i>▸</i></button>
+      <div class="tmorep" data-tmorep="T2" hidden>
+        <div id="g-ttype2"></div>
+        <h4>Fill the letters with</h4><div class="opts" id="o-T2fill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p>
+        <h4>Star Wars crawl</h4><div class="trow tcrawl"><button class="btn" id="t-T2crawl" data-tog="T2crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="2">↺ RESTART</button></div>
+        <div class="tcrawlg" data-crawlg="T2"><div id="g-tcrawl2"></div></div>
+      </div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text2"></div>
     <h2>Colour</h2><div id="tcolbox2"></div>
     <h2>Space</h2><div class="opts" id="o-T2space"></div><p class="hint2 tsph" data-tsph="T2"></p>
@@ -762,10 +821,18 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Direction</h2><div class="opts" id="o-T3dir"></div>
     <h2>Animation</h2><div class="opts" id="o-T3anim"></div>
     <div class="tadir" data-tadir="T3"><span>Moves</span><div class="opts" id="o-T3adir"></div></div>
-    <h2>Font</h2><div class="opts" id="o-T3font"></div>
-    <h2>Type</h2><div class="opts talign" id="o-T3align"></div><h2>Fill the letters with</h2><div class="opts" id="o-T3fill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p><div id="g-ttype3"></div>
-    <div class="trow tcrawl"><button class="btn" id="t-T3crawl" data-tog="T3crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="3">↺ RESTART</button></div>
-    <div class="tcrawlg" data-crawlg="T3"><div id="g-tcrawl3"></div></div>
+    <h2>Typography</h2><div class="typo" data-typo="T3">
+      <div class="tyrow"><button class="fpick" data-fpick="T3"></button></div>
+      <div class="fpanel" data-fpanel="T3" hidden></div>
+      <div class="fwts" data-fwts="T3"></div>
+      <div class="tyal" id="o-T3align"></div>
+      <button class="tmore" data-tmore="T3"><span>Spacing · Fill · Star Wars crawl</span><i>▸</i></button>
+      <div class="tmorep" data-tmorep="T3" hidden>
+        <div id="g-ttype3"></div>
+        <h4>Fill the letters with</h4><div class="opts" id="o-T3fill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p>
+        <h4>Star Wars crawl</h4><div class="trow tcrawl"><button class="btn" id="t-T3crawl" data-tog="T3crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="3">↺ RESTART</button></div>
+        <div class="tcrawlg" data-crawlg="T3"><div id="g-tcrawl3"></div></div>
+      </div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text3"></div>
     <h2>Colour</h2><div id="tcolbox3"></div>
     <h2>Space</h2><div class="opts" id="o-T3space"></div><p class="hint2 tsph" data-tsph="T3"></p>
@@ -1002,7 +1069,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17d';
+const BUILD = '2026-11-17e';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1776,16 +1843,47 @@ const TOPTS = {
   Textdir: [['h','HORIZONTAL'],['v','VERTICAL'],['up','SIDEWAYS ↑'],['down','SIDEWAYS ↓']],
   Textadir: [['left','← LEFT'],['right','RIGHT →'],['up','↑ UP'],['down','DOWN ↓']],
   Textspace: [['flat','FLAT'],['3d','3D']],
-  Textalign: [['left','⇤ LEFT'],['center','≡ CENTRE'],['right','RIGHT ⇥'],['justify','☰ JUSTIFY']],
+  Textalign: [['left','<svg viewBox="0 0 20 16"><path d="M2 3h16M2 8h10M2 13h13"/></svg><em>Left</em>'],['center','<svg viewBox="0 0 20 16"><path d="M2 3h16M5 8h10M3.5 13h13"/></svg><em>Centre</em>'],['right','<svg viewBox="0 0 20 16"><path d="M2 3h16M8 8h10M5 13h13"/></svg><em>Right</em>'],['justify','<svg viewBox="0 0 20 16"><path d="M2 3h16M2 8h16M2 13h16"/></svg><em>Justify</em>'],['stairs','<svg viewBox="0 0 20 16"><path d="M2 3h6M8 8h5M13 13h5"/></svg><em>Stairs</em>'],['free','<svg viewBox="0 0 20 16"><path d="M2 3h9M6 8h8M3 13h12"/></svg><em>As typed</em>']],
   Textfill: [['colour','COLOUR'],['m1','LAYER 1'],['m2','LAYER 2'],['m3','LAYER 3'],['m4','LAYER 4'],['m5','LAYER 5'],['m6','LAYER 6']],
   Kstest: [['off','OFF'],['over','GRID OVER'],['grid','GRID ONLY']],
   Projmon: [['1','1'],['2','2'],['3','3'],['4','4']],
-  Textfont: [['Inter Tight','Inter Tight'],['Inter Tight Semi','Inter Semi'],['Bebas Neue','Bebas'],['Impact','Impact'],['Bahnschrift','Bahn'],['Algerian','Deco'],['Bangers','Bangers'],['Permanent Marker','Marker'],['Caveat Brush','Brush'],['Rock Salt','Scrawl'],['Pacifico','Pacifico'],['Shrikhand','Shrikhand'],['Monoton','MONOTON'],['Bungee Shade','SHADE'],['Rubik Glitch','GLITCH'],['Press Start 2P','PIXEL']]};
+  Textfont: []};
 TOPTS.Textmotion = [['models','LIKE 3D MODELS'],['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']];
 TOPTS.Textmaxis = [['y','↻ Y'],['x','TUMBLE X'],['z','ROLL Z']];
 [2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis','align','fill'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'motion'] = TOPTS.Textmotion; TOPTS['M' + i + 'maxis'] = TOPTS.Textmaxis; });
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE'],['custom','PICKED']]; });
+const FONTS = [
+  ['Sans', [['Inter Tight', [['Inter Tight Light','Light'],['Inter Tight Regular','Regular'],['Inter Tight Semi','Semi'],['Inter Tight Bold','Bold'],['Inter Tight','Extra'],['Inter Tight Black','Black']]],
+            ['Space Grotesk', [['Space Grotesk Light','Light'],['Space Grotesk Bold','Bold']]], ['Archivo Black', [['Archivo Black','Black']]],
+            ['Bahnschrift', [['Bahnschrift','Regular']]], ['Impact', [['Impact','Black']]]]],
+  ['Condensed', [['Bebas Neue', [['Bebas Neue','Bold']]], ['Anton', [['Anton','Bold']]]]],
+  ['Serif', [['Playfair Display', [['Playfair Display','Regular'],['Playfair Display Black','Black'],['Playfair Black Italic','Black italic']]],
+             ['DM Serif Display', [['DM Serif Display','Regular']]], ['Instrument Serif', [['Instrument Serif','Regular'],['Instrument Serif Italic','Italic']]]]],
+  ['Mono', [['Space Mono', [['Space Mono Bold','Bold']]], ['JetBrains Mono', [['JetBrains Mono Light','Light'],['JetBrains Mono ExtraBold','Extra']]],
+            ['Press Start 2P', [['Press Start 2P','Pixel']]]]],
+  ['Display', [['Unbounded', [['Unbounded Light','Light'],['Unbounded Black','Black']]], ['Syne', [['Syne ExtraBold','Extra']]], ['Bangers', [['Bangers','Regular']]],
+               ['Shrikhand', [['Shrikhand','Regular']]], ['Monoton', [['Monoton','Regular']]], ['Bungee Shade', [['Bungee Shade','Regular']]],
+               ['Rubik Glitch', [['Rubik Glitch','Regular']]], ['Algerian', [['Algerian','Regular']]]]],
+  ['Hand', [['Permanent Marker', [['Permanent Marker','Marker']]], ['Caveat Brush', [['Caveat Brush','Brush']]], ['Rock Salt', [['Rock Salt','Scrawl']]],
+            ['Pacifico', [['Pacifico','Script']]]]]];
+TOPTS.Textfont = FONTS.flatMap(g => g[1].flatMap(f => f[1].map(w => [w[0], w[0]])));
+const fontOf = v => { for (const g of FONTS) for (const f of g[1]) { const w = f[1].find(x => x[0] === v); if (w) return {g:g[0], f, w}; } return {g:'Sans', f:[v, [[v, '']]], w:[v, '']}; };
+const famDef = f => (f[1].find(w => /Extra|Black$|Bold/.test(w[1])) || f[1][0])[0];        // a family tile picks its heavy cut first
+const FPG = {}, TMORE = store.get('tmore', {});
+function typoUI(pre, p){                     // Figma-style type panel: font button, weights, alignment, a fold for the rest
+  const v = p[pre + 'font'] || 'Bebas Neue', o = fontOf(v), b = $(`[data-fpick="${pre}"]`); if (!b) return;
+  const pan = $(`[data-fpanel="${pre}"]`), open = !pan.hidden;
+  b.innerHTML = `<span class="fpa" style="font-family:'${v}',var(--sans)">Aa</span><span class="fpt"><b>${o.f[0]}</b><small>${o.g} · ${o.w[1] || 'Regular'}</small></span><i>${open ? '▴' : '▾'}</i>`;
+  b.classList.toggle('open', open);
+  const ws = $(`[data-fwts="${pre}"]`); ws.hidden = o.f[1].length < 2;
+  ws.innerHTML = o.f[1].map(w => `<button data-tp="${pre}font" data-tv="${w[0]}" class="${w[0] === v ? 'on' : ''}" style="font-family:'${w[0]}',var(--sans)">${w[1]}</button>`).join('');
+  if (open) { const g = FPG[pre] || o.g;
+    pan.innerHTML = `<div class="fgrp">${FONTS.map(x => `<button data-fgrp="${pre}|${x[0]}" class="${x[0] === g ? 'on' : ''}">${x[0]}</button>`).join('')}</div>`
+      + `<div class="fgrid">${FONTS.find(x => x[0] === g)[1].map(f => { const d = f[1].some(w => w[0] === v) ? v : famDef(f);
+          return `<button data-tp="${pre}font" data-tv="${d}" class="ftile${f[1].some(w => w[0] === v) ? ' cur' : ''}"><span style="font-family:'${d}',var(--sans)">Aa</span><small>${f[0]}</small>${f[1].length > 1 ? `<em>${f[1].length}</em>` : ''}</button>`; }).join('')}</div>`; }
+  const m = $(`[data-tmore="${pre}"]`), mp = $(`[data-tmorep="${pre}"]`); if (m && mp) { mp.hidden = !TMORE[pre]; m.classList.toggle('open', !!TMORE[pre]); }
+}
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
 function buildText(){
   for (const p in TOPTS) { const h = $('#o-' + p); if (h) h.innerHTML = TOPTS[p].map(([v, l]) => `<button data-tp="${p}" data-tv="${v}"${/font$/.test(p) ? ` class="fch" style="font-family:'${v}',var(--sans)"` : ''}>${l}</button>`).join(''); }
@@ -1847,6 +1945,7 @@ function syncText(p){
     const h = $(`[data-tsph="${q}"]`), b3 = p[q + 'space'] === '3d', bh = textBehind(n);
     if (h) { h.textContent = b3 ? 'In the 3D scene: moves with the 3D camera and Object motion. ' + (['mask','cutout','invert','refract'].includes(p[q + 'mode']) ? 'Mask, Cut-out, Invert and Refract show as plain letters here.' : '')
                        : bh ? 'Behind another layer (see Layers). ' + (['mask','cutout','invert','refract'].includes(p[q + 'mode']) ? 'Mask, Cut-out, Invert and Refract show as plain letters there.' : '') : ''; h.hidden = !h.textContent; } });
+  ['Text','T2','T3'].forEach(q => typoUI(q, p));
   const t = $('#t-Texton'); t.textContent = p.Texton ? 'ON' : 'OFF';
   if (document.activeElement !== $('#tin') && !$('#tin')._dirty) $('#tin').value = p.Textstr || '';
   [['Text',1],['T2',2],['T3',3]].forEach(([pre, n]) => { const b = $('#t-' + pre + 'crawl'), on = !!p[pre + 'crawl']; if (b) { b.classList.toggle('on', on); b.textContent = on ? '✦ CRAWL ON' : '✦ STAR WARS CRAWL'; }
@@ -3308,6 +3407,9 @@ document.addEventListener('click', e => {
     if (it.k !== 'fx') applyPars({}); setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); if (d.gtog === '#arch') ARCH = null; renderPads(); buzz(); }
   else if (d.arch) { sheetArch(d.arch); buzz(); }
+  else if (d.fpick) { const pn = $(`[data-fpanel="${d.fpick}"]`); pn.hidden = !pn.hidden; FPG[d.fpick] = null; typoUI(d.fpick, S.pars); buzz(); }
+  else if (d.fgrp) { const [q, g] = d.fgrp.split('|'); FPG[q] = g; typoUI(q, S.pars); buzz(); }
+  else if (d.tmore) { TMORE[d.tmore] = !TMORE[d.tmore]; store.set('tmore', TMORE); typoUI(d.tmore, S.pars); buzz(); }
   else if (d.crawlgo) { send({t:'crawlgo', n:+d.crawlgo}); toast('Crawl from the top'); buzz(); }
   else if (d.arr) { ARR = !ARR; document.body.classList.toggle('arranging', ARR); renderPads(); toast(ARR ? 'Drag the presets into the order you like' : 'Order saved'); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
