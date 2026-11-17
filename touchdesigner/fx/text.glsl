@@ -7,7 +7,7 @@ float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); 
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
   return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
 float fbm(vec2 p){ float v = 0.0, a = 0.5; for(int i=0;i<5;i++){ v += a*vnoise(p); p *= 2.03; a *= 0.5; } return v; }
-// uM = (morph 0 old -> 1 new, scene dim under the text during a preset dip, morph active, unused)
+// uM = (morph 0 old -> 1 new, scene dim under the text during a preset dip, morph active, 1 = text-only pass: alpha = letter coverage)
 uniform vec4 uM;
 // text colour gradient: uTA = (colour A, mode 0 named colour / 1 solid / 2 ramp / 3 radial), uTB = (colour B, angle)
 uniform vec4 uTA;
@@ -134,5 +134,6 @@ void main(){
   }
   if (uM.z > 0.5) o += col * front * (m * 0.55 + gl * 0.35);           // soft glow where the letters change
   o = max(o, col * (m + gl * uC.w * 0.5) * uM.y);                      // during a dip the words stay lit on black
-  fragColor = TDOutputSwizzle(vec4(mix(sc, clamp(o, 0.0, 1.5), uMix), 1.0));
+  float cov = clamp(max(m, gl * uC.w * 0.6), 0.0, 1.0);                // how much of this pixel is letters (for the text-only pass: any colour works, even black)
+  fragColor = TDOutputSwizzle(vec4(mix(sc, clamp(o, 0.0, 1.5), uMix), uM.w > 0.5 ? cov * uMix : 1.0));
 }
