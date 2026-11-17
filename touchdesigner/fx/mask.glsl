@@ -26,6 +26,7 @@ vec4 texA(vec2 uv){ return (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0
 float d2(float v, float d){ return floor(v / d + 0.001); }
 // MASK  show the layer only inside (or outside) a shape.
 // uP.x = x * 100 + y (centre, 0-99, y from the top), uP.y = width * 100 + height, uP.z = shape * 1000 + invert * 100 + softness
+// shapes: 0 circle 1 rectangle 2 text letters (input 1) 3 diamond 4 band 5 ring 6 star
 void main(){
   vec2 uv = vUV.st; float asp = ASP();
   float px = d2(uP.x, 100.0), py = uP.x - px * 100.0, w = d2(uP.y, 100.0), h = uP.y - w * 100.0;
@@ -33,9 +34,20 @@ void main(){
   vec2 c = vec2(px / 99.0, 1.0 - py / 99.0);
   vec2 hs = vec2(0.01 + w / 99.0 * 0.6, 0.01 + h / 99.0 * 0.6);   // half size, in screen heights (so a circle stays round)
   vec2 q = (uv - c) * vec2(asp, 1.0) / hs;
-  float d = shp < 0.5 ? length(q) : max(abs(q.x), abs(q.y));        // 0 circle / oval, 1 rectangle
+  int sh = int(shp + 0.5);
+  float d = sh == 0 ? length(q) : max(abs(q.x), abs(q.y));          // 0 circle / oval, 1 rectangle
+  if (sh == 3) d = abs(q.x) + abs(q.y);                             // 3 diamond
+  if (sh == 4) d = abs(q.y);                                        // 4 band across the whole width (height = band)
+  if (sh == 5) d = abs(length(q) - 0.7) / 0.3;                      // 5 ring
+  if (sh == 6) { float an = atan(q.y, q.x), r = length(q);          // 6 star
+    float k = cos(floor(0.5 + an / 1.2566) * 1.2566 - an); d = r * (0.62 + 0.38 * k) / 0.75; }
   float f = 0.005 + sf / 99.0 * 0.6;
   float m = 1.0 - smoothstep(1.0 - f, 1.0 + f, d);
+  if (sh == 2) {                                                    // 2 TEXT: the letters of Text 1 (move / size with the pad)
+    vec2 tq = (uv - c) / (0.35 + w / 99.0 * 1.3) + 0.5;
+    float a = (tq.x < 0.0 || tq.y < 0.0 || tq.x > 1.0 || tq.y > 1.0) ? 0.0 : texture(sTD2DInputs[1], tq).a;
+    m = smoothstep(0.5 - f * 0.8 - 0.02, 0.5 + f * 0.8 + 0.02, a);
+  }
   if (inv > 0.5) m = 1.0 - m;
   vec4 t = texture(sTD2DInputs[0], uv);
   fragColor = TDOutputSwizzle(mix(t, t * m, uMix));

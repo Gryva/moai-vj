@@ -119,7 +119,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['Trreplay', 'Textcrawl', 'T2crawl', 'T3crawl'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -1215,7 +1215,7 @@ def state():
     C = _C()
     return {'t': 'state', 'prep': prepMsg()['jobs'], 'rec': recMsg(), 'pars': _pars(), 'presets': _presets(), 'presetmov': _presetsMoving(), 'presetdata': _presetData(), 'layers': _layers(), 'looks': _E().lookNames(),
             'queue': {'v': _E().qMsg()['v'], 'pos': _E().qMsg()['pos']}, 'lcols': {k: v for k, v in _E().LCOL.items()},
-            'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
+            'fxbeat': sorted(_E().BEATFX), 'tfx': _E().tLive(), 'tcol': {t: dict(v) for t, v in _E().TCOL.items()},
             'bank': _E().bankList(), 'archn': len(_E().archList()), 'b': _E().S.get('bank', 0), 'mons': _E().projMonitors(), 'quick': _E().quickAll(), 'store': _E().storeInfo(), 'local': localLink(),
             'models': [dict({'name': n, 'label': l, 'anim': n.startswith('anim_')}, **({'loop': _E().animLoop(_E().animInfo(n))} if n.startswith('anim_') else {}))
                        for n, l in zip(C.par.Model.menuNames, C.par.Model.menuLabels)],
@@ -1548,6 +1548,7 @@ def _ensurePars():
         for pre in ('Text', 'T2', 'T3'):                       # TYPE: alignment, spacing, Star Wars crawl
             pg = C.par[pre + 'size'].page
             if not hasattr(C.par, pre + 'align'): pp = pg.appendStr(pre + 'align', label=pre + ' align')[0]; pp.default = 'center'; pp.val = 'center'
+            if not hasattr(C.par, pre + 'fill'): pp = pg.appendStr(pre + 'fill', label=pre + ' fill')[0]; pp.default = 'colour'; pp.val = 'colour'
             for k, dv in (('letter', 0.0), ('word', 0.0), ('line', 1.0), ('ctilt', 0.6), ('cspeed', 0.5)):
                 if not hasattr(C.par, pre + k): pp = pg.appendFloat(pre + k, label=pre + ' ' + k)[0]; pp.default = dv; pp.val = dv
             if not hasattr(C.par, pre + 'crawl'): pp = pg.appendToggle(pre + 'crawl', label=pre + ' crawl')[0]; pp.default = False; pp.val = False
@@ -1727,6 +1728,8 @@ def handle(msg, reply):
             _all({'t': 'quick', 'v': E.quickAll()})
             if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
         elif t == 'crawlgo': E.crawlRestart(int(msg.get('n') or 1))
+        elif t == 'fxbeat':                                        # ♪ on an effect: it only comes on with the beat
+            E.fxBeat(str(msg.get('tgt') or 'all'), str(msg.get('k', '')), bool(msg.get('on'))); _publish(state(), active_only=True)
         elif t == 'song': songCmd(msg, reply)
         elif t == 'bankorder' and isinstance(msg.get('v'), list):
             E.bankOrder(msg['v'][:128]); _all({'t': 'bank', 'bank': E.bankList()})

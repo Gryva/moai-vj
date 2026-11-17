@@ -45,6 +45,7 @@ float T(vec2 p){
 }
 uniform vec4 uX;   // x, y = move (-1..1), z = direction (0 across, 1 stacked letters, 2 sideways up, 3 sideways down), w = animation direction (0 left, 1 right, 2 up, 3 down)
 float gFl = 1.0;                                                      // flicker: letters blink out on the beat
+uniform vec4 uF;   // FILL: x = 1 -> the letters show another layer (its picture is packed into input 1's colour) instead of a colour
 uniform vec4 uK;   // CRAWL: x = tilt (0 = off), y = how far it has travelled, z = text sheet height / width, w = column width at the bottom of the screen
 float gCr = 1.0;
 vec2 crawlUV(vec2 uv){                                                // a plane tilted away from the viewer (Star Wars opening crawl)
@@ -110,6 +111,7 @@ void main(){
   for (int i = 0; i < 8; i++) { float an = float(i) * 0.785398; gl += T(q + vec2(cos(an), sin(an)) * px * 6.0) + T(q + vec2(cos(an), sin(an)) * px * 14.0) * 0.6; }
   gl = inside ? gl / 12.8 * gFl * gCr : 0.0;
   vec3 col = (uTA.w > 0.5 ? tTint(q) : uC.rgb) * (1.0 + a.w * 0.35 * react);
+  if (uF.x > 0.5) col = texture(sTD2DInputs[1], q).rgb * (1.0 + a.w * 0.2 * react);   // a video / picture / noise inside the letters (packed with the letters)
   vec3 sc = tex(uv), o = sc;
   if (mode == 0) o = mix(sc + col * gl * uC.w * 0.8, col, m);
   else if (mode == 1) o = sc * m * 1.5 + col * m * 0.10 + col * gl * uC.w * 0.35 * (1.0 - m);

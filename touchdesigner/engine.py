@@ -730,12 +730,12 @@ TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont
             'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
             'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt',
             'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev', 'Textname',
-            'Textalign', 'Textletter', 'Textword', 'Textline', 'Textcrawl', 'Textctilt', 'Textcspeed']
+            'Textalign', 'Textletter', 'Textword', 'Textline', 'Textcrawl', 'Textctilt', 'Textcspeed', 'Textfill']
 TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
            'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
            'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': '',
-           'Textalign': 'center', 'Textletter': 0.0, 'Textword': 0.0, 'Textline': 1.0, 'Textcrawl': False, 'Textctilt': 0.6, 'Textcspeed': 0.5}   # older presets: these
-TFONTFILES = {'Bangers': 'Bangers-Regular.ttf', 'Permanent Marker': 'PermanentMarker-Regular.ttf', 'Caveat Brush': 'CaveatBrush-Regular.ttf',
+           'Textalign': 'center', 'Textletter': 0.0, 'Textword': 0.0, 'Textline': 1.0, 'Textcrawl': False, 'Textctilt': 0.6, 'Textcspeed': 0.5, 'Textfill': 'colour'}   # older presets: these
+TFONTFILES = {'Inter Tight': 'InterTight-ExtraBold.ttf', 'Inter Tight Semi': 'InterTight-SemiBold.ttf', 'Bangers': 'Bangers-Regular.ttf', 'Permanent Marker': 'PermanentMarker-Regular.ttf', 'Caveat Brush': 'CaveatBrush-Regular.ttf',
               'Monoton': 'Monoton-Regular.ttf', 'Pacifico': 'Pacifico-Regular.ttf', 'Press Start 2P': 'PressStart2P-Regular.ttf',
               'Rubik Glitch': 'RubikGlitch-Regular.ttf', 'Bungee Shade': 'BungeeShade-Regular.ttf', 'Shrikhand': 'Shrikhand-Regular.ttf',
               'Rock Salt': 'RockSalt-Regular.ttf'}                # shipped in td/fonts (open licences), no install needed
@@ -886,6 +886,11 @@ def textUpdate(C, T, n=1):
         off = ((T - TX.get('ct0', T)) * ty['cspeed'] * 0.06) % tot
         pp.vec11valuex, pp.vec11valuey, pp.vec11valuez, pp.vec11valuew = max(0.01, ty['tilt']), off, R_, 0.62
     else: pp.vec11valuex = 0.0
+    fl = str(C.par[tpn(n, 'Textfill')].eval()) if hasattr(C.par, tpn(n, 'Textfill')) else 'colour'
+    sw = op('/project1/txfill%d' % n); fi = int(fl[1:]) if fl[:1] == 'm' and fl[1:].isdigit() else 0
+    if sw is not None and int(sw.par.index.eval()) != fi: sw.par.index = fi
+    if pp.vec12name.eval() != 'uF': pp.vec12name = 'uF'
+    pp.vec12valuex = 1.0 if fi else 0.0                           # FILL: the letters show a layer (video / picture / noise)
     return True
 
 CRAWLRES = (960, 1280)                                           # the crawl's text sheet (free licence: max 1280)
@@ -998,14 +1003,24 @@ def applyLayers(T=None):
             if on:
                 g.par.vec2valuex = amt
                 pSet(g, k, p1)
-    S['live'] = [k for k, on, a, p in live if on]
+    S['live'] = [k for k, on, a, p in live if on]; S['liveamt'] = {k: a for k, on, a, p in live if on}
 
+BEATFX = set()                                                  # 'target:effect' that only come on with the beat (♪ on the effect button)
+def beatEnv(): return float(S.get('pulse', 0.0))                # jumps to 1 on every kick, falls back (beat pulse fall-back time)
+def fxBeat(tgt, k, on):
+    key = '%s:%s' % (tgt or 'all', k)
+    if on: BEATFX.add(key)
+    else: BEATFX.discard(key)
+    S['layers'] = None; SLOTSIG.clear()                          # re-apply the plain amounts
+    S['dirty'] = True
 def pushUniforms(T):
     """Audio + time straight into the active layers only (no per-layer Python expressions)."""
     o = op('/project1/AUDIO/OUT')
     au = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval())
+    env = beatEnv(); la = S.get('liveamt', {})
     for k in S['live']:
         p = op('/project1/fx_' + k).par
+        if 'all:' + k in BEATFX: p.vec2valuex = la.get(k, 1.0) * env
         p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
         p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
         if k == 'beat': p.vec3valuew = T - A['lastkick']                  # time since the last beat
@@ -1232,6 +1247,7 @@ def tUniforms(T):
             p = g.par
             p.vec0valuex = T % TWRAP
             p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
+            if t + ':' + k in BEATFX: p.vec2valuex = v[1] * (beatEnv() if t not in NR else 0.0)
             if k == 'beat': p.vec3valuew = (T - A['lastkick']) if t not in NR else 99.0
             if k in COLFX:
                 c = TCOL[t].get(k)
@@ -1251,7 +1267,7 @@ def lookData():
             'text': {p: C.par[p].eval() for p in TEXTPARS}, 'statue': bool(C.par.Statue.eval()),
             'texts': {str(n): {p: C.par[tpn(n, p)].eval() for p in TEXTPARS} for n in (2, 3) if C.par[tpn(n, 'Texton')].eval()},
             'lcols': {k: dict(v) for k, v in LCOL.items() if v.get('m', 0) > 0},
-            'tfx': tData(), 'tcol': {t: {k: dict(v) for k, v in TCOL[t].items() if v.get('m', 0) > 0} for t in FXTGTS}}
+            'beatfx': sorted(BEATFX), 'tfx': tData(), 'tcol': {t: {k: dict(v) for k, v in TCOL[t].items() if v.get('m', 0) > 0} for t in FXTGTS}}
 
 def applyLook(d, text=True):
     C = op('/project1/CONTROLS'); S['dirty'] = True
@@ -1278,6 +1294,7 @@ def applyLook(d, text=True):
         if str(n) not in tx2: C.par[tpn(n, 'Texton')] = False
     C.par.Statue = bool(d.get('statue', True))                  # older presets: statue on
     colsApply(d.get('lcols'), S.get('colfade', 0.0))
+    BEATFX.clear(); BEATFX.update(d.get('beatfx') or []); S['layers'] = None; SLOTSIG.clear()   # effects that come on with the beat
     tfx = dict(d.get('tfx') or {}); tcol = dict(d.get('tcol') or {})   # per-layer effects (older presets: none)
     for a, b in (('images', 'm1'), ('videos', 'm2')):                 # before media layers were slots
         if a in tfx and b not in tfx: tfx[b] = tfx.pop(a)

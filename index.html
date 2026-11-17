@@ -603,6 +603,8 @@ body.arranging #pads .pad.full{outline:2px dashed #ffd23e88;outline-offset:-2px;
 #qk .ctl.qchained::after{left:-8px;right:auto;top:8px;bottom:8px;width:5px;height:auto}#qk .ctl.qchained{padding-left:8px}
 .qchb{position:absolute;left:4px;bottom:-17px;z-index:2;font:800 10px var(--mono);font-style:normal;padding:1px 6px;border-radius:6px;background:var(--chc);color:#0b0a0f;pointer-events:none}#qk .ctl .qchb{left:auto;right:40px;top:12px;bottom:auto}#qk .qchprev .qchb{display:none}
 body.qlinking #qk [data-qtog],body.qlinking #qk [data-qswap]{outline:2px dashed #ffd23e88;outline-offset:-3px}body.qlinking #qk .qchcur{box-shadow:inset 0 0 0 3px var(--chc),0 0 14px var(--chc)}
+.fxbt{position:absolute;left:5px;top:5px;z-index:3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--sans);background:#000a;color:#fff9;border:1px solid #fff3}
+.fxbt.on{background:#ffd23e;color:#0b0a0f;border-color:#ffd23e;box-shadow:0 0 10px #ffd23e}button.beaty{animation:beatyp .5s ease-in-out infinite alternate}@keyframes beatyp{from{filter:none}to{filter:brightness(1.25)}}
 .archempty{padding:28px 12px;color:var(--mut,#8a8796);font:600 13px var(--sans);text-align:center}.pad.arch{opacity:.85}.pgc.archc b{letter-spacing:.06em}
 .sgtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sgtop select{flex:1 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:600 13px var(--sans)}
 .sgtop input{flex:2 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--sunk,#0d0c12);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:500 13px var(--sans)}
@@ -717,7 +719,7 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
     <div class="tadir" data-tadir="Text"><span>Moves</span><div class="opts" id="o-Textadir"></div></div>
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
-    <h2>Type</h2><div class="opts talign" id="o-Textalign"></div><div id="g-ttype1"></div>
+    <h2>Type</h2><div class="opts talign" id="o-Textalign"></div><h2>Fill the letters with</h2><div class="opts" id="o-Textfill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p><div id="g-ttype1"></div>
     <div class="trow tcrawl"><button class="btn" id="t-Textcrawl" data-tog="Textcrawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="1">↺ RESTART</button></div>
     <div class="tcrawlg" data-crawlg="Text"><div id="g-tcrawl1"></div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text"></div>
@@ -739,7 +741,7 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Animation</h2><div class="opts" id="o-T2anim"></div>
     <div class="tadir" data-tadir="T2"><span>Moves</span><div class="opts" id="o-T2adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T2font"></div>
-    <h2>Type</h2><div class="opts talign" id="o-T2align"></div><div id="g-ttype2"></div>
+    <h2>Type</h2><div class="opts talign" id="o-T2align"></div><h2>Fill the letters with</h2><div class="opts" id="o-T2fill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p><div id="g-ttype2"></div>
     <div class="trow tcrawl"><button class="btn" id="t-T2crawl" data-tog="T2crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="2">↺ RESTART</button></div>
     <div class="tcrawlg" data-crawlg="T2"><div id="g-tcrawl2"></div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text2"></div>
@@ -761,7 +763,7 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Animation</h2><div class="opts" id="o-T3anim"></div>
     <div class="tadir" data-tadir="T3"><span>Moves</span><div class="opts" id="o-T3adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T3font"></div>
-    <h2>Type</h2><div class="opts talign" id="o-T3align"></div><div id="g-ttype3"></div>
+    <h2>Type</h2><div class="opts talign" id="o-T3align"></div><h2>Fill the letters with</h2><div class="opts" id="o-T3fill"></div><p class="hint2">LAYER = that layer's video / picture / noise shows inside the letters. Hide the layer itself (its eye in LAYERS) to see it only there.</p><div id="g-ttype3"></div>
     <div class="trow tcrawl"><button class="btn" id="t-T3crawl" data-tog="T3crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="3">↺ RESTART</button></div>
     <div class="tcrawlg" data-crawlg="T3"><div id="g-tcrawl3"></div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text3"></div>
@@ -1000,7 +1002,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17c';
+const BUILD = '2026-11-17d';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1393,6 +1395,7 @@ function layerMove(k, dir){                  // dir -1 = towards the front (up),
 const TGTNAME = {all:'All layers', model:'3D models', camera:'Phone camera', draw:'Drawing'};
 const tgtName = k => /^m\d$/.test(k) ? mediaName(+k.slice(1)) : (custName(k) || {text:'Text', text2:'Text 2', text3:'Text 3'}[k] || TGTNAME[k]);
 function applyTarget(){
+  setTimeout(fxBeatUI, 0);
   const cur = {}; (FXT_SEL === 'all' ? (S.allL || []) : ((S.tfx || {})[FXT_SEL] || [])).forEach(([k, on, amt, p1]) => cur[k] = [on, amt, p1]);
   const base = {}; (S.allL || []).forEach(([k, on, amt, p1]) => base[k] = [on, amt, p1]);
   S.layers.forEach(l => { const v = cur[l.k];
@@ -1743,7 +1746,7 @@ var ACC = {};
 function build(){
 
   ['warp','style','post','glitter'].forEach(g => $('#lt-' + g).innerHTML = S.layers.filter(l => l.g === g).map(l =>
-    `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i></button>`).join(''));
+    `<button data-layer="${l.k}" style="--c:${GC[g]}"><img src="thumbs/fx/${l.k}.jpg?${FXV}" alt="" loading="lazy" onerror="this.remove()"><b>${l.label}</b><i class="ck">✓</i><span class="fxbt" data-fxbeat="${l.k}" role="button" aria-label="Only on the beat">♪</span></button>`).join(''));
   const mb = m => `<button class="model" data-model="${esc(m.name)}"><img src="thumbs/${esc(m.name)}.jpg" alt="" onerror="this.style.visibility='hidden'"><span>${esc(m.label)}</span></button>`;
   const isA = m => m.anim || String(m.name).startsWith('anim_');
   $('#models').innerHTML = S.models.filter(m => !isA(m)).map(mb).join('');
@@ -1774,12 +1777,13 @@ const TOPTS = {
   Textadir: [['left','← LEFT'],['right','RIGHT →'],['up','↑ UP'],['down','DOWN ↓']],
   Textspace: [['flat','FLAT'],['3d','3D']],
   Textalign: [['left','⇤ LEFT'],['center','≡ CENTRE'],['right','RIGHT ⇥'],['justify','☰ JUSTIFY']],
+  Textfill: [['colour','COLOUR'],['m1','LAYER 1'],['m2','LAYER 2'],['m3','LAYER 3'],['m4','LAYER 4'],['m5','LAYER 5'],['m6','LAYER 6']],
   Kstest: [['off','OFF'],['over','GRID OVER'],['grid','GRID ONLY']],
   Projmon: [['1','1'],['2','2'],['3','3'],['4','4']],
-  Textfont: [['Bebas Neue','Bebas'],['Impact','Impact'],['Bahnschrift','Bahn'],['Algerian','Deco'],['Bangers','Bangers'],['Permanent Marker','Marker'],['Caveat Brush','Brush'],['Rock Salt','Scrawl'],['Pacifico','Pacifico'],['Shrikhand','Shrikhand'],['Monoton','MONOTON'],['Bungee Shade','SHADE'],['Rubik Glitch','GLITCH'],['Press Start 2P','PIXEL']]};
+  Textfont: [['Inter Tight','Inter Tight'],['Inter Tight Semi','Inter Semi'],['Bebas Neue','Bebas'],['Impact','Impact'],['Bahnschrift','Bahn'],['Algerian','Deco'],['Bangers','Bangers'],['Permanent Marker','Marker'],['Caveat Brush','Brush'],['Rock Salt','Scrawl'],['Pacifico','Pacifico'],['Shrikhand','Shrikhand'],['Monoton','MONOTON'],['Bungee Shade','SHADE'],['Rubik Glitch','GLITCH'],['Press Start 2P','PIXEL']]};
 TOPTS.Textmotion = [['models','LIKE 3D MODELS'],['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']];
 TOPTS.Textmaxis = [['y','↻ Y'],['x','TUMBLE X'],['z','ROLL Z']];
-[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis','align'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
+[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis','align','fill'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'motion'] = TOPTS.Textmotion; TOPTS['M' + i + 'maxis'] = TOPTS.Textmaxis; });
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE'],['custom','PICKED']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
@@ -1983,8 +1987,10 @@ function header(){
 function applyLayers(L){
   if (L) { S.allL = L; if (FXT_SEL === 'all') L.forEach(([k, on, amt, p1]) => { const l = S.layers.find(x => x.k === k); if (l) { l.on = !!on; l.amt = amt; l.p1 = p1; } }); }
   EL.layerBtns.forEach(b => b.classList.toggle('on', !!S.layers.find(x => x.k === b.dataset.layer && x.on)));
-  onAir(); header();
+  fxBeatUI(); onAir(); header();
 }
+function fxBeatUI(){ const set = new Set((S && S.fxbeat) || []), t = FXT_SEL || 'all';
+  $$('[data-fxbeat]').forEach(b => { const on = set.has(t + ':' + b.dataset.fxbeat); b.classList.toggle('on', on); const tile = b.closest('button'); if (tile) tile.classList.toggle('beaty', on); }); }
 let airSig = null;
 function onAir(){
   const act = S.layers.filter(l => l.on), sig = act.map(l => l.k).join(',');
@@ -2797,7 +2803,7 @@ function pkDot(i, c){ i.style.left = c.x / 99 * 100 + '%'; i.style.top = c.y / 9
 const pkS = (l, f, lab, v) => `<div class="sub"><span>${lab}</span><input type="range" data-pk="${f}" min="0" max="99" step="1" value="${v}" style="--acc:${GC[l.g]}"></div>`;
 function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k}" data-pkv="${pkEnc(k, c)}">`;
   if (k === 'mask') { const sty = `left:${c.x / 99 * 100}%;top:${c.y / 99 * 100}%;width:${(1 + c.w / 99 * 60) * 2 * 9 / 16}%;height:${(1 + c.h / 99 * 60) * 2}%;aspect-ratio:auto;border-radius:${c.shp ? '3px' : '50%'}`;
-    h += segUI('Shape', 'data-pkf="shp" data-v', ['CIRCLE / OVAL','RECTANGLE'], c.shp) + `<div class="sub"><span>Where (tap or drag)</span></div><div class="sppad" data-pkpad><i style="${sty}"></i></div>`
+    h += segUI('Shape', 'data-pkf="shp" data-v', ['CIRCLE / OVAL','RECTANGLE','TEXT LETTERS','DIAMOND','BAND','RING','STAR'], c.shp) + `<div class="sub"><span>Where (tap or drag)</span></div><div class="sppad" data-pkpad><i style="${sty}"></i></div>`
       + pkS(l, 'w', 'Width', c.w) + pkS(l, 'h', 'Height', c.h) + pkS(l, 'sf', 'Soft edge', c.sf) + segUI('Show', 'data-pkf="inv" data-v', ['INSIDE','OUTSIDE'], c.inv); }
   if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp) + segUI('Empty corners', 'data-pkf="fill" data-v', ['LEAVE EMPTY','FILL (MIRROR)','ZOOM TO COVER'], c.fill);
   if (k === 'glitter') h += `<div class="sub"><span>Look</span></div>` + glitSw('data-pkf="sty" data-v', c.sty) + pkS(l, 'amt', 'Glitter', c.amt) + pkS(l, 'sp', 'Sparkle speed', c.sp) + segUI('Sparkles', 'data-pkf="beat" data-v', ['STEADY','FLASH WITH THE BEAT'], c.beat);
@@ -3126,6 +3132,10 @@ document.addEventListener('pointerup', endHold); document.addEventListener('poin
 
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
+  const fb = e.target.closest('[data-fxbeat]');
+  if (fb && S) { e.stopPropagation(); const k = fb.dataset.fxbeat, t = FXT_SEL || 'all', key = t + ':' + k, set = new Set(S.fxbeat || []), on = !set.has(key);
+    on ? set.add(key) : set.delete(key); S.fxbeat = [...set]; send({t:'fxbeat', tgt:t, k, on}); fxBeatUI();
+    toast(on ? '♪ ' + ((S.layers.find(x => x.k === k) || {}).label || k) + ' now only hits on the beat' : '♪ off - steady again'); buzz(8); return; }
   const h = e.target.closest('.card .ch'); if (h && !EDIT && h.parentElement.id === 'cardQuick' && !e.target.closest('[data-qlink]')) return;
   if (h && S && !e.target.closest('button, label, input')) { const c = h.parentElement;
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
