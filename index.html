@@ -595,6 +595,14 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 .pgchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.pgchips::-webkit-scrollbar{display:none}
 body.arranging #pads .pad.full{outline:2px dashed #ffd23e88;outline-offset:-2px;touch-action:none;cursor:grab}body.arranging #pads .pad .live{display:none}.pad.arrdrag{opacity:.55;outline:2px solid #fff!important;transform:scale(.96)}.pgc.arrc.on{background:var(--amber);color:#0b0a0f}
 .tin{resize:vertical;min-height:64px;line-height:1.35;white-space:pre-wrap}.tcrawl{margin-top:8px}.tcrawl .btn{flex:1}
+.qlinkb{margin-left:auto;height:var(--h1);padding:0 12px;border-radius:var(--r1);border:1px solid var(--line);background:var(--raise);color:var(--ink);font:700 11px var(--sans);letter-spacing:.08em}.qlinkb.on{background:#ffd23e;color:#0b0a0f;border-color:#ffd23e}
+.qlbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line);background:#ffd23e14}.qlbar span{flex:1 1 200px;font:600 12px var(--sans);opacity:.85}.qlbar button{height:var(--h1);padding:0 12px;border-radius:var(--r1);border:1px solid var(--line);background:var(--raise);color:var(--ink);font:700 11px var(--sans)}.qlbar button.pri{background:#ffd23e;color:#0b0a0f;border-color:#ffd23e}
+.qlbar[hidden]{display:none}#qk .qchained{position:relative}#qk .qfxw.lt.qchained{margin-bottom:22px}
+#qk .qchained::after{content:'';position:absolute;left:2px;right:2px;bottom:-11px;height:5px;border-radius:3px;background:var(--chc);box-shadow:0 0 8px var(--chc);pointer-events:none}
+#qk .qchained.qchnext::after{right:-12px;border-top-right-radius:0;border-bottom-right-radius:0}#qk .qchained.qchprev::after{left:-2px;border-top-left-radius:0;border-bottom-left-radius:0}
+#qk .ctl.qchained::after{left:-8px;right:auto;top:8px;bottom:8px;width:5px;height:auto}#qk .ctl.qchained{padding-left:8px}
+.qchb{position:absolute;left:4px;bottom:-17px;z-index:2;font:800 10px var(--mono);font-style:normal;padding:1px 6px;border-radius:6px;background:var(--chc);color:#0b0a0f;pointer-events:none}#qk .ctl .qchb{left:auto;right:40px;top:12px;bottom:auto}#qk .qchprev .qchb{display:none}
+body.qlinking #qk [data-qtog],body.qlinking #qk [data-qswap]{outline:2px dashed #ffd23e88;outline-offset:-3px}body.qlinking #qk .qchcur{box-shadow:inset 0 0 0 3px var(--chc),0 0 14px var(--chc)}
 .archempty{padding:28px 12px;color:var(--mut,#8a8796);font:600 13px var(--sans);text-align:center}.pad.arch{opacity:.85}.pgc.archc b{letter-spacing:.06em}
 .sgtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sgtop select{flex:1 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:600 13px var(--sans)}
 .sgtop input{flex:2 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--sunk,#0d0c12);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:500 13px var(--sans)}
@@ -660,7 +668,7 @@ header .r1 .fps{font:500 12px var(--mono)}
       <h4>Autopilot: change every</h4><div class="seg sm aptimes" id="apTimes"><button data-apt="10">10s</button><button data-apt="20">20s</button><button data-apt="30">30s</button><button data-apt="60">1m</button><button data-apt="120">2m</button><button data-apt="300">5m</button></div>
     </div>
     <button class="sltog" id="slTog" aria-pressed="true"><b>☰ SET LIST</b><span id="slState">ON</span></button>
-    <div class="card open hide" id="cardQuick" style="margin-top:12px"><div class="ch"><b>Quick controls</b><em id="qkn"></em></div><div class="cb" id="qk"></div></div>
+    <div class="card open hide" id="cardQuick" style="margin-top:12px"><div class="ch"><b>Quick controls</b><em id="qkn"></em><button class="qlinkb" id="qlinkB" data-qlink="1">⛓ CHAIN</button></div><div class="qlbar" id="qlbar" hidden><span id="qlhint">Tap buttons to chain them together</span><button data-qlnew="1">＋ NEW CHAIN</button><button class="pri" data-qlink="1">✓ DONE</button></div><div class="cb" id="qk"></div></div>
 
     </aside>
     <div class="livesplit" id="livesplit" aria-hidden="true"><i></i></div>
@@ -992,7 +1000,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17b';
+const BUILD = '2026-11-17c';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2270,6 +2278,35 @@ function qVal(it){                        // current value of a pinned control
   return row ? (it.f === 'amt' ? row[2] : row[3]) : (it.f === 'amt' ? 1 : l.p1);
 }
 let QSIG = '', QB = null;
+/* CHAINS: quick buttons linked together - one press switches the whole chain (stored on this tablet) */
+const QCOL = ['#ffd23e', '#22e6ff', '#ff4fd8', '#7dff4f', '#ff8a1f', '#b18cff'];
+let QCH = store.get('qchains', []), QL = {on:false, cur:-1};
+const qChainOf = id => QCH.findIndex(c => c.includes(id));
+function qChainSave(){ QCH = QCH.filter(c => c.length > 1 || QL.on); store.set('qchains', QCH.filter(c => c.length > 1)); }
+function qChainDecor(){
+  const L = qList(); document.body.classList.toggle('qlinking', QL.on); $('#qlbar').hidden = !QL.on; $('#qlinkB').classList.toggle('on', QL.on);
+  $$('#qk [data-qtog], #qk [data-qswap]').forEach(b => {
+    const i = +(b.dataset.qtog ?? b.dataset.qswap), it = L[i]; if (!it) return; const id = qid(it), c = qChainOf(id);
+    const w = b.closest('.qfxw') || b.closest('.ctl') || b; w.classList.toggle('qchained', c >= 0); w.classList.toggle('qchcur', QL.on && c === QL.cur && c >= 0);
+    if (c >= 0) { w.style.setProperty('--chc', QCOL[c % QCOL.length]); const first = L.findIndex(x => QCH[c].includes(qid(x))); w.style.order = String(first * 20 + QCH[c].indexOf(id) + 1); }
+    else { w.style.removeProperty('--chc'); w.style.order = String(i * 20); }
+    let bd = w.querySelector('.qchb'); if (c >= 0) { if (!bd) { bd = document.createElement('i'); bd.className = 'qchb'; w.appendChild(bd); } bd.textContent = '⛓' + (c + 1); } else if (bd) bd.remove(); });
+  $$('#qk > :not(.qchained)').forEach((w, k) => { if (!w.style.order) w.style.order = String(k * 20); });
+  const vis = [...$('#qk').children].sort((a, b) => (+a.style.order || 0) - (+b.style.order || 0));   // the rail runs on under a whole chain
+  vis.forEach((w, k) => { const c = w.style.getPropertyValue('--chc'), nx = vis[k + 1], pv = vis[k - 1];
+    w.classList.toggle('qchnext', !!(c && w.classList.contains('qchained') && nx && nx.classList.contains('qchained') && nx.style.getPropertyValue('--chc') === c && w.offsetTop === nx.offsetTop));
+    w.classList.toggle('qchprev', !!(c && w.classList.contains('qchained') && pv && pv.classList.contains('qchained') && pv.style.getPropertyValue('--chc') === c && w.offsetTop === pv.offsetTop)); });
+  const cur = QCH[QL.cur]; $('#qlhint').innerHTML = QL.on ? (cur && cur.length ? `<b style="color:${QCOL[QL.cur % QCOL.length]}">⛓${QL.cur + 1}</b> has ${cur.length} - tap more to add, tap a chained one to take it out` : 'Tap the buttons to chain together · tap a chained one to take it out') : '';
+}
+function qLinkTap(it){                                   // CHAIN mode: add to the chain being built / take out of its chain
+  const id = qid(it), c = qChainOf(id);
+  if (c >= 0) { QCH[c] = QCH[c].filter(x => x !== id); if (!QCH[c].length) { QCH.splice(c, 1); if (QL.cur >= QCH.length) QL.cur = -1; } }
+  else { if (QL.cur < 0 || !QCH[QL.cur]) { QCH.push([]); QL.cur = QCH.length - 1; } QCH[QL.cur].push(id); }
+  qChainSave(); qChainDecor(); buzz(6); }
+function qPress(it, v){                                  // one quick toggle to a state (used for every member of a chain)
+  if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); }
+  else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); } }
+function qMembers(it){ const c = qChainOf(qid(it)); return c < 0 ? [] : qList().filter(x => x !== it && QCH[c].includes(qid(x))); }
 function renderQuick(){
   if (!S) return; const L = qList(), card = $('#cardQuick'), TX = qTexts(), any = L.length + TX.length;
   card.classList.toggle('hide', !any); $('#qkn').textContent = any ? any + '' : '';
@@ -2296,7 +2333,7 @@ function renderQuick(){
   $$('#qk input[data-qki]').forEach(el => { const it = L[+el.dataset.qki]; el.value = +qVal(it) || 0;
     bindSlider(el, 'qk_' + el.dataset.qki, v => { if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, [it.f]:v}); }
       else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); } }); });
-  quickSync(); qRecent();
+  quickSync(); qRecent(); qChainDecor();
 }
 // every preset with text gets its words in Quick controls; SHOW also updates the words saved in that preset
 const QTP = n => n === 1 ? 'Text' : 'T' + n;
@@ -3089,7 +3126,7 @@ document.addEventListener('pointerup', endHold); document.addEventListener('poin
 
 /* ---------------- taps ---------------- */
 document.addEventListener('click', e => {
-  const h = e.target.closest('.card .ch'); if (h && !EDIT && h.parentElement.id === 'cardQuick') return;
+  const h = e.target.closest('.card .ch'); if (h && !EDIT && h.parentElement.id === 'cardQuick' && !e.target.closest('[data-qlink]')) return;
   if (h && S && !e.target.closest('button, label, input')) { const c = h.parentElement;
     if (c.classList.contains('open') || c.classList.contains('shut')) { if (c.classList.contains('open')) SHUT[c.id] = 1; else delete SHUT[c.id]; shutSave(); cards(); buzz(); } return; }
   const t = e.target.closest('button'); if (!t || !S) return; const d = t.dataset;
@@ -3241,7 +3278,10 @@ document.addEventListener('click', e => {
   else if (d.mcrop) { ['l','r','t','b'].forEach(n => { const k = 'M' + d.mcrop + 'crop' + n; S.pars[k] = 0; send({t:'set', p:k, v:0}); }); build(); buzz(); }
   else if (d.addl) { addLayer(d.addl); buzz(); }
   else if (d.swapk) { const pt = partnerOf(d.swapk); if (pt) doSwap(d.swapk, pt); }
-  else if (d.qswap !== undefined) { const it = qList()[+d.qswap]; if (it) { doSwap(it.a, it.b); setTimeout(quickSync, 60); } }
+  else if (d.qlink) { QL.on = !QL.on; QL.cur = -1; if (!QL.on) { QCH = QCH.filter(c => c.length > 1); qChainSave(); toast(QCH.length ? QCH.length + ' chain' + (QCH.length > 1 ? 's' : '') + ' ready' : 'No chains'); } qChainDecor(); buzz(); }
+  else if (d.qlnew) { QL.cur = -1; qChainDecor(); toast('Next taps start a new chain'); buzz(); }
+  else if (d.qswap !== undefined) { const it = qList()[+d.qswap]; if (!it) return; if (QL.on) { qLinkTap(it); return; }
+    doSwap(it.a, it.b); qMembers(it).forEach(m => m.k === 'swap' ? doSwap(m.a, m.b) : qPress(m, !qVal(m))); setTimeout(quickSync, 60); }
   else if (d.lau) { const nr = new Set(String(S.pars.Noreact || '').split(',').filter(Boolean)), k = d.lau;
     if (nr.has(k)) nr.delete(k); else nr.add(k); S.pars.Noreact = [...nr].join(','); send({t:'set', p:'Noreact', v:S.pars.Noreact});
     toast(lName(k).split(' · ')[0] + (nr.has(k) ? ' ignores the music' : ' reacts to the music')); layerStack(); buzz(); }
@@ -3253,8 +3293,9 @@ document.addEventListener('click', e => {
     else if (k === 'camera') { if (CAMF.on) camStop(); else { S.pars.Camsrc = 'off'; send({t:'set', p:'Camsrc', v:'off'}); } if (S.pars.Clipstate === 'loop') send({t:'clip', do:'live'}); }
     applyPars({}); buzz(); }
   else if (d.qmenu !== undefined) { sheetQk(+d.qmenu); buzz(); }
-  else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; const v = !qVal(it);
-    if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
+  else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; if (QL.on) { qLinkTap(it); return; } const v = !qVal(it);
+    qPress(it, v); qMembers(it).forEach(m => m.k === 'swap' ? doSwap(m.a, m.b) : qPress(m, v));              // the whole chain follows the button you pressed
+    if (it.k !== 'fx') applyPars({}); setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); if (d.gtog === '#arch') ARCH = null; renderPads(); buzz(); }
   else if (d.arch) { sheetArch(d.arch); buzz(); }
   else if (d.crawlgo) { send({t:'crawlgo', n:+d.crawlgo}); toast('Crawl from the top'); buzz(); }
