@@ -32,7 +32,12 @@ for _i in range(1, 7):
                       (_m + 'nzdetail', 'Detail', 1, 8, 1, 'm%dnz' % _i), (_m + 'nzwarp', 'Swirl', 0, 2, 0.01, 'm%dnz' % _i),
                       (_m + 'nzcontrast', 'Colour sharpness', 0.2, 4, 0.01, 'm%dnz' % _i), (_m + 'nzdir', 'Direction', 0, 360, 1, 'm%dnz' % _i),
                       (_m + 'nzreact', 'Reacts to music', 0, 2, 0.01, 'm%dnz' % _i), (_m + 'nzbright', 'Brightness', 0, 2, 0.01, 'm%dnz' % _i),
-                      (_m + 'nzsteps', 'Flat bands (0 = smooth)', 0, 12, 1, 'm%dnz' % _i), (_m + 'nzseed', 'Variation', 0, 100, 1, 'm%dnz' % _i)]
+                      (_m + 'nzsteps', 'Flat bands (0 = smooth)', 0, 12, 1, 'm%dnz' % _i), (_m + 'nzseed', 'Variation', 0, 100, 1, 'm%dnz' % _i),
+                      (_m + 'rang', 'Gradient angle', 0, 360, 1, 'm%drc' % _i), (_m + 'rstripes', 'Stripes', 2, 40, 1, 'm%drc' % _i),
+                      (_m + 'rflow', 'Flow (moves the colours)', 0, 2, 0.01, 'm%drc' % _i), (_m + 'rbeat', 'Flash on the beat', 0, 1, 0.01, 'm%drc' % _i),
+                      (_m + 'rw', 'Width', 0.02, 1, 0.005, 'm%drs' % _i), (_m + 'rh', 'Height', 0.02, 1, 0.005, 'm%drs' % _i),
+                      (_m + 'rround', 'Round corners', 0, 1, 0.01, 'm%drs' % _i), (_m + 'rline', 'Outline only (0 = filled)', 0, 1, 0.01, 'm%drs' % _i),
+                      (_m + 'rsoft', 'Soft edge', 0, 1, 0.01, 'm%drs' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autofade', 'Autopilot transition', 0, 600, 0.1, 'apfade'),     # set by the phone's transition buttons
@@ -119,7 +124,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['Trreplay', 'Textcrawl', 'T2crawl', 'T3crawl'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -1470,7 +1475,7 @@ def _clean(p, v):
     if p == 'Noreact':
         ok = _E().LAYER_IDS
         return ','.join(k for k in dict.fromkeys(str(v).split(',')) if k in ok)
-    if p.endswith('keyhex') or p[-4:-1] == 'nzc' or p.endswith('rcol'):
+    if p.endswith('keyhex') or p[-4:-1] == 'nzc' or p.endswith('rcol') or p.endswith('rcol2'):
         import re
         v = str(v).strip().lower()
         if not re.fullmatch(r'#[0-9a-f]{6}', v): raise ValueError('bad colour')
@@ -1574,12 +1579,23 @@ def _ensurePars():
                 if not hasattr(C.par, 'M%d%s' % (i, nm)): m.page.appendToggle('M%d%s' % (i, nm), label='M%d %s' % (i, lb))
             if not hasattr(C.par, 'M%drcol' % i):                       # RECTANGLE layers: a plain colour card
                 pp = m.page.appendStr('M%drcol' % i, label='M%d rectangle colour' % i)[0]; pp.default = '#000000'; pp.val = '#000000'
+            for n_, dv in (('rcol2', '#ff3da8'), ('rfill', 'solid')):         # RECTANGLE depth: gradients, shape, motion
+                if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendStr('M%d%s' % (i, n_), label='M%d rect %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
+            for n_, dv in (('rang', 0.0), ('rstripes', 8.0), ('rflow', 0.0), ('rbeat', 0.0), ('rw', 1.0), ('rh', 1.0), ('rround', 0.0), ('rline', 0.0), ('rsoft', 0.0)):
+                if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendFloat('M%d%s' % (i, n_), label='M%d rect %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
             P_ = op('/project1'); sw = P_.op('msrc%d' % i)
-            if sw is not None and P_.op('rect%d' % i) is None:
-                r = P_.create(td.constantTOP, 'rect%d' % i); r.nodeX = sw.nodeX - 200; r.nodeY = sw.nodeY - 300
-                r.par.outputresolution = 'custom'; r.par.resolutionw = 1280; r.par.resolutionh = 720
-                for j, ax in enumerate(('colorr', 'colorg', 'colorb')):
-                    r.par[ax].expr = "op('/project1/fx_engine').module.hexc(op('/project1/CONTROLS').par.M%drcol.eval(), %d)" % (i, j)
+            if sw is not None and P_.op('rectg%d' % i) is None and P_.op('rectfill_src') is not None:
+                r = P_.create(td.glslTOP, 'rectg%d' % i); r.nodeX = sw.nodeX - 200; r.nodeY = sw.nodeY - 420
+                r.par.outputresolution = 'custom'; r.par.resolutionw = 1280; r.par.resolutionh = 720; r.par.format = 'rgba16float'
+                r.par.pixeldat = P_.op('rectfill_src')
+                c_ = "op('/project1/CONTROLS').par.M%d" % i; e_ = "op('/project1/fx_engine').module"
+                U = [('uA', [e_ + ".hexc(%srcol.eval(), 0)" % c_, e_ + ".hexc(%srcol.eval(), 1)" % c_, e_ + ".hexc(%srcol.eval(), 2)" % c_, e_ + ".RFILL.get(%srfill.eval(), 0)" % c_]),
+                     ('uB', [e_ + ".hexc(%srcol2.eval(), 0)" % c_, e_ + ".hexc(%srcol2.eval(), 1)" % c_, e_ + ".hexc(%srcol2.eval(), 2)" % c_, "math.radians(%srang.eval())" % c_]),
+                     ('uS', [c_ + 'rw', c_ + 'rh', c_ + 'rround', c_ + 'rline']), ('uE', [c_ + 'rsoft', c_ + 'rflow', c_ + 'rbeat', c_ + 'rstripes']),
+                     ('uT', ['absTime.seconds', e_ + ".S.get('pulse', 0.0)", '0', '0'])]
+                for k_, (nm_, ex_) in enumerate(U):
+                    r.par['vec%dname' % k_] = nm_
+                    for ax, x_ in zip('xyzw', ex_): r.par['vec%dvalue%s' % (k_, ax)].expr = x_
                 sw.inputConnectors[3].connect(r)
             k = op('/project1/mk%d' % i)
             if k is not None and k.par.vec3name.eval() != 'uKC':

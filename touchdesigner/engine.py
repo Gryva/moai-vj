@@ -947,6 +947,7 @@ def _tJust(line, gap, width, W, sw):
     return ''.join(w_ + (gap + ' ' * (extra // g_ + (1 if k < extra % g_ else 0)) if k < g_ else '') for k, w_ in enumerate(line))
 
 TINST = {1: False, 2: False, 3: False}
+RFILL = {'solid': 0, 'linear': 1, 'radial': 2, 'conic': 3, 'stripes': 4, 'glass': 5}     # rectangle layer fills
 
 TXM = {'on': False, 't0': 0.0, 'dur': 1.0, 'frm': {}, 'col': (1, 1, 1), 'mode': 'overlay'}
 TNUM = ['Textsize', 'Textglow', 'Textamount', 'Textspeed', 'Textreact']
@@ -1649,7 +1650,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'cues', 'cueon', 'mirror', 'flip']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()

@@ -442,6 +442,14 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.rcprev{width:min(100%,320px);aspect-ratio:16/9;border-radius:var(--r1);margin:4px auto 10px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:repeating-conic-gradient(#ffffff10 0 25%,transparent 0 50%) 0 0/16px 16px,#08070c;border:1px solid var(--line)}.rcprev i{display:block;transition:all .15s}
+.rcfill{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.rcfill button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:var(--r1);border:1px solid var(--line);background:var(--panel);color:var(--mute);font:700 9px var(--sans);letter-spacing:.06em}
+.rcfill button.on{border-color:var(--ink);color:var(--ink);background:var(--raise)}.rcfill b{width:26px;height:18px;border-radius:4px;display:block}
+.rcf-solid{background:#ddd}.rcf-linear{background:linear-gradient(90deg,#ff3da8,#3ef0ff)}.rcf-radial{background:radial-gradient(circle,#ffe23a,#a24bff)}.rcf-conic{background:conic-gradient(#ff3da8,#3ef0ff,#ff3da8)}
+.rcf-stripes{background:repeating-linear-gradient(45deg,#ddd 0 3px,#333 3px 6px)}.rcf-glass{background:linear-gradient(135deg,#fff8,transparent 50%),linear-gradient(#2f6bff,#a24bff)}
+.rcswap{margin-left:auto;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--mute);font:700 10px var(--sans);letter-spacing:.08em}
+[data-rcb][hidden]{display:none}
 .typo{display:flex;flex-direction:column;gap:8px}
 .fpick{width:100%;display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r1);background:var(--panel);border:1px solid var(--line);color:var(--ink);text-align:left}
 .fpick.open{border-color:var(--ink)}.fpick .fpa{font-size:28px;line-height:1;min-width:46px;text-align:center}.fpick .fpt{flex:1;display:flex;flex-direction:column;gap:2px}
@@ -1069,10 +1077,11 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17e';
+const BUILD = '2026-11-17f';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
+const RFILLS = [['solid','SOLID'],['linear','LINEAR'],['radial','RADIAL'],['conic','CONIC'],['stripes','STRIPES'],['glass','GLASS']];
 const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
 const QFADE = store.get('qfade', {});        // pinned effect -> its own transition (s, 0 = cut); missing = the FX tab setting
@@ -1321,10 +1330,17 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
       <div class="cb"><div class="mfrow"><button class="mfile" data-mlib="${i}"><b id="mfn${i}">Choose a file</b><span>CHANGE ▾</span></button><button class="mtrimb" data-mtrim="${i}" hidden>✂ TRIM · CROP</button></div>
         <div class="clips mlib" id="mlist${i}" hidden></div>
         <div class="rcbox" hidden>
-          <div class="sub pinl"><span>Colour</span></div>
+          <div class="rcprev" data-rcprev="${i}"><i></i></div>
+          <div class="sub pinl"><span>Fill</span></div>
+          <div class="rcfill">${RFILLS.map(([v, l]) => `<button data-rcfill="${i}" data-v="${v}"><b class="rcf-${v}"></b>${l}</button>`).join('')}</div>
+          <div class="sub pinl"><span data-rcla="${i}">Colour</span></div>
           <div class="cstrip">${SWC.map(c => `<button data-rcsw="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="rc:${i}" aria-label="Any colour"></button></div>${hsvBox('rc:' + i)}
+          <div data-rcb="${i}"><div class="sub pinl"><span>Colour B</span><button class="rcswap" data-rcswap="${i}">⇄ SWAP</button></div>
+          <div class="cstrip">${SWC.map(c => `<button data-rcsw2="${i}" data-v="${c}" style="background:${c}"></button>`).join('')}<button class="cpick" data-hsvt="rb:${i}" aria-label="Any colour"></button></div>${hsvBox('rb:' + i)}</div>
+          <div id="g-m${i}rc"></div>
+          <div class="sub pinl"><span>Shape</span></div><div id="g-m${i}rs"></div>
           <div class="sub"><span>Opacity</span><input type="range" data-rcop="${i}" min="0" max="1" step="0.01" value="1"></div>
-          <p class="hint2">Size and place it with Crop below and in VIEW (zoom, move, turn). Put it under a text layer to make the words easier to read.</p></div>
+          <p class="hint2">Width / Height keep round corners and outlines whole. Move, zoom and turn it in VIEW. Put it under a text layer to make the words easier to read.</p></div>
         <div class="nzbox" hidden>
           <div class="nzlive"><img data-nzimg="${i}" alt=""><span>● LIVE</span></div>
           <div class="mtabs" data-gtabs="nz${i}">${[['pat','PATTERN'],['col','COLOUR'],['mot','MOTION']].map(([k, l]) => `<button data-gtab="${k}" data-gtabk="nz${i}">${l}</button>`).join('')}</div>
@@ -1387,6 +1403,20 @@ function sortCards(){
   const sig = ids.join(','); if (sig === CARDSIG) return; CARDSIG = sig;
   const box = $('#scards'); ids.forEach(id => { const c = $('#' + id); if (c) box.appendChild(c); });
 }
+function rcCss(p, m){ const a = p[m + 'rcol'] || '#000000', b = p[m + 'rcol2'] || '#ff3da8', f = p[m + 'rfill'] || 'solid', g = 90 - (+p[m + 'rang'] || 0), n = Math.max(2, +p[m + 'rstripes'] || 8);
+  return f === 'linear' ? `linear-gradient(${g}deg,${a},${b})` : f === 'radial' ? `radial-gradient(circle,${a},${b})` : f === 'conic' ? `conic-gradient(from ${g - 90}deg,${a},${b},${a})`
+    : f === 'stripes' ? `repeating-linear-gradient(${g}deg,${a} 0 ${50 / n}%,${b} ${50 / n}% ${100 / n}%)` : f === 'glass' ? `linear-gradient(135deg,#ffffff40,transparent 40%),linear-gradient(0deg,${a},${b})` : a; }
+function rcUI(i, p){                         // rectangle card: live swatch, fill buttons, colour B and the sliders that matter for that fill
+  const m = 'M' + i, f = p[m + 'rfill'] || 'solid', pv = $(`[data-rcprev="${i}"] i`);
+  if (pv) { const w = +(p[m + 'rw'] ?? 1), hh = +(p[m + 'rh'] ?? 1), ln = +p[m + 'rline'] || 0;
+    Object.assign(pv.style, {background:rcCss(p, m), width:w * 100 + '%', height:hh * 100 + '%', borderRadius:(+p[m + 'rround'] || 0) * Math.min(w * 320, hh * 180) / 2 * (pv.parentNode.clientWidth || 320) / 320 + 'px',
+      opacity:p[m + 'alpha'] ?? 1, filter:`blur(${(+p[m + 'rsoft'] || 0) * 6}px)`, WebkitMask:ln > 0 ? `linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)` : 'none', padding:ln > 0 ? Math.max(1, ln * Math.min(w * 320, hh * 180) / 4) + 'px' : '0', boxSizing:'border-box'}); }
+  $$(`[data-rcfill="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === f));
+  $$(`[data-rcsw2="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'rcol2'] || '#ff3da8')));
+  const two = f !== 'solid', bb = $(`[data-rcb="${i}"]`); if (bb) bb.hidden = !two; const la = $(`[data-rcla="${i}"]`); if (la) la.textContent = two ? 'Colour A' : 'Colour';
+  const vis = {[m + 'rang']: ['linear','conic','stripes'].includes(f), [m + 'rstripes']: f === 'stripes', [m + 'rflow']: two};
+  for (const k in vis) { const s = $('#s-' + k); if (s && s.closest('.ctl')) s.closest('.ctl').hidden = !vis[k]; }
+}
 function rcBind(){ $$('[data-rcop]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.rcop;
   bindSlider(el, 'rcop' + i, v => { S.pars['M' + i + 'alpha'] = v; send({t:'set', p:'M' + i + 'alpha', v}); }); }); }
 function mzBind(){ rcBind(); $$('[data-mzoom]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.mzoom;
@@ -1414,7 +1444,7 @@ function mediaCardsUI(p){
     const nz = p[m + 'kind'] === 'noise', rc = p[m + 'kind'] === 'rect', lopen = MLIB[i] ?? !f;
     lib.hidden = dr || nz || rc || !lopen; mfb.hidden = dr || nz || rc;
     { const cb = c.querySelector('.cuebox'); cb.hidden = p[m + 'kind'] !== 'video' || !f; if (!cb.hidden) cueUI(i); c.querySelector('.mtrimb').hidden = cb.hidden; }
-    c.querySelector('.rcbox').hidden = !rc; if (rc) { $$(`[data-rcsw="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'rcol'] || '#000000'))); const o = c.querySelector('[data-rcop]'); if (o && !(touching['rcop' + i] > performance.now())) { o.value = p[m + 'alpha'] ?? 1; o._show && o._show(); } } mfb.classList.toggle('open', !lib.hidden);
+    c.querySelector('.rcbox').hidden = !rc; if (rc) { rcUI(i, p); $$(`[data-rcsw="${i}"]`).forEach(b => b.classList.toggle('on', b.dataset.v === (p[m + 'rcol'] || '#000000'))); const o = c.querySelector('[data-rcop]'); if (o && !(touching['rcop' + i] > performance.now())) { o.value = p[m + 'alpha'] ?? 1; o._show && o._show(); } } mfb.classList.toggle('open', !lib.hidden);
     c.querySelector('.nzbox').hidden = !nz; if (nz) { nzUI(i, p); gtabsUI(); }
     c.querySelector('.mplay').hidden = !vid;
     c.querySelector('.mfitbox').hidden = dr || nz || !f || p[m + 'mode'] === 'object';
@@ -2170,6 +2200,7 @@ function hsv2hex({h, s, v}){ const f = n => { const k = (n + h / 60) % 6; return
 function hsvCur(id){ if (id.startsWith('key:')) return S.pars['M' + id.slice(4) + 'keyhex'] || '#00ff00';
   if (id.startsWith('nz:')) { const [, i, k] = id.split(':'); return S.pars['M' + i + 'nzc' + k] || '#000000'; }
   if (id.startsWith('rc:')) return S.pars['M' + id.slice(3) + 'rcol'] || '#000000';
+  if (id.startsWith('rb:')) return S.pars['M' + id.slice(3) + 'rcol2'] || '#ff3da8';
   const c = CC[id].get(), w = c.m >= 2 || CC[id].two ? (CED[id] || 'a') : 'a'; return c.m === 0 ? c.a : c[w]; }
 function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q = HSV[id]; if (!b || !q) return; const hx = hsv2hex(q);
   b.querySelector('.sv').style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(${q.h},100%,50%))`;
@@ -2179,6 +2210,7 @@ function hsvDraw(id){ const b = document.querySelector(`[data-hsv="${id}"]`), q 
 function hsvFrom(id){ if (!HSV[id]) return; HSV[id] = hex2hsv(hsvCur(id)); hsvDraw(id); }
 function hsvApply(id){ const hx = hsv2hex(HSV[id]);
   if (id.startsWith('key:')) keyPick(+id.slice(4), hx, true);
+  else if (id.startsWith('rb:')) { const pn = 'M' + id.slice(3) + 'rcol2'; S.pars[pn] = hx; thr(pn, () => send({t:'set', p:pn, v:hx})); mediaCardsUI(S.pars); }
   else if (id.startsWith('rc:')) { const pn = 'M' + id.slice(3) + 'rcol'; S.pars[pn] = hx; thr(pn, () => send({t:'set', p:pn, v:hx})); mediaCardsUI(S.pars); }
   else if (id.startsWith('nz:')) { const [, i, k] = id.split(':'), pn = 'M' + i + 'nzc' + k; S.pars[pn] = hx; thr(pn, () => send({t:'set', p:pn, v:hx})); nzUI(+i, S.pars); }
   else ccPick(id, hx, true); hsvDraw(id); }
@@ -3344,6 +3376,10 @@ document.addEventListener('click', e => {
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.rcsw2) { const pn = 'M' + d.rcsw2 + 'rcol2'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); hsvFrom('rb:' + d.rcsw2); mediaCardsUI(S.pars); buzz(); return; }
+  if (d.rcfill) { const pn = 'M' + d.rcfill + 'rfill'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); mediaCardsUI(S.pars); buzz(); return; }
+  if (d.rcswap) { const m = 'M' + d.rcswap, a = S.pars[m + 'rcol'] || '#000000', b = S.pars[m + 'rcol2'] || '#ff3da8'; S.pars[m + 'rcol'] = b; S.pars[m + 'rcol2'] = a;
+    send({t:'set', p:m + 'rcol', v:b}); send({t:'set', p:m + 'rcol2', v:a}); hsvFrom('rc:' + d.rcswap); hsvFrom('rb:' + d.rcswap); mediaCardsUI(S.pars); buzz(); return; }
   if (d.rcsw) { const pn = 'M' + d.rcsw + 'rcol'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); hsvFrom('rc:' + d.rcsw); mediaCardsUI(S.pars); buzz(); return; }
   if (d.ksw) { keyPick(+d.ksw, d.v); hsvFrom('key:' + d.ksw); return; }
   if (d.hsvt) { hsvToggle(d.hsvt); return; }
