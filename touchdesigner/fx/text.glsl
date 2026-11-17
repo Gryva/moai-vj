@@ -45,6 +45,16 @@ float T(vec2 p){
 }
 uniform vec4 uX;   // x, y = move (-1..1), z = direction (0 across, 1 stacked letters, 2 sideways up, 3 sideways down), w = animation direction (0 left, 1 right, 2 up, 3 down)
 float gFl = 1.0;                                                      // flicker: letters blink out on the beat
+uniform vec4 uK;   // CRAWL: x = tilt (0 = off), y = how far it has travelled, z = text sheet height / width, w = column width at the bottom of the screen
+float gCr = 1.0;
+vec2 crawlUV(vec2 uv){                                                // a plane tilted away from the viewer (Star Wars opening crawl)
+  float k = clamp(uK.x, 0.01, 0.95), den = 1.0 - k * uv.y, d = 1.0 / max(den, 0.02);
+  float asp = RES().x / RES().y;
+  float u = (uv.x - 0.5) * d / uK.w + 0.5;
+  float yp = uv.y * d / (asp * uK.w);                                  // distance up the plane, in column widths
+  gCr = smoothstep(0.02, 0.4, den);                                    // melts into the distance
+  return vec2(u, 1.0 - (uK.y - yp) / uK.z);
+}
 vec2 textUV(vec2 uv, float t, vec4 a, int anim, float react){
   float sc = max(0.05, uQ.x);
   int ad = int(uX.w + 0.5); bool vert = ad >= 2; float sg = (ad == 0 || ad == 3) ? 1.0 : -1.0;
@@ -79,7 +89,7 @@ void main(){
   vec4 a = uAudio; vec2 uv = vUV.st;
   int mode = int(uP.x + 0.5), anim = int(uP.y + 0.5);
   float t = uTime * uP.z, react = uP.w;
-  vec2 q = textUV(uv, t, a, anim, react);
+  vec2 q = uK.x > 0.001 ? crawlUV(uv) : textUV(uv, t, a, anim, react);
   float front = 0.0;
   if (uM.z > 0.5) {                                                     // dissolve the old letters into the new ones
     float px1 = 1.0 / max(1.0, RES().y);
@@ -93,12 +103,12 @@ void main(){
     front = smoothstep(0.0, 1.0, 1.0 - abs(gW * 2.0 - 1.0));
   }
   bool inside = q.x >= 0.0 && q.x <= 1.0 && q.y >= 0.0 && q.y <= 1.0;
-  float m = inside ? T(q) * gFl : 0.0;
+  float m = inside ? T(q) * gFl * gCr : 0.0;
   vec2 px = PX() / max(0.05, uQ.x);
   // soft glow around the letters
   float gl = 0.0;
   for (int i = 0; i < 8; i++) { float an = float(i) * 0.785398; gl += T(q + vec2(cos(an), sin(an)) * px * 6.0) + T(q + vec2(cos(an), sin(an)) * px * 14.0) * 0.6; }
-  gl = inside ? gl / 12.8 * gFl : 0.0;
+  gl = inside ? gl / 12.8 * gFl * gCr : 0.0;
   vec3 col = (uTA.w > 0.5 ? tTint(q) : uC.rgb) * (1.0 + a.w * 0.35 * react);
   vec3 sc = tex(uv), o = sc;
   if (mode == 0) o = mix(sc + col * gl * uC.w * 0.8, col, m);

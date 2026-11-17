@@ -594,6 +594,7 @@ header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.
 .padacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.padacts .pad.add{min-height:0;height:52px;aspect-ratio:auto}.padacts .pad.add>span{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}header .r1 .prepPill[hidden]{display:none}body:not(.editing) header .r1 .savebtn{display:none}.padacts .pad.add small br{display:none}.padacts .pad.add .plus{font-size:20px}
 .pgchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.pgchips::-webkit-scrollbar{display:none}
 body.arranging #pads .pad.full{outline:2px dashed #ffd23e88;outline-offset:-2px;touch-action:none;cursor:grab}body.arranging #pads .pad .live{display:none}.pad.arrdrag{opacity:.55;outline:2px solid #fff!important;transform:scale(.96)}.pgc.arrc.on{background:var(--amber);color:#0b0a0f}
+.tin{resize:vertical;min-height:64px;line-height:1.35;white-space:pre-wrap}.tcrawl{margin-top:8px}.tcrawl .btn{flex:1}
 .archempty{padding:28px 12px;color:var(--mut,#8a8796);font:600 13px var(--sans);text-align:center}.pad.arch{opacity:.85}.pgc.archc b{letter-spacing:.06em}
 .sgtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sgtop select{flex:1 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:600 13px var(--sans)}
 .sgtop input{flex:2 1 220px;min-width:0;height:var(--h2);border-radius:var(--r1);background:var(--sunk,#0d0c12);color:var(--ink);border:1px solid var(--line);padding:0 10px;font:500 13px var(--sans)}
@@ -699,7 +700,7 @@ header .r1 .fps{font:500 12px var(--mono)}
 
     <div class="card" id="cardText"><div class="ch"><b>Text</b><button class="tg" id="t-Texton" data-tog="Texton">OFF</button></div>
       <div class="cb">
-            <textarea class="tin" id="tin" maxlength="120" placeholder="Type your text…"></textarea>
+            <textarea class="tin" id="tin" maxlength="900" rows="2" placeholder="Type your text… (Enter = new line)"></textarea>
     <div class="trow"><button class="go" id="tsend">SHOW TEXT</button><button class="capsb" data-caps="1">⇪ CAPS</button></div>
     <div class="recent" id="recent"></div>
     <h2>Effect</h2><div class="opts" id="o-Textmode"></div>
@@ -708,6 +709,9 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Animation</h2><div class="opts" id="o-Textanim"></div>
     <div class="tadir" data-tadir="Text"><span>Moves</span><div class="opts" id="o-Textadir"></div></div>
     <h2>Font</h2><div class="opts" id="o-Textfont"></div>
+    <h2>Type</h2><div class="opts talign" id="o-Textalign"></div><div id="g-ttype1"></div>
+    <div class="trow tcrawl"><button class="btn" id="t-Textcrawl" data-tog="Textcrawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="1">↺ RESTART</button></div>
+    <div class="tcrawlg" data-crawlg="Text"><div id="g-tcrawl1"></div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text"></div>
     <h2>Colour</h2><div id="tcolbox"></div>
     <h2>Space</h2><div class="opts" id="o-Textspace"></div><p class="hint2 tsph" data-tsph="Text"></p>
@@ -719,7 +723,7 @@ header .r1 .fps{font:500 12px var(--mono)}
       </div></div>
     <div class="card hide" id="cardT2"><div class="ch"><b>Text 2</b><button class="tg" id="t-T2on" data-tog="T2on">OFF</button></div>
       <div class="cb">
-    <textarea class="tin" id="tin2" maxlength="120" placeholder="Type your text…"></textarea>
+    <textarea class="tin" id="tin2" maxlength="900" rows="2" placeholder="Type your text… (Enter = new line)"></textarea>
     <div class="trow"><button class="go" data-tsend="2">SHOW TEXT</button><button class="capsb" data-caps="2">⇪ CAPS</button></div>
     <h2>Effect</h2><div class="opts" id="o-T2mode"></div>
     <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-T2layout"></div><div class="tmv" id="g-text2pos"></div></div>
@@ -727,6 +731,9 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Animation</h2><div class="opts" id="o-T2anim"></div>
     <div class="tadir" data-tadir="T2"><span>Moves</span><div class="opts" id="o-T2adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T2font"></div>
+    <h2>Type</h2><div class="opts talign" id="o-T2align"></div><div id="g-ttype2"></div>
+    <div class="trow tcrawl"><button class="btn" id="t-T2crawl" data-tog="T2crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="2">↺ RESTART</button></div>
+    <div class="tcrawlg" data-crawlg="T2"><div id="g-tcrawl2"></div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text2"></div>
     <h2>Colour</h2><div id="tcolbox2"></div>
     <h2>Space</h2><div class="opts" id="o-T2space"></div><p class="hint2 tsph" data-tsph="T2"></p>
@@ -738,7 +745,7 @@ header .r1 .fps{font:500 12px var(--mono)}
       </div></div>
     <div class="card hide" id="cardT3"><div class="ch"><b>Text 3</b><button class="tg" id="t-T3on" data-tog="T3on">OFF</button></div>
       <div class="cb">
-    <textarea class="tin" id="tin3" maxlength="120" placeholder="Type your text…"></textarea>
+    <textarea class="tin" id="tin3" maxlength="900" rows="2" placeholder="Type your text… (Enter = new line)"></textarea>
     <div class="trow"><button class="go" data-tsend="3">SHOW TEXT</button><button class="capsb" data-caps="3">⇪ CAPS</button></div>
     <h2>Effect</h2><div class="opts" id="o-T3mode"></div>
     <h2>Position</h2><div class="tposw"><div class="opts tpos" id="o-T3layout"></div><div class="tmv" id="g-text3pos"></div></div>
@@ -746,6 +753,9 @@ header .r1 .fps{font:500 12px var(--mono)}
     <h2>Animation</h2><div class="opts" id="o-T3anim"></div>
     <div class="tadir" data-tadir="T3"><span>Moves</span><div class="opts" id="o-T3adir"></div></div>
     <h2>Font</h2><div class="opts" id="o-T3font"></div>
+    <h2>Type</h2><div class="opts talign" id="o-T3align"></div><div id="g-ttype3"></div>
+    <div class="trow tcrawl"><button class="btn" id="t-T3crawl" data-tog="T3crawl">✦ STAR WARS CRAWL</button><button class="btn" data-crawlgo="3">↺ RESTART</button></div>
+    <div class="tcrawlg" data-crawlg="T3"><div id="g-tcrawl3"></div></div>
     <h2>Glitter core</h2><div class="glrow" data-glt="text3"></div>
     <h2>Colour</h2><div id="tcolbox3"></div>
     <h2>Space</h2><div class="opts" id="o-T3space"></div><p class="hint2 tsph" data-tsph="T3"></p>
@@ -982,7 +992,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-16i';
+const BUILD = '2026-11-17a';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1755,12 +1765,13 @@ const TOPTS = {
   Textdir: [['h','HORIZONTAL'],['v','VERTICAL'],['up','SIDEWAYS ↑'],['down','SIDEWAYS ↓']],
   Textadir: [['left','← LEFT'],['right','RIGHT →'],['up','↑ UP'],['down','DOWN ↓']],
   Textspace: [['flat','FLAT'],['3d','3D']],
+  Textalign: [['left','⇤ LEFT'],['center','≡ CENTRE'],['right','RIGHT ⇥'],['justify','☰ JUSTIFY']],
   Kstest: [['off','OFF'],['over','GRID OVER'],['grid','GRID ONLY']],
   Projmon: [['1','1'],['2','2'],['3','3'],['4','4']],
   Textfont: [['Bebas Neue','Bebas'],['Impact','Impact'],['Bahnschrift','Bahn'],['Algerian','Deco'],['Bangers','Bangers'],['Permanent Marker','Marker'],['Caveat Brush','Brush'],['Rock Salt','Scrawl'],['Pacifico','Pacifico'],['Shrikhand','Shrikhand'],['Monoton','MONOTON'],['Bungee Shade','SHADE'],['Rubik Glitch','GLITCH'],['Press Start 2P','PIXEL']]};
 TOPTS.Textmotion = [['models','LIKE 3D MODELS'],['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']];
 TOPTS.Textmaxis = [['y','↻ Y'],['x','TUMBLE X'],['z','ROLL Z']];
-[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
+[2,3].forEach(n => ['mode','layout','anim','font','dir','adir','space','motion','maxis','align'].forEach(k => TOPTS['T' + n + k] = TOPTS['Text' + k]));
 MS.forEach(i => { TOPTS['M' + i + 'motion'] = TOPTS.Textmotion; TOPTS['M' + i + 'maxis'] = TOPTS.Textmaxis; });
 MS.forEach(i => { TOPTS['M' + i + 'mode'] = [['flat','FLAT'],['object','3D OBJECT']]; TOPTS['M' + i + 'keycolor'] = [['auto','AUTO'],['green','GREEN'],['blue','BLUE'],['custom','PICKED']]; });
 const TCOL = {white:'#f3efe7', hot:'#ff4d2e', cyan:'#3ef0ff', violet:'#b06bff', lime:'#c6ff3d', gold:'#ffc740'};
@@ -1826,6 +1837,8 @@ function syncText(p){
                        : bh ? 'Behind another layer (see Layers). ' + (['mask','cutout','invert','refract'].includes(p[q + 'mode']) ? 'Mask, Cut-out, Invert and Refract show as plain letters there.' : '') : ''; h.hidden = !h.textContent; } });
   const t = $('#t-Texton'); t.textContent = p.Texton ? 'ON' : 'OFF';
   if (document.activeElement !== $('#tin') && !$('#tin')._dirty) $('#tin').value = p.Textstr || '';
+  [['Text',1],['T2',2],['T3',3]].forEach(([pre, n]) => { const b = $('#t-' + pre + 'crawl'), on = !!p[pre + 'crawl']; if (b) { b.classList.toggle('on', on); b.textContent = on ? '✦ CRAWL ON' : '✦ STAR WARS CRAWL'; }
+    const g = $(`[data-crawlg="${pre}"]`); if (g) g.hidden = !on; const r = $(`[data-crawlgo="${n}"]`); if (r) r.hidden = !on; });
   [2,3].forEach(n => { const b = $('#t-T' + n + 'on'), ti = $('#tin' + n); if (b) { b.textContent = p['T' + n + 'on'] ? 'ON' : 'OFF'; b.classList.toggle('on', !!p['T' + n + 'on']); }
     if (ti && document.activeElement !== ti && !ti._dirty) ti.value = p['T' + n + 'str'] || ''; });
 }
@@ -3239,6 +3252,7 @@ document.addEventListener('click', e => {
     if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); } else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); applyPars({}); } setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); if (d.gtog === '#arch') ARCH = null; renderPads(); buzz(); }
   else if (d.arch) { sheetArch(d.arch); buzz(); }
+  else if (d.crawlgo) { send({t:'crawlgo', n:+d.crawlgo}); toast('Crawl from the top'); buzz(); }
   else if (d.arr) { ARR = !ARR; document.body.classList.toggle('arranging', ARR); renderPads(); toast(ARR ? 'Drag the presets into the order you like' : 'Order saved'); buzz(); }
   else if (d.fxt) { if (FXHOLD && performance.now() - FXHOLD < 700) return; FXT_SEL = d.fxt; applyTarget(); buzz(); }
   else if (d.vwt) { VW_SEL = d.vwt; viewTargets(); buzz(); }
@@ -3405,8 +3419,8 @@ document.addEventListener('keydown', e => { if (e.code !== 'Space' || $('#prep')
 document.addEventListener('keydown', e => { const el = e.target; if (e.key === 'Enter' && el && el.dataset && el.dataset.qtxt) { e.preventDefault(); qtSend(+el.dataset.qtxt); } });
 $('#lockpw').addEventListener('keydown', e => { if (e.key === 'Enter') unlockTry(); });
 $('#tin').addEventListener('input', () => $('#tin')._dirty = true);
-[2,3].forEach(n => { const ti = $('#tin' + n); ti.addEventListener('input', () => ti._dirty = true); ti.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); showTextN(n); } }); });
-$('#tin').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); showText(); } });
+[2,3].forEach(n => { const ti = $('#tin' + n); ti.addEventListener('input', () => ti._dirty = true); ti.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); showTextN(n); } }); });
+$('#tin').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); showText(); } });   // Enter = new line
 uiPrefs(); wake(); connect();
 </script>
 </body>

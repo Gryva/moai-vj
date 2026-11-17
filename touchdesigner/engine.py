@@ -709,10 +709,12 @@ def safetyUpdate(C):
 TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor',
             'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
             'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt',
-            'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev', 'Textname']
+            'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev', 'Textname',
+            'Textalign', 'Textletter', 'Textword', 'Textline', 'Textcrawl', 'Textctilt', 'Textcspeed']
 TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
            'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
-           'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': ''}   # older presets: these
+           'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': '',
+           'Textalign': 'center', 'Textletter': 0.0, 'Textword': 0.0, 'Textline': 1.0, 'Textcrawl': False, 'Textctilt': 0.6, 'Textcspeed': 0.5}   # older presets: these
 TFONTFILES = {'Bangers': 'Bangers-Regular.ttf', 'Permanent Marker': 'PermanentMarker-Regular.ttf', 'Caveat Brush': 'CaveatBrush-Regular.ttf',
               'Monoton': 'Monoton-Regular.ttf', 'Pacifico': 'Pacifico-Regular.ttf', 'Press Start 2P': 'PressStart2P-Regular.ttf',
               'Rubik Glitch': 'RubikGlitch-Regular.ttf', 'Bungee Shade': 'BungeeShade-Regular.ttf', 'Shrikhand': 'Shrikhand-Regular.ttf',
@@ -774,17 +776,32 @@ def textUpdate(C, T, n=1):
     lay, anim, size = tp('Textlayout').eval(), tp('Textanim').eval(), float(tp('Textsize').eval())
     small = lay in TSMALL
     tdir = tp('Textdir').eval()
-    sig = (full, lay, anim, tp('Textfont').eval(), round(size, 3) if small else 0, tdir)
+    ty = _tType(C, n)                                                # TYPE: alignment, letter / word / line spacing, the crawl
+    crawl = ty['crawl']
+    sig = (full, lay, anim, tp('Textfont').eval(), round(size, 3) if (small or crawl) else 0, tdir, ty['align'], ty['letter'], ty['word'], ty['line'], crawl)
     if sig != TX['sig']:
+        if crawl and not (TX['sig'] and TX['sig'][-1]): TX['ct0'] = T          # the crawl starts from the beginning when switched on
         TX['sig'] = sig; TX['t0'] = T; TX['words'] = full.split() or [' ']; TX['wi'] = 0; TX['shown'] = None
         ax, ay, px, py, fpx, fit, wrap = TLAYOUT.get(lay, TLAYOUT['center'])
         if anim == 'scroll': wrap = False
         p = tt.par
         fnt = tp('Textfont').eval(); ff = TFONTFILES.get(fnt, '')
         p.fontfile = (project.folder + '/td/fonts/' + ff) if ff else ''; p.font = fnt if not ff else p.font.eval()
-        p.alignx = ax; p.aligny = ay
-        p.positionx = px; p.positiony = py
+        rw, rh = (CRAWLRES if crawl else (1280, 720))
+        if p.resolutionw.eval() != rw or p.resolutionh.eval() != rh: p.outputresolution = 'custom'; p.resolutionw = rw; p.resolutionh = rh
+        if crawl: ax, ay, px, py, fpx, fit, wrap = 'left', 'top', 0, -rh * 0.02, 64.0 * size, 'nofit', False
+        elif ty['align'] in ('left', 'right', 'center') and not small: ax = ty['align']
+        if ty['align'] == 'justify': wrap = False                    # justified lines are broken here, not by the text box
+        p.alignx = 'left' if ty['align'] == 'justify' and not small else ax; p.aligny = ay
+        p.positionx = (rw * 0.04 if crawl else px); p.positiony = py
         p.fontsizex = fpx * (size if small else 1.0); p.fontautosize = fit; p.wordwrap = wrap
+        fs = float(p.fontsizex.eval())
+        p.trackingx = ty['letter'] * fs * 0.5                        # letter spacing grows with the letters
+        try: lh = float(tt.evalTextSize('Ag')[1])
+        except Exception: lh = fs
+        p.linespacingunit = 'pixels'; p.linespacing = (ty['line'] - 1.0) * lh
+        TX['full'] = _tCompose(tt, full, ty, (rw * 0.92) if crawl else rw * 0.86)
+    full = TX.get('full', full)
     if anim == 'type':
         nch = int((T - TX['t0']) * 14.0 * max(0.1, tp('Textspeed').eval())) % (len(full) + 25)
         txt = full[:min(nch, len(full))] or ' '
@@ -843,7 +860,42 @@ def textUpdate(C, T, n=1):
     pp.vec8valuex, pp.vec8valuey, pp.vec8valuez, pp.vec8valuew = tv[3], tv[4], tv[5], math.radians(tv[6])
     try: pp.vec10valuex, pp.vec10valuey, pp.vec10valuez, pp.vec10valuew = float(tp('Textx').eval()), float(tp('Texty').eval()), TDIRS.get(tdir, 0), TADIRS.get(tp('Textadir').eval(), 0)
     except Exception: pass
+    if pp.vec11name.eval() != 'uK': pp.vec11name = 'uK'
+    if crawl:                                                        # the Star Wars crawl: text on a plane tilted away, gliding up into the distance
+        R_ = CRAWLRES[1] / float(CRAWLRES[0]); tot = R_ + 3.0
+        off = ((T - TX.get('ct0', T)) * ty['cspeed'] * 0.06) % tot
+        pp.vec11valuex, pp.vec11valuey, pp.vec11valuez, pp.vec11valuew = max(0.01, ty['tilt']), off, R_, 0.62
+    else: pp.vec11valuex = 0.0
     return True
+
+CRAWLRES = (960, 1280)                                           # the crawl's text sheet (free licence: max 1280)
+def _tType(C, n):
+    g = lambda k, d: (C.par[tpn(n, k)].eval() if hasattr(C.par, tpn(n, k)) else d)
+    return {'align': str(g('Textalign', 'center')), 'letter': round(float(g('Textletter', 0.0)), 3), 'word': round(float(g('Textword', 0.0)), 2),
+            'line': round(float(g('Textline', 1.0)), 3), 'crawl': bool(g('Textcrawl', False)), 'tilt': float(g('Textctilt', 0.6)), 'cspeed': float(g('Textcspeed', 0.5))}
+def crawlRestart(n=1): TXN[n]['ct0'] = absTime.seconds
+def _tCompose(tt, full, ty, width):
+    """Word spacing (extra spaces) and justified lines (broken to the width and spread to both edges)."""
+    gap = ' ' * (1 + int(round(max(0.0, ty['word']) * 2)))
+    paras = [' '.join(l.split()) if l.strip() else '' for l in full.split('\n')]
+    if ty['align'] != 'justify': return '\n'.join(gap.join(l.split(' ')) if l else '' for l in paras) or ' '
+    try: sw = max(1.0, float(tt.evalTextSize(' ')[0]))
+    except Exception: return '\n'.join(paras) or ' '
+    W = lambda t_: float(tt.evalTextSize(t_)[0])
+    out = []
+    for para in paras:
+        words = para.split(' ') if para else []
+        if not words: out.append(''); continue
+        line = []
+        for w_ in words:
+            if line and W(gap.join(line + [w_])) > width: out.append(_tJust(line, gap, width, W, sw)); line = [w_]
+            else: line.append(w_)
+        out.append(gap.join(line))                                   # the last line of a paragraph stays as it is
+    return '\n'.join(out) or ' '
+def _tJust(line, gap, width, W, sw):
+    if len(line) < 2: return gap.join(line)
+    extra = max(0, int((width - W(gap.join(line))) / sw)); g_ = len(line) - 1
+    return ''.join(w_ + (gap + ' ' * (extra // g_ + (1 if k < extra % g_ else 0)) if k < g_ else '') for k, w_ in enumerate(line))
 
 TINST = {1: False, 2: False, 3: False}
 

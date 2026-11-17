@@ -64,6 +64,10 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Textx', 'Left / right', -1, 1, 0.01, 'textpos'), ('Texty', 'Down / up', -1, 1, 0.01, 'textpos'),
     ('T2x', 'Left / right', -1, 1, 0.01, 'text2pos'), ('T2y', 'Down / up', -1, 1, 0.01, 'text2pos'),
     ('T3x', 'Left / right', -1, 1, 0.01, 'text3pos'), ('T3y', 'Down / up', -1, 1, 0.01, 'text3pos'),
+    *[(pre + k, lab, lo, hi, st, grp + str(n)) for n, pre in ((1, 'Text'), (2, 'T2'), (3, 'T3'))
+      for k, lab, lo, hi, st, grp in (('letter', 'Letter spacing', -0.3, 1.5, 0.01, 'ttype'), ('word', 'Word spacing', 0, 4, 0.5, 'ttype'),
+                                      ('line', 'Line height', 0.5, 3, 0.01, 'ttype'), ('ctilt', 'Crawl tilt', 0.05, 0.92, 0.01, 'tcrawl'),
+                                      ('cspeed', 'Crawl speed', 0, 3, 0.01, 'tcrawl'))],
     ('Textdepth', 'Depth (back / front)', -4, 4, 0.05, 'tobj1'), ('Textoscale', 'Size', 0.2, 3, 0.01, 'tobj1'), ('Textoturn', 'Turn', -180, 180, 1, 'tobj1'), ('Textotilt', 'Tilt', -90, 90, 1, 'tobj1'),
     ('T2depth', 'Depth (back / front)', -4, 4, 0.05, 'tobj2'), ('T2oscale', 'Size', 0.2, 3, 0.01, 'tobj2'), ('T2oturn', 'Turn', -180, 180, 1, 'tobj2'), ('T2otilt', 'Tilt', -90, 90, 1, 'tobj2'),
     ('T3depth', 'Depth (back / front)', -4, 4, 0.05, 'tobj3'), ('T3oscale', 'Size', 0.2, 3, 0.01, 'tobj3'), ('T3oturn', 'Turn', -180, 180, 1, 'tobj3'), ('T3otilt', 'Tilt', -90, 90, 1, 'tobj3'),
@@ -113,8 +117,8 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Opcamera', 'Brightness', 0, 1.5, 0.01, 'opcamera'),
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
-TOGGLES = ['Trreplay'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
+TOGGLES = ['Trreplay', 'Textcrawl', 'T2crawl', 'T3crawl'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -1470,7 +1474,7 @@ def _clean(p, v):
         v = str(v).strip().lower()
         if not re.fullmatch(r'#[0-9a-f]{6}', v): raise ValueError('bad colour')
         return v
-    if p in TEXTMENUS or p in ('Scene', 'Modelstyle', 'Model'): return str(v)[:120]
+    if p in TEXTMENUS or p in ('Scene', 'Modelstyle', 'Model'): return str(v)[:900 if p in ('Textstr', 'T2str', 'T3str') else 120]   # text can be a whole crawl
     return float(v)
 
 def _ensurePars():
@@ -1536,6 +1540,12 @@ def _ensurePars():
         if absTime.frame < 900 and C.par.Autopilot.eval(): C.par.Autopilot = False      # the show always starts with autopilot OFF
         C.par.Autopilot.default = False
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
+        for pre in ('Text', 'T2', 'T3'):                       # TYPE: alignment, spacing, Star Wars crawl
+            pg = C.par[pre + 'size'].page
+            if not hasattr(C.par, pre + 'align'): pp = pg.appendStr(pre + 'align', label=pre + ' align')[0]; pp.default = 'center'; pp.val = 'center'
+            for k, dv in (('letter', 0.0), ('word', 0.0), ('line', 1.0), ('ctilt', 0.6), ('cspeed', 0.5)):
+                if not hasattr(C.par, pre + k): pp = pg.appendFloat(pre + k, label=pre + ' ' + k)[0]; pp.default = dv; pp.val = dv
+            if not hasattr(C.par, pre + 'crawl'): pp = pg.appendToggle(pre + 'crawl', label=pre + ' crawl')[0]; pp.default = False; pp.val = False
         if not hasattr(C.par, 'Trreplay'): pp = C.par.Autopilot.page.appendToggle('Trreplay', label='Transitions replay the old look')[0]; pp.default = False; pp.val = False
         if not hasattr(C.par, 'Transtyle'): pp = C.par.Autopilot.page.appendStr('Transtyle', label='Preset transition style')[0]; pp.default = 'adaptive'; pp.val = 'adaptive'
         for i in range(1, 7):                          # any background colour can be removed (picked on the remote)
@@ -1711,6 +1721,7 @@ def handle(msg, reply):
             ok = E.quickEdit(msg.get('do'), 'all' if msg.get('scope') == 'all' else 'preset', msg.get('item') or {}, msg.get('slot'), int(msg.get('d') or 0))
             _all({'t': 'quick', 'v': E.quickAll()})
             if not ok: reply({'t': 'err', 'msg': 'Could not save the quick control'})
+        elif t == 'crawlgo': E.crawlRestart(int(msg.get('n') or 1))
         elif t == 'song': songCmd(msg, reply)
         elif t == 'bankorder' and isinstance(msg.get('v'), list):
             E.bankOrder(msg['v'][:128]); _all({'t': 'bank', 'bank': E.bankList()})
