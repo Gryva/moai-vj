@@ -391,6 +391,10 @@ def pSet(g, k, p1):
         q = int(round(float(p1))); lo = q % 100000000; hi = q // 100000000
         g.par.vec3valuex = lo // 10000; g.par.vec3valuey = lo % 10000; g.par.vec3valuez = (hi // 10000) * 10000 + ((hi // 100) % 100) * 100 + hi % 100
         return
+    if k == 'speed':                                                   # style*1e7 + direction (0-359 deg)*1e4 + speed*100 + beat boost
+        q = int(round(float(p1))); g.par.vec3valuex = (q // 10000000) % 10; g.par.vec3valuey = math.radians((q // 10000) % 1000)
+        g.par.vec3valuez = ((q // 100) % 100) / 99.0; g.par.vec3valuew = (q % 100) / 99.0
+        return
     if k == 'beat':                                                    # mode*1e4 + amount*100 + fall-back (each 0-99)
         q = int(round(float(p1))); g.par.vec3valuex = (q // 10000) % 10; g.par.vec3valuey = ((q // 100) % 100) / 99.0
         g.par.vec3valuez = 0.05 + (q % 100) / 99.0 * 1.45
@@ -689,6 +693,22 @@ def mediaFit(i=None):
     S['angle'] = 0.0
     CS['cur'] = None; CS['pan'] = 0.0; CS['orb'] = 0.0; CS['joltT'] = CS['jolt'] = 0.0
 
+def _rxyz(rx, ry, rz):
+    a, b, c = (math.radians(v) for v in (rx, ry, rz))
+    X = np.array([[1, 0, 0], [0, math.cos(a), -math.sin(a)], [0, math.sin(a), math.cos(a)]])
+    Y = np.array([[math.cos(b), 0, math.sin(b)], [0, 1, 0], [-math.sin(b), 0, math.cos(b)]])
+    Z = np.array([[math.cos(c), -math.sin(c), 0], [math.sin(c), math.cos(c), 0], [0, 0, 1]])
+    return Z @ Y @ X                                               # TD order xyz: x first, then y, then z
+def _freeSpin(C, g, spin):
+    """FREE spin axis: the object turns around an axis you lean any way (Axis tilt = forward / back, Axis lean = left / right), keeping its own pose."""
+    try: at, al = float(C.par.Axtilt.eval()), float(C.par.Axlean.eval())
+    except Exception: return
+    T_ = _rxyz(at, 0.0, al)
+    M = T_ @ _rxyz(0.0, spin, 0.0) @ T_.T @ _rxyz(g.par.rx.eval(), g.par.ry.eval(), g.par.rz.eval())
+    ry = math.degrees(math.asin(max(-1.0, min(1.0, -M[2, 0]))))
+    if abs(M[2, 0]) < 0.99999: rx = math.degrees(math.atan2(M[2, 1], M[2, 2])); rz = math.degrees(math.atan2(M[1, 0], M[0, 0]))
+    else: rx = math.degrees(math.atan2(-M[1, 2], M[1, 1])); rz = 0.0
+    g.par.rx, g.par.ry, g.par.rz = rx, ry, rz
 def applyModelXform(C, g, s, base_ry):
     style = C.par.Modelstyle.eval()
     k = max(0.0, 1.0 - s)                                   # 0 = fully shown, 1 = fully gone
@@ -1516,7 +1536,7 @@ def _bankTable():
         while t.numRows < BANK_SLOTS + 1: t.appendRow(['', ''])
     return t
 
-GLIDEPOSE = ['Angle', 'Tilt', 'Motionamt', 'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
+GLIDEPOSE = ['Angle', 'Tilt', 'Axtilt', 'Axlean', 'Motionamt', 'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt']
 PG = {}
 def poseGlideStep(C, T):
     for k in list(PG):
@@ -1529,9 +1549,9 @@ def poseGlideStep(C, T):
     if a:
         u = min(1.0, (T - a['t0']) / max(0.01, a['dur'])); S['angoffv'] = a['v'] * (1.0 - u * u * (3.0 - 2.0 * u))
         if u >= 1.0: S['angoff'] = None; S['angoffv'] = 0.0
-OBJKEYS = ['Angle', 'Tilt', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat',
+OBJKEYS = ['Angle', 'Tilt', 'Axtilt', 'Axlean', 'Speed', 'Spinboost', 'Autospin', 'Spinrev', 'Spinaxis', 'Motion', 'Motionamt', 'Animspeed', 'Animbeat',
            'Modelx', 'Modely', 'Modelz', 'Modelscale', 'Modelturn', 'Modeltilt', 'Beatpulse', 'Pulsedecay']
-MODEL3D = {'Modelx': 0.0, 'Modely': 0.0, 'Modelz': 0.0, 'Modelscale': 1.0, 'Modelturn': 0.0, 'Modeltilt': 0.0, 'Beatpulse': 0.0, 'Pulsedecay': 0.35}
+MODEL3D = {'Axtilt': 0.0, 'Axlean': 0.0, 'Modelx': 0.0, 'Modely': 0.0, 'Modelz': 0.0, 'Modelscale': 1.0, 'Modelturn': 0.0, 'Modeltilt': 0.0, 'Beatpulse': 0.0, 'Pulsedecay': 0.35}
 
 def snapshot():
     C = op('/project1/CONTROLS')
@@ -2832,6 +2852,7 @@ def _models(C, dt, T, react, grid):
             base = 0.0 if (grid and g.name == 'moai_geo') else C.par.Angle.eval()
             applyModelXform(C, g, ms, base + (spin if ax == 'y' else 0.0) + o_ry)
             g.par.rx = C.par.Tilt.eval() + o_rx + (spin if ax == 'x' else 0.0); g.par.rz = o_rz + (spin if ax == 'z' else 0.0)
+            if ax == 'free' and not (grid and g.name == 'moai_geo'): _freeSpin(C, g, spin)
             if o_ty: g.par.ty = g.par.ty.eval() + o_ty
         x, y, z, sc, tu, ti = obj3d(C, g.name)                     # each 3D layer's own place in the scene (VIEW tab)
         g.par.tx = x; g.par.tz = z

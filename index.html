@@ -992,7 +992,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17a';
+const BUILD = '2026-11-17b';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1755,7 +1755,7 @@ function build(){
 }
 const TOPTS = {
   Modelblend: BLM, Drawblend: BLM,
-  Spinaxis: [['y','SPIN ↻ Y'],['x','TUMBLE X'],['z','ROLL Z']],
+  Spinaxis: [['y','SPIN ↻ Y'],['x','TUMBLE X'],['z','ROLL Z'],['free','FREE ✥']],
   Camsrc: [['off','OFF'],['cam','NORMAL'],['screen','BLEND'],['mask','MASK']],
   Camfit: [['fill','FILL'],['fit','WHOLE IMAGE']],
   Motion: [['spin','SPIN'],['bob','BOB'],['sway','SWAY'],['float','FLOAT'],['still','STILL']],
@@ -2429,6 +2429,7 @@ document.getElementById('recpill').addEventListener('click', () => { $('#stat2')
 setInterval(() => REC.on && recTick(), 500);
 const PK = {
   beat:   [['md', 1e4, 10], ['amt', 100, 100], ['dec', 1, 100]],
+  speed:  [['st', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
   dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]],
@@ -2763,6 +2764,10 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
       + pkS(l, 'w', 'Width', c.w) + pkS(l, 'h', 'Height', c.h) + pkS(l, 'sf', 'Soft edge', c.sf) + segUI('Show', 'data-pkf="inv" data-v', ['INSIDE','OUTSIDE'], c.inv); }
   if (k === 'rotate') h += segUI('Direction', 'data-pkf="dir" data-v', ['↻ CLOCKWISE','↺ ANTICLOCKWISE'], c.dir) + pkS(l, 'sp', 'Speed', c.sp) + segUI('Empty corners', 'data-pkf="fill" data-v', ['LEAVE EMPTY','FILL (MIRROR)','ZOOM TO COVER'], c.fill);
   if (k === 'glitter') h += `<div class="sub"><span>Look</span></div>` + glitSw('data-pkf="sty" data-v', c.sty) + pkS(l, 'amt', 'Glitter', c.amt) + pkS(l, 'sp', 'Sparkle speed', c.sp) + segUI('Sparkles', 'data-pkf="beat" data-v', ['STEADY','FLASH WITH THE BEAT'], c.beat);
+  if (k === 'speed') h += segUI('Look', 'data-pkf="st" data-v', ['LINES','BLUR','BOTH'], c.st)
+    + segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
+    + `<div class="sub"><span>Direction (°)</span><input type="range" data-pk="ang" min="0" max="359" step="1" value="${c.ang}" style="--acc:${GC[l.g]}"></div>`
+    + pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'bb', 'Faster on the beat', c.bb);
   if (k === 'beat') h += segUI('On every beat', 'data-pkf="md" data-v', ['GROW','SHRINK','FLASH','BLINK','SHAKE','SPIN'], c.md) + pkS(l, 'amt', 'How much', c.amt) + pkS(l, 'dec', 'Falls back (short → long)', c.dec);
   if (k === 'dvd') h += pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'sz', 'Size', c.sz) + pkS(l, 'an', 'Angle', c.an) + segUI('On each bounce', 'data-pkf="cc" data-v', ['SAME COLOUR','NEW COLOUR'], c.cc);
   return h + '</div>'; }

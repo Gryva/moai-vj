@@ -81,6 +81,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Speed', 'Spin speed', -180, 180, 1, 'motion'),
     ('Spinboost', 'Bass spin boost', 0, 300, 1, 'motion'),
     ('Tilt', 'Model tilt', -60, 60, 1, 'motion'),
+    ('Axtilt', 'Spin axis: forward / back (FREE)', -90, 90, 1, 'motion'), ('Axlean', 'Spin axis: left / right (FREE)', -90, 90, 1, 'motion'),
     ('Angle', 'Model angle', -180, 180, 1, 'motion'),
     ('Distance', 'Distance', 0.5, 15, 0.05, 'camera'),
     ('Elevation', 'Elevation', -85, 85, 1, 'camera'),
@@ -1540,6 +1541,10 @@ def _ensurePars():
         if absTime.frame < 900 and C.par.Autopilot.eval(): C.par.Autopilot = False      # the show always starts with autopilot OFF
         C.par.Autopilot.default = False
         if not hasattr(C.par, 'Aplost'): C.par.Autopilot.page.appendToggle('Aplost', label='Remote lost -> autopilot')
+        sa = C.par.Spinaxis                                    # FREE spin: any axis
+        if 'free' not in sa.menuNames: sa.menuNames = list(sa.menuNames) + ['free']; sa.menuLabels = list(sa.menuLabels) + ['Free']
+        for n_ in ('Axtilt', 'Axlean'):
+            if not hasattr(C.par, n_): pp = C.par.Tilt.page.appendFloat(n_, label=n_)[0]; pp.default = 0.0; pp.val = 0.0
         for pre in ('Text', 'T2', 'T3'):                       # TYPE: alignment, spacing, Star Wars crawl
             pg = C.par[pre + 'size'].page
             if not hasattr(C.par, pre + 'align'): pp = pg.appendStr(pre + 'align', label=pre + ' align')[0]; pp.default = 'center'; pp.val = 'center'
