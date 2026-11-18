@@ -1080,7 +1080,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-17g';
+const BUILD = '2026-11-18a';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1672,7 +1672,7 @@ function renderMedia(){
     const L = all.filter(x => (x.kind === 'video') === vid);
     if (!vid) { el.innerHTML = L.map(tile).join('') || `<p class="hint2">No pictures yet · ＋ ADD</p>`; return; }
     const B = binOf(i), fo = {}, loose = [];
-    L.forEach(x => { const p = String(x.id).split('/'); if (p[0] === 'videos' && p.length > 2) (fo[p[1]] = fo[p[1]] || []).push(x); else loose.push(x); });
+    L.forEach(x => { const p = String(x.id).split('/'), f = p[0] === 'videos' ? (p.length > 2 ? p[1] : '') : (p.length > 1 && p[0] !== 'uploads' ? p[0] : ''); if (f) (fo[f] = fo[f] || []).push(x); else loose.push(x); });   // any sub-folder (videos/x/ or media/x/) is a folder tile
     const dl = PREPJ.filter(j => j.url && j.state === 'download').map(j => `<div class="mtile mdl"><div class="clip"><i class="mdlbar" style="width:${j.pct || 0}%"></i><span>⬇ ${j.pct || 0}%</span></div><b class="mname">${esc(j.title)}</b><i class="mdate">downloading</i></div>`).join('');
     const linkT = `<div class="mtile"><button class="clip mlinkt" data-mlink="${i}"><span>＋</span><b>LINK</b></button><b class="mname">Get a video</b><i class="mdate">paste a link</i></div>`;
     if (B.f && fo[B.f]) {                       // inside one folder: the full video first, then its clips in order
