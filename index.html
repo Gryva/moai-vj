@@ -442,6 +442,13 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.go3d{width:100%;padding:12px;border-radius:var(--r1);border:1px solid var(--ink);background:var(--raise);color:var(--ink);font:800 12px var(--sans);letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:3px}
+.go3d small{font:600 10px var(--sans);color:var(--mute);letter-spacing:.06em}.mclone.is3d .go3d{display:none}.mclone:not(.is3d) .m3d{display:none}
+.mixbox[hidden]{display:none}.mixrow,.mixpick{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.mixpick[hidden]{display:none}
+.mixc{position:relative;width:56px;height:56px;border-radius:var(--r1);border:1px solid var(--line);background:#0006;display:grid;place-items:center;overflow:hidden;padding:0;color:var(--ink)}
+.mixc img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.mixc em{position:absolute;left:3px;top:2px;font:800 10px var(--sans);font-style:normal;text-shadow:0 0 3px #000}
+.mixc i{position:absolute;right:3px;top:1px;font-style:normal;font-size:13px;opacity:.8}.mixc.a{border-color:var(--ink)}.mixc.add{font-size:22px;border-style:dashed;color:var(--mute)}.mixc.on{outline:2px solid var(--ink)}
+.mixpat{margin-bottom:8px;flex-wrap:wrap}.cax{margin-bottom:6px}
 .lays{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0 0 8px}.lays button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;border-radius:var(--r1);border:1px solid var(--line);background:var(--panel);color:var(--mute)}
 .lays svg{width:26px;height:26px;fill:currentColor}.lays em{font:700 9px var(--sans);font-style:normal;letter-spacing:.06em}.lays button.on{border-color:var(--ink);color:var(--ink);background:var(--raise)}
 .mclone[hidden]{display:none}
@@ -1080,7 +1087,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-18a';
+const BUILD = '2026-11-18b';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1392,10 +1399,17 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="ksrow" data-mspin="M${i}"><span>Axis</span><div class="opts" id="o-M${i}maxis"></div><button class="btn mrev" id="t-M${i}mrev" data-tog="M${i}mrev">⟲ REV</button></div>
           <div id="g-m${i}mot"></div>
           <p class="hint2">Place it (move, depth, size, turn) in VIEW → tap this layer.</p></div>
-        <div class="mmot mclone" id="box-m${i}cl"><h4>Thickness</h4><div id="g-m${i}thick"></div>
+        <div class="mmot mclone" id="box-m${i}cl">
+          <button class="go3d" data-go3d="${i}">⬢ MAKE IT 3D <small>thickness · clones · spin</small></button>
+          <div class="m3d">
+          <h4>Thickness</h4><div id="g-m${i}thick"></div>
+          <h4>Spin each one</h4><div class="seg sm cax">${[['y','TURN'],['x','FLIP'],['z','ROLL'],['tumble','TUMBLE']].map(([v, l]) => `<button data-tp="M${i}caxis" data-tv="${v}">${l}</button>`).join('')}</div><div id="g-m${i}cspin"></div>
           <h4>Clones</h4><div class="lays">${LAYS.map(([v, l, d]) => `<button data-tp="M${i}lay" data-tv="${v}"><svg viewBox="0 0 24 24">${d}</svg><em>${l}</em></button>`).join('')}</div>
           <div id="g-m${i}clone"></div>
-          <p class="hint2">All copies play the same GIF in step. For different GIFs at once, put each on its own layer.</p></div>
+          <div class="mixbox"><h4>Mix GIFs in the pattern</h4><div class="mixrow" data-mixrow="${i}"></div>
+            <div class="seg sm mixpat">${[['order','IN ORDER'],['rows','ROWS'],['cols','COLUMNS'],['checker','CHECKER'],['rings','RINGS'],['random','RANDOM']].map(([v, l]) => `<button data-tp="M${i}pat" data-tv="${v}">${l}</button>`).join('')}</div>
+            <div class="mixpick" data-mixpick="${i}" hidden></div></div>
+          </div></div>
       </div></div>`; }).join('');
   $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div><div class="blrow" data-op="m${i}"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="M${i}blend" data-tv="${v}" class="${(S && S.pars && S.pars['M' + i + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
@@ -1425,6 +1439,16 @@ function rcUI(i, p){                         // rectangle card: live swatch, fil
   const vis = {[m + 'rang']: ['linear','conic','stripes'].includes(f), [m + 'rstripes']: f === 'stripes', [m + 'rflow']: two};
   for (const k in vis) { const s = $('#s-' + k); if (s && s.closest('.ctl')) s.closest('.ctl').hidden = !vis[k]; }
 }
+function mixFiles(i, p){ const m = 'M' + i; return [p[m + 'file'], p[m + 'file2'], p[m + 'file3'], p[m + 'file4']]; }
+function mixUI(i, p){                        // the GIFs sharing this layout: A is the layer's own file, B-D come from the same folder
+  const row = $(`[data-mixrow="${i}"]`); if (!row) return; const F = mixFiles(i, p), th = id => { const x = (S.media || []).find(q => q.id === id); return x && x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''; };
+  row.innerHTML = F.map((f, k) => k === 0 ? `<div class="mixc a">${th(f)}<em>A</em></div>`
+    : f ? `<button class="mixc" data-mixdel="${i}|${k + 1}" title="Remove">${th(f)}<em>${'ABCD'[k]}</em><i>×</i></button>` : '').join('')
+    + (F.slice(1).some(f => !f) ? `<button class="mixc add" data-mixadd="${i}">＋</button>` : '');
+  const pk = $(`[data-mixpick="${i}"]`);
+  if (!pk.hidden) { const dir = String(F[0] || '').split('/').slice(0, -1).join('/'), L = (S.media || []).filter(x => x.kind === 'video' && x.id !== F[0] && String(x.id).split('/').slice(0, -1).join('/') === dir);
+    pk.innerHTML = (L.length ? L : (S.media || []).filter(x => /\.gif$/i.test(x.id))).map(x => `<button class="mixc${F.includes(x.id) ? ' on' : ''}" data-mixpickf="${i}|${esc(x.id)}">${th(x.id)}</button>`).join('') || '<p class="hint2">No other GIFs in this folder.</p>'; }
+}
 function rcBind(){ $$('[data-rcop]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.rcop;
   bindSlider(el, 'rcop' + i, v => { S.pars['M' + i + 'alpha'] = v; send({t:'set', p:'M' + i + 'alpha', v}); }); }); }
 function mzBind(){ rcBind(); $$('[data-mzoom]').forEach(el => { if (el._b) return; el._b = 1; const i = +el.dataset.mzoom;
@@ -1446,9 +1470,11 @@ function mediaCardsUI(p){
       mCropUI(i); mTimeUI(i); }
     mTabsUI(i);
     $('#box-m' + i + 'obj').hidden = p[m + 'mode'] !== 'object';
-    { const cb = $('#box-m' + i + 'cl'); if (cb) { cb.hidden = p[m + 'mode'] !== 'object'; const lay = p[m + 'lay'] || 'single';
-      cb.querySelectorAll('[data-tp="M' + i + 'lay"]').forEach(b => b.classList.toggle('on', b.dataset.tv === lay));
-      cb.querySelectorAll('#g-m' + i + 'clone .ctl').forEach(c => c.hidden = lay === 'single'); } }
+    { const cb = $('#box-m' + i + 'cl'); if (cb) { const kd = p[m + 'kind'] || 'video', ob = p[m + 'mode'] === 'object'; cb.hidden = !['video','image'].includes(kd) || !p[m + 'file'];
+      cb.classList.toggle('is3d', ob); const lay = p[m + 'lay'] || 'single';
+      for (const [k, d] of [['lay', 'single'], ['caxis', 'y'], ['pat', 'order']]) cb.querySelectorAll(`[data-tp="M${i}${k}"]`).forEach(b => b.classList.toggle('on', b.dataset.tv === (p[m + k] || d)));
+      cb.querySelectorAll('#g-m' + i + 'clone .ctl').forEach(c => c.hidden = lay === 'single');
+      cb.querySelector('.mixbox').hidden = lay === 'single'; mixUI(i, p); } }
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
     $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
@@ -3387,6 +3413,14 @@ document.addEventListener('click', e => {
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.go3d) { const m = 'M' + d.go3d; S.pars[m + 'mode'] = 'object'; send({t:'set', p:m + 'mode', v:'object'});
+    if (!(+S.pars[m + 'thick'] > 0)) { S.pars[m + 'thick'] = 0.35; send({t:'set', p:m + 'thick', v:0.35}); } mediaCardsUI(S.pars); buzz(); return; }
+  if (d.mixadd) { const pk = $(`[data-mixpick="${d.mixadd}"]`); pk.hidden = !pk.hidden; mixUI(+d.mixadd, S.pars); buzz(); return; }
+  if (d.mixdel) { const [i, k] = d.mixdel.split('|'), pn = 'M' + i + 'file' + k; S.pars[pn] = ''; send({t:'set', p:pn, v:''}); mixUI(+i, S.pars); buzz(); return; }
+  if (d.mixpickf) { const j = d.mixpickf.indexOf('|'), i = +d.mixpickf.slice(0, j), f = d.mixpickf.slice(j + 1), F = mixFiles(i, S.pars), at = F.indexOf(f);
+    if (at > 0) { S.pars['M' + i + 'file' + (at + 1)] = ''; send({t:'set', p:'M' + i + 'file' + (at + 1), v:''}); }
+    else { const k = F.findIndex((x, n) => n > 0 && !x); if (k < 0) { toast('Up to 4 GIFs in one pattern'); return; } S.pars['M' + i + 'file' + (k + 1)] = f; send({t:'set', p:'M' + i + 'file' + (k + 1), v:f}); }
+    mixUI(i, S.pars); buzz(); return; }
   if (d.rcsw2) { const pn = 'M' + d.rcsw2 + 'rcol2'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); hsvFrom('rb:' + d.rcsw2); mediaCardsUI(S.pars); buzz(); return; }
   if (d.rcfill) { const pn = 'M' + d.rcfill + 'rfill'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); mediaCardsUI(S.pars); buzz(); return; }
   if (d.rcswap) { const m = 'M' + d.rcswap, a = S.pars[m + 'rcol'] || '#000000', b = S.pars[m + 'rcol2'] || '#ff3da8'; S.pars[m + 'rcol'] = b; S.pars[m + 'rcol2'] = a;

@@ -58,19 +58,34 @@ def onCook(scriptOp):
     ext = max([max(abs(x), abs(y)) for x, y, z in pts] + [0.0]) * 2.0 + 2.6
     fit = min(1.0, 4.0 / ext)                                       # more copies = smaller copies: the layout stays about screen size
     pts = [(x * fit, y * fit, z * fit) for x, y, z in pts]
-    ch = {k: [] for k in ('tx', 'ty', 'tz', 'rx', 'ry', 'rz', 's', 'cr', 'cg', 'cb')}
+    ch = {k: [] for k in ('tx', 'ty', 'tz', 'rx', 'ry', 'rz', 's', 'cr', 'cg', 'cb', 'ti')}
+    nt = max(1, int(S.get('mitex%d' % i, 1)))                       # how many GIFs share this layout (the engine sets this)
+    pat = str(g('pat', 'order')); rnd = random.Random(11)
+    cs = float(g('cspin', 0.0)); ax = str(g('caxis', 'y')); stag = float(g('cstag', 0.5))
     for k, (x, y, z) in enumerate(pts):
+        col, row = int(round(x / max(sp * fit, 1e-4))), int(round(y / max(sp * fit, 1e-4)))
+        ring = int(round(math.hypot(x, y) / max(sp * fit, 1e-4)))
+        ti = {'rows': row, 'cols': col, 'checker': col + row, 'rings': ring, 'random': rnd.randrange(nt)}.get(pat, k) % nt   # which GIF this copy shows
         x, y = x * ca - y * sa, x * sa + y * ca
         ph = k * 0.7
         y += math.sin(T * 2.2 + ph) * wave * 0.35 * sp * fit           # copies float up and down, each a little later
         z += math.cos(T * 1.7 + ph) * wave * 0.25 * sp * fit
         s = fit * (1.0 + kick * 0.15 * (1.0 if lay == 'single' else math.cos(ph)))
-        ry = turn * math.sin(T * 1.3 + ph) * 35.0 if lay != 'wall' else 0.0     # copies rock left / right
+        rx = rz = 0.0; ry = turn * math.sin(T * 1.3 + ph) * 35.0 if lay != 'wall' else 0.0     # copies rock left / right
+        a_ = T * cs + k * stag * 137.5                                 # each copy spins around itself (stagger = not all in step)
+        if ax == 'x': rx += a_
+        elif ax == 'z': rz += a_
+        elif ax == 'tumble': rx += a_ * 0.61; ry += a_; rz += a_ * 0.37
+        else: ry += a_
+        X, Y, Z = (math.radians(v) for v in (rx, ry, rz))
         for j in range(ns):
             f = 0.0 if ns == 1 else j / (ns - 1.0)                   # 0 = front face, 1 = back face
-            r_ = math.radians(ry); dz = -f * depth * fit                 # the slice offset turns with the copy
-            ch['tx'].append(x + dz * math.sin(r_)); ch['ty'].append(y); ch['tz'].append(z + dz * math.cos(r_))
-            ch['rx'].append(0.0); ch['ry'].append(ry); ch['rz'].append(0.0); ch['s'].append(s)
+            ox, oy, oz = 0.0, 0.0, -f * depth * fit                    # the slice offset turns with the copy (x, then y, then z)
+            oy, oz = oy * math.cos(X) - oz * math.sin(X), oy * math.sin(X) + oz * math.cos(X)
+            ox, oz = ox * math.cos(Y) + oz * math.sin(Y), -ox * math.sin(Y) + oz * math.cos(Y)
+            ox, oy = ox * math.cos(Z) - oy * math.sin(Z), ox * math.sin(Z) + oy * math.cos(Z)
+            ch['tx'].append(x + ox); ch['ty'].append(y + oy); ch['tz'].append(z + oz)
+            ch['rx'].append(rx); ch['ry'].append(ry); ch['rz'].append(rz); ch['s'].append(s); ch['ti'].append(ti)
             c = 1.0 if (j == 0 or j == ns - 1) else 1.0 - shade * 0.75   # faces bright, the sides darker
             ch['cr'].append(c); ch['cg'].append(c); ch['cb'].append(c)
     scriptOp.clear(); scriptOp.numSamples = len(ch['tx'])

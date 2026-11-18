@@ -520,16 +520,40 @@ def _cardShape(geo, tex):
     if abs(card.par.sizex.eval() - sx) > 1e-3 or abs(card.par.sizey.eval() - sy) > 1e-3:
         card.par.sizex = sx; card.par.sizey = sy
 
+def _cloneTex(C, i, g):
+    """Up to 3 more GIFs share this layer's clone layout: each gets a movie TOP (mx<n>_<k>) and the copies pick one by the pattern."""
+    R = op('/project1/remote_cb').module; L = ['/project1/mk%d' % i]
+    for k in (2, 3, 4):
+        f = str(mp(C, i, 'file%d' % k).eval()) if hasattr(C.par, 'M%dfile%d' % (i, k)) else ''
+        t = op('/project1/mx%d_%d' % (i, k))
+        if not f:
+            if t is not None and t.par.play.eval(): t.par.play = False          # parked, costs nothing
+            continue
+        if t is None:
+            t = op('/project1').create(moviefileinTOP, 'mx%d_%d' % (i, k)); src = op('/project1/mk%d' % i)
+            t.nodeX = src.nodeX; t.nodeY = src.nodeY - 150 * k
+        full = R.mediaFull(f)
+        if t.par.file.eval() != full: t.par.file = full
+        if not t.par.play.eval(): t.par.play = True
+        L.append(t.path)
+    want = ' '.join(L) if len(L) > 1 else ''
+    if g.par.instancetexs.eval() != want:
+        g.par.instancetexs = want; g.par.instancetexindexop = op('/project1/mi%d' % i); g.par.instancetexindex = 'ti'
+    S['mitex%d' % i] = len(L)
+    return len(L)
+
 def _cloneUpdate(C, i, g):
-    """GIF / picture in 3D: thickness (stacked slices) and clone layouts, drawn as instances of the one card (mi<n> makes the list)."""
+    """GIF / picture in 3D: thickness (stacked slices), clone layouts, spin and mixed GIFs, drawn as instances of the one card (mi<n> makes the list)."""
     mi = op('/project1/mi%d' % i)
     if mi is None or not hasattr(C.par, 'M%dlay' % i): return
     lay = str(mp(C, i, 'lay').eval()); th = float(mp(C, i, 'thick').eval())
-    need = lay != 'single' or th > 0.005
+    cs = float(mp(C, i, 'cspin').eval()) if hasattr(C.par, 'M%dcspin' % i) else 0.0
+    need = lay != 'single' or th > 0.005 or abs(cs) > 1e-4
     if bool(g.par.instancing.eval()) != need: g.par.instancing = need
     if not need: return
-    sig = (lay, th, float(mp(C, i, 'edge').eval()), int(mp(C, i, 'cnt').eval()), float(mp(C, i, 'lsp').eval()))
-    anim = lay != 'single' or any(abs(float(mp(C, i, k).eval())) > 1e-4 for k in ('lspin', 'lwave', 'lturn'))
+    nt = _cloneTex(C, i, g)
+    sig = (lay, th, float(mp(C, i, 'edge').eval()), int(mp(C, i, 'cnt').eval()), float(mp(C, i, 'lsp').eval()), nt, str(mp(C, i, 'pat').eval()) if hasattr(C.par, 'M%dpat' % i) else '')
+    anim = lay != 'single' or abs(cs) > 1e-4 or any(abs(float(mp(C, i, k).eval())) > 1e-4 for k in ('lspin', 'lwave', 'lturn'))
     if anim or sig != S.get('misig%d' % i): mi.cook(force=True); S['misig%d' % i] = sig
 
 def objUpdate(C):
@@ -1662,7 +1686,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cues', 'cueon', 'mirror', 'flip']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()
