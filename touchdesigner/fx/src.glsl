@@ -16,6 +16,7 @@ uniform vec4 uMF1; uniform vec4 uMF2; uniform vec4 uMF3; uniform vec4 uMF4; unif
 uniform vec4 uAL1; uniform vec4 uAL2;                   // opacity: media 1-4 | media 5, 6, 3D models, drawing
 uniform vec4 uBL1; uniform vec4 uBL2;                   // blend mode, same order: 0 normal 1 add 2 screen 3 multiply 4 overlay 5 difference 6 lighten 7 darken
 uniform vec4 uCT1; uniform vec4 uCT2;                   // contrast, same order (1 = as it is)
+uniform vec4 uMW1; uniform vec4 uMW2;                   // media layers 1-6: 1 = wrap round (SCROLL / TILE animation repeats the picture)
 uniform vec4 uTX; uniform vec4 uTS;                     // text layers 1-3 drawn inside the stack (behind something, or in 3D): on, effect chain
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -45,7 +46,9 @@ vec4 tin(int i, vec2 p){
   if (i == 5) return texture(sTD2DInputs[5], p); if (i == 6) return texture(sTD2DInputs[6], p);
   if (i == 7) return texture(sTD2DInputs[7], p); return texture(sTD2DInputs[8], p);
 }
-vec4 fitTex(int i, vec2 uv, bool mir, bool whole){       // .rgb colour, .a = alpha (keyed alpha x inside the picture)
+vec4 fitTexW(int i, vec2 uv, bool mir, bool whole, bool wrap);
+vec4 fitTex(int i, vec2 uv, bool mir, bool whole){ return fitTexW(i, uv, mir, whole, false); }
+vec4 fitTexW(int i, vec2 uv, bool mir, bool whole, bool wrap){       // .rgb colour, .a = alpha (keyed alpha x inside the picture); wrap = repeat it
   vec2 r0 = uTD2DInfos[0].res.zw, r1 = uTD2DInfos[i].res.zw;
   float a0 = r0.x / r0.y, a1 = r1.x / r1.y;
   bool fit = uP.y > 1.5 || whole;                        // whole: the full picture fits (bars), else it fills the screen (crops)
@@ -54,7 +57,8 @@ vec4 fitTex(int i, vec2 uv, bool mir, bool whole){       // .rgb colour, .a = al
   else     { if (a1 > a0) q.x *= a0 / a1; else q.y *= a1 / a0; }
   if (mir) q.x = -q.x;
   vec2 p = q + 0.5;
-  float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0)
+  if (wrap) p = fract(p);
+  float inside = wrap ? 1.0 : step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0)
                * step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
   vec4 t = tin(i, p);
   return vec4(t.rgb, (i == 1 ? 1.0 : t.a) * inside);
@@ -67,8 +71,10 @@ vec4 layerPM(int id, vec2 uv){                 // one layer on its own, premulti
   if (id == 5) { vec2 p = frame(uv, uF5); float ins = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
                  vec3 d = clamp(texture(sTD2DInputs[2], clamp(p, 0.0, 1.0)).rgb * uQ.x, 0.0, 1.0) * ins; return vec4(d, max(d.r, max(d.g, d.b))); }
   if (id >= 11 && id <= 16) { int j = id - 11; float k = clamp(pick4(uMA1, uMA2, j), 0.0, 1.0); if (k < 0.002) return vec4(0.0);
-                 if (pick4(uMM1, uMM2, j) > 0.5) return tin(3 + j, uv) * k;
-                 vec4 c = fitTex(3 + j, frame(uv, mframe(j)), false, mframe(j).x < 0.0); float a = c.a * k; return vec4(c.rgb * a, a); }
+                 bool wr = pick4(uMW1, uMW2, j) > 0.5; vec2 fp = frame(uv, mframe(j));
+                 if (pick4(uMM1, uMM2, j) > 0.5) { if (wr) fp = fract(fp);           // 3D object: its render moves as a picture (framing = the animation only)
+                   float ins = wr ? 1.0 : step(0.0, fp.x) * step(fp.x, 1.0) * step(0.0, fp.y) * step(fp.y, 1.0); return tin(3 + j, fp) * k * ins; }
+                 vec4 c = fitTexW(3 + j, fp, false, mframe(j).x < 0.0, wr); float a = c.a * k; return vec4(c.rgb * a, a); }
   if (id >= 21 && id <= 23) { int j = id - 21; float k = j == 0 ? uTX.x : j == 1 ? uTX.y : uTX.z; if (k < 0.5) return vec4(0.0);
                  return j == 0 ? texture(sTD2DInputs[13], uv) : j == 1 ? texture(sTD2DInputs[14], uv) : texture(sTD2DInputs[15], uv); }
   return vec4(0.0);

@@ -1079,6 +1079,47 @@ def fxBeat(tgt, k, on):
     else: BEATFX.discard(key)
     S['layers'] = None; SLOTSIG.clear()                          # re-apply the plain amounts
     S['dirty'] = True
+# ------------------------------------------------------------------ layer animation (the text-style moves, for picture / video / GIF / noise / rectangle layers)
+MANIMS = ('static', 'pulse', 'breathe', 'wave', 'scroll', 'tile', 'bounce', 'shake', 'sway', 'spin')
+MA = {j: [1.0, 0.0, 0.0, 0.0, 0.0] for j in range(1, 7)}            # zoom factor, x, y, turn (deg), wrap (0/1)
+MAOFF = {j: [0.0, 0.0, None] for j in range(1, 7)}
+ADIRV = {'left': (-1.0, 0.0), 'right': (1.0, 0.0), 'up': (0.0, 1.0), 'down': (0.0, -1.0)}
+def mediaAnim(T):
+    C = op('/project1/CONTROLS'); pz = float(S.get('pulse', 0.0)); kk = float(S.get('kick', 0.0))
+    for j in range(1, 7):
+        if not hasattr(C.par, 'M%danim' % j): continue
+        an = str(C.par['M%danim' % j].eval()); m = MA[j]
+        if an == 'static' or not C.par['M%don' % j].eval():
+            m[:] = [1.0, 0.0, 0.0, 0.0, 0.0]; MAOFF[j][2] = None; continue
+        sp = float(C.par['M%daspd' % j].eval()); am = float(C.par['M%daamt' % j].eval())
+        dx, dy = ADIRV.get(str(C.par['M%dadir' % j].eval()), (-1.0, 0.0))
+        z, x, y, r, w = 1.0, 0.0, 0.0, 0.0, 0.0
+        o = MAOFF[j]; dt = 0.0 if o[2] is None else max(0.0, min(0.1, T - o[2])); o[2] = T
+        if an == 'pulse': z = 1.0 + am * 0.3 * pz
+        elif an == 'breathe': z = 1.0 + am * 0.15 * math.sin(T * sp * 1.3)
+        elif an == 'wave':
+            s_ = math.sin(T * sp * 2.2) * am * 0.25; x, y = (0.0, s_) if dy == 0 else (s_, 0.0)
+        elif an in ('scroll', 'tile'):
+            w = 1.0; o[0] = (o[0] + dx * sp * 0.5 * dt) % 1000.0; o[1] = (o[1] + dy * sp * 0.5 * dt) % 1000.0; x, y = o[0], o[1]
+            if an == 'tile': z = 1.0 / max(1.0, float(C.par['M%datile' % j].eval()))
+        elif an == 'bounce':
+            b_ = abs(math.sin(T * sp * 2.6)) * am * 0.4; x, y = (dx * b_, dy * b_) if (dx or dy) else (0.0, b_)
+        elif an == 'shake':
+            x = (math.sin(T * 37.0 + j) + math.sin(T * 23.0)) * am * 0.012 * (1.0 + 3.0 * kk); y = (math.cos(T * 31.0 + j) + math.sin(T * 19.0)) * am * 0.012 * (1.0 + 3.0 * kk)
+        elif an == 'sway': r = math.sin(T * sp * 1.6) * am * 18.0
+        elif an == 'spin': r = (T * sp * 45.0) % 360.0
+        m[:] = [z, x, y, r, w]
+
+def mf(j, a):
+    """The framing uniform of media layer j (fx_src uMF): your VIEW framing (flat only) with the animation on top."""
+    C = op('/project1/CONTROLS'); ob = str(C.par['M%dmode' % j].eval()) == 'object'; m = MA[j]
+    if a == 0:
+        z = 1.0 if ob else float(C.par['M%dfzoom' % j].eval()) * (-1.0 if C.par['M%dfit' % j].eval() else 1.0)
+        return z * m[0]
+    if a == 1: return (0.0 if ob else float(C.par['M%dfx' % j].eval())) + m[1]
+    if a == 2: return (0.0 if ob else float(C.par['M%dfy' % j].eval())) + m[2]
+    return (0.0 if ob else float(C.par['M%dfrot' % j].eval())) + m[3]
+
 SCROLLOFF = {}
 def _scrollTick(p, who, T, env):
     """SCROLL: the offset is added up frame by frame, so changing the speed or the direction never makes the picture jump."""
@@ -1090,6 +1131,7 @@ def _scrollTick(p, who, T, env):
 
 def pushUniforms(T):
     """Audio + time straight into the active layers only (no per-layer Python expressions)."""
+    mediaAnim(T)
     o = op('/project1/AUDIO/OUT')
     au = (o['low'].eval(), o['mid'].eval(), o['high'].eval(), o['kick'].eval())
     env = beatEnv(); la = S.get('liveamt', {})
@@ -1702,7 +1744,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'csz', 'lzoom', 'gcols', 'gbrick', 'lscx', 'lscy', 'cues', 'cueon', 'mirror', 'flip']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'csz', 'lzoom', 'gcols', 'gbrick', 'lscx', 'lscy', 'anim', 'adir', 'aspd', 'aamt', 'atile', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()

@@ -45,7 +45,8 @@ for _i in range(1, 7):
                       (_m + 'csz', 'Copy size', 0.2, 3, 0.01, 'm%dclone' % _i), (_m + 'lzoom', 'Layout size (fill the screen)', 0.3, 4, 0.01, 'm%dclone' % _i),
                       (_m + 'gcols', 'Columns (0 = fit the screen)', 0, 40, 1, 'm%dclone' % _i), (_m + 'gbrick', 'Brick offset (every other row)', 0, 1, 0.01, 'm%dclone' % _i),
                       (_m + 'lscx', 'Slide left ← → right', -2, 2, 0.01, 'm%dslide' % _i), (_m + 'lscy', 'Slide down ↓ ↑ up', -2, 2, 0.01, 'm%dslide' % _i),
-                      (_m + 'cspin', 'Spin each one (°/s)', -360, 360, 1, 'm%dcspin' % _i), (_m + 'cstag', 'Out of step', 0, 1, 0.01, 'm%dcspin' % _i)]
+                      (_m + 'cspin', 'Spin each one (°/s)', -360, 360, 1, 'm%dcspin' % _i), (_m + 'cstag', 'Out of step', 0, 1, 0.01, 'm%dcspin' % _i),
+                      (_m + 'aspd', 'Speed', 0, 3, 0.01, 'm%danim' % _i), (_m + 'aamt', 'How much', 0, 1, 0.01, 'm%danim' % _i), (_m + 'atile', 'Copies across', 1, 10, 1, 'm%danim' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
     ('Autofade', 'Autopilot transition', 0, 600, 0.1, 'apfade'),     # set by the phone's transition buttons
@@ -132,7 +133,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['Trreplay', 'Textcrawl', 'T2crawl', 'T3crawl'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'lay', 'caxis', 'pat', 'file2', 'file3', 'file4', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'lay', 'caxis', 'pat', 'file2', 'file3', 'file4', 'anim', 'adir', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -1629,7 +1630,9 @@ def _ensurePars():
             if not hasattr(C.par, 'M%dlay' % i): pp = m.page.appendStr('M%dlay' % i, label='M%d layout' % i)[0]; pp.default = 'single'; pp.val = 'single'
             for n_, dv in (('cspin', 0.0), ('cstag', 0.5), ('csz', 1.0), ('lzoom', 1.0), ('gcols', 0.0), ('gbrick', 0.0), ('lscx', 0.0), ('lscy', 0.0)):
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendFloat('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
-            for n_, dv in (('caxis', 'y'), ('pat', 'order'), ('file2', ''), ('file3', ''), ('file4', '')):
+            for n_, dv in (('aspd', 1.0), ('aamt', 0.5), ('atile', 3.0)):         # text-style animation for this layer
+                if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendFloat('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
+            for n_, dv in (('caxis', 'y'), ('pat', 'order'), ('file2', ''), ('file3', ''), ('file4', ''), ('anim', 'static'), ('adir', 'left')):
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendStr('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
             for n_, dv in (('rcol2', '#ff3da8'), ('rfill', 'solid')):         # RECTANGLE depth: gradients, shape, motion
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendStr('M%d%s' % (i, n_), label='M%d rect %s' % (i, n_))[0]; pp.default = dv; pp.val = dv

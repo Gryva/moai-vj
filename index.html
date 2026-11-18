@@ -442,6 +442,8 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.manim[hidden]{display:none}.mpos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin:0 0 8px}.mpos button{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:15px}
+.mpos button.on{background:var(--ink);color:var(--bg);border-color:transparent}.mano{margin-bottom:6px}
 .go3d{width:100%;padding:12px;border-radius:var(--r1);border:1px solid var(--ink);background:var(--raise);color:var(--ink);font:800 12px var(--sans);letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:3px}
 .go3d small{font:600 10px var(--sans);color:var(--mute);letter-spacing:.06em}.mclone.is3d .go3d{display:none}.mclone:not(.is3d) .m3d{display:none}
 .mixbox[hidden]{display:none}.warn3d{color:var(--hot);margin:2px 0 8px}.mixrow,.mixpick{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.mixpick[hidden]{display:none}
@@ -1087,11 +1089,13 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-18f';
+const BUILD = '2026-11-18g';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
 const LAYS = [['single','ONE','<circle cx="12" cy="12" r="3.2"/>'],['grid','GRID','<circle cx="6" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="18" cy="18" r="1.6"/>'],['line','LINE','<circle cx="4" cy="12" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="20" cy="12" r="1.6"/>'],['zigzag','ZIGZAG','<circle cx="4" cy="15" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="15" cy="15" r="1.6"/><circle cx="20" cy="9" r="1.6"/>'],['circle','CIRCLE','<circle cx="20.0" cy="12.0" r="1.6"/><circle cx="17.7" cy="17.7" r="1.6"/><circle cx="12.0" cy="20.0" r="1.6"/><circle cx="6.3" cy="17.7" r="1.6"/><circle cx="4.0" cy="12.0" r="1.6"/><circle cx="6.3" cy="6.3" r="1.6"/><circle cx="12.0" cy="4.0" r="1.6"/><circle cx="17.7" cy="6.3" r="1.6"/>'],['rings','RINGS','<circle cx="12" cy="12" r="1.6"/><circle cx="17.0" cy="12.0" r="1.3"/><circle cx="14.5" cy="16.3" r="1.3"/><circle cx="9.5" cy="16.3" r="1.3"/><circle cx="7.0" cy="12.0" r="1.3"/><circle cx="9.5" cy="7.7" r="1.3"/><circle cx="14.5" cy="7.7" r="1.3"/><circle cx="21.6" cy="15.0" r="1.1"/><circle cx="18.8" cy="19.3" r="1.1"/><circle cx="14.2" cy="21.8" r="1.1"/><circle cx="9.0" cy="21.6" r="1.1"/><circle cx="4.7" cy="18.8" r="1.1"/><circle cx="2.2" cy="14.2" r="1.1"/><circle cx="2.4" cy="9.0" r="1.1"/><circle cx="5.2" cy="4.7" r="1.1"/><circle cx="9.8" cy="2.2" r="1.1"/><circle cx="15.0" cy="2.4" r="1.1"/><circle cx="19.3" cy="5.2" r="1.1"/><circle cx="21.8" cy="9.8" r="1.1"/>'],['spiral','SPIRAL','<circle cx="13.3" cy="12.0" r="1.2"/><circle cx="10.3" cy="13.6" r="1.2"/><circle cx="12.3" cy="9.0" r="1.2"/><circle cx="14.2" cy="14.8" r="1.2"/><circle cx="8.0" cy="11.3" r="1.2"/><circle cx="15.8" cy="9.6" r="1.2"/><circle cx="10.7" cy="16.7" r="1.2"/><circle cx="9.6" cy="7.4" r="1.2"/><circle cx="17.2" cy="13.9" r="1.2"/><circle cx="6.6" cy="14.2" r="1.2"/><circle cx="14.6" cy="6.4" r="1.2"/><circle cx="13.9" cy="18.1" r="1.2"/><circle cx="6.2" cy="8.6" r="1.2"/><circle cx="18.8" cy="10.5" r="1.2"/>'],['scatter','SCATTER','<circle cx="5" cy="6" r="1.4"/><circle cx="15" cy="4" r="1.1"/><circle cx="19" cy="11" r="1.8"/><circle cx="9" cy="13" r="1.2"/><circle cx="4" cy="19" r="1.6"/><circle cx="14" cy="18" r="1.3"/><circle cx="20" cy="20" r="1"/>'],['wall','WALL','<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="3" y="9.5" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><rect x="9.5" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="16" width="5" height="5" rx="1"/>']];
+const MANIMS = [['static','STATIC'],['pulse','BEAT'],['breathe','BREATHE'],['wave','WAVE'],['scroll','SCROLL'],['tile','TILE'],['bounce','BOUNCE'],['shake','SHAKE'],['sway','SWAY'],['spin','SPIN']];
+const MPOS = [[-0.62,0.62,'↖'],[0,0.62,'↑'],[0.62,0.62,'↗'],[-0.62,0,'←'],[0,0,'●'],[0.62,0,'→'],[-0.62,-0.62,'↙'],[0,-0.62,'↓'],[0.62,-0.62,'↘']];
 const RFILLS = [['solid','SOLID'],['linear','LINEAR'],['radial','RADIAL'],['conic','CONIC'],['stripes','STRIPES'],['glass','GLASS']];
 const SWC = ['#ffffff','#000000','#ff2d2d','#ff8a1f','#ffe23a','#9dff2e','#1fdc6a','#22e6ff','#2f6bff','#a24bff','#ff3da8'];
 const LFOLD = new Set(store.get('lfold', []));
@@ -1394,6 +1398,10 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <div class="cuel" data-cuel="${i}"></div>
           <button class="cbtn cueadd" data-cueadd="${i}">＋ ADD CUE AT NOW</button>
           <p class="hint2">While the video plays, each cue switches its effect on at START and off at END. Times are in the video (min:sec).</p></details>
+        <div class="manim" id="box-m${i}an"><h4>Position</h4><div class="mpos">${MPOS.map(([x, y, l]) => `<button data-mpos="${i}|${x}|${y}" title="${l}">${l}</button>`).join('')}</div>
+          <h4>Animation</h4><div class="opts mano">${MANIMS.map(([v, l]) => `<button data-tp="M${i}anim" data-tv="${v}">${l}</button>`).join('')}</div>
+          <div class="ksrow" data-madir="${i}"><span>Moves</span><div class="opts">${[['left','← LEFT'],['right','RIGHT →'],['up','↑ UP'],['down','DOWN ↓']].map(([v, l]) => `<button data-tp="M${i}adir" data-tv="${v}">${l}</button>`).join('')}</div></div>
+          <div id="g-m${i}anim"></div></div>
         <div class="mmot" id="box-m${i}obj"><h4>Object motion</h4>
           <div class="ksrow"><span>Moves</span><div class="opts" id="o-M${i}motion"></div></div>
           <div class="ksrow" data-mspin="M${i}"><span>Axis</span><div class="opts" id="o-M${i}maxis"></div><button class="btn mrev" id="t-M${i}mrev" data-tog="M${i}mrev">⟲ REV</button></div>
@@ -1440,6 +1448,16 @@ function rcUI(i, p){                         // rectangle card: live swatch, fil
   const vis = {[m + 'rang']: ['linear','conic','stripes'].includes(f), [m + 'rstripes']: f === 'stripes', [m + 'rflow']: two};
   for (const k in vis) { const s = $('#s-' + k); if (s && s.closest('.ctl')) s.closest('.ctl').hidden = !vis[k]; }
 }
+function manimUI(i, p){                      // text-style animation on any picture layer: show only the settings that mode uses
+  const m = 'M' + i, an = p[m + 'anim'] || 'static', b = $('#box-m' + i + 'an'); if (!b) return;
+  b.querySelectorAll(`[data-tp="${m}anim"]`).forEach(x => x.classList.toggle('on', x.dataset.tv === an));
+  b.querySelectorAll(`[data-tp="${m}adir"]`).forEach(x => x.classList.toggle('on', x.dataset.tv === (p[m + 'adir'] || 'left')));
+  b.querySelector('[data-madir]').hidden = !['scroll','tile','wave','bounce'].includes(an);
+  const vis = {aspd: !['static','pulse','shake'].includes(an), aamt: ['pulse','breathe','wave','bounce','shake','sway'].includes(an), atile: an === 'tile'};
+  for (const k in vis) { const s_ = $('#s-' + m + k); if (s_ && s_.closest('.ctl')) s_.closest('.ctl').hidden = !vis[k]; }
+  const ob = p[m + 'mode'] === 'object', fx = (+p[m + (ob ? 'objx' : 'fx')] || 0) / (ob ? 3.5 : 1), fy = (+p[m + (ob ? 'objy' : 'fy')] || 0) / (ob ? 2.0 : 1);
+  b.querySelectorAll('[data-mpos]').forEach(x => { const q = x.dataset.mpos.split('|'); x.classList.toggle('on', Math.abs(+q[1] - fx) < 0.02 && Math.abs(+q[2] - fy) < 0.02); });
+}
 function mixFiles(i, p){ const m = 'M' + i; return [p[m + 'file'], p[m + 'file2'], p[m + 'file3'], p[m + 'file4']]; }
 function mixUI(i, p){                        // the GIFs sharing this layout: A is the layer's own file, B-D come from the same folder
   const row = $(`[data-mixrow="${i}"]`); if (!row) return; const F = mixFiles(i, p), th = id => { const x = (S.media || []).find(q => q.id === id); return x && x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''; };
@@ -1477,6 +1495,7 @@ function mediaCardsUI(p){
       cb.querySelectorAll('#g-m' + i + 'clone .ctl, #g-m' + i + 'slide .ctl').forEach(c => c.hidden = lay === 'single');
       for (const k of ['gcols', 'gbrick']) { const s_ = $('#s-M' + i + k); if (s_ && s_.closest('.ctl')) s_.closest('.ctl').hidden = !['grid', 'wall'].includes(lay); }
       mixUI(i, p); } }
+    manimUI(i, p);
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
     $('#mfn' + i).textContent = f ? f.split('/').pop() : 'Choose a ' + (vid ? 'video' : 'picture');
@@ -3420,6 +3439,9 @@ document.addEventListener('click', e => {
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.mpos) { const [i, x, y] = d.mpos.split('|'), m = 'M' + i, ob = S.pars[m + 'mode'] === 'object';      // 3D objects move in the scene, flat pictures in the frame
+    const kx = ob ? 'objx' : 'fx', ky = ob ? 'objy' : 'fy', vx = Math.round(+x * (ob ? 3.5 : 1) * 1000) / 1000, vy = Math.round(+y * (ob ? 2.0 : 1) * 1000) / 1000;
+    S.pars[m + kx] = vx; S.pars[m + ky] = vy; send({t:'set', p:m + kx, v:vx}); send({t:'set', p:m + ky, v:vy}); mediaCardsUI(S.pars); buzz(); return; }
   if (d.go3d) { const m = 'M' + d.go3d; S.pars[m + 'mode'] = 'object'; send({t:'set', p:m + 'mode', v:'object'});
     if (!(+S.pars[m + 'thick'] > 0)) { S.pars[m + 'thick'] = 0.35; send({t:'set', p:m + 'thick', v:0.35}); } mediaCardsUI(S.pars); buzz(); return; }
   if (d.mixadd) { const pk = $(`[data-mixpick="${d.mixadd}"]`); pk.hidden = !pk.hidden; mixUI(+d.mixadd, S.pars); buzz(); return; }
