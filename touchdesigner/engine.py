@@ -395,6 +395,10 @@ def pSet(g, k, p1):
         q = int(round(float(p1))); g.par.vec3valuex = (q // 10000000) % 10; g.par.vec3valuey = math.radians((q // 10000) % 1000)
         g.par.vec3valuez = ((q // 100) % 100) / 99.0; g.par.vec3valuew = (q % 100) / 99.0
         return
+    if k == 'scroll':                                                  # copies*1e7 + direction (0-359 deg)*1e4 + speed*100 + beat push (each 0-99)
+        q = int(round(float(p1))); g.par.vec3valuex = 1 + (q // 10000000) % 10; g.par.vec3valuey = math.radians((q // 10000) % 1000)
+        s_ = ((q // 100) % 100) / 99.0; g.par.vec3valuez = s_ * s_ * 1.5; g.par.vec3valuew = (q % 100) / 99.0
+        return
     if k == 'beat':                                                    # mode*1e4 + amount*100 + fall-back (each 0-99)
         q = int(round(float(p1))); g.par.vec3valuex = (q // 10000) % 10; g.par.vec3valuey = ((q // 100) % 100) / 99.0
         g.par.vec3valuez = 0.05 + (q % 100) / 99.0 * 1.45
@@ -552,7 +556,8 @@ def _cloneUpdate(C, i, g):
     if bool(g.par.instancing.eval()) != need: g.par.instancing = need
     if not need: return
     nt = _cloneTex(C, i, g)
-    sig = (lay, th, float(mp(C, i, 'edge').eval()), int(mp(C, i, 'cnt').eval()), float(mp(C, i, 'lsp').eval()), nt, str(mp(C, i, 'pat').eval()) if hasattr(C.par, 'M%dpat' % i) else '')
+    sig = (lay, th, float(mp(C, i, 'edge').eval()), int(mp(C, i, 'cnt').eval()), float(mp(C, i, 'lsp').eval()), nt, str(mp(C, i, 'pat').eval()) if hasattr(C.par, 'M%dpat' % i) else '',
+           tuple(float(mp(C, i, k).eval()) for k in ('csz', 'lzoom', 'gcols', 'gbrick') if hasattr(C.par, 'M%d%s' % (i, k))))
     anim = lay != 'single' or abs(cs) > 1e-4 or any(abs(float(mp(C, i, k).eval())) > 1e-4 for k in ('lspin', 'lwave', 'lturn'))
     if anim or sig != S.get('misig%d' % i): mi.cook(force=True); S['misig%d' % i] = sig
 
@@ -1074,6 +1079,15 @@ def fxBeat(tgt, k, on):
     else: BEATFX.discard(key)
     S['layers'] = None; SLOTSIG.clear()                          # re-apply the plain amounts
     S['dirty'] = True
+SCROLLOFF = {}
+def _scrollTick(p, who, T, env):
+    """SCROLL: the offset is added up frame by frame, so changing the speed or the direction never makes the picture jump."""
+    d = SCROLLOFF.setdefault(who, [0.0, 0.0, T]); dt = max(0.0, min(0.1, T - d[2])); d[2] = T
+    sp = float(p.vec3valuez) * (1.0 + float(p.vec3valuew) * 4.0 * env)        # beat: a push forward on every kick
+    a = float(p.vec3valuey); d[0] = (d[0] + math.cos(a) * sp * dt) % 1.0; d[1] = (d[1] + math.sin(a) * sp * dt) % 1.0
+    if p.vec6name.eval() != 'uO': p.vec6name = 'uO'
+    p.vec6valuex, p.vec6valuey = d[0], d[1]
+
 def pushUniforms(T):
     """Audio + time straight into the active layers only (no per-layer Python expressions)."""
     o = op('/project1/AUDIO/OUT')
@@ -1085,6 +1099,7 @@ def pushUniforms(T):
         p.vec0valuex = T % TWRAP                               # shaders get a wrapped clock
         p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
         if k == 'beat': p.vec3valuew = T - A['lastkick']                  # time since the last beat
+        if k == 'scroll': _scrollTick(p, 'all', T, env)
         if k in COLFX: _colPush(k, p, T)
 
 # ------------------------------------------------------------------ effect colours (own colour / solid / linear / radial gradient)
@@ -1310,6 +1325,7 @@ def tUniforms(T):
             p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
             if t + ':' + k in BEATFX: p.vec2valuex = v[1] * (beatEnv() if t not in NR else 0.0)
             if k == 'beat': p.vec3valuew = (T - A['lastkick']) if t not in NR else 99.0
+            if k == 'scroll': _scrollTick(p, t, T, beatEnv() if t not in NR else 0.0)
             if k in COLFX:
                 c = TCOL[t].get(k)
                 if not c or c['m'] == 0:
@@ -1686,7 +1702,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'cues', 'cueon', 'mirror', 'flip']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'csz', 'lzoom', 'gcols', 'gbrick', 'lscx', 'lscy', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()

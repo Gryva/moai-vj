@@ -444,7 +444,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
 .go3d{width:100%;padding:12px;border-radius:var(--r1);border:1px solid var(--ink);background:var(--raise);color:var(--ink);font:800 12px var(--sans);letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:3px}
 .go3d small{font:600 10px var(--sans);color:var(--mute);letter-spacing:.06em}.mclone.is3d .go3d{display:none}.mclone:not(.is3d) .m3d{display:none}
-.mixbox[hidden]{display:none}.mixrow,.mixpick{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.mixpick[hidden]{display:none}
+.mixbox[hidden]{display:none}.warn3d{color:var(--hot);margin:2px 0 8px}.mixrow,.mixpick{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.mixpick[hidden]{display:none}
 .mixc{position:relative;width:56px;height:56px;border-radius:var(--r1);border:1px solid var(--line);background:#0006;display:grid;place-items:center;overflow:hidden;padding:0;color:var(--ink)}
 .mixc img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.mixc em{position:absolute;left:3px;top:2px;font:800 10px var(--sans);font-style:normal;text-shadow:0 0 3px #000}
 .mixc i{position:absolute;right:3px;top:1px;font-style:normal;font-size:13px;opacity:.8}.mixc.a{border-color:var(--ink)}.mixc.add{font-size:22px;border-style:dashed;color:var(--mute)}.mixc.on{outline:2px solid var(--ink)}
@@ -1087,7 +1087,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-18d';
+const BUILD = '2026-11-18f';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1406,6 +1406,7 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
           <h4>Spin each one</h4><div class="seg sm cax">${[['y','TURN'],['x','FLIP'],['z','ROLL'],['tumble','TUMBLE']].map(([v, l]) => `<button data-tp="M${i}caxis" data-tv="${v}">${l}</button>`).join('')}</div><div id="g-m${i}cspin"></div>
           <h4>Clones</h4><div class="lays">${LAYS.map(([v, l, d]) => `<button data-tp="M${i}lay" data-tv="${v}"><svg viewBox="0 0 24 24">${d}</svg><em>${l}</em></button>`).join('')}</div>
           <div id="g-m${i}clone"></div>
+          <h4>Slide the whole wall (wraps round)</h4><div id="g-m${i}slide"></div>
           <div class="mixbox"><h4>Mix GIFs in the pattern (needs a layout with copies)</h4><div class="mixrow" data-mixrow="${i}"></div>
             <div class="seg sm mixpat">${[['order','IN ORDER'],['rows','ROWS'],['cols','COLUMNS'],['checker','CHECKER'],['rings','RINGS'],['random','RANDOM']].map(([v, l]) => `<button data-tp="M${i}pat" data-tv="${v}">${l}</button>`).join('')}</div>
             <div class="mixpick" data-mixpick="${i}" hidden></div></div>
@@ -1473,7 +1474,8 @@ function mediaCardsUI(p){
     { const cb = $('#box-m' + i + 'cl'); if (cb) { const kd = p[m + 'kind'] || 'video', ob = p[m + 'mode'] === 'object'; cb.hidden = !['video','image'].includes(kd) || !p[m + 'file'];
       cb.classList.toggle('is3d', ob); const lay = p[m + 'lay'] || 'single';
       for (const [k, d] of [['lay', 'single'], ['caxis', 'y'], ['pat', 'order']]) cb.querySelectorAll(`[data-tp="M${i}${k}"]`).forEach(b => b.classList.toggle('on', b.dataset.tv === (p[m + k] || d)));
-      cb.querySelectorAll('#g-m' + i + 'clone .ctl').forEach(c => c.hidden = lay === 'single');
+      cb.querySelectorAll('#g-m' + i + 'clone .ctl, #g-m' + i + 'slide .ctl').forEach(c => c.hidden = lay === 'single');
+      for (const k of ['gcols', 'gbrick']) { const s_ = $('#s-M' + i + k); if (s_ && s_.closest('.ctl')) s_.closest('.ctl').hidden = !['grid', 'wall'].includes(lay); }
       mixUI(i, p); } }
     const dr = p[m + 'kind'] === 'draw', vid = p[m + 'kind'] === 'video', f = p[m + 'file'];
     const lib = c.querySelector('.mlib'), mfb = c.querySelector('.mfile');
@@ -2608,8 +2610,8 @@ function segUI(lab, attr, list, cur, vals){ return `<div class="sub pinl"><span>
 function bitsUI(lab, f, list, mask, none){ return `<div class="sub pinl"><span>${lab}</span></div><div class="seg sm" style="margin:4px 0 6px;flex-wrap:wrap">`
   + (none ? `<button data-clbits="${f}" data-b="0" class="${mask ? '' : 'on'}">${none}</button>` : '')
   + list.map((m, i) => `<button data-clbits="${f}" data-b="${1 << i}" class="${mask & (1 << i) ? 'on' : ''}">${m}</button>`).join('') + '</div>'; }
-function clonesUI(l){ const c = clDec(l.p1);
-  return `<div data-clones="${Math.round(l.p1)}">` + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay)
+function clonesUI(l){ const c = clDec(l.p1), t3 = /^m(\d)$/.test(FXT_SEL || '') && (S.pars['M' + FXT_SEL.slice(1) + 'lay'] || 'single') !== 'single' && S.pars['M' + FXT_SEL.slice(1) + 'mode'] === 'object';
+  return `<div data-clones="${Math.round(l.p1)}">` + (t3 ? '<p class="hint2 warn3d">This layer already makes 3D copies (SOURCE → Clones). This FX copies the whole picture again, copies of copies. Use one or the other.</p>' : '') + segUI('Layout', 'data-cl="lay" data-v', CLN.lay, c.lay)
     + (c.lay === 1 || c.lay === 2 ? `<div class="sub"><span>${c.lay === 1 ? 'Moves left → right' : 'Moves top → bottom'} · speed</span><input type="range" data-clscr min="0" max="31" step="1" value="${c.scr || 0}" style="--acc:${GC[l.g]}"></div>` : '')
     + `<div class="sub"><span>How many</span><input type="range" data-clnum min="1" max="150" step="1" value="${c.n}" style="--acc:${GC[l.g]}"><output id="o-clnum">${c.n}</output></div>`
     + bitsUI('Sizes (mix any)', 'sz', CLN.sz, c.sz || 8) + segUI('Overlap', 'data-cl="ov" data-v', CLN.ov, c.ov)
@@ -2641,6 +2643,7 @@ setInterval(() => REC.on && recTick(), 500);
 const PK = {
   beat:   [['md', 1e4, 10], ['amt', 100, 100], ['dec', 1, 100]],
   speed:  [['st', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
+  scroll: [['n', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
   dvd:    [['cc', 1e6, 10], ['an', 1e4, 100], ['sp', 100, 100], ['sz', 1, 100]],
@@ -2979,6 +2982,10 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
     + segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
     + `<div class="sub"><span>Direction (°)</span><input type="range" data-pk="ang" min="0" max="359" step="1" value="${c.ang}" style="--acc:${GC[l.g]}"></div>`
     + pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'bb', 'Faster on the beat', c.bb);
+  if (k === 'scroll') h += segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
+    + `<div class="sub"><span>Direction (°)</span><input type="range" data-pk="ang" min="0" max="359" step="1" value="${c.ang}" style="--acc:${GC[l.g]}"></div>`
+    + pkS(l, 'sp', 'Speed', c.sp) + segUI('Copies across', 'data-pkf="n" data-v', ['1','2','3','4','5','6','8','10'], c.n, [0,1,2,3,4,5,7,9])
+    + pkS(l, 'bb', 'Push on the beat', c.bb) + '<p class="hint2">Whatever leaves one edge comes back on the other. Copies across repeats the picture as a seamless wall that moves together.</p>';
   if (k === 'beat') h += segUI('On every beat', 'data-pkf="md" data-v', ['GROW','SHRINK','FLASH','BLINK','SHAKE','SPIN'], c.md) + pkS(l, 'amt', 'How much', c.amt) + pkS(l, 'dec', 'Falls back (short → long)', c.dec);
   if (k === 'dvd') h += pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'sz', 'Size', c.sz) + pkS(l, 'an', 'Angle', c.an) + segUI('On each bounce', 'data-pkf="cc" data-v', ['SAME COLOUR','NEW COLOUR'], c.cc);
   return h + '</div>'; }

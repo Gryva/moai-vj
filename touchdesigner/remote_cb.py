@@ -39,9 +39,12 @@ for _i in range(1, 7):
                       (_m + 'rround', 'Round corners', 0, 1, 0.01, 'm%drs' % _i), (_m + 'rline', 'Outline only (0 = filled)', 0, 1, 0.01, 'm%drs' % _i),
                       (_m + 'rsoft', 'Soft edge', 0, 1, 0.01, 'm%drs' % _i),
                       (_m + 'thick', 'Thickness (0 = flat)', 0, 1, 0.01, 'm%dthick' % _i), (_m + 'edge', 'Darker sides', 0, 1, 0.01, 'm%dthick' % _i),
-                      (_m + 'cnt', 'How many', 2, 64, 1, 'm%dclone' % _i), (_m + 'lsp', 'Spacing', 0.2, 3, 0.01, 'm%dclone' % _i),
+                      (_m + 'cnt', 'How many', 2, 400, 1, 'm%dclone' % _i), (_m + 'lsp', 'Spacing', 0.2, 3, 0.01, 'm%dclone' % _i),
                       (_m + 'lspin', 'Turn the whole layout (°/s)', -90, 90, 1, 'm%dclone' % _i), (_m + 'lwave', 'Float (wave)', 0, 1, 0.01, 'm%dclone' % _i),
                       (_m + 'lturn', 'Rock left / right', 0, 1, 0.01, 'm%dclone' % _i),
+                      (_m + 'csz', 'Copy size', 0.2, 3, 0.01, 'm%dclone' % _i), (_m + 'lzoom', 'Layout size (fill the screen)', 0.3, 4, 0.01, 'm%dclone' % _i),
+                      (_m + 'gcols', 'Columns (0 = fit the screen)', 0, 40, 1, 'm%dclone' % _i), (_m + 'gbrick', 'Brick offset (every other row)', 0, 1, 0.01, 'm%dclone' % _i),
+                      (_m + 'lscx', 'Slide left ← → right', -2, 2, 0.01, 'm%dslide' % _i), (_m + 'lscy', 'Slide down ↓ ↑ up', -2, 2, 0.01, 'm%dslide' % _i),
                       (_m + 'cspin', 'Spin each one (°/s)', -360, 360, 1, 'm%dcspin' % _i), (_m + 'cstag', 'Out of step', 0, 1, 0.01, 'm%dcspin' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
@@ -1624,7 +1627,7 @@ def _ensurePars():
             for n_, dv in (('thick', 0.0), ('edge', 0.5), ('cnt', 9.0), ('lsp', 1.0), ('lspin', 0.0), ('lwave', 0.0), ('lturn', 0.0)):   # GIF thickness + clone layouts
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendFloat('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
             if not hasattr(C.par, 'M%dlay' % i): pp = m.page.appendStr('M%dlay' % i, label='M%d layout' % i)[0]; pp.default = 'single'; pp.val = 'single'
-            for n_, dv in (('cspin', 0.0), ('cstag', 0.5)):
+            for n_, dv in (('cspin', 0.0), ('cstag', 0.5), ('csz', 1.0), ('lzoom', 1.0), ('gcols', 0.0), ('gbrick', 0.0), ('lscx', 0.0), ('lscy', 0.0)):
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendFloat('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
             for n_, dv in (('caxis', 'y'), ('pat', 'order'), ('file2', ''), ('file3', ''), ('file4', '')):
                 if not hasattr(C.par, 'M%d%s' % (i, n_)): pp = m.page.appendStr('M%d%s' % (i, n_), label='M%d %s' % (i, n_))[0]; pp.default = dv; pp.val = dv
