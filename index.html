@@ -1087,7 +1087,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-18c';
+const BUILD = '2026-11-18d';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1188,7 +1188,7 @@ function onMsg(m){
   else if (m.t === 'media') { const old = {}; (S.media || []).forEach(x => { if (x.thumb) old[x.id] = x.thumb; });
     S.media = m.v.map(x => Object.assign(x, x.thumb ? {} : {thumb: old[x.id] || ''})); renderMedia(); cards(); }
   else if (m.t === 'mthumb') { const it = (S.media || []).find(x => x.id === m.id);
-    if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(renderMedia, 80); } }
+    if (it) { it.thumb = m.img; clearTimeout(renderMedia._t); renderMedia._t = setTimeout(() => { renderMedia(); MS.forEach(i => mixUI(i, S.pars)); }, 80); } }
   else if (m.t === 'thumb') { if (m.img) THUMBS[m.s] = 'data:image/jpeg;base64,' + m.img; else delete THUMBS[m.s]; thumbCache(); renderPads(); clearTimeout(renderQueue._t); renderQueue._t = setTimeout(renderQueue, 120); }
   else if (m.t === 'presets') { S.presets = m.presets; if (m.presetmov) S.presetmov = m.presetmov; if (m.presetdata) S.presetdata = m.presetdata; buildCam(); }
   else if (m.t === 'err') toast('TD: ' + m.msg);

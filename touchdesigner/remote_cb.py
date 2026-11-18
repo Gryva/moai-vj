@@ -297,11 +297,48 @@ def _tdGrab(full):
     except Exception as e:
         print('thumb grab failed', full, e); return None
 
+GIFQ = {'q': [], 'busy': False}
+def _gifQueue(rel, full, tp):
+    if any(x[0] == rel for x in GIFQ['q']): return
+    GIFQ['q'].append((rel, full, tp))
+    if not GIFQ['busy']: GIFQ['busy'] = True; run("op('/project1/remote_cb').module._gifBatch()", delayFrames=2)
+
+def _gifBatch():
+    """Load up to 24 GIFs at once in hidden Movie File In TOPs; read them back a moment later (_gifCollect)."""
+    P = op('/project1'); job = GIFQ['q'][:24]; GIFQ['q'] = GIFQ['q'][24:]
+    for k, (rel, full, tp) in enumerate(job):
+        t = P.op('gth%d' % k) or P.create(moviefileinTOP, 'gth%d' % k); t.nodeX = -2400; t.nodeY = -2400 - k * 120
+        t.par.play = True; t.par.file = full                   # paused GIFs never decode a frame here, so let them play
+    GIFQ['job'] = job
+    run("op('/project1/remote_cb').module._gifCollect()", delayFrames=30)
+
+def _gifCollect():
+    import numpy as np, cv2, base64
+    P = op('/project1')
+    for k, (rel, full, tp) in enumerate(GIFQ.get('job') or []):
+        t = P.op('gth%d' % k)
+        try:
+            a = t.numpyArray()
+            if a is not None and a.size and t.width >= 4:
+                a = np.clip(a[::-1], 0, 1); al = a[:, :, 3:4]; bg = np.array([46, 34, 38], dtype=np.float32) / 255.0    # see-through parts on dark grey (BGR)
+                im = ((a[:, :, 2::-1] * al + bg * (1 - al)) * 255).astype(np.uint8)
+                h, w = im.shape[:2]; s = 192.0 / max(w, h)
+                cv2.imwrite(tp, cv2.resize(im, (max(1, int(w * s)), max(1, int(h * s))), interpolation=cv2.INTER_NEAREST), [cv2.IMWRITE_JPEG_QUALITY, 85])
+                _all({'t': 'mthumb', 'id': rel, 'img': base64.b64encode(open(tp, 'rb').read()).decode('ascii')})
+        except Exception as e: print('gif thumb failed', rel, e)
+        if t is not None: t.destroy()
+    GIFQ['job'] = []
+    if GIFQ['q']: run("op('/project1/remote_cb').module._gifBatch()", delayFrames=2)
+    else: GIFQ['busy'] = False
+
 def _mediaThumb(rel, full, kind):
     import cv2, base64, hashlib
     os.makedirs(MEDIA_THUMBS, exist_ok=True)
-    key = hashlib.sha1((rel + str(os.path.getmtime(full))).encode()).hexdigest()[:16]
+    gif = str(full).lower().endswith('.gif')
+    key = hashlib.sha1((rel + str(os.path.getmtime(full)) + ('gif4' if gif else '')).encode()).hexdigest()[:16]
     tp = os.path.join(MEDIA_THUMBS, key + '.jpg')
+    if gif and not os.path.exists(tp):                          # GIF: decoded by TouchDesigner a few frames later, then sent on its own
+        _gifQueue(rel, full, tp); return ''
     if not os.path.exists(tp):
         im = None
         try:
