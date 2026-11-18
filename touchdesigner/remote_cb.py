@@ -22,7 +22,7 @@ for _i in range(1, 7):
                       (_m + 'objx', 'Left / right', -3, 3, 0.01, 'm%dobj' % _i), (_m + 'objy', 'Up / down', -2, 2, 0.01, 'm%dobj' % _i),
                       (_m + 'objz', 'Depth (back / front)', -4, 4, 0.05, 'm%dobj' % _i), (_m + 'objscale', 'Size', 0.2, 3, 0.01, 'm%dobj' % _i),
                       (_m + 'objturn', 'Turn', -180, 180, 1, 'm%dobj' % _i), (_m + 'objtilt', 'Tilt', -90, 90, 1, 'm%dobj' % _i),
-                      (_m + 'mspeed', 'Spin speed (°/s)', 0, 180, 1, 'm%dmot' % _i), (_m + 'mamt', 'Amount', 0, 2, 0.01, 'm%dmot' % _i),
+                      (_m + 'mspeed', 'Spin speed (°/s)', 0, 720, 1, 'm%dmot' % _i), (_m + 'mamt', 'Amount', 0, 2, 0.01, 'm%dmot' % _i),
                       (_m + 'fzoom', 'Zoom', 0.2, 4, 0.01, 'm%dfr' % _i), (_m + 'fx', 'Left / right', -1, 1, 0.005, 'm%dfr' % _i),
                       (_m + 'fy', 'Up / down', -1, 1, 0.005, 'm%dfr' % _i), (_m + 'frot', 'Rotate', -180, 180, 1, 'm%dfr' % _i),
                       (_m + 'alpha', 'Opacity', 0, 1, 0.01, 'm%dop' % _i), (_m + 'op', 'Brightness', 0, 2, 0.01, 'm%dop' % _i), (_m + 'contrast', 'Contrast', 0, 2, 0.01, 'm%dop' % _i),
@@ -45,7 +45,7 @@ for _i in range(1, 7):
                       (_m + 'csz', 'Copy size', 0.2, 3, 0.01, 'm%dclone' % _i), (_m + 'lzoom', 'Layout size (fill the screen)', 0.3, 4, 0.01, 'm%dclone' % _i),
                       (_m + 'gcols', 'Columns (0 = fit the screen)', 0, 40, 1, 'm%dclone' % _i), (_m + 'gbrick', 'Brick offset (every other row)', 0, 1, 0.01, 'm%dclone' % _i),
                       (_m + 'lscx', 'Slide left ← → right', -2, 2, 0.01, 'm%dslide' % _i), (_m + 'lscy', 'Slide down ↓ ↑ up', -2, 2, 0.01, 'm%dslide' % _i),
-                      (_m + 'cspin', 'Spin each one (°/s)', -360, 360, 1, 'm%dcspin' % _i), (_m + 'cstag', 'Out of step', 0, 1, 0.01, 'm%dcspin' % _i),
+                      (_m + 'cspin', 'Spin each one (°/s)', -720, 720, 1, 'm%dcspin' % _i), (_m + 'cstag', 'Out of step', 0, 1, 0.01, 'm%dcspin' % _i),
                       (_m + 'aspd', 'Speed', 0, 3, 0.01, 'm%danim' % _i), (_m + 'aamt', 'How much', 0, 1, 0.01, 'm%danim' % _i), (_m + 'atile', 'Copies across', 1, 10, 1, 'm%danim' % _i)]
 SLIDERS = MSLOT_SLIDERS + [
     ('Fadetime', 'Blackout fade', 0, 3, 0.05, 'master'),
