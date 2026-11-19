@@ -32,7 +32,9 @@ vec2 RES(){ return uTD2DInfos[0].res.zw; }
 void main(){
   vec4 a = uAudio; vec2 res = RES(); float asp = res.x / res.y;
   vec2 q = vUV.st - 0.5; q.x *= asp; float r = length(q);
-  float tw = (1.5 + uP.x * 6.0) * (1.0 + a.x * 0.8) * smoothstep(0.75, 0.0, r) * sin(uTime * 0.4);
+  float tw = (1.5 + uP.x * 6.0) * (1.0 + a.x * 0.8) * smoothstep(0.75, 0.0, r);
+  if (uP.y < 0.5) tw *= sin(uTime * 0.4);                              // SWING: twists one way, then back
+  else tw = tw * 0.6 * (uP.y < 1.5 ? 1.0 : -1.0) + uP.w;                 // FOREVER: a fixed twist that keeps turning one way (uP.w = turn so far)
   float c = cos(tw), s = sin(tw); q = mat2(c, -s, s, c) * q; q.x /= asp;
   fragColor = TDOutputSwizzle(outc(vUV.st, tex(q + 0.5)));
 }

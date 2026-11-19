@@ -17,6 +17,7 @@ uniform vec4 uAL1; uniform vec4 uAL2;                   // opacity: media 1-4 | 
 uniform vec4 uBL1; uniform vec4 uBL2;                   // blend mode, same order: 0 normal 1 add 2 screen 3 multiply 4 overlay 5 difference 6 lighten 7 darken
 uniform vec4 uCT1; uniform vec4 uCT2;                   // contrast, same order (1 = as it is)
 uniform vec4 uMW1; uniform vec4 uMW2;                   // media layers 1-6: 1 = wrap round (SCROLL / TILE animation repeats the picture)
+uniform vec4 uTL; uniform vec4 uTD;                     // text 1-3: blend mode, and mask mode (0 over, 1 mask, 2 cut-out, 3 invert) when drawn inside the stack
 uniform vec4 uTX; uniform vec4 uTS;                     // text layers 1-3 drawn inside the stack (behind something, or in 3D): on, effect chain
 layout(location = 0) out vec4 fragColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -90,6 +91,21 @@ vec3 layer(int id, vec2 uv, vec3 o){
   vec4 L = s > 0 ? slotTex(s, uv) : layerPM(id, uv);
   if (L.a < 0.0005 && max(L.r, max(L.g, L.b)) < 0.0005) return o;
   float op = opOf(id); L.rgb *= max(op, 0.0);                                          // brightness: darker / brighter, not see-through
+  if (id >= 21 && id <= 23) {                                                            // text inside the stack: its mask mode, then its blend
+    int j = id - 21; float a = clamp(L.a, 0.0, 1.0); int md = int((j == 0 ? uTD.x : j == 1 ? uTD.y : uTD.z) + 0.5);
+    if (md == 1) return o * a;                                                           // MASK: the picture only shows inside the letters
+    if (md == 2) return o * (1.0 - a);                                                   // CUT-OUT: the letters are holes
+    if (md == 3) return mix(o, 1.0 - o, a);                                              // INVERT inside the letters
+    int bm = int((j == 0 ? uTL.x : j == 1 ? uTL.y : uTL.z) + 0.5); vec3 c = clamp(L.rgb / max(L.a, 0.0001), 0.0, 4.0);
+    if (bm == 1) return o + L.rgb;
+    if (bm == 2) return 1.0 - (1.0 - o) * (1.0 - clamp(L.rgb, 0.0, 1.0));
+    if (bm == 3) return mix(o, o * c, a);
+    if (bm == 4) return mix(o, mix(2.0 * o * c, 1.0 - 2.0 * (1.0 - o) * (1.0 - c), step(0.5, o)), a);
+    if (bm == 5) return mix(o, abs(o - c), a);
+    if (bm == 6) return mix(o, max(o, c), a);
+    if (bm == 7) return mix(o, min(o, c), a);
+    return o * (1.0 - a) + L.rgb;
+  }
   int bi = id == 1 ? 6 : id == 5 ? 7 : (id >= 11 && id <= 16) ? id - 11 : -1;
   if (bi >= 0) {                                                                         // each layer: opacity + blend mode
     float ct = bi < 4 ? uCT1[bi] : uCT2[bi - 4];

@@ -133,7 +133,7 @@ SLIDERS = MSLOT_SLIDERS + [
     ('Alphadraw', 'Opacity', 0, 1, 0.01, 'opdraw'), ('Opdraw', 'Brightness', 0, 2, 0.01, 'opdraw'), ('Contrastdraw', 'Contrast', 0, 2, 0.01, 'opdraw'),
 ]
 TOGGLES = ['Trreplay', 'Textcrawl', 'T2crawl', 'T3crawl'] + ['M%d%s' % (i, n) for i in range(1, 7) for n in ('on', 'vis', 'keyon', 'mrev', 'fit', 'cueon', 'mirror', 'flip')] + ['Textmrev', 'T2mrev', 'T3mrev'] + [ 'Autopilot', 'Autospin', 'Spinrev', 'Blackout', 'Showlabel', 'Texton', 'T2on', 'T3on', 'Monitor', 'Cammirror', 'Textpin', 'Statue', 'Clipbounce', 'Drawon', 'Ksflipx', 'Ksflipy', 'Projwin', 'Aplost', 'Automic']
-TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'lay', 'caxis', 'pat', 'file2', 'file3', 'file4', 'anim', 'adir', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
+TEXTMENUS = ['M%d%s' % (i, n) for i in range(1, 7) for n in ('kind', 'file', 'mode', 'keycolor', 'keyhex', 'motion', 'maxis', 'name', 'nztype', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'blend', 'rcol', 'rcol2', 'rfill', 'lay', 'caxis', 'pat', 'file2', 'file3', 'file4', 'anim', 'adir', 'cues')] + ['Textmotion', 'Textmaxis', 'T2motion', 'T2maxis', 'T3motion', 'T3maxis', 'Textname', 'T2name', 'T3name', 'Modelname'] + ['Spinaxis', 'Layerorder', 'Links', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont', 'Textcolor', 'Textdir', 'Textadir', 'Textspace'] + ['T%d%s' % (n, k) for n in (2, 3) for k in ('str', 'mode', 'layout', 'anim', 'font', 'color', 'dir', 'adir', 'space')] + ['Textalign', 'T2align', 'T3align', 'Textfill', 'T2fill', 'T3fill', 'Textblend', 'T2blend', 'T3blend'] + ['Camsrc', 'Clipstate', 'Camfit', 'Motion', 'Kstest', 'Projmon', 'Automode', 'Noreact', 'Modelblend', 'Drawblend', 'Transtyle']
 ALLOWED = set(s[0] for s in SLIDERS) | set(TOGGLES) | {'Model', 'Height', 'Pan', 'Orbit', 'Scene', 'Modelstyle'} | set(TEXTMENUS)
 
 def _C(): return op('/project1/CONTROLS')
@@ -1605,6 +1605,7 @@ def _ensurePars():
             pg = C.par[pre + 'size'].page
             if not hasattr(C.par, pre + 'align'): pp = pg.appendStr(pre + 'align', label=pre + ' align')[0]; pp.default = 'center'; pp.val = 'center'
             if not hasattr(C.par, pre + 'fill'): pp = pg.appendStr(pre + 'fill', label=pre + ' fill')[0]; pp.default = 'colour'; pp.val = 'colour'
+            if not hasattr(C.par, pre + 'blend'): pp = pg.appendStr(pre + 'blend', label=pre + ' blend')[0]; pp.default = 'normal'; pp.val = 'normal'
             for k, dv in (('letter', 0.0), ('word', 0.0), ('line', 1.0), ('ctilt', 0.6), ('cspeed', 0.5)):
                 if not hasattr(C.par, pre + k): pp = pg.appendFloat(pre + k, label=pre + ' ' + k)[0]; pp.default = dv; pp.val = dv
             if not hasattr(C.par, pre + 'crawl'): pp = pg.appendToggle(pre + 'crawl', label=pre + ' crawl')[0]; pp.default = False; pp.val = False
@@ -1951,6 +1952,9 @@ def handle(msg, reply):
             _all(fxpMsg())
         elif t == 'clean':
             n = E.cleanSlate()
+            if n and msg.get('group'):
+                try: E.bankSetGroup(n, str(msg.get('group'))[:40])       # made straight in the group you were looking at
+                except Exception as er: print('clean group', er)
             _all({'t': 'bank', 'bank': E.bankList()}); _publish(state(), active_only=True)
             if n:
                 th = {'t': 'thumb', 's': n, 'img': E.thumbB64(n)}; _all(th)

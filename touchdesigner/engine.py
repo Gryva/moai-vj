@@ -376,6 +376,28 @@ def blendUpdate(C):
             pp = g.par['vec%dvalue%s' % (vi, ax)]
             if abs(pp.eval() - v) > 1e-5: pp.val = v
 BLI = {}
+VSLOT = {}
+def setVec(g, name, vals):
+    """Write a named vec4 uniform on a GLSL TOP, taking a free slot the first time."""
+    k = (g.path, name); i = VSLOT.get(k)
+    if i is None or g.par['vec%dname' % i].eval() != name:
+        i = next((int(p.name[3:-4]) for p in g.pars('vec*name') if p.eval() == name), None)
+        if i is None:
+            i = next((int(p.name[3:-4]) for p in g.pars('vec*name') if not p.eval()), None)
+            if i is None: return
+            g.par['vec%dname' % i] = name
+        VSLOT[k] = i
+    for ax, v in zip('xyzw', vals):
+        pp = g.par['vec%dvalue%s' % (i, ax)]
+        if abs(pp.eval() - v) > 1e-5: pp.val = v
+TMODEC = {'mask': 1.0, 'cutout': 2.0, 'invert': 3.0}
+def textBlendUpdate(C):
+    """Text blend + mask mode for text drawn inside the stack (fx_src) or laid back after its own effects (txcomp)."""
+    bl = [float(BLENDS.index(v)) if v in BLENDS else 0.0 for v in (str(C.par[tpn(n, 'Textblend')].eval()) if hasattr(C.par, tpn(n, 'Textblend')) else 'normal' for n in TEXTN)]
+    md = [TMODEC.get(str(C.par[tpn(n, 'Textmode')].eval()), 0.0) for n in TEXTN]
+    for path in ('/project1/fx_src', '/project1/txcomp'):
+        g = op(path)
+        if g is not None: setVec(g, 'uTL', bl + [0.0]); setVec(g, 'uTD', md + [0.0])
 
 def pSet(g, k, p1):
     """An effect's one setting into its shader. CLONES needs more bits than one float holds: split over uP.x / uP.y."""
@@ -394,6 +416,13 @@ def pSet(g, k, p1):
     if k == 'speed':                                                   # style*1e7 + direction (0-359 deg)*1e4 + speed*100 + beat boost
         q = int(round(float(p1))); g.par.vec3valuex = (q // 10000000) % 10; g.par.vec3valuey = math.radians((q // 10000) % 1000)
         g.par.vec3valuez = ((q // 100) % 100) / 99.0; g.par.vec3valuew = (q % 100) / 99.0
+        return
+    if k == 'swirl':                                                   # old presets: just the amount (0-1, swings). New: 1e5 + mode*1e4 + speed*100 + amount
+        q = float(p1)
+        if q < 2.0: g.par.vec3valuex = q; g.par.vec3valuey = 0.0; g.par.vec3valuez = 0.0
+        else:
+            q = int(round(q)); g.par.vec3valuex = (q % 100) / 99.0; g.par.vec3valuey = (q // 10000) % 10
+            s_ = ((q // 100) % 100) / 99.0; g.par.vec3valuez = s_ * s_ * 4.0
         return
     if k == 'scroll':                                                  # copies*1e7 + direction (0-359 deg)*1e4 + speed*100 + beat push (each 0-99)
         q = int(round(float(p1))); g.par.vec3valuex = 1 + (q // 10000000) % 10; g.par.vec3valuey = math.radians((q // 10000) % 1000)
@@ -771,8 +800,8 @@ TEXTPARS = ['Texton', 'Textstr', 'Textmode', 'Textlayout', 'Textanim', 'Textfont
             'Textsize', 'Textglow', 'Textspeed', 'Textreact', 'Textamount', 'Textcm', 'Textca', 'Textcb', 'Textcang',
             'Textx', 'Texty', 'Textdir', 'Textadir', 'Textspace', 'Textdepth', 'Textoscale', 'Textoturn', 'Textotilt',
             'Textmotion', 'Textmaxis', 'Textmspeed', 'Textmamt', 'Textmrev', 'Textname',
-            'Textalign', 'Textletter', 'Textword', 'Textline', 'Textcrawl', 'Textctilt', 'Textcspeed', 'Textfill']
-TEXTNEW = {'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
+            'Textalign', 'Textletter', 'Textword', 'Textline', 'Textcrawl', 'Textctilt', 'Textcspeed', 'Textfill', 'Textblend']
+TEXTNEW = {'Textblend': 'normal', 'Textx': 0.0, 'Texty': 0.0, 'Textdir': 'h', 'Textadir': 'left', 'Textspace': 'flat', 'Textdepth': 0.0,
            'Textoscale': 1.0, 'Textoturn': 0.0, 'Textotilt': 0.0,
            'Textmotion': 'models', 'Textmaxis': 'y', 'Textmspeed': 30.0, 'Textmamt': 1.0, 'Textmrev': False, 'Textname': '',
            'Textalign': 'center', 'Textletter': 0.0, 'Textword': 0.0, 'Textline': 1.0, 'Textcrawl': False, 'Textctilt': 0.6, 'Textcspeed': 0.5, 'Textfill': 'colour'}   # older presets: these
@@ -941,6 +970,9 @@ def textUpdate(C, T, n=1):
     if sw is not None and int(sw.par.index.eval()) != fi: sw.par.index = fi
     if pp.vec12name.eval() != 'uF': pp.vec12name = 'uF'
     pp.vec12valuex = 1.0 if fi else 0.0                           # FILL: the letters show a layer (video / picture / noise)
+    bl = str(C.par[tpn(n, 'Textblend')].eval()) if hasattr(C.par, tpn(n, 'Textblend')) else 'normal'
+    if pp.vec13name.eval() != 'uBT': pp.vec13name = 'uBT'
+    pp.vec13valuex = float(BLENDS.index(bl)) if bl in BLENDS else 0.0   # BLEND: how the letters mix with the picture under them
     return True
 
 CRAWLRES = (960, 1280)                                           # the crawl's text sheet (free licence: max 1280)
@@ -1120,6 +1152,14 @@ def mf(j, a):
     if a == 2: return (0.0 if ob else float(C.par['M%dfy' % j].eval())) + m[2]
     return (0.0 if ob else float(C.par['M%dfrot' % j].eval())) + m[3]
 
+SWIRLA = {}
+def _swirlTick(p, who, T):
+    """SWIRL forever: the turn is added up frame by frame (one way only), so speed changes never jump."""
+    d = SWIRLA.setdefault(who, [0.0, T]); dt = max(0.0, min(0.1, T - d[1])); d[1] = T
+    md = int(round(float(p.vec3valuey)))
+    if md > 0: d[0] = (d[0] + (1.0 if md == 1 else -1.0) * float(p.vec3valuez) * dt) % (2.0 * math.pi)
+    p.vec3valuew = d[0]
+
 SCROLLOFF = {}
 def _scrollTick(p, who, T, env):
     """SCROLL: the offset is added up frame by frame, so changing the speed or the direction never makes the picture jump."""
@@ -1142,6 +1182,7 @@ def pushUniforms(T):
         p.vec1valuex, p.vec1valuey, p.vec1valuez, p.vec1valuew = au
         if k == 'beat': p.vec3valuew = T - A['lastkick']                  # time since the last beat
         if k == 'scroll': _scrollTick(p, 'all', T, env)
+        if k == 'swirl': _swirlTick(p, 'all', T)
         if k in COLFX: _colPush(k, p, T)
 
 # ------------------------------------------------------------------ effect colours (own colour / solid / linear / radial gradient)
@@ -1368,6 +1409,7 @@ def tUniforms(T):
             if t + ':' + k in BEATFX: p.vec2valuex = v[1] * (beatEnv() if t not in NR else 0.0)
             if k == 'beat': p.vec3valuew = (T - A['lastkick']) if t not in NR else 99.0
             if k == 'scroll': _scrollTick(p, t, T, beatEnv() if t not in NR else 0.0)
+            if k == 'swirl': _swirlTick(p, t, T)
             if k in COLFX:
                 c = TCOL[t].get(k)
                 if not c or c['m'] == 0:
@@ -3146,6 +3188,7 @@ def onFrameStart(frame):
     if S['frame'] % 8 == 0: _safe('clonesbb', clonesBB)
     _safe('noise', noiseUpdate, C, T)
     _safe('blend', blendUpdate, C)
+    _safe('tblend', textBlendUpdate, C)
     _safe('cues', cueUpdate, C)
     if SONG.get('play'): _safe('song', songUpdate, C, T)
     _safe('dvd', dvdCorners)

@@ -750,7 +750,7 @@ header .r1 .fps{font:500 12px var(--mono)}
     <div class="card open" id="cardFxLayers" style="margin-top:14px"><div class="ch"><b>Layers</b></div>
       <div class="cb"><div class="lstack" id="fxtg"></div></div></div>
     <h2><span>On air · <b id="fxtgname">All layers</b></span><button class="clr" data-act="clear">CLEAR</button></h2>
-    <details class="box lsets" id="lsets"><summary>Layer look<span>opacity · blend · brightness · contrast</span></summary><div id="g-opall" data-op="all"></div><div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div></details>
+    <details class="box lsets" id="lsets"><summary>Layer look<span>opacity · blend · brightness · contrast</span></summary><div id="g-opall" data-op="all"></div><div id="g-opmodel" data-op="model"></div><div class="blrow" data-op="model"><span>Blend</span><div class="seg sm" id="o-Modelblend"></div></div><span id="mopbox"></span><span id="topbox"></span><div id="g-opdraw" data-op="draw"></div><div class="blrow" data-op="draw"><span>Blend</span><div class="seg sm" id="o-Drawblend"></div></div></details>
     <div class="onair" id="onair"></div>
     <div class="fxfrow"><span>Effect on / off fade</span><span class="tin"><input type="number" min="0" max="600" step="0.1" inputmode="decimal" id="fxfadein"><i>s</i></span><span class="hint2">0 = instant</span></div>
     </div><div class="colB">
@@ -1023,7 +1023,8 @@ const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s)
 document.addEventListener('change', e => { const el = e.target; if (!el.dataset || !el.dataset.cuef) return; const box = el.closest('.cuebox'); if (!box) return;
   const i = +box.querySelector('[data-cuel]').dataset.cuel, n = +el.closest('[data-cue]').dataset.cue, L = cuesOf(i); if (!L[n]) return;
   L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : el.dataset.cuef === 'fade' ? Math.max(0, +el.value || 0) : parseT(el.value); cuesSet(i, L); });
-document.addEventListener('input', e => { const el = e.target; if (el.dataset && el.dataset.prepc && PREPSEL) { PREPO[PREPSEL][el.dataset.prepc] = (+el.value || 0) / 100; paint(el); prepVid(PREPJ.find(x => x.id === PREPSEL)); return; } });
+document.addEventListener('input', e => {
+  { const r = e.target.closest && e.target.closest('[data-tpr]'); if (r) { const pn = r.dataset.tpr, v = +r.value; S.pars[pn] = v; thr(pn, () => send({t:'set', p:pn, v})); const s_ = $('#s-' + pn); if (s_) s_.value = v; return; } } const el = e.target; if (el.dataset && el.dataset.prepc && PREPSEL) { PREPO[PREPSEL][el.dataset.prepc] = (+el.value || 0) / 100; paint(el); prepVid(PREPJ.find(x => x.id === PREPSEL)); return; } });
 document.addEventListener('input', e => { const el = e.target; if (!el.dataset || !el.dataset.prepv || !PREPSEL) return; const o = PREPO[PREPSEL];
   o[el.dataset.prepv] = el.dataset.prepv === 'speed' ? Math.max(0.1, Math.min(8, +el.value || 1)) : el.value; const j = PREPJ.find(x => x.id === PREPSEL); prepTL(j); prepVid(j); });
 document.addEventListener('change', e => { const el = e.target, v = Math.max(0, Math.min(600, +String(el.value).replace(',', '.') || 0));
@@ -1089,7 +1090,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-18g';
+const BUILD = '2026-11-19a';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1420,6 +1421,9 @@ function mediaCardsBuild(){               // 6 cards exist once; only added laye
             <div class="mixpick" data-mixpick="${i}" hidden></div></div>
           </div></div>
       </div></div>`; }).join('');
+  { const tb = $('#topbox'); if (tb) tb.innerHTML = [['text','Text'],['text2','T2'],['text3','T3']].map(([k, pre]) => `<div data-op="${k}"><div class="sub"><span>Opacity</span><input type="range" data-tpr="${pre}amount" min="0" max="1" step="0.01" value="${S && S.pars ? (S.pars[pre + 'amount'] ?? 1) : 1}"></div>
+    <div class="blrow"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="${pre}blend" data-tv="${v}" class="${(S && S.pars && S.pars[pre + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    <p class="hint2">MASK · CUT-OUT · INVERT (in the text card) now also work when the text has its own effects or sits behind another layer.</p></div>`).join(''); }
   $('#mopbox').innerHTML = MS.map(i => `<div id="g-m${i}op" data-op="m${i}"></div><div class="blrow" data-op="m${i}"><span>Blend</span><div class="seg sm">${BLM.map(([v, l]) => `<button data-tp="M${i}blend" data-tv="${v}" class="${(S && S.pars && S.pars['M' + i + 'blend'] || 'normal') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`).join('');
   $('#mfrbox').innerHTML = MS.map(i => `<div id="g-m${i}fr" data-fr="m${i}"></div>`).join('');
   $('#m3dbox').innerHTML = MS.map(i => `<div data-v3="m${i}"><div class="btns" style="grid-template-columns:1fr;margin:0 0 7px"><button class="btn" data-mfit="${i}">⤢ FIT TO SCREEN</button></div><div id="g-m${i}obj"></div></div>`).join('');
@@ -1656,19 +1660,21 @@ const MFOPEN = new Set();
 document.addEventListener('toggle', e => { const f = e.target.dataset && e.target.dataset.mfold; if (f === undefined) return; if (e.target.open) MFOPEN.add(f); else MFOPEN.delete(f); }, true);
 /* layer card: crop on a still picture, the time strip, speed */
 const GT = store.get('gtabs', {});
-function gtabsUI(){ $$('[data-gtabs]').forEach(bar => { const k = bar.dataset.gtabs, bs = [...bar.querySelectorAll('[data-gtab]')], cur = GT[k] || (bs[0] && bs[0].dataset.gtab);
-  bs.forEach(b => b.classList.toggle('on', b.dataset.gtab === cur)); $$(`[data-gpane^="${k}:"]`).forEach(p => p.classList.toggle('tabhide', p.dataset.gpane !== k + ':' + cur)); }); }
+const gtOpen = (k, d) => { let v = GT[k]; if (v == null) v = d ? [d] : []; if (!Array.isArray(v)) v = [v]; return GT[k] = v; };   // several parts open at once
+function gtabsUI(){ $$('[data-gtabs]').forEach(bar => { const k = bar.dataset.gtabs, bs = [...bar.querySelectorAll('[data-gtab]')], cur = gtOpen(k, bs[0] && bs[0].dataset.gtab);
+  bs.forEach(b => b.classList.toggle('on', cur.includes(b.dataset.gtab))); $$(`[data-gpane^="${k}:"]`).forEach(p => p.classList.toggle('tabhide', !cur.includes(p.dataset.gpane.slice(k.length + 1)))); }); }
 function layoutSet(v){ store.set('layout', v); document.body.classList.toggle('stacked', v === 'stacked'); $$('[data-layout]').forEach(b => b.classList.toggle('on', b.dataset.layout === v)); MS.forEach(i => mTabsUI(i)); }
 const MTAB = store.get('mtab', {}), MTABSEL = {frame:'.mframe', time:'.mplay', look:'.mkey', cues:'.cuebox'}, MFR = {};
-function mTabsUI(i){ const c = $('#cardM' + i); if (!c) return; let cur = MTAB[i] || null;
+const mtOpen = i => { let v = MTAB[i]; if (!Array.isArray(v)) v = MTAB[i] = v ? [v] : []; return v; };   // any number of parts open at once
+function mTabsUI(i){ const c = $('#cardM' + i); if (!c) return; const cur = mtOpen(i);
   for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]), b = c.querySelector(`[data-mtab="${k}"]`); if (!el || !b) continue;
-    b.hidden = el.hidden; if (el.hidden && cur === k) cur = MTAB[i] = null;
+    b.hidden = el.hidden; if (el.hidden && cur.includes(k)) cur.splice(cur.indexOf(k), 1);
     const sm = el.querySelector('summary span'); b.querySelector('i').classList.toggle('on', !!(sm && sm.textContent.trim())); }
   if (document.body.classList.contains('stacked')) { for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]); if (el) el.classList.remove('tabhide'); } return; }
   for (const k in MTABSEL) { const el = c.querySelector(MTABSEL[k]), b = c.querySelector(`[data-mtab="${k}"]`); if (!el) continue;
-    const on = k === cur; b.classList.toggle('on', on); el.classList.toggle('tabhide', !on); if (el.open !== on) { el._tabset = true; el.open = on; } } }
+    const on = cur.includes(k); b.classList.toggle('on', on); el.classList.toggle('tabhide', !on); if (el.open !== on) { el._tabset = true; el.open = on; } } }
 document.addEventListener('toggle', e => { const el = e.target; if (!el.classList || !el.classList.contains('tabp')) return; if (el._tabset) { el._tabset = false; return; }
-  if (el.open) { const c = el.closest('[id^="cardM"]'); if (!c) return; const i = +c.id.slice(5); for (const k in MTABSEL) if (el.matches(MTABSEL[k])) MTAB[i] = k; mTabsUI(i); } }, true);
+  if (el.open) { const c = el.closest('[id^="cardM"]'); if (!c) return; const i = +c.id.slice(5), cur = mtOpen(i); for (const k in MTABSEL) if (el.matches(MTABSEL[k]) && !cur.includes(k)) cur.push(k); mTabsUI(i); } }, true);
 function mFrameAsk(i){ send({t:'media', do:'frame', slot:i}); }
 const NZLIVE = {};                         // noise layers: a small live picture while the card is on screen
 setInterval(() => { if (!S || ui.tab !== 'source' || document.hidden) return; MS.forEach(i => { const im = $(`[data-nzimg="${i}"]`); if (!im || !S.pars['M' + i + 'on'] || S.pars['M' + i + 'kind'] !== 'noise') return;
@@ -1676,7 +1682,7 @@ setInterval(() => { if (!S || ui.tab !== 'source' || document.hidden) return; MS
   NZLIVE[i] = performance.now(); NZLIVE[i + 'w'] = 1; send({t:'media', do:'frame', slot:i, live:1}); }); }, 450);
 function mCropUI(i){ const box = $(`[data-mcropbox="${i}"]`); if (!box) return; const p = S.pars, m = 'M' + i, f = p[m + 'file'];
   const fk = f || p[m + 'kind'], it = (S.media || []).find(x => x.id === f), img = box.querySelector('img'), fr = MFR[i] && MFR[i].file === fk ? MFR[i].img : '', src = fr ? 'data:image/jpeg;base64,' + fr : it && it.thumb ? 'data:image/jpeg;base64,' + it.thumb : '';
-  if (MTAB[i] === 'frame' && fk && (!MFR[i] || MFR[i].file !== fk) && MFR[i + 'ask'] !== fk) { MFR[i + 'ask'] = fk; mFrameAsk(i); }
+  if (mtOpen(i).includes('frame') && fk && (!MFR[i] || MFR[i].file !== fk) && MFR[i + 'ask'] !== fk) { MFR[i + 'ask'] = fk; mFrameAsk(i); }
   if (img.getAttribute('src') !== src) { if (src) img.setAttribute('src', src); else img.removeAttribute('src'); }
   if (MCROP && MCROP.i === i) return; const c = box.querySelector('.mcf');
   c.style.left = (+p[m + 'cropl'] || 0) * 100 + '%'; c.style.right = (+p[m + 'cropr'] || 0) * 100 + '%'; c.style.top = (+p[m + 'cropt'] || 0) * 100 + '%'; c.style.bottom = (+p[m + 'cropb'] || 0) * 100 + '%'; }
@@ -2121,7 +2127,7 @@ function quickDo(v){ const [a, n] = v.split(':'), close = () => { $('#sheet').cl
     $('#prep').hidden = true; $('#prepLink').hidden = false; $('#prepUrl').value = ''; $('#prepCutA').value = ''; $('#prepCutB').value = ''; setTimeout(() => $('#prepUrl').focus(), 50); }
   else if (a === 'cue') { const b = $(`[data-cueadd="${n}"]`); if (b) { b.click(); toast('⏱ Cue added on ' + tgtName('m' + n) + ' at ' + fmtT((VT[+n] || [0])[0]) + ' · change it in SETUP → SOURCE → CUES'); } }
   else if (a === 'save') saveNew();
-  else if (a === 'clean') { send({t:'clean'}); toast('Clean preset added at the end'); }
+  else if (a === 'clean') { const grp = padGroupNow(); send({t:'clean', group:grp}); toast('Clean preset added' + (grp ? ' in ' + grp : ' at the end')); }
   else if (a === 'mode') setEdit(!EDIT);
   buzz(); }
 function setEdit(on){
@@ -2662,6 +2668,7 @@ setInterval(() => REC.on && recTick(), 500);
 const PK = {
   beat:   [['md', 1e4, 10], ['amt', 100, 100], ['dec', 1, 100]],
   speed:  [['st', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
+  swirl:  [['f', 1e5, 10], ['mode', 1e4, 10], ['sp', 100, 100], ['amt', 1, 100]],
   scroll: [['n', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
   rotate: [['fill', 1000, 10], ['dir', 100, 10], ['sp', 1, 100]],
@@ -2985,8 +2992,9 @@ function prepMark(k){ const j = PREPJ.find(x => x.id === PREPSEL), v = $('#prepV
   if (k === 'in') { if (t >= o.out - 0.2) o.out = d; o.in = Math.max(0, Math.min(t, o.out - 0.2)); }
   else { if (t <= o.in + 0.2) o.in = 0; o.out = Math.min(d, Math.max(t, o.in + 0.2)); }
   PFREE = false; PV.t = undefined; prepTL(j); if (k === 'out') pSeek(v, Math.max(o.in, o.out - 1.5)); toast(k === 'in' ? 'Clip starts at ' + fmtT(o.in) : 'Clip ends at ' + fmtT(o.out)); }
-function pkDec(k, p){ p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
-function pkEnc(k, c){ return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
+function pkDec(k, p){ if (k === 'swirl' && (+p || 0) < 2) return {f:1, mode:0, sp:30, amt:Math.round((+p || 0) * 99)};   // old swirl presets: just the amount
+  p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
+function pkEnc(k, c){ if (k === 'swirl') c.f = 1; return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
 function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
   const i = box.querySelector('.sppad i'); if (i && k === 'mask') pkDot(i, c); }
 function pkDot(i, c){ i.style.left = c.x / 99 * 100 + '%'; i.style.top = c.y / 99 * 100 + '%'; i.style.width = (1 + c.w / 99 * 60) * 2 * 9 / 16 + '%'; i.style.height = (1 + c.h / 99 * 60) * 2 + '%'; i.style.aspectRatio = 'auto'; i.style.borderRadius = c.shp ? '3px' : '50%'; }
@@ -3001,6 +3009,8 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
     + segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
     + `<div class="sub"><span>Direction (°)</span><input type="range" data-pk="ang" min="0" max="359" step="1" value="${c.ang}" style="--acc:${GC[l.g]}"></div>`
     + pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'bb', 'Faster on the beat', c.bb);
+  if (k === 'swirl') h += segUI('Turns', 'data-pkf="mode" data-v', ['⇆ SWING', '↻ FOREVER', '↺ FOREVER'], c.mode, [0, 1, 2]) + pkS(l, 'amt', 'Twist', c.amt)
+    + pkS(l, 'sp', 'Speed (FOREVER)', c.sp) + '<p class="hint2">SWING twists one way and back. FOREVER keeps turning the same way, like water down a drain.</p>';
   if (k === 'scroll') h += segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
     + `<div class="sub"><span>Direction (°)</span><input type="range" data-pk="ang" min="0" max="359" step="1" value="${c.ang}" style="--acc:${GC[l.g]}"></div>`
     + pkS(l, 'sp', 'Speed', c.sp) + segUI('Copies across', 'data-pkf="n" data-v', ['1','2','3','4','5','6','8','10'], c.n, [0,1,2,3,4,5,7,9])
@@ -3183,11 +3193,13 @@ function step(d){
   const i = filled.indexOf(S.b); const next = filled[((i < 0 ? (d > 0 ? -1 : 0) : i) + d + filled.length) % filled.length];
   go(next);
 }
+function padGroupNow(){ const sel = store.get('pgsel', ''); return sel && sel !== '*' && sel !== '#arch' && presetGroups().includes(sel) ? sel : ''; }   // the group you are looking at
 function saveNew(){
   const slot = S.bank.indexOf(null) + 1; if (!slot) { toast('All preset slots are full'); return; }
-  const name = S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Clean';
-  bankOp('banksave', slot, name, 'Saved · ' + name); S.b = slot;
-  S.bank[slot - 1] = {name, on: S.layers.filter(l => l.on).map(l => l.k), scene: S.pars.Scene, model: S.pars.Model};
+  const name = S.layers.filter(l => l.on).map(l => l.label).slice(0, 2).join(' + ') || 'Clean', grp = padGroupNow();
+  bankOp('banksave', slot, name, 'Saved · ' + name + (grp ? ' in ' + grp : '')); S.b = slot;
+  if (grp) send({t:'bankgroup', v:slot, name:grp, n:Math.random().toString(36).slice(2, 9)});
+  S.bank[slot - 1] = {name, on: S.layers.filter(l => l.on).map(l => l.k), scene: S.pars.Scene, model: S.pars.Model, group: grp};
   renderPads();
 }
 function sheet(slot, simple){
@@ -3240,8 +3252,8 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
     $('#shP').textContent = 'Presets, layers and quick switches that use it follow the new name.';
     $('#shA').innerHTML = `<button class="pri" data-sh="mrenok">✓ Rename</button><button data-sh="cancel">Cancel</button>`; setTimeout(() => { nI.focus(); nI.select(); }, 60); return; }
   else if (b.dataset.sh === 'mrenok') { const v = $('#shI').value.trim(); if (v) send({t:'media', do:'rename', id:$('#sheet').dataset.mid, name:v}); }
-  else if (b.dataset.sh === 'savenewok') { const slot = +b.dataset.slot, name = ($('#shI').value || '').trim() || 'New look ' + slot;
-    bankOp('banksave', slot, name, 'Saved as new · ' + slot + ' · ' + name); S.b = slot; S.bank[slot - 1] = {name, on:S.layers.filter(l => l.on).map(l => l.k), scene:S.pars.Scene, model:S.pars.Model, group:store.get('recfmt', '16:9') === '9:16' ? 'PHONE' : '', phone:store.get('recfmt', '16:9') === '9:16'}; renderPads(); }
+  else if (b.dataset.sh === 'savenewok') { const slot = +b.dataset.slot, name = ($('#shI').value || '').trim() || 'New look ' + slot, grp = padGroupNow();
+    bankOp('banksave', slot, name, 'Saved as new · ' + slot + ' · ' + name + (grp ? ' in ' + grp : '')); if (grp) send({t:'bankgroup', v:slot, name:grp, n:Math.random().toString(36).slice(2, 9)}); S.b = slot; S.bank[slot - 1] = {name, on:S.layers.filter(l => l.on).map(l => l.k), scene:S.pars.Scene, model:S.pars.Model, group:padGroupNow() || (store.get('recfmt', '16:9') === '9:16' ? 'PHONE' : ''), phone:store.get('recfmt', '16:9') === '9:16'}; renderPads(); }
   else if (b.dataset.sh === 'trempty') { send({t:'media', do:'emptytrash'}); }
   else if (b.dataset.sh === 'mdel') { const id = $('#sheet').dataset.mid; send({t:'media', do:'uses', id});
     const live = MS.filter(i => S.pars['M' + i + 'on'] && S.pars['M' + i + 'file'] === id).map(i => tgtName('m' + i));
@@ -3263,7 +3275,8 @@ $('#shA').addEventListener('click', e => { const b = e.target.closest('[data-sh]
   else if (b.dataset.sh === 'qleft') qMove(qi, -1);
   else if (b.dataset.sh === 'qright') qMove(qi, 1);
   else if (b.dataset.sh === 'qdel') qDel(qi);
-  else if (b.dataset.sh === 'save') { bankOp('banksave', slot, name, 'Saved ' + slot + ' · ' + name); S.b = slot; }
+  else if (b.dataset.sh === 'save') { const grp = !S.bank[slot - 1] ? padGroupNow() : ''; bankOp('banksave', slot, name, 'Saved ' + slot + ' · ' + name + (grp ? ' in ' + grp : '')); S.b = slot;
+    if (grp) send({t:'bankgroup', v:slot, name:grp, n:Math.random().toString(36).slice(2, 9)}); }
   else if (b.dataset.sh === 'rename') bankOp('bankrename', slot, name, 'Renamed');
   else if (b.dataset.sh === 'grpmenu') { sheetGroup(slot); return; }
   else if (b.dataset.sh === 'grp') bankOp('bankgroup', slot, b.dataset.g, b.dataset.g ? 'Moved to ' + b.dataset.g : 'Taken out of its group');
@@ -3315,7 +3328,7 @@ const endHold = e => { const c = e.target.closest && e.target.closest('[data-pad
       else { send({t:'fxp', do:'apply', i:+c.dataset.fxp, fade:ui.fade}); buzz(); } }
     else if (c.dataset.media) { { const i = +c.dataset.mslot; if (c.dataset.media === S.pars['M' + i + 'file']) send({t:'media', do:'stop', slot:i}); else { send({t:'media', do:'play', slot:i, id:c.dataset.media}); MLIB[i] = false; S.pars['M' + i + 'file'] = c.dataset.media; mediaCardsUI(S.pars); } }; buzz(); }
     else if (c.dataset.clip) { send(c.dataset.clip === 'live' ? {t:'clip', do:'live'} : {t:'clip', do:'play', id:c.dataset.clip}); buzz(); }
-    else if (c.dataset.pad === 'clean') { send({t:'clean'}); toast('Clean preset added at the end · build it, then tap SAVE'); buzz(20); }
+    else if (c.dataset.pad === 'clean') { const grp = padGroupNow(); send({t:'clean', group:grp}); toast('Clean preset added' + (grp ? ' in ' + grp : ' at the end') + ' · build it, then tap SAVE'); buzz(20); }
     else if (c.dataset.pad === 'new') { toast('Hold + to save what is on screen'); buzz(); }
     else if (c.dataset.pad && GRPADD) { const slot = +c.dataset.pad, p = S.bank[slot - 1];
       if (p && (p.group || '') !== GRPADD) { bankOp('bankgroup', slot, GRPADD, 'Moved to ' + GRPADD); c.classList.add('sladded'); setTimeout(() => c.classList.remove('sladded'), 350); buzz(10); } }
@@ -3353,7 +3366,8 @@ document.addEventListener('click', e => {
   if (d.preplocal) { send({t:'prep', do:'local', mid:d.preplocal}); $('#prepPick').innerHTML = ''; PREPWANT = true; toast('Opening the video…'); buzz(); return; }
   if (d.qvid) { const sl = +d.qvslot; if (S.pars['M' + sl + 'file'] !== d.qvid) { send({t:'media', do:'play', slot:sl, id:d.qvid}); S.pars['M' + sl + 'file'] = d.qvid; QSIG = ''; renderQuick(); } buzz(); return; }
   if (d.mfold !== undefined && d.mslot) { binOf(+d.mslot).f = d.mfold; renderMedia(); buzz(); return; }
-  if (d.mtab) { const i = +d.mtabi; MTAB[i] = MTAB[i] === d.mtab ? null : d.mtab; store.set('mtab', MTAB); mTabsUI(i); if (MTAB[i] === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (MTAB[i] === 'cues') cueUI(i); buzz(); return; }
+  if (d.mtab) { const i = +d.mtabi, cur = mtOpen(i), at = cur.indexOf(d.mtab); if (at >= 0) cur.splice(at, 1); else cur.push(d.mtab); store.set('mtab', MTAB); mTabsUI(i);
+    if (cur.includes('frame') && d.mtab === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (cur.includes('cues') && d.mtab === 'cues') cueUI(i); buzz(); return; }
   if (d.mfr) { MFR[+d.mfr + 'ask'] = S.pars['M' + d.mfr + 'file']; mFrameAsk(+d.mfr); toast('Grabbing the frame playing now…'); buzz(); return; }
   if (d.trs) { S.pars.Transtyle = d.trs; send({t:'set', p:'Transtyle', v:d.trs}); apSummary(); toast('Transition: ' + (TRS.find(x => x[0] === d.trs) || ['', d.trs])[1].toLowerCase()); buzz(); return; }
   if (d.qkm) { quickDo(d.qkm); return; }
@@ -3434,7 +3448,7 @@ document.addEventListener('click', e => {
     box.querySelectorAll(`[data-cl="${d.cl}"]`).forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
   if (d.nzset) { const pn = 'M' + d.nzset + d.k, v = +d.v; S.pars[pn] = v; send({t:'set', p:pn, v}); nzUI(+d.nzset, S.pars); buzz(); return; }
   if (d.nzdice) { const pn = 'M' + d.nzdice + 'nzseed', v = 1 + Math.floor(Math.random() * 99); S.pars[pn] = v; send({t:'set', p:pn, v}); toast('🎲 New variation'); buzz(); return; }
-  if (d.gtab) { GT[d.gtabk] = d.gtab; store.set('gtabs', GT); gtabsUI(); buzz(); return; }
+  if (d.gtab) { const cur = gtOpen(d.gtabk), at = cur.indexOf(d.gtab); if (at >= 0) cur.splice(at, 1); else cur.push(d.gtab); store.set('gtabs', GT); gtabsUI(); buzz(); return; }
   if (d.nzt || d.nzcm) { const i = d.nzt || d.nzcm, pn = 'M' + i + (d.nzt ? 'nztype' : 'nzcmode'); S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); nzUI(+i, S.pars); buzz(); return; }
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }

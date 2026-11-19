@@ -45,6 +45,7 @@ float T(vec2 p){
 }
 uniform vec4 uX;   // x, y = move (-1..1), z = direction (0 across, 1 stacked letters, 2 sideways up, 3 sideways down), w = animation direction (0 left, 1 right, 2 up, 3 down)
 float gFl = 1.0;                                                      // flicker: letters blink out on the beat
+uniform vec4 uBT;  // BLEND: x = 0 normal, 1 add, 2 screen, 3 multiply, 4 overlay, 5 difference, 6 lighten, 7 darken (how the letters mix with the picture)
 uniform vec4 uF;   // FILL: x = 1 -> the letters show another layer (its picture is packed into input 1's colour) instead of a colour
 uniform vec4 uK;   // CRAWL: x = tilt (0 = off), y = how far it has travelled, z = text sheet height / width, w = column width at the bottom of the screen
 float gCr = 1.0;
@@ -113,7 +114,13 @@ void main(){
   vec3 col = (uTA.w > 0.5 ? tTint(q) : uC.rgb) * (1.0 + a.w * 0.35 * react);
   if (uF.x > 0.5) col = texture(sTD2DInputs[1], q).rgb * (1.0 + a.w * 0.2 * react);   // a video / picture / noise inside the letters (packed with the letters)
   vec3 sc = tex(uv), o = sc;
-  if (mode == 0) o = mix(sc + col * gl * uC.w * 0.8, col, m);
+  if (mode == 0) {
+    int bm = int(uBT.x + 0.5); vec3 b = col;
+    if (bm == 1) b = sc + col; else if (bm == 2) b = 1.0 - (1.0 - sc) * (1.0 - clamp(col, 0.0, 1.0)); else if (bm == 3) b = sc * col;
+    else if (bm == 4) b = mix(2.0 * sc * col, 1.0 - 2.0 * (1.0 - sc) * (1.0 - col), step(0.5, sc)); else if (bm == 5) b = abs(sc - col);
+    else if (bm == 6) b = max(sc, col); else if (bm == 7) b = min(sc, col);
+    o = mix(sc + col * gl * uC.w * 0.8 * (bm == 0 ? 1.0 : 0.5), b, m);
+  }
   else if (mode == 1) o = sc * m * 1.5 + col * m * 0.10 + col * gl * uC.w * 0.35 * (1.0 - m);
   else if (mode == 2) o = sc * (1.0 - m) + col * m * 0.12 + col * gl * uC.w * 0.45 * (1.0 - m);
   else if (mode == 3) o = mix(sc, 1.0 - sc, m);
