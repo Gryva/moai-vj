@@ -417,6 +417,12 @@ def pSet(g, k, p1):
         q = int(round(float(p1))); g.par.vec3valuex = (q // 10000000) % 10; g.par.vec3valuey = math.radians((q // 10000) % 1000)
         g.par.vec3valuez = ((q // 100) % 100) / 99.0; g.par.vec3valuew = (q % 100) / 99.0
         return
+    if k == 'hue':                                                     # old presets: cycle speed 0-1. New: 1e5 + mode*1e4 + speed*100 + shift (0-99 = 0-356 deg)
+        q = float(p1)
+        if q < 2.0: g.par.vec3valuex = q; g.par.vec3valuey = 0.0; g.par.vec3valuez = 0.0
+        else:
+            q = int(round(q)); g.par.vec3valuex = ((q // 100) % 100) / 99.0; g.par.vec3valuey = (q // 10000) % 10; g.par.vec3valuez = (q % 100) / 100.0
+        return
     if k == 'swirl':                                                   # old presets: just the amount (0-1, swings). New: 1e5 + mode*1e4 + speed*100 + amount
         q = float(p1)
         if q < 2.0: g.par.vec3valuex = q; g.par.vec3valuey = 0.0; g.par.vec3valuez = 0.0
@@ -2187,7 +2193,7 @@ def _qclean(it):
             return d
     elif k == 'fx':
         t, e, f = str(it.get('t', '')), str(it.get('e', '')), str(it.get('f', ''))
-        if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and f in ('amt', 'p1', 'on'):
+        if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and (f in ('amt', 'p1', 'on') or (f.startswith('pk:') and f[3:].isalpha() and len(f) < 12)):
             return {'k': 'fx', 't': t, 'e': e, 'f': f}
     return None
 

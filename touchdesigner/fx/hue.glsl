@@ -25,7 +25,8 @@ float ASP(){ vec2 r = RES(); return r.x / r.y; }
 // COLOR CYCLE  hue rotation + saturation boost, mids push the colour. uP.x = speed
 void main(){
   vec4 a = uAudio; vec3 c = tex(vUV.st); vec3 h = rgb2hsv(c);
-  h.x = fract(h.x + uTime * (0.03 + 0.2 * uP.x) + a.y * 0.25 + vUV.st.y * 0.15);
+  if (uP.y > 0.5) { h.x = fract(h.x + uP.z); OUT(hsv(h.x, h.y, h.z)); return; }     // SHIFT: every colour turned round the wheel by uP.z, held still
+  h.x = fract(h.x + uTime * (0.03 + 0.2 * uP.x) + a.y * 0.25 + vUV.st.y * 0.15);   // CYCLE (as before)
   h.y = clamp(h.y * 1.8 + 0.25, 0.0, 1.0);
   OUT(hsv(h.x, h.y, h.z * (1.0 + a.w * 0.25)));
 }

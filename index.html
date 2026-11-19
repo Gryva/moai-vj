@@ -360,7 +360,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:32px;border:0;border-radiu
 .bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
 .bar div{width:100%;border-radius:var(--r1);background:var(--c);height:2%;box-shadow:0 0 18px -4px var(--c)}.bar span{font:700 11px var(--mono);color:var(--mute)}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(8,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav button[data-v="song"]{display:none}                    /* SONG tab hidden for shows (the code stays) */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(7,1fr);padding:7px 6px calc(7px + var(--sb));background:#0d0b12f2;backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--mute);border-radius:var(--r1)}nav button.on{color:var(--ink);background:var(--panel2)}
 
 /* text tab */
@@ -443,6 +444,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
 .pgsec h5{margin:14px 2px 6px;font:800 11px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);display:flex;gap:8px;align-items:baseline}.pgsec h5 i{font-style:normal;opacity:.6}
+.qpop{animation:qpop .28s ease-out}@keyframes qpop{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
 .fxpins{display:grid;grid-template-columns:1fr 1fr;gap:6px}.qsw{position:absolute;right:6px;bottom:6px;display:flex;gap:2px;font-style:normal}.qsw u{text-decoration:none;font:800 10px var(--sans);padding:2px 5px;border-radius:4px;background:#0008;color:#fff}.qfxt:not(.on) .qsw u:first-child,.qfxt.on .qsw u:last-child{background:var(--lime);color:#0b0a0f}
 .fxpin{display:block;width:100%;margin:8px 0 2px;padding:9px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.06em}
 .manim[hidden]{display:none}.mpos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin:0 0 8px}.mpos button{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:15px}
@@ -1093,7 +1095,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19d';
+const BUILD = '2026-11-19e';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2444,7 +2446,8 @@ function qLabel(it){
   if (it.k === 'swap') return ['Swap', tgtName(it.a) + ' ⇄ ' + tgtName(it.b)];
   if (it.k === 'fxp') { const l = S.layers.find(x => x.k === it.e) || {label:it.e}; return [it.t === 'all' ? 'All layers' : tgtName(it.t), it.name || l.label, 'Setting']; }
   if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
-    return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
+    const pkl = { deg:'Hue shift', sp:'Speed', amt:'Amount', bb:'Beat', ang:'Direction', n:'Copies' };
+    return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : /^pk:/.test(it.f) ? (pkl[it.f.slice(3)] || it.f.slice(3)) : (l.p1label || 'Setting')]; }
   const sd = (S.sliders || []).find(x => x.p === it.p);
   const raw = it.p.replace(/^(M\d|T\d(?=on|str)|Text(?=on))/, '');
   const TL = {vis:'On / off', on:'On / off', Texton:'On / off', keyon:'Green screen', Statue:'On / off', Autospin:'Spin', Spinrev:'Reverse spin', Drawon:'On / off', Autopilot:'Autopilot', Showlabel:'Label', Monitor:'Monitor', cueon:'Effect cues'};
@@ -2489,6 +2492,7 @@ function qVal(it){                        // current value of a pinned control
   if (it.k !== 'fx') return S.pars[it.p];
   const st = it.t === 'all' ? (S.allL || []) : ((S.tfx || {})[it.t] || []), row = st.find(x => x[0] === it.e), l = S.layers.find(x => x.k === it.e) || {};
   if (it.f === 'on') return !!(row && row[1]);
+  if (/^pk:/.test(it.f)) { const p1 = row ? row[3] : l.p1; return (pkDec(it.e, p1) || {})[it.f.slice(3)] ?? 0; }   // one setting inside an effect
   return row ? (it.f === 'amt' ? row[2] : row[3]) : (it.f === 'amt' ? 1 : l.p1);
 }
 let QSIG = '', QB = null;
@@ -2549,12 +2553,14 @@ function renderQuick(){
       return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(L.label || it.e)}</b><i class="ck">✓</i>${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}${fd != null ? `<i class="qffd">${fd ? fd + ' s' : 'CUT'}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Transition, move or remove">⋯</button></div>`; }
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm.replace(/ · on \/ off$/, ''))}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
     if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {};
-      const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : [l.p1min, l.p1max, l.p1step];
+      const [mn, mx, st] = it.f === 'amt' ? [0, 1, 0.01] : /^pk:/.test(it.f) ? [0, 99, 1] : [l.p1min, l.p1max, l.p1step];
       return `<div class="ctl">${lab}<input type="range" id="s-qk_${i}" data-qki="${i}" min="${mn}" max="${mx}" step="${st}" style="--acc:${GC[l.g] || '#c7ff3d'}"></div>`; }
     const sd = (S.sliders || []).find(x => x.p === it.p); if (!sd) return '';
     return `<div class="ctl">${lab}<input type="range" id="s-qk_${i}" data-qki="${i}" min="${sd.min}" max="${sd.max}" step="${sd.step}" style="--acc:${ACC[sd.group] || '#c7ff3d'}"></div>`; }).join('');
   $$('#qk input[data-qki]').forEach(el => { const it = L[+el.dataset.qki]; el.value = +qVal(it) || 0;
-    bindSlider(el, 'qk_' + el.dataset.qki, v => { if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, [it.f]:v}); }
+    bindSlider(el, 'qk_' + el.dataset.qki, v => { if (it.k === 'fx' && /^pk:/.test(it.f)) { const st = it.t === 'all' ? null : ((S.tfx || {})[it.t] || []).find(x => x[0] === it.e), l = S.layers.find(x => x.k === it.e) || {};
+        const c = pkDec(it.e, st ? st[3] : l.p1); c[it.f.slice(3)] = Math.round(v); const p1 = pkEnc(it.e, c); if (it.t === 'all' || it.t === FXT_SEL) l.p1 = p1; if (st) st[3] = p1; send({t:'layer', tgt:it.t, k:it.e, p1}); }
+      else if (it.k === 'fx') { send({t:'layer', tgt:it.t, k:it.e, [it.f]:v}); }
       else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); } }); });
   quickSync(); qRecent(); qChainDecor();
 }
@@ -2690,6 +2696,7 @@ setInterval(() => REC.on && recTick(), 500);
 const PK = {
   beat:   [['md', 1e4, 10], ['amt', 100, 100], ['dec', 1, 100]],
   speed:  [['st', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
+  hue:    [['f', 1e5, 10], ['mode', 1e4, 10], ['sp', 100, 100], ['deg', 1, 100]],
   swirl:  [['f', 1e5, 10], ['mode', 1e4, 10], ['sp', 100, 100], ['amt', 1, 100]],
   scroll: [['n', 1e7, 10], ['ang', 1e4, 1000], ['sp', 100, 100], ['bb', 1, 100]],
   mask:   [['inv', 1e11, 10], ['shp', 1e10, 10], ['x', 1e8, 100], ['y', 1e6, 100], ['w', 1e4, 100], ['h', 100, 100], ['sf', 1, 100]],
@@ -3014,13 +3021,14 @@ function prepMark(k){ const j = PREPJ.find(x => x.id === PREPSEL), v = $('#prepV
   if (k === 'in') { if (t >= o.out - 0.2) o.out = d; o.in = Math.max(0, Math.min(t, o.out - 0.2)); }
   else { if (t <= o.in + 0.2) o.in = 0; o.out = Math.min(d, Math.max(t, o.in + 0.2)); }
   PFREE = false; PV.t = undefined; prepTL(j); if (k === 'out') pSeek(v, Math.max(o.in, o.out - 1.5)); toast(k === 'in' ? 'Clip starts at ' + fmtT(o.in) : 'Clip ends at ' + fmtT(o.out)); }
-function pkDec(k, p){ if (k === 'swirl' && (+p || 0) < 2) return {f:1, mode:0, sp:30, amt:Math.round((+p || 0) * 99)};   // old swirl presets: just the amount
+function pkDec(k, p){ if (k === 'hue' && (+p || 0) < 2) return {f:1, mode:0, sp:Math.round((+p || 0) * 99), deg:0};   // old hue presets: cycle speed only
+  if (k === 'swirl' && (+p || 0) < 2) return {f:1, mode:0, sp:30, amt:Math.round((+p || 0) * 99)};   // old swirl presets: just the amount
   p = Math.round(+p || 0); const c = {}; PK[k].forEach(([f, m, b]) => c[f] = Math.floor(p / m) % b); return c; }
-function pkEnc(k, c){ if (k === 'swirl') c.f = 1; return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
+function pkEnc(k, c){ if (k === 'swirl' || k === 'hue') c.f = 1; return PK[k].reduce((a, [f, m]) => a + (c[f] || 0) * m, 0); }
 function pkSet(box, c){ const k = box.dataset.pkk, p1 = pkEnc(k, c); box.dataset.pkv = p1; send({t:'layer', tgt:FXT_SEL, k, p1}); setLay(k, 'p1', p1); const L = S.layers.find(x => x.k === k); if (L) L.p1 = p1;
   const i = box.querySelector('.sppad i'); if (i && k === 'mask') pkDot(i, c); }
 function pkDot(i, c){ i.style.left = c.x / 99 * 100 + '%'; i.style.top = c.y / 99 * 100 + '%'; i.style.width = (1 + c.w / 99 * 60) * 2 * 9 / 16 + '%'; i.style.height = (1 + c.h / 99 * 60) * 2 + '%'; i.style.aspectRatio = 'auto'; i.style.borderRadius = c.shp ? '3px' : '50%'; }
-const pkS = (l, f, lab, v) => `<div class="sub"><span>${lab}</span><input type="range" data-pk="${f}" min="0" max="99" step="1" value="${v}" style="--acc:${GC[l.g]}"></div>`;
+const pkS = (l, f, lab, v) => `<div class="sub"><span data-qfx="${l.k}" data-qf="pk:${f}" title="Hold to pin to Quick">${lab}</span><input type="range" data-pk="${f}" min="0" max="99" step="1" value="${v}" style="--acc:${GC[l.g]}"></div>`;
 function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k}" data-pkv="${pkEnc(k, c)}">`;
   if (k === 'mask') { const sty = `left:${c.x / 99 * 100}%;top:${c.y / 99 * 100}%;width:${(1 + c.w / 99 * 60) * 2 * 9 / 16}%;height:${(1 + c.h / 99 * 60) * 2}%;aspect-ratio:auto;border-radius:${c.shp ? '3px' : '50%'}`;
     h += segUI('Shape', 'data-pkf="shp" data-v', ['CIRCLE / OVAL','RECTANGLE','TEXT LETTERS','DIAMOND','BAND','RING','STAR'], c.shp) + `<div class="sub"><span>Where (tap or drag)</span></div><div class="sppad" data-pkpad><i style="${sty}"></i></div>`
@@ -3031,6 +3039,8 @@ function pkUI(l){ const k = l.k, c = pkDec(k, l.p1); let h = `<div data-pkk="${k
     + segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
     + `<div class="sub"><span>Direction (°)</span><input type="range" data-pk="ang" min="0" max="359" step="1" value="${c.ang}" style="--acc:${GC[l.g]}"></div>`
     + pkS(l, 'sp', 'Speed', c.sp) + pkS(l, 'bb', 'Faster on the beat', c.bb);
+  if (k === 'hue') h += segUI('Colours', 'data-pkf="mode" data-v', ['🌈 CYCLE', '◐ SHIFT'], c.mode, [0, 1]) + pkS(l, 'deg', 'Hue shift (SHIFT)', c.deg) + pkS(l, 'sp', 'Cycle speed (CYCLE)', c.sp)
+    + '<p class="hint2">SHIFT turns every colour round the colour wheel and holds it there. Use it on the whole picture (All layers) or on one layer. Hold a slider\'s name to pin it to Quick.</p>';
   if (k === 'swirl') h += segUI('Turns', 'data-pkf="mode" data-v', ['⇆ SWING', '↻ FOREVER', '↺ FOREVER'], c.mode, [0, 1, 2]) + pkS(l, 'amt', 'Twist', c.amt)
     + pkS(l, 'sp', 'Speed (FOREVER)', c.sp) + '<p class="hint2">SWING twists one way and back. FOREVER keeps turning the same way, like water down a drain.</p>';
   if (k === 'scroll') h += segUI('Going', 'data-pkf="ang" data-v', ['←','↖','↑','↗','→','↘','↓','↙'], c.ang, [180,135,90,45,0,315,270,225])
@@ -3562,6 +3572,8 @@ document.addEventListener('click', e => {
   else if (d.qmenu !== undefined) { sheetQk(+d.qmenu); buzz(); }
   else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; if (QL.on) { qLinkTap(it); return; } const v = !qVal(it);
     qPress(it, v); qMembers(it).forEach(m => m.k === 'swap' ? doSwap(m.a, m.b) : qPress(m, v));              // the whole chain follows the button you pressed
+    { const ids = [qid(it)].concat(qMembers(it).map(qid)), L2 = qList();                                   // a chain looks like one button: all of it lights and pops together
+      $$('#qk [data-qtog]').forEach(b => { const x = L2[+b.dataset.qtog]; if (x && ids.includes(qid(x))) { b.classList.toggle('on', !!v); const w = b.closest('.qfxw') || b.closest('.ctl') || b; w.classList.remove('qpop'); void w.offsetWidth; w.classList.add('qpop'); } }); }
     if (it.k !== 'fx') applyPars({}); setTimeout(quickSync, 50); buzz(); }
   else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const g = d.gtog;
     let open = (PGOPEN || []).filter(x => x !== '*' && x !== '#arch');
