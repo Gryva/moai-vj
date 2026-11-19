@@ -389,6 +389,7 @@ def setVec(g, name, vals):
         VSLOT[k] = i
     for ax, v in zip('xyzw', vals):
         pp = g.par['vec%dvalue%s' % (i, ax)]
+        if pp.mode != ParMode.CONSTANT: pp.mode = ParMode.CONSTANT
         if abs(pp.eval() - v) > 1e-5: pp.val = v
 TMODEC = {'mask': 1.0, 'cutout': 2.0, 'invert': 3.0}
 def textBlendUpdate(C):
@@ -1147,6 +1148,22 @@ def mediaAnim(T):
         elif an == 'sway': r = math.sin(T * sp * 1.6) * am * 18.0
         elif an == 'spin': r = (T * sp * 45.0) % 360.0
         m[:] = [z, x, y, r, w]
+    _mfPush()
+
+MFOPS = ('/project1/fx_src', '/project1/lyr1', '/project1/lyr2', '/project1/lyr3', '/project1/lyr4')
+MFLAST = {}
+def _mfPush():
+    """Layer framing + animation into the picture shaders, written only when a value changes (no per-frame expressions)."""
+    vals = {j: [mf(j, a) for a in range(4)] for j in range(1, 7)}
+    w = [MA[j][4] for j in range(1, 7)] + [0.0, 0.0]
+    sig = (tuple(tuple(round(x, 5) for x in v) for v in vals.values()), tuple(w))
+    if MFLAST.get('sig') == sig: return
+    MFLAST['sig'] = sig
+    for path in MFOPS:
+        g = op(path)
+        if g is None: continue
+        for j in range(1, 7): setVec(g, 'uMF%d' % j, vals[j])
+        setVec(g, 'uMW1', w[0:4]); setVec(g, 'uMW2', w[4:8])
 
 def mf(j, a):
     """The framing uniform of media layer j (fx_src uMF): your VIEW framing (flat only) with the animation on top."""
