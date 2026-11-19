@@ -2175,6 +2175,12 @@ def _qclean(it):
         if t in ('m1', 'm2', 'm3', 'm4', 'm5', 'm6'):
             ids = [str(x)[:200] for x in (it.get('ids') or []) if isinstance(x, str)][:16]
             return {'k': 'vids', 't': t, 'ids': ids}
+    elif k == 'fxp':                                               # one effect's exact settings, saved as a button
+        t, e = str(it.get('t', '')), str(it.get('e', ''))
+        try: v = float(it.get('v'))
+        except Exception: return None
+        if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()):
+            return {'k': 'fxp', 't': t, 'e': e, 'f': '%.0f' % v if abs(v) >= 2 else '%.4f' % v, 'v': v, 'name': str(it.get('name', ''))[:40]}
     elif k == 'fx':
         t, e, f = str(it.get('t', '')), str(it.get('e', '')), str(it.get('f', ''))
         if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and f in ('amt', 'p1', 'on'):

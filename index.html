@@ -442,6 +442,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.fxpin{display:block;width:100%;margin:8px 0 2px;padding:9px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.06em}
 .manim[hidden]{display:none}.mpos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin:0 0 8px}.mpos button{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:15px}
 .mpos button.on{background:var(--ink);color:var(--bg);border-color:transparent}.mano{margin-bottom:6px}
 .go3d{width:100%;padding:12px;border-radius:var(--r1);border:1px solid var(--ink);background:var(--raise);color:var(--ink);font:800 12px var(--sans);letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -1090,7 +1091,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19a';
+const BUILD = '2026-11-19b';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2195,8 +2196,9 @@ function onAir(){
     const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : l.k === 'spotpulse' ? spotUI(l) : PK[l.k] ? pkUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
+    const pinS = l.p1label || PK[l.k] || ['clones','mirror','scrapbook','spotpulse'].includes(l.k) ? `<button class="fxpin" data-fxpin="${l.k}">📌 Pin this setting to Quick</button>` : '';
     return `<div class="lay${LFOLD.has(l.k) ? ' fold' : ''}" style="--c:${GC[l.g]}"><div class="hd"><button class="lfold" data-lfold="${l.k}" aria-label="Show or hide settings">▾</button><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
-      <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${l.col ? colBox(l.k) : ''}</div>`;
+      <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${pinS}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
   $$('#onair input[data-clnum]').forEach(el => bindSlider(el, 'clnum', v => { const box = el.closest('[data-clones]'), c = clDec(+box.dataset.clones); c.n = Math.round(v); clSet(box, c); }));
   $$('#onair input[data-sp]').forEach(el => bindSlider(el, 'sp' + el.dataset.sp, v => { const box = el.closest('[data-spot]'), c = spDec(box.dataset.spot); c[el.dataset.sp] = Math.round(v); spSet(box, c);
@@ -2434,6 +2436,7 @@ function qLayer(p){                       // which layer a control belongs to (s
 function qLabel(it){
   if (it.k === 'vids') return [tgtName(it.t), 'Videos'];
   if (it.k === 'swap') return ['Swap', tgtName(it.a) + ' ⇄ ' + tgtName(it.b)];
+  if (it.k === 'fxp') { const l = S.layers.find(x => x.k === it.e) || {label:it.e}; return [it.t === 'all' ? 'All layers' : tgtName(it.t), it.name || l.label, 'Setting']; }
   if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
     return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label, it.f === 'amt' ? 'Amount' : it.f === 'on' ? 'On / off' : (l.p1label || 'Setting')]; }
   const sd = (S.sliders || []).find(x => x.p === it.p);
@@ -2444,7 +2447,7 @@ function qLabel(it){
 function qAlive(it){                     // a control for a layer this preset doesn't have is left out
   const slotOn = i => !!S.pars['M' + i + 'on'];
   if (it.k === 'swap') return [it.a, it.b].every(k => !/^m\d$/.test(k) || slotOn(+k.slice(1)));
-  if (it.k === 'fx' || it.k === 'vids') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
+  if (it.k === 'fx' || it.k === 'vids' || it.k === 'fxp') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
   const m = /^M(\d)/.exec(it.p || ''); return !m || slotOn(+m[1]);
 }
 const QSEEN = {};                            // effects seen on in each preset since it was loaded
@@ -2473,6 +2476,9 @@ function sheetQk(i){
 }
 function qVal(it){                        // current value of a pinned control
   if (it.k === 'swap') return visOf(it.a);
+  if (it.k === 'fxp') { const st = it.t === 'all' ? (S.allL || []) : ((S.tfx || {})[it.t] || []), row = st.find(x => x[0] === it.e);
+    if (it.t === 'all') { const l = S.layers.find(x => x.k === it.e); return !!(l && l.on && Math.abs(+l.p1 - +it.v) < 0.5); }
+    return !!(row && row[1] && Math.abs(+row[3] - +it.v) < 0.5); }
   if (it.k !== 'fx') return S.pars[it.p];
   const st = it.t === 'all' ? (S.allL || []) : ((S.tfx || {})[it.t] || []), row = st.find(x => x[0] === it.e), l = S.layers.find(x => x.k === it.e) || {};
   if (it.f === 'on') return !!(row && row[1]);
@@ -2505,6 +2511,8 @@ function qLinkTap(it){                                   // CHAIN mode: add to t
   else { if (QL.cur < 0 || !QCH[QL.cur]) { QCH.push([]); QL.cur = QCH.length - 1; } QCH[QL.cur].push(id); }
   qChainSave(); qChainDecor(); buzz(6); }
 function qPress(it, v){                                  // one quick toggle to a state (used for every member of a chain)
+  if (it.k === 'fxp') { if (v) send({t:'layer', tgt:it.t, k:it.e, p1:+it.v}); send({t:'layer', tgt:it.t, k:it.e, on:v});                 // a saved setting: apply it (and switch on), or switch the effect off
+    if (it.t === 'all' || it.t === FXT_SEL) { const l = S.layers.find(x => x.k === it.e); if (l) { if (v) l.p1 = +it.v; l.on = v; } } return; }
   if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); }
   else { S.pars[it.p] = v; send({t:'set', p:it.p, v}); } }
 function qMembers(it){ const c = qChainOf(qid(it)); return c < 0 ? [] : qList().filter(x => x !== it && QCH[c].includes(qid(x))); }
@@ -2523,6 +2531,8 @@ function renderQuick(){
     if (it.k === 'vids') { const sl = +it.t.slice(1), cur = S.pars['M' + sl + 'file'];
       return `<div class="ctl qvids"><div class="top"><span><i class="qly">${esc(ly)}</i> Videos</span><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div><div class="qvrow">${(it.ids || []).map(id => { const x = (S.media || []).find(m => m.id === id) || {};
         return `<button class="qv ${id === cur ? 'on' : ''}" data-qvslot="${sl}" data-qvid="${esc(id)}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}<b>${esc(id.split('/').pop().replace(/\.[^.]+$/, ''))}</b></button>`; }).join('')}</div></div>`; }
+    if (it.k === 'fxp') { const L = S.layers.find(x => x.k === it.e) || {};
+      return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(it.name || L.label || it.e)}</b><i class="ck">✓</i>${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`; }
     if (it.k === 'fx' && it.f === 'on') { const L = S.layers.find(x => x.k === it.e) || {}, fd = QFADE[qid(it)];
       return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(L.label || it.e)}</b><i class="ck">✓</i>${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}${fd != null ? `<i class="qffd">${fd ? fd + ' s' : 'CUT'}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Transition, move or remove">⋯</button></div>`; }
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm.replace(/ · on \/ off$/, ''))}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
@@ -3456,6 +3466,11 @@ document.addEventListener('click', e => {
   if (d.mpos) { const [i, x, y] = d.mpos.split('|'), m = 'M' + i, ob = S.pars[m + 'mode'] === 'object';      // 3D objects move in the scene, flat pictures in the frame
     const kx = ob ? 'objx' : 'fx', ky = ob ? 'objy' : 'fy', vx = Math.round(+x * (ob ? 3.5 : 1) * 1000) / 1000, vy = Math.round(+y * (ob ? 2.0 : 1) * 1000) / 1000;
     S.pars[m + kx] = vx; S.pars[m + ky] = vy; send({t:'set', p:m + kx, v:vx}); send({t:'set', p:m + ky, v:vy}); mediaCardsUI(S.pars); buzz(); return; }
+  if (d.fxpin) { const l = S.layers.find(x => x.k === d.fxpin); if (!l) return; const t = FXT_SEL || 'all';
+    const n = (S.quick && [].concat(S.quick.all || [], (S.quick.p || {})[S.b] || []).filter(x => x.k === 'fxp' && x.e === l.k).length || 0) + 1;
+    const name = prompt('Name this button (it brings back these exact settings):', l.label + ' ' + n); if (name === null) return;
+    send({t:'quick', do:'pin', scope:S.b ? 'preset' : 'all', slot:S.b, item:{k:'fxp', t, e:l.k, v:+l.p1, name:name.trim().slice(0, 40) || l.label}});
+    toast('Pinned to Quick controls (LIVE) · ⋯ there to keep it for every preset'); buzz(); return; }
   if (d.go3d) { const m = 'M' + d.go3d; S.pars[m + 'mode'] = 'object'; send({t:'set', p:m + 'mode', v:'object'});
     if (!(+S.pars[m + 'thick'] > 0)) { S.pars[m + 'thick'] = 0.35; send({t:'set', p:m + 'thick', v:0.35}); } mediaCardsUI(S.pars); buzz(); return; }
   if (d.mixadd) { const pk = $(`[data-mixpick="${d.mixadd}"]`); pk.hidden = !pk.hidden; mixUI(+d.mixadd, S.pars); buzz(); return; }
