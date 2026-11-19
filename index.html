@@ -35,32 +35,39 @@
 @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/jetbrains-mono-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/jetbrains-mono-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/jetbrains-mono-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-/* PERFORM window */
-.pfbar,.pftr{display:none}
-body.pf .pfbar{display:grid;grid-template-columns:96px minmax(0,1fr) 96px;gap:12px;align-items:stretch;margin:4px 0 12px}
-body.pf .pfnav{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:18px;border:1px solid var(--line);background:var(--panel);color:var(--ink);min-height:112px}
-body.pf .pfnav svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}.pfnav small{font:800 11px var(--sans);letter-spacing:.14em;color:var(--mute)}
-body.pf .pfnav.next{background:var(--lime);color:#0b0a0f;border-color:transparent}body.pf .pfnav.next small{color:#0b0a0f}body.pf .pfnav:active{transform:scale(.95)}
+/* PERFORM window: now playing · transition pill · [◀ list ▶] · big controls */
+.pfbar,.pftr,.pfnav{display:none}
+body.pf #v-live.on{display:grid;grid-template-columns:84px minmax(0,1fr) 84px;grid-template-areas:"now now now" "tr tr tr" "prev list next" "quick quick quick" "misc misc misc";gap:12px;align-items:start}
+body.pf .liveside,body.pf .livemain,body.pf .presetsbox{display:contents}
+body.pf #nowcard,body.pf .livesplit,body.pf #apPanel,body.pf .padacts,body.pf .arrc,body.pf .sl-arr,body.pf .sl-add,body.pf .apmore{display:none!important}
+body.pf .pfbar{display:block;grid-area:now}
 body.pf .pfnow{display:flex;gap:14px;align-items:center;min-width:0;border-radius:18px;border:1px solid var(--line);background:var(--panel);padding:10px;overflow:hidden}
-body.pf .pfimg{position:relative;flex:none;width:min(42%,240px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}.pfimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+body.pf .pfimg{position:relative;flex:none;width:min(40%,240px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}.pfimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 body.pf .pfimg .nowtag{position:absolute;left:8px;top:8px;padding:3px 8px;border-radius:6px;background:var(--hot);color:#fff;font:800 10px var(--sans);letter-spacing:.12em;line-height:1.2}
 body.pf .pftxt{display:flex;flex-direction:column;gap:4px;min-width:0}.pftxt b{font:800 clamp(18px,2.6vw,28px)/1.1 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pftxt em{font-style:normal;color:var(--mute);font:700 11px var(--sans);letter-spacing:.12em;text-transform:uppercase}.pfnext{font:600 12px var(--sans);color:var(--mute)}.pfnext b{color:var(--ink)}
-body.pf .pftr{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
-.pfrow{display:flex;align-items:center;gap:10px;min-width:0}.pfrow>span{flex:none;width:84px;font:800 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
-.pfchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}.pfchips button{flex:none;min-height:46px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:800 12px var(--sans);letter-spacing:.06em}
-.pfchips button.on{background:var(--ink);color:var(--bg);border-color:transparent}
-body.pf #nowcard,body.pf .livesplit{display:none}
-body.pf #v-live.on{display:grid;grid-template-columns:minmax(0,1fr);gap:0 18px}
-body.pf #v-live .pfbar,body.pf #v-live .pftr{grid-column:1/-1}
-@media (min-width:900px){ body.pf #v-live.on{grid-template-columns:minmax(0,1.15fr) minmax(320px,1fr)} body.pf .livemain{grid-column:1;grid-row:3} body.pf .liveside{grid-column:2;grid-row:3;width:auto!important;max-width:none!important;position:static} }
-@media (max-width:899px){ body.pf .liveside{width:auto!important;max-width:none!important} }
-body.pf .pad{min-height:104px}body.pf .pad b{font-size:15px}body.pf .pads{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-body.pf .pgc{min-height:46px;padding:0 18px}body.pf .sltog{min-height:54px}
-body.pf .qfxw.lt{width:132px}body.pf .qfxw .qfxt{width:132px;min-height:96px}body.pf .qfxt b{font-size:14px}
-body.pf .qbig{min-height:72px;font-size:16px}body.pf #qk{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:flex-start}body.pf #qk>.ctl{flex:1 1 300px;max-width:460px}
-body.pf #qk input[type=range]{height:30px}body.pf #qk .qvids,body.pf #qk .qcol{flex-basis:100%;max-width:none}
-body.pf #cardQuick .ch b{font-size:13px}
+body.pf .pftr{display:flex;grid-area:tr;align-items:center;gap:10px;min-width:0}
+.pftrb{flex:none;display:flex;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:800 12px var(--sans);letter-spacing:.06em}
+.pftrb i{font-style:normal;font-size:18px;transition:transform .2s}.pftr.open .pftrb i{transform:rotate(180deg)}
+.pftrx{display:flex;gap:10px;min-width:0;max-width:0;overflow:hidden;opacity:0;transition:max-width .3s ease,opacity .2s}.pftr.open .pftrx{max-width:100%;opacity:1;overflow-x:auto;scrollbar-width:none}
+.pfchips{display:flex;gap:6px;flex:none}.pfchips button{flex:none;min-height:46px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:800 12px var(--sans);letter-spacing:.06em;white-space:nowrap}
+.pfchips button.on{background:var(--ink);color:var(--bg);border-color:transparent}.pftime{padding-left:10px;border-left:1px solid var(--line)}
+body.pf .pfnav{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;align-self:stretch;min-height:120px;border-radius:18px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+body.pf .pfnav.prev{grid-area:prev}body.pf .pfnav.next{grid-area:next;background:var(--lime);color:#0b0a0f;border-color:transparent}
+.pfnav svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}.pfnav small{font:800 11px var(--sans);letter-spacing:.14em;opacity:.7}body.pf .pfnav:active{transform:scale(.95)}
+body.pf #pads{grid-area:list;min-width:0}body.pf #setlist{grid-area:list;min-width:0;margin:0}
+body.pf.slon #pads{display:none}body.pf:not(.slon) #setlist{display:none}
+body.pf .sl-row{grid-template-columns:1fr!important}body.pf .sl-it{min-width:150px;min-height:96px}
+body.pf #cardQuick{grid-area:quick;margin:0!important}body.pf .aprow{grid-area:misc;margin:0;justify-self:start;width:calc(50% - 6px)}body.pf #slTog{grid-area:misc;justify-self:end;width:calc(50% - 6px);min-height:50px;margin:0}
+body.pf #pads{display:block!important}body.pf #pads .pads{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important;gap:10px!important}body.pf #pads .pads .pad{width:auto!important;margin:0!important}
+body.pf .aprow,body.pf #slTog{position:static!important;max-width:none!important}body.pf .aprow{width:calc(50% - 6px)!important}body.pf #slTog{width:calc(50% - 6px)!important}body.pf .aprow .aptog{flex:1;width:100%!important;min-height:50px}body.pf .aprow,body.pf #slTog{margin:0!important}
+body.pf .pad{min-height:104px}body.pf .pad b{font-size:15px}body.pf .pgc{min-height:46px;padding:0 18px}
+body.pf .qfxw.lt{width:136px}body.pf .qfxw .qfxt{width:136px;min-height:100px}body.pf .qfxt b{font-size:14px}
+body.pf .qbig{min-height:76px;font-size:16px}body.pf #qk{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:flex-start}body.pf #qk>.ctl{flex:1 1 280px;max-width:420px}
+body.pf #qk>.qbigrow{flex:0 1 220px}body.pf #qk input[type=range]{height:30px}body.pf #qk .qvids,body.pf #qk .qcol{flex-basis:100%;max-width:none}
+body.pf #v-live .liveside>.aprow{display:flex!important;gap:10px;align-items:stretch;grid-area:misc!important}body.pf #v-live .liveside>#slTog{grid-area:misc!important}
+body.pf #v-live .liveside #apBtn,body.pf #v-live .liveside>#slTog{height:auto!important;min-height:50px!important;grid-column:auto;margin:0!important}body.pf #v-live .liveside #apBtn{width:100%!important}
+@media (max-width:640px){ body.pf #v-live.on{grid-template-columns:56px minmax(0,1fr) 56px} body.pf .pfnav{min-height:90px} }
 </style>
 <style>
 :root{--bg:#09080d;--panel:#13111a;--panel2:#1b1824;--raise:#16131c;--sunk:#0e0c13;--line2:#3a3446;--red:#ff3b3b;--redt:#ff6b6b;--amber:#ffb02e;--r1:6px;--r2:10px;--r3:16px;--h1:32px;--h2:40px;--h3:48px;--line:#2a2635;--ink:#f3efe7;--mute:#8b8597;--hot:#ff4d2e;--cyan:#3ef0ff;--vio:#b06bff;--lime:#c6ff3d;
@@ -757,11 +764,11 @@ header .r1 .fps{font:500 12px var(--mono)}
 
 <main>
   <section class="view" id="v-live">
-    <div class="pfbar" id="pfbar"><button class="pfnav" data-pfstep="-1" aria-label="Previous preset"><svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8"/></svg><small>PREV</small></button>
-      <div class="pfnow"><div class="pfimg"><img id="pfimg" alt=""><span class="nowtag">● ON AIR</span></div><div class="pftxt"><b id="pfname">—</b><em id="pfsub"></em><span class="pfnext" id="pfnext"></span></div></div>
-      <button class="pfnav next" data-pfstep="1" aria-label="Next preset"><svg viewBox="0 0 24 24"><path d="M9 4l8 8-8 8"/></svg><small>NEXT</small></button></div>
-    <div class="pftr"><div class="pfrow"><span>Transition</span><div class="pfchips" id="pftrs"></div></div>
-      <div class="pfrow"><span>Time</span><div class="pfchips" id="pffade"></div></div></div>
+    <div class="pfbar" id="pfbar"><div class="pfnow"><div class="pfimg"><img id="pfimg" alt=""><span class="nowtag">● ON AIR</span></div><div class="pftxt"><b id="pfname">—</b><em id="pfsub"></em><span class="pfnext" id="pfnext"></span></div></div></div>
+    <div class="pftr" id="pftr"><button class="pftrb" data-pftr="1"><span id="pftrsum">ADAPTIVE · 1 s</span><i>›</i></button>
+      <div class="pftrx"><div class="pfchips" id="pftrs"></div><div class="pfchips pftime" id="pffade"></div></div></div>
+    <button class="pfnav prev" data-pfstep="-1" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8"/></svg><small>PREV</small></button>
+    <button class="pfnav next" data-pfstep="1" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 4l8 8-8 8"/></svg><small>NEXT</small></button>
     <aside class="liveside">
     <div class="nowcard" id="nowcard"><div class="nowimg"><img id="nowimg" alt=""><span class="nowtag">● ON AIR</span></div><div class="nowtxt"><b id="nowname">—</b><em id="nowsub"></em></div></div>
     <div class="aprow"><button class="aptog" id="apBtn"><b>AUTOPILOT</b><span id="apState">OFF</span></button>
@@ -1134,7 +1141,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19h';
+const BUILD = '2026-11-19i';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2197,7 +2204,7 @@ function uiPrefs(){
   document.body.classList.toggle('pf', ui.tab === 'perform'); if (ui.tab === 'perform') pfUI();
   ['tab','bank','fade','model','text'].forEach(k => store.set(k, ui[k])); store.set('cam2', ui.cam);
   const sl = $('#setlist'), tg = $('#slTog');
-  if (sl) sl.classList.toggle('off', !ui.setlist);
+  if (sl) sl.classList.toggle('off', !ui.setlist); document.body.classList.toggle('slon', !!ui.setlist);
   if (!ui.setlist && typeof SLADD !== 'undefined' && SLADD) slAddMode(false);
   if (tg) { tg.classList.toggle('on', ui.setlist); tg.setAttribute('aria-pressed', ui.setlist); const st = $('#slState'); if (st) st.textContent = ui.setlist ? 'ON' : 'OFF'; }
   store.set('setlist', ui.setlist);
@@ -2480,6 +2487,7 @@ function pfUI(){ if (!S || !document.body.classList.contains('pf')) return;
   const nx = pfTarget(1), np = nx && S.bank[nx - 1]; $('#pfnext').innerHTML = np ? 'NEXT › <b>' + esc(np.name) + '</b>' : '';
   const cur = S.pars.Transtyle || 'adaptive';
   $('#pftrs').innerHTML = TRS.map(([v, l]) => `<button data-trs="${v}" class="${v === cur ? 'on' : ''}">${l}</button>`).join('');
+  $('#pftr').classList.toggle('open', !!store.get('pftr', false)); { const tl = (TRS.find(x => x[0] === cur) || ['', cur])[1], fv = +(ui.fade || 0); $('#pftrsum').textContent = tl + ' · ' + (fv ? fv + ' s' : 'CUT'); }
   const f = +(ui.fade || 0); $('#pffade').innerHTML = PFFADES.map(([v, l]) => `<button data-pffade="${v}" class="${Math.abs(v - f) < 0.01 ? 'on' : ''}">${l}</button>`).join('');
 }
 function pfTarget(dir){                    // next / previous: the set list when it is on, otherwise the presets on screen
@@ -3471,6 +3479,7 @@ document.addEventListener('click', e => {
     if (cur.includes('frame') && d.mtab === 'frame') { MFR[i + 'ask'] = ''; mCropUI(i); } if (cur.includes('cues') && d.mtab === 'cues') cueUI(i); buzz(); return; }
   if (d.mfr) { MFR[+d.mfr + 'ask'] = S.pars['M' + d.mfr + 'file']; mFrameAsk(+d.mfr); toast('Grabbing the frame playing now…'); buzz(); return; }
   if (d.pfstep) { pfStep(+d.pfstep); buzz(12); return; }
+  if (d.pftr) { store.set('pftr', !store.get('pftr', false)); pfUI(); buzz(); return; }
   if (d.pffade !== undefined) { const v = +d.pffade; ui.fade = v; uiPrefs(); send({t:'set', p:'Autofade', v}); toast(v ? 'Presets fade in ' + v + ' s' : 'Presets cut'); pfUI(); buzz(); return; }
   if (d.trs) { S.pars.Transtyle = d.trs; setTimeout(pfUI, 0); send({t:'set', p:'Transtyle', v:d.trs}); apSummary(); toast('Transition: ' + (TRS.find(x => x[0] === d.trs) || ['', d.trs])[1].toLowerCase()); buzz(); return; }
   if (d.qkm) { quickDo(d.qkm); return; }
