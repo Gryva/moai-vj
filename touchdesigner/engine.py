@@ -2180,7 +2180,11 @@ def _qclean(it):
         try: v = float(it.get('v'))
         except Exception: return None
         if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()):
-            return {'k': 'fxp', 't': t, 'e': e, 'f': '%.0f' % v if abs(v) >= 2 else '%.4f' % v, 'v': v, 'name': str(it.get('name', ''))[:40]}
+            d = {'k': 'fxp', 't': t, 'e': e, 'f': '%.0f' % v if abs(v) >= 2 else '%.4f' % v, 'v': v, 'name': str(it.get('name', ''))[:40]}
+            try:
+                if it.get('v2') is not None: d['v2'] = float(it.get('v2')); d['f'] += '|' + ('%.0f' % d['v2'] if abs(d['v2']) >= 2 else '%.4f' % d['v2'])   # a switch: one button flips A <-> B
+            except Exception: pass
+            return d
     elif k == 'fx':
         t, e, f = str(it.get('t', '')), str(it.get('e', '')), str(it.get('f', ''))
         if (t == 'all' or t in FXTGTS) and any(r['key'] == e for r in layers()) and f in ('amt', 'p1', 'on'):

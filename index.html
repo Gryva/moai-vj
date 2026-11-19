@@ -442,6 +442,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.fxpins{display:grid;grid-template-columns:1fr 1fr;gap:6px}.qsw{position:absolute;right:6px;bottom:6px;display:flex;gap:2px;font-style:normal}.qsw u{text-decoration:none;font:800 10px var(--sans);padding:2px 5px;border-radius:4px;background:#0008;color:#fff}.qfxt:not(.on) .qsw u:first-child,.qfxt.on .qsw u:last-child{background:var(--lime);color:#0b0a0f}
 .fxpin{display:block;width:100%;margin:8px 0 2px;padding:9px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.06em}
 .manim[hidden]{display:none}.mpos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin:0 0 8px}.mpos button{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:15px}
 .mpos button.on{background:var(--ink);color:var(--bg);border-color:transparent}.mano{margin-bottom:6px}
@@ -1091,7 +1092,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19b';
+const BUILD = '2026-11-19c';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2196,7 +2197,7 @@ function onAir(){
     const p1 = l.k === 'clones' ? clonesUI(l) : l.k === 'mirror' ? mirrorUI(l) : l.k === 'scrapbook' ? scrapUI(l) : l.k === 'spotpulse' ? spotUI(l) : PK[l.k] ? pkUI(l) : !l.p1label ? '' : sw ? pin + `<div class="swr">${sw.map((c, i) => `<button data-mode="${l.k}" data-v="${i}" style="background:${c}" class="${Math.round(l.p1) === i ? 'on' : ''}"></button>`).join('')}</div>`
       : md ? pin + `<div class="seg sm" style="margin:4px 0 6px">${md.map((m, i) => `<button data-mode="${l.k}" data-v="${i}" class="${Math.round(l.p1) === i ? 'on' : ''}">${m}</button>`).join('')}</div>`
       : `<div class="sub"><span data-qfx="${l.k}" data-qf="p1">${l.p1label}</span><input type="range" data-lk="${l.k}" data-f="p1" min="${l.p1min}" max="${l.p1max}" step="${l.p1step}" value="${l.p1}" style="--acc:${GC[l.g]}"></div>`;
-    const pinS = l.p1label || PK[l.k] || ['clones','mirror','scrapbook','spotpulse'].includes(l.k) ? `<button class="fxpin" data-fxpin="${l.k}">📌 Pin this setting to Quick</button>` : '';
+    const pinS = l.p1label || PK[l.k] || ['clones','mirror','scrapbook','spotpulse'].includes(l.k) ? `<div class="fxpins"><button class="fxpin" data-fxpin="${l.k}">📌 Pin this setting</button><button class="fxpin" data-fxsw="${l.k}">${FXSW[l.k] != null ? '⇄ Now set side B, then tap here' : '⇄ Pin a switch (A ↔ B)'}</button></div>` : '';
     return `<div class="lay${LFOLD.has(l.k) ? ' fold' : ''}" style="--c:${GC[l.g]}"><div class="hd"><button class="lfold" data-lfold="${l.k}" aria-label="Show or hide settings">▾</button><i></i><span data-qfx="${l.k}" data-qf="on">${l.label}</span><button class="x" data-off="${l.k}">×</button></div>
       <div class="sub"><span data-qfx="${l.k}" data-qf="amt">Amount</span><input type="range" data-lk="${l.k}" data-f="amt" min="0" max="1" step="0.01" value="${l.amt}" style="--acc:${GC[l.g]}"></div>${p1}${pinS}${l.col ? colBox(l.k) : ''}</div>`;
   }).join('') : '<div class="empty">Nothing on air — tap an effect tile below</div>';
@@ -2450,7 +2451,7 @@ function qAlive(it){                     // a control for a layer this preset do
   if (it.k === 'fx' || it.k === 'vids' || it.k === 'fxp') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
   const m = /^M(\d)/.exec(it.p || ''); return !m || slotOn(+m[1]);
 }
-const QSEEN = {};                            // effects seen on in each preset since it was loaded
+const QSEEN = {}, FXSW = {};               // FXSW: side A of a switch being made (effect -> its settings)                            // effects seen on in each preset since it was loaded
 function qUsed(it){ if (it.k !== 'fx') return true;
   const k = S.b + '|' + (it.t || 'all'), set = QSEEN[k] || (QSEEN[k] = new Set());
   const on = it.t && it.t !== 'all' ? ((S.tfx || {})[it.t] || []).some(r => r[0] === it.e && r[1]) : !!(S.layers.find(l => l.k === it.e) || {}).on;
@@ -2476,6 +2477,7 @@ function sheetQk(i){
 }
 function qVal(it){                        // current value of a pinned control
   if (it.k === 'swap') return visOf(it.a);
+  if (it.k === 'fxp' && it.v2 != null) { const cur = qFxNow(it); return !!(cur && cur.on && Math.abs(cur.p1 - +it.v2) < 0.5); }   // switch: lit = side B
   if (it.k === 'fxp') { const st = it.t === 'all' ? (S.allL || []) : ((S.tfx || {})[it.t] || []), row = st.find(x => x[0] === it.e);
     if (it.t === 'all') { const l = S.layers.find(x => x.k === it.e); return !!(l && l.on && Math.abs(+l.p1 - +it.v) < 0.5); }
     return !!(row && row[1] && Math.abs(+row[3] - +it.v) < 0.5); }
@@ -2510,7 +2512,12 @@ function qLinkTap(it){                                   // CHAIN mode: add to t
   if (c >= 0) { QCH[c] = QCH[c].filter(x => x !== id); if (!QCH[c].length) { QCH.splice(c, 1); if (QL.cur >= QCH.length) QL.cur = -1; } }
   else { if (QL.cur < 0 || !QCH[QL.cur]) { QCH.push([]); QL.cur = QCH.length - 1; } QCH[QL.cur].push(id); }
   qChainSave(); qChainDecor(); buzz(6); }
+function qFxNow(it){ if (it.t === 'all') { const l = S.layers.find(x => x.k === it.e); return l && {on:!!l.on, p1:+l.p1}; }
+  const row = ((S.tfx || {})[it.t] || []).find(x => x[0] === it.e); return row && {on:!!row[1], p1:+row[3]}; }
 function qPress(it, v){                                  // one quick toggle to a state (used for every member of a chain)
+  if (it.k === 'fxp' && it.v2 != null) { const p = v ? +it.v2 : +it.v;                 // switch: true = side B, false = side A; the effect stays on
+    send({t:'layer', tgt:it.t, k:it.e, p1:p}); send({t:'layer', tgt:it.t, k:it.e, on:true});
+    if (it.t === 'all' || it.t === FXT_SEL) { const l = S.layers.find(x => x.k === it.e); if (l) { l.p1 = p; l.on = true; } } return; }
   if (it.k === 'fxp') { if (v) send({t:'layer', tgt:it.t, k:it.e, p1:+it.v}); send({t:'layer', tgt:it.t, k:it.e, on:v});                 // a saved setting: apply it (and switch on), or switch the effect off
     if (it.t === 'all' || it.t === FXT_SEL) { const l = S.layers.find(x => x.k === it.e); if (l) { if (v) l.p1 = +it.v; l.on = v; } } return; }
   if (it.k === 'fx') { const fd = QFADE[qid(it)]; send(Object.assign({t:'layer', tgt:it.t, k:it.e, on:v}, fd != null ? {fade:fd} : {})); }
@@ -2532,7 +2539,7 @@ function renderQuick(){
       return `<div class="ctl qvids"><div class="top"><span><i class="qly">${esc(ly)}</i> Videos</span><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div><div class="qvrow">${(it.ids || []).map(id => { const x = (S.media || []).find(m => m.id === id) || {};
         return `<button class="qv ${id === cur ? 'on' : ''}" data-qvslot="${sl}" data-qvid="${esc(id)}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}<b>${esc(id.split('/').pop().replace(/\.[^.]+$/, ''))}</b></button>`; }).join('')}</div></div>`; }
     if (it.k === 'fxp') { const L = S.layers.find(x => x.k === it.e) || {};
-      return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(it.name || L.label || it.e)}</b><i class="ck">✓</i>${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`; }
+      return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(it.name || L.label || it.e)}</b>${it.v2 != null ? '<i class="qsw"><u>A</u><u>B</u></i>' : '<i class="ck">✓</i>'}${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`; }
     if (it.k === 'fx' && it.f === 'on') { const L = S.layers.find(x => x.k === it.e) || {}, fd = QFADE[qid(it)];
       return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(L.label || it.e)}</b><i class="ck">✓</i>${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}${fd != null ? `<i class="qffd">${fd ? fd + ' s' : 'CUT'}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Transition, move or remove">⋯</button></div>`; }
     if (it.k === 'tog' || it.f === 'on') return `<div class="ctl qrow qbigrow"><button class="qbig" data-qtog="${i}"><i class="qly">${esc(ly)}</i><b>${esc(nm.replace(/ · on \/ off$/, ''))}</b></button><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`;
@@ -3466,6 +3473,12 @@ document.addEventListener('click', e => {
   if (d.mpos) { const [i, x, y] = d.mpos.split('|'), m = 'M' + i, ob = S.pars[m + 'mode'] === 'object';      // 3D objects move in the scene, flat pictures in the frame
     const kx = ob ? 'objx' : 'fx', ky = ob ? 'objy' : 'fy', vx = Math.round(+x * (ob ? 3.5 : 1) * 1000) / 1000, vy = Math.round(+y * (ob ? 2.0 : 1) * 1000) / 1000;
     S.pars[m + kx] = vx; S.pars[m + ky] = vy; send({t:'set', p:m + kx, v:vx}); send({t:'set', p:m + ky, v:vy}); mediaCardsUI(S.pars); buzz(); return; }
+  if (d.fxsw) { const l = S.layers.find(x => x.k === d.fxsw); if (!l) return;
+    if (FXSW[l.k] == null) { FXSW[l.k] = +l.p1; toast('Side A kept · now change the settings to side B and tap the switch button again'); applyLayers(); buzz(); return; }
+    const a = FXSW[l.k], b2 = +l.p1; delete FXSW[l.k]; if (Math.abs(a - b2) < 0.5) { toast('Side B is the same as A · change a setting first'); FXSW[l.k] = a; return; }
+    const name = prompt('Name this switch (one button flips between the two):', l.label + ' A ⇄ B'); if (name === null) { applyLayers(); return; }
+    send({t:'quick', do:'pin', scope:S.b ? 'preset' : 'all', slot:S.b, item:{k:'fxp', t:FXT_SEL || 'all', e:l.k, v:a, v2:b2, name:name.trim().slice(0, 40) || l.label}});
+    toast('Switch pinned to Quick controls (LIVE)'); applyLayers(); buzz(); return; }
   if (d.fxpin) { const l = S.layers.find(x => x.k === d.fxpin); if (!l) return; const t = FXT_SEL || 'all';
     const n = (S.quick && [].concat(S.quick.all || [], (S.quick.p || {})[S.b] || []).filter(x => x.k === 'fxp' && x.e === l.k).length || 0) + 1;
     const name = prompt('Name this button (it brings back these exact settings):', l.label + ' ' + n); if (name === null) return;
