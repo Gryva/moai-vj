@@ -444,6 +444,9 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
 .pgsec h5{margin:14px 2px 6px;font:800 11px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);display:flex;gap:8px;align-items:baseline}.pgsec h5 i{font-style:normal;opacity:.6}
+.mtile{position:relative}.mqpin{position:absolute;left:4px;top:4px;width:26px;height:26px;border-radius:50%;border:0;background:#000a;font-size:12px;opacity:.55;z-index:2;padding:0}.mqpin.on{opacity:1;background:var(--lime)}
+.rlL{margin-right:10px;flex:none;height:36px}
+.qcol .cstrip button{width:34px;height:34px}.qcol .cstrip button.on{outline:2px solid var(--ink);outline-offset:2px}.qcany{position:relative;overflow:hidden}.qcany input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .qpop{animation:qpop .28s ease-out}@keyframes qpop{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
 .fxpins{display:grid;grid-template-columns:1fr 1fr;gap:6px}.qsw{position:absolute;right:6px;bottom:6px;display:flex;gap:2px;font-style:normal}.qsw u{text-decoration:none;font:800 10px var(--sans);padding:2px 5px;border-radius:4px;background:#0008;color:#fff}.qfxt:not(.on) .qsw u:first-child,.qfxt.on .qsw u:last-child{background:var(--lime);color:#0b0a0f}
 .fxpin{display:block;width:100%;margin:8px 0 2px;padding:9px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.06em}
@@ -656,7 +659,7 @@ html.coarse input[type=range]{pointer-events:none}html.coarse .ctl,html.coarse .
 header .r1>*,header .r1 .hg>*{flex:none}header .r1 .hsp{flex:1 1 0;min-width:0}header .r1{gap:8px}.hg{gap:5px}header .r1 .prepPill{white-space:nowrap}
 @media (max-width:1300px){header .r1 .savenew .lng{display:none}}
 header .r1 .stat{height:36px;padding:0 8px;border-radius:var(--r2)}header .r1 .fsb,header .r1 .savebtn,header .r1 .edit,header .r1 .prepPill,header .r1 .golocal,header .r1 .stbk{height:40px;border-radius:var(--r2);font:700 11px var(--sans);letter-spacing:.1em;display:flex;align-items:center;justify-content:center;gap:4px;margin:0}
-header .r1 .fsb{min-width:36px;width:auto;padding:0 10px}header .r1 #undoB,header .r1 #redoB,header .r1 #fsbtn,header .r1 #rlbtn{width:36px;padding:0;font-size:17px}header .r1 .stbk{padding:0 10px;border:1px solid var(--line);color:var(--mute)}
+header .r1 .fsb{min-width:36px;width:auto;padding:0 10px}header .r1 #undoB,header .r1 #redoB,header .r1 #fsbtn,header .r1 #rlbtn,header .r1 #rlbtnL{width:36px;padding:0;font-size:17px}header .r1 .stbk{padding:0 10px;border:1px solid var(--line);color:var(--mute)}
 header .r1 .stbk:not(.on){display:none}.stat.open~.stbk{display:flex!important}.st2:not(.open)~.tbk:not(.on){display:none!important}header .r1 .golocal{padding:0 10px}header .r1 .prepPill{padding:0 12px;border-radius:var(--r2)}
 .qkb{color:var(--amber)!important;border-color:#ffd23e66!important}header .r1 .fsb.recb{color:var(--red)}#fsbtn{margin-left:0!important}
 .padacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.padacts .pad.add{min-height:0;height:52px;aspect-ratio:auto}.padacts .pad.add>span{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}header .r1 .prepPill[hidden]{display:none}body:not(.editing) header .r1 .savebtn{display:none}.padacts .pad.add small br{display:none}.padacts .pad.add .plus{font-size:20px}
@@ -719,7 +722,7 @@ header .r1 .fps{font:500 12px var(--mono)}
 </head>
 <body>
 <header>
-  <div class="r1"><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="recpill" id="recpill" hidden aria-label="Recording time - tap for the record controls">● REC 0:00</button><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="fsb tbk" id="rlbtn" aria-label="Reload the remote">⟳</button><button class="prepPill tbk" id="prepPill" hidden></button></div><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn savenew" id="saveNewBtn" aria-label="Save as a new preset">＋ <span class="lng">SAVE AS </span>NEW</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
+  <div class="r1"><button class="fsb rlL" id="rlbtnL" aria-label="Refresh the remote">⟳</button><div class="dot" id="dot"></div><div class="logo" id="logo">VIDEO<i>//</i>JOCKEY</div><button class="recpill" id="recpill" hidden aria-label="Recording time - tap for the record controls">● REC 0:00</button><div class="hg"><button class="stat" id="stat" aria-label="Show fps and connection"><i class="stbar" id="stbar"></i><span class="sx"><span class="fps" id="fps">-- fps</span><span class="lk" id="lk"></span></span></button><button class="lk stbk" id="bkBtn">↺ BACKUPS</button></div><div class="hg"><button class="stat st2" id="stat2" aria-label="Quick menu, reload and record"><i class="stbar"></i></button><button class="fsb tbk qkb" id="quickB" aria-label="Quick menu">⚡ QUICK</button><button class="fsb tbk recfmt" id="recfmt" aria-label="Recording format">▭ 16:9</button><button class="fsb recb tbk" id="recbtn" aria-label="Record the show">● REC</button><button class="fsb recx tbk" id="recx" aria-label="Throw this recording away">✕ DISCARD</button><button class="prepPill tbk" id="prepPill" hidden></button></div><span class="hsp"></span><a class="lk golocal" id="golocal">⇄ DIRECT</a><button class="fsb" id="undoB" aria-label="Undo (hold for history)" disabled>↶</button><button class="fsb" id="redoB" aria-label="Redo" disabled>↷</button><button class="savebtn savenew" id="saveNewBtn" aria-label="Save as a new preset">＋ <span class="lng">SAVE AS </span>NEW</button><button class="savebtn" id="savebtn">SAVE</button><button class="edit" id="editbtn">✎ SETUP</button><button class="fsb" id="fsbtn" aria-label="Full screen" style="margin-left:6px">⛶</button></div>
   <div class="now"><b id="nowA">—</b></div>
   <div class="meters"><div class="m l"><i id="mL"></i></div><div class="m md"><i id="mM"></i></div><div class="m h"><i id="mH"></i></div><div class="m k"><i id="mK"></i></div></div>
 </header>
@@ -1029,6 +1032,7 @@ document.addEventListener('change', e => { const el = e.target; if (!el.dataset 
   const i = +box.querySelector('[data-cuel]').dataset.cuel, n = +el.closest('[data-cue]').dataset.cue, L = cuesOf(i); if (!L[n]) return;
   L[n][el.dataset.cuef] = el.dataset.cuef === 'k' ? el.value : el.dataset.cuef === 'fade' ? Math.max(0, +el.value || 0) : parseT(el.value); cuesSet(i, L); });
 document.addEventListener('input', e => {
+  { const q = e.target.closest && e.target.closest('[data-qcany]'); if (q) { const fake = {dataset:{}}; const i = q.dataset.qcany; const b = document.createElement('button'); b.dataset.qcsw = i + '|' + q.value; document.body.appendChild(b); b.click(); b.remove(); return; } }
   { const r = e.target.closest && e.target.closest('[data-tpr]'); if (r) { const pn = r.dataset.tpr, v = +r.value; S.pars[pn] = v; thr(pn, () => send({t:'set', p:pn, v})); const s_ = $('#s-' + pn); if (s_) s_.value = v; return; } } const el = e.target; if (el.dataset && el.dataset.prepc && PREPSEL) { PREPO[PREPSEL][el.dataset.prepc] = (+el.value || 0) / 100; paint(el); prepVid(PREPJ.find(x => x.id === PREPSEL)); return; } });
 document.addEventListener('input', e => { const el = e.target; if (!el.dataset || !el.dataset.prepv || !PREPSEL) return; const o = PREPO[PREPSEL];
   o[el.dataset.prepv] = el.dataset.prepv === 'speed' ? Math.max(0.1, Math.min(8, +el.value || 1)) : el.value; const j = PREPJ.find(x => x.id === PREPSEL); prepTL(j); prepVid(j); });
@@ -1095,7 +1099,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19e';
+const BUILD = '2026-11-19f';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1467,11 +1471,11 @@ function manimUI(i, p){                      // text-style animation on any pict
   const ob = p[m + 'mode'] === 'object', fx = (+p[m + (ob ? 'objx' : 'fx')] || 0) / (ob ? 3.5 : 1), fy = (+p[m + (ob ? 'objy' : 'fy')] || 0) / (ob ? 2.0 : 1);
   b.querySelectorAll('[data-mpos]').forEach(x => { const q = x.dataset.mpos.split('|'); x.classList.toggle('on', Math.abs(+q[1] - fx) < 0.02 && Math.abs(+q[2] - fy) < 0.02); });
 }
-function mixFiles(i, p){ const m = 'M' + i; return [p[m + 'file'], p[m + 'file2'], p[m + 'file3'], p[m + 'file4']]; }
+function mixFiles(i, p){ const m = 'M' + i; return [p[m + 'file']].concat([2, 3, 4, 5, 6, 7, 8].map(k => p[m + 'file' + k])); }
 function mixUI(i, p){                        // the GIFs sharing this layout: A is the layer's own file, B-D come from the same folder
   const row = $(`[data-mixrow="${i}"]`); if (!row) return; const F = mixFiles(i, p), th = id => { const x = (S.media || []).find(q => q.id === id); return x && x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''; };
   row.innerHTML = F.map((f, k) => k === 0 ? `<div class="mixc a">${th(f)}<em>A</em></div>`
-    : f ? `<button class="mixc" data-mixdel="${i}|${k + 1}" title="Remove">${th(f)}<em>${'ABCD'[k]}</em><i>×</i></button>` : '').join('')
+    : f ? `<button class="mixc" data-mixdel="${i}|${k + 1}" title="Remove">${th(f)}<em>${'ABCDEFGH'[k]}</em><i>×</i></button>` : '').join('')
     + (F.slice(1).some(f => !f) ? `<button class="mixc add" data-mixadd="${i}">＋</button>` : '');
   const pk = $(`[data-mixpick="${i}"]`);
   if (!pk.hidden) { const dir = String(F[0] || '').split('/').slice(0, -1).join('/'), L = (S.media || []).filter(x => x.kind === 'video' && x.id !== F[0] && String(x.id).split('/').slice(0, -1).join('/') === dir);
@@ -1726,6 +1730,7 @@ function renderMedia(){
     const tile = x => `<div class="mtile ${x.id === cur ? 'on' : ''}">
       <button class="clip ${x.id === cur ? 'on' : ''}" data-mslot="${i}" data-media="${esc(x.id)}" data-up="${x.up ? 1 : 0}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}${x.kind === 'video' ? '<span class="vid">▶</span>' : ''}${x.full ? '<span class="mfull">FULL</span>' : ''}${x.rng ? `<i class="mrng"><u style="left:${x.rng[0] * 100}%;width:${Math.max(2, (x.rng[1] - x.rng[0]) * 100)}%"></u></i>` : ''}</button>
       <button class="mdots" data-mdots="${esc(x.id)}" data-mslot="${i}" aria-label="More">⋯</button>
+      ${x.kind === 'video' ? `<button class="mqpin ${qList().some(q => q.k === 'vids' && q.t === 'm' + i && (q.ids || []).includes(x.id)) ? 'on' : ''}" data-mqpin="${esc(x.id)}" data-mslot="${i}" aria-label="Quick switch">📌</button>` : ''}
       <b class="mname" title="${esc(nm(x.id))}">${esc(nm(x.id))}</b><i class="mdate ${x.used ? 'used' : ''}">${x.used ? '● preset ' + x.used.slice(0, 4).join(', ') + (x.used.length > 4 ? '…' : '') : when(x.mt)}</i></div>`;
     const L = all.filter(x => (x.kind === 'video') === vid);
     if (!vid) { el.innerHTML = L.map(tile).join('') || `<p class="hint2">No pictures yet · ＋ ADD</p>`; return; }
@@ -2320,7 +2325,7 @@ const TWOCOL = {duotone:['SHADOWS','HIGHLIGHTS'], thermal:['COLD','HOT'], sketch
 function colBox(k){
   const two = TWOCOL[k];
   ccDef('fx:' + k, () => colOf(k), c => { colMap()[k] = c; const tg = FXT_SEL; thr('fx:' + tg + k, () => send({t:'lcol', tgt:tg, k, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang)})); }, two ? [[0,'OWN'],[2,'MY 2 COLOURS']] : FXMODES, two);
-  return ccBox('fx:' + k, two ? '🎨 Two colours' : k === 'toon' ? '🎨 Outline colour' : '🎨 Colour');
+  return ccBox('fx:' + k, two ? '🎨 Two colours' : k === 'toon' ? '🎨 Outline colour' : '🎨 Colour') + `<button class="fxpin" data-fxcpin="${k}">📌 Pin these colours to Quick</button>`;
 }
 const colUI = k => ccUI('fx:' + k);
 function setLay(k, f, v){
@@ -2444,6 +2449,7 @@ function qLayer(p){                       // which layer a control belongs to (s
 function qLabel(it){
   if (it.k === 'vids') return [tgtName(it.t), 'Videos'];
   if (it.k === 'swap') return ['Swap', tgtName(it.a) + ' ⇄ ' + tgtName(it.b)];
+  if (it.k === 'fxc') { const l = S.layers.find(x => x.k === it.e) || {label:it.e}; return [it.t === 'all' ? 'All layers' : tgtName(it.t), l.label + ' colour', 'Colour']; }
   if (it.k === 'fxp') { const l = S.layers.find(x => x.k === it.e) || {label:it.e}; return [it.t === 'all' ? 'All layers' : tgtName(it.t), it.name || l.label, 'Setting']; }
   if (it.k === 'fx') { const l = S.layers.find(x => x.k === it.e) || {label:it.e};
     const pkl = { deg:'Hue shift', sp:'Speed', amt:'Amount', bb:'Beat', ang:'Direction', n:'Copies' };
@@ -2456,10 +2462,10 @@ function qLabel(it){
 function qAlive(it){                     // a control for a layer this preset doesn't have is left out
   const slotOn = i => !!S.pars['M' + i + 'on'];
   if (it.k === 'swap') return [it.a, it.b].every(k => !/^m\d$/.test(k) || slotOn(+k.slice(1)));
-  if (it.k === 'fx' || it.k === 'vids' || it.k === 'fxp') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
+  if (it.k === 'fx' || it.k === 'vids' || it.k === 'fxp' || it.k === 'fxc') return !/^m\d$/.test(it.t) || slotOn(+it.t.slice(1));
   const m = /^M(\d)/.exec(it.p || ''); return !m || slotOn(+m[1]);
 }
-const QSEEN = {}, FXSW = {};               // FXSW: side A of a switch being made (effect -> its settings)                            // effects seen on in each preset since it was loaded
+const QSEEN = {}, FXSW = {}, QCW = {};               // FXSW: side A of a switch being made (effect -> its settings)                            // effects seen on in each preset since it was loaded
 function qUsed(it){ if (it.k !== 'fx') return true;
   const k = S.b + '|' + (it.t || 'all'), set = QSEEN[k] || (QSEEN[k] = new Set());
   const on = it.t && it.t !== 'all' ? ((S.tfx || {})[it.t] || []).some(r => r[0] === it.e && r[1]) : !!(S.layers.find(l => l.k === it.e) || {}).on;
@@ -2547,6 +2553,9 @@ function renderQuick(){
     if (it.k === 'vids') { const sl = +it.t.slice(1), cur = S.pars['M' + sl + 'file'];
       return `<div class="ctl qvids"><div class="top"><span><i class="qly">${esc(ly)}</i> Videos</span><button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div><div class="qvrow">${(it.ids || []).map(id => { const x = (S.media || []).find(m => m.id === id) || {};
         return `<button class="qv ${id === cur ? 'on' : ''}" data-qvslot="${sl}" data-qvid="${esc(id)}">${x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''}<b>${esc(id.split('/').pop().replace(/\.[^.]+$/, ''))}</b></button>`; }).join('')}</div></div>`; }
+    if (it.k === 'fxc') { const L = S.layers.find(x => x.k === it.e) || {}, two = TWOCOL[it.e];
+      return `<div class="ctl qcol"><div class="top"><span><i class="qly">${esc(ly)}</i> ${esc(L.label || it.e)} colour</span>${two ? `<span class="seg sm">${[['a', two[0]], ['b', two[1]]].map(([w, n]) => `<button data-qcab="${i}|${w}" class="${(QCW[i] || 'a') === w ? 'on' : ''}">${n}</button>`).join('')}</span>` : ''}<button class="qmenu" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>
+        <div class="cstrip">${SWC.map(c => `<button data-qcsw="${i}|${c}" style="background:${c}"></button>`).join('')}<label class="cpick qcany"><input type="color" data-qcany="${i}"></label></div></div>`; }
     if (it.k === 'fxp') { const L = S.layers.find(x => x.k === it.e) || {};
       return `<div class="qfxw lt"><button class="qfxt" data-qtog="${i}" style="--c:${GC[L.g] || 'var(--lime)'}"><img src="thumbs/fx/${it.e}.jpg?${FXV}" alt="" onerror="this.remove()"><b>${esc(it.name || L.label || it.e)}</b>${it.v2 != null ? '<i class="qsw"><u>A</u><u>B</u></i>' : '<i class="ck">✓</i>'}${it.t !== 'all' ? `<i class="qfly">${esc(ly)}</i>` : ''}</button><button class="qmenu qfxm" data-qmenu="${i}" aria-label="Move or remove">⋯</button></div>`; }
     if (it.k === 'fx' && it.f === 'on') { const L = S.layers.find(x => x.k === it.e) || {}, fd = QFADE[qid(it)];
@@ -3411,6 +3420,9 @@ document.addEventListener('click', e => {
   if (d.mfback) { binOf(+d.mfback).f = null; renderMedia(); buzz(); return; }
   if (d.mfall) { binOf(+d.mfall).all = true; renderMedia(); return; }
   if (d.mspd) { const k = 'M' + d.mspd + 'speed', v = +d.v; S.pars[k] = v; send({t:'set', p:k, v}); mTimeUI(+d.mspd); build(); buzz(); return; }
+  if (d.mqpin) { const sl = +d.mslot, id = d.mqpin, inQ = qList().some(x => x.k === 'vids' && x.t === 'm' + sl && (x.ids || []).includes(id));
+    send({t:'quick', do:inQ ? 'drop' : 'add', scope:S.b ? 'preset' : 'all', slot:S.b, item:{k:'vids', t:'m' + sl, ids:[id]}}); e.target.classList.toggle('on', !inQ);
+    toast(inQ ? 'Taken out of the quick switch' : '📌 In the quick switch · LIVE → Quick controls · tap a clip there to swap to it'); buzz(); return; }
   if (d.mdots) { const id = d.mdots, isv = ((S.media || []).find(x => x.id === id) || {}).kind === 'video';
     $('#shI').style.display = 'none'; $('#shT').textContent = id.split('/').pop(); $('#shP').textContent = isv ? 'Video in your list' : 'Picture in your list';
     const sl = +d.mslot, inQ = qList().some(x => x.k === 'vids' && x.t === 'm' + sl && (x.ids || []).includes(id));
@@ -3488,6 +3500,11 @@ document.addEventListener('click', e => {
   if (d.mpos) { const [i, x, y] = d.mpos.split('|'), m = 'M' + i, ob = S.pars[m + 'mode'] === 'object';      // 3D objects move in the scene, flat pictures in the frame
     const kx = ob ? 'objx' : 'fx', ky = ob ? 'objy' : 'fy', vx = Math.round(+x * (ob ? 3.5 : 1) * 1000) / 1000, vy = Math.round(+y * (ob ? 2.0 : 1) * 1000) / 1000;
     S.pars[m + kx] = vx; S.pars[m + ky] = vy; send({t:'set', p:m + kx, v:vx}); send({t:'set', p:m + ky, v:vy}); mediaCardsUI(S.pars); buzz(); return; }
+  if (d.fxcpin) { send({t:'quick', do:'pin', scope:S.b ? 'preset' : 'all', slot:S.b, item:{k:'fxc', t:FXT_SEL || 'all', e:d.fxcpin}}); toast('Colours pinned · LIVE → Quick controls'); buzz(); return; }
+  if (d.qcsw) { const [i, w] = d.qcsw.split('|'), it = qList()[+i]; if (!it) return; const c = Object.assign({m:1, a:'#ffffff', b:'#ff3da8', ang:0}, (it.t === FXT_SEL || it.t === 'all') ? colOf(it.e) : {});
+    if (!c.m) c.m = TWOCOL[it.e] ? 2 : 1; c[QCW[i] || 'a'] = w; if (it.t === FXT_SEL || it.t === 'all') colMap()[it.e] = c;
+    send({t:'lcol', tgt:it.t, k:it.e, m:c.m, a:c.a, b:c.b, ang:Math.round(c.ang || 0)}); $$(`[data-qcsw^="${i}|"]`).forEach(x => x.classList.toggle('on', x.dataset.qcsw === d.qcsw)); buzz(); return; }
+  if (d.qcab) { const [i, w] = d.qcab.split('|'); QCW[i] = w; $$(`[data-qcab^="${i}|"]`).forEach(x => x.classList.toggle('on', x.dataset.qcab === d.qcab)); buzz(); return; }
   if (d.fxsw) { const l = S.layers.find(x => x.k === d.fxsw); if (!l) return;
     if (FXSW[l.k] == null) { FXSW[l.k] = +l.p1; toast('Side A kept · now change the settings to side B and tap the switch button again'); applyLayers(); buzz(); return; }
     const a = FXSW[l.k], b2 = +l.p1; delete FXSW[l.k]; if (Math.abs(a - b2) < 0.5) { toast('Side B is the same as A · change a setting first'); FXSW[l.k] = a; return; }
@@ -3505,7 +3522,7 @@ document.addEventListener('click', e => {
   if (d.mixdel) { const [i, k] = d.mixdel.split('|'), pn = 'M' + i + 'file' + k; S.pars[pn] = ''; send({t:'set', p:pn, v:''}); mixUI(+i, S.pars); buzz(); return; }
   if (d.mixpickf) { const j = d.mixpickf.indexOf('|'), i = +d.mixpickf.slice(0, j), f = d.mixpickf.slice(j + 1), F = mixFiles(i, S.pars), at = F.indexOf(f);
     if (at > 0) { S.pars['M' + i + 'file' + (at + 1)] = ''; send({t:'set', p:'M' + i + 'file' + (at + 1), v:''}); }
-    else { const k = F.findIndex((x, n) => n > 0 && !x); if (k < 0) { toast('Up to 4 GIFs in one pattern'); return; } S.pars['M' + i + 'file' + (k + 1)] = f; send({t:'set', p:'M' + i + 'file' + (k + 1), v:f});
+    else { const k = F.findIndex((x, n) => n > 0 && !x); if (k < 0) { toast('Up to 8 GIFs in one pattern'); return; } S.pars['M' + i + 'file' + (k + 1)] = f; send({t:'set', p:'M' + i + 'file' + (k + 1), v:f});
       if ((S.pars['M' + i + 'lay'] || 'single') === 'single') { S.pars['M' + i + 'lay'] = 'grid'; send({t:'set', p:'M' + i + 'lay', v:'grid'}); toast('Layout set to GRID so the GIFs can mix'); mediaCardsUI(S.pars); } }
     mixUI(i, S.pars); buzz(); return; }
   if (d.rcsw2) { const pn = 'M' + d.rcsw2 + 'rcol2'; S.pars[pn] = d.v; send({t:'set', p:pn, v:d.v}); hsvFrom('rb:' + d.rcsw2); mediaCardsUI(S.pars); buzz(); return; }
@@ -3616,7 +3633,7 @@ document.addEventListener('click', e => {
   else if (t.id === 'chpass') { const np = prompt('New remote password (leave empty to remove the lock):'); if (np !== null) {
       send({t:'setpass', v:np}); TOKEN = makeToken(np); store.set('tok_' + (KEY || 'local'), TOKEN); setTimeout(() => send({t:'hello'}), 600); toast(np ? 'Password changed' : 'Lock removed'); } }
   else if (t.id === 'logout') { TOKEN = ''; store.set('tok_' + (KEY || 'local'), ''); lock('Locked on this phone'); }
-  else if (t.id === 'rlbtn') { buzz(); refreshRemote(); }
+  else if (t.id === 'rlbtn' || t.id === 'rlbtnL') { buzz(); refreshRemote(); }
 });
 
 /* ---------------- touch camera ---------------- */

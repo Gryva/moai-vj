@@ -560,9 +560,9 @@ def _cardShape(geo, tex):
         card.par.sizex = sx; card.par.sizey = sy
 
 def _cloneTex(C, i, g):
-    """Up to 3 more GIFs share this layer's clone layout: each gets a movie TOP (mx<n>_<k>) and the copies pick one by the pattern."""
+    """Up to 7 more GIFs share this layer's clone layout: each gets a movie TOP (mx<n>_<k>) and the copies pick one by the pattern."""
     R = op('/project1/remote_cb').module; L = ['/project1/mk%d' % i]
-    for k in (2, 3, 4):
+    for k in (2, 3, 4, 5, 6, 7, 8):
         f = str(mp(C, i, 'file%d' % k).eval()) if hasattr(C.par, 'M%dfile%d' % (i, k)) else ''
         t = op('/project1/mx%d_%d' % (i, k))
         if not f:
@@ -1792,7 +1792,7 @@ EXTRAPARS = ['Flip', 'Modelyaw', 'Cammirror', 'Clipspeed', 'Clipbounce', 'Alpham
 # ------------------------------------------------------------------ source (what the effects work on) in presets
 MPARS = ['on', 'vis', 'kind', 'file', 'mode', 'cropl', 'cropr', 'cropt', 'cropb', 'keyon', 'keycolor', 'keyhex', 'keytol', 'keysoft', 'keyspill',
          'keyshrink', 'objx', 'objy', 'objscale', 'objz', 'objturn', 'objtilt', 'motion', 'maxis', 'mspeed', 'mamt', 'mrev', 'name', 'fzoom', 'fx', 'fy', 'frot', 'op', 'speed', 'trimin', 'trimout', 'fit',
-         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'csz', 'lzoom', 'gcols', 'gbrick', 'lscx', 'lscy', 'anim', 'adir', 'aspd', 'aamt', 'atile', 'cues', 'cueon', 'mirror', 'flip']
+         'nztype', 'nzscale', 'nzspeed', 'nzdetail', 'nzwarp', 'nzcontrast', 'nzdir', 'nzreact', 'nzbright', 'nzsteps', 'nzseed', 'nzcmode', 'nzc1', 'nzc2', 'nzc3', 'alpha', 'blend', 'contrast', 'rcol', 'rcol2', 'rfill', 'rang', 'rstripes', 'rflow', 'rbeat', 'rw', 'rh', 'rround', 'rline', 'rsoft', 'thick', 'edge', 'lay', 'cnt', 'lsp', 'lspin', 'lwave', 'lturn', 'cspin', 'caxis', 'cstag', 'pat', 'file2', 'file3', 'file4', 'file5', 'file6', 'file7', 'file8', 'csz', 'lzoom', 'gcols', 'gbrick', 'lscx', 'lscy', 'anim', 'adir', 'aspd', 'aamt', 'atile', 'cues', 'cueon', 'mirror', 'flip']
 
 def _mval(par):
     v = par.eval()
@@ -2181,6 +2181,9 @@ def _qclean(it):
         if t in ('m1', 'm2', 'm3', 'm4', 'm5', 'm6'):
             ids = [str(x)[:200] for x in (it.get('ids') or []) if isinstance(x, str)][:16]
             return {'k': 'vids', 't': t, 'ids': ids}
+    elif k == 'fxc':                                               # an effect's colour swatches on LIVE
+        t, e = str(it.get('t', '')), str(it.get('e', ''))
+        if (t == 'all' or t in FXTGTS) and e in COLFX: return {'k': 'fxc', 't': t, 'e': e}
     elif k == 'fxp':                                               # one effect's exact settings, saved as a button
         t, e = str(it.get('t', '')), str(it.get('e', ''))
         try: v = float(it.get('v'))
