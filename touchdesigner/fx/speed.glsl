@@ -28,35 +28,39 @@ vec4 S4(vec2 uv){ return texture(sTD2DInputs[0], clamp(uv, 0.0, 1.0)) * step(0.0
 void main(){
   vec2 uv = vUV.st; float asp = ASP();
   int st = int(uP.x + 0.5); float sp = clamp(uP.z, 0.0, 1.0);
-  float kick = uAudio.w * uP.w;
-  vec2 d = vec2(cos(uP.y), sin(uP.y));                             // where the object is going (screen space, aspect-correct)
-  vec2 du = d / vec2(asp, 1.0);                                     // the same direction in texture units
+  float kick = clamp(uAudio.w, 0.0, 1.0) * uP.w;                     // the beat only brightens and stretches a little - it never switches lines on/off (that was the flicker)
+  vec2 d = vec2(cos(uP.y), sin(uP.y));
+  vec2 du = d / vec2(asp, 1.0);
   vec2 pr = vec2(-d.y, d.x);
   vec2 p = (uv - 0.5) * vec2(asp, 1.0);
   vec4 base = S4(uv);
-  float L = (0.05 + 0.55 * sp) * (1.0 + 1.2 * kick);                 // how far behind the trail reaches
+  float L = (0.05 + 0.55 * sp) * (1.0 + 0.35 * kick);
   vec4 o = base;
-  if (st >= 1) {                                                    // BLUR: the object smeared along its path
+  if (st >= 1) {
     vec4 acc = vec4(0.0); float wsum = 0.0;
-    for (int i = 0; i < 18; i++) { float k = float(i) / 17.0; float w = 1.0 - k * 0.85; acc += S4(uv + du * L * 0.45 * k) * w; wsum += w; }
+    for (int i = 0; i < 24; i++) { float k = (float(i) + 0.5) / 24.0; float w = 1.0 - k * 0.85; acc += S4(uv + du * L * 0.45 * k) * w; wsum += w; }
     acc /= wsum;
     o = max(o, acc * 0.9);
   }
-  if (st == 0 || st == 2) {                                         // LINES: thin streaks pulled out of the object, rushing backwards
-    float rowW = 0.0045 + 0.004 * (1.0 - sp);
+  if (st == 0 || st == 2) {                                         // LINES: soft anti-aliased streaks, steady from frame to frame
+    float px = 1.0 / RES().y;
+    float rowW = max(0.0045 + 0.004 * (1.0 - sp), px * 4.0);          // a row is never thinner than 4 pixels
     float c = dot(p, pr) / rowW, row = floor(c), fr = fract(c);
     float h = hash(vec2(row, 3.1)), h2 = hash(vec2(row, 7.7));
-    float thin = smoothstep(0.5, 0.15, abs(fr - 0.5));               // a hairline in the middle of each row
-    float lit = step(0.35 - 0.25 * sp - 0.2 * kick, h);              // not every row carries a line
+    float fw = max(fwidth(c), 1e-4);
+    float lw = max(0.14, fw * 0.9);
+    float thin = 1.0 - smoothstep(lw, lw + fw * 1.5, abs(fr - 0.5));  // anti-aliased line (no crawling jaggies)
+    float lit = smoothstep(0.30 - 0.25 * sp, 0.36 - 0.25 * sp, h);     // which rows carry a line - fixed, not tied to the beat
     float s = dot(p, d);
-    float run = fract(s * (2.0 + 5.0 * h2) + uTime * (0.6 + 2.6 * sp) * (0.6 + h));   // dashes flying backwards
-    float dash = smoothstep(0.0, 0.08, run) * smoothstep(0.55 + 0.35 * sp, 0.3, run);
-    vec4 src = vec4(0.0); float near = 0.0;
-    for (int i = 1; i <= 16; i++) { float k = float(i) / 16.0; vec4 t = S4(uv + du * L * k); float w = (1.0 - k) * t.a;
-      if (w > near) { near = w; src = t; } }
-    float m = thin * lit * dash * near * (1.0 - base.a * 0.85);
-    vec3 col = src.a > 0.001 ? src.rgb / src.a : vec3(1.0);
-    col = mix(col, vec3(1.0), 0.35);                                  // a touch brighter than the body, like light streaks
+    float run = fract(s * (1.5 + 3.0 * h2) + uTime * (0.35 + 1.2 * sp) * (0.6 + h));
+    float fd = max(fwidth(run) * 1.5, 0.02);
+    float dash = smoothstep(0.0, 0.08 + fd, run) * (1.0 - smoothstep(0.30, 0.55 + 0.35 * sp, run));
+    vec4 src = vec4(0.0); float near = 0.0;                             // the colour behind: a soft weighted average (no hard jumps)
+    for (int i = 1; i <= 16; i++) { float k = float(i) / 16.0; vec4 t = S4(uv + du * L * k); float w = (1.0 - k) * t.a; src += t * w; near = max(near, w); }
+    float ws = src.a; src = ws > 1e-4 ? src / ws : vec4(0.0);
+    float m = thin * lit * dash * near * (1.0 - base.a * 0.85) * (0.8 + 0.4 * kick);
+    vec3 col = src.a > 0.001 ? src.rgb / max(src.a, 1e-3) : vec3(1.0);
+    col = mix(clamp(col, 0.0, 1.0), vec3(1.0), 0.35);
     o = vec4(o.rgb + col * m * (1.0 - o.a * 0.5), max(o.a, m));
   }
   fragColor = TDOutputSwizzle(mix(base, o, uMix));
