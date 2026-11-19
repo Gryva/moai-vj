@@ -447,6 +447,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 .mtile{position:relative}.mqpin{position:absolute;left:4px;top:4px;width:26px;height:26px;border-radius:50%;border:0;background:#000a;font-size:12px;opacity:.55;z-index:2;padding:0}.mqpin.on{opacity:1;background:var(--lime)}
 .rlL{margin-right:10px;flex:none;height:36px}
 .qcol .cstrip button{width:34px;height:34px}.qcol .cstrip button.on{outline:2px solid var(--ink);outline-offset:2px}.qcany{position:relative;overflow:hidden}.qcany input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.aprof{margin:10px 0}.aprof>span{display:block;font:700 10px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
 .qpop{animation:qpop .28s ease-out}@keyframes qpop{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
 .fxpins{display:grid;grid-template-columns:1fr 1fr;gap:6px}.qsw{position:absolute;right:6px;bottom:6px;display:flex;gap:2px;font-style:normal}.qsw u{text-decoration:none;font:800 10px var(--sans);padding:2px 5px;border-radius:4px;background:#0008;color:#fff}.qfxt:not(.on) .qsw u:first-child,.qfxt.on .qsw u:last-child{background:var(--lime);color:#0b0a0f}
 .fxpin{display:block;width:100%;margin:8px 0 2px;padding:9px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.06em}
@@ -955,6 +956,8 @@ header .r1 .fps{font:500 12px var(--mono)}
     <div class="ain">
       <div class="ainhd"><h2>Sound input</h2><span id="ainlv">-- dB</span></div>
       <div class="seg sm ainseg" id="ainseg"></div>
+      <div class="aprof"><span>One-tap setup</span><div class="seg sm"><button data-aprof="line">🔌 CABLE FROM MIXER</button><button data-aprof="mic">🎤 ROOM MIC</button><button data-aprof="back">↺ MY SETTINGS</button></div>
+        <p class="hint2">CABLE: clean signal, tight beats. ROOM MIC: louder, ignores crowd noise, steadier and more sensitive to the kick. Fine-tune with the sliders below.</p></div>
       <button class="btn" id="t-Automic" data-tog="Automic">🎤 ROOM MIC MODE<small>levels itself: for a mic picking up the speakers</small></button>
     </div>
     <div class="bars" style="margin-top:14px">
@@ -1099,7 +1102,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19f';
+const BUILD = '2026-11-19g';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1471,6 +1474,14 @@ function manimUI(i, p){                      // text-style animation on any pict
   const ob = p[m + 'mode'] === 'object', fx = (+p[m + (ob ? 'objx' : 'fx')] || 0) / (ob ? 3.5 : 1), fy = (+p[m + (ob ? 'objy' : 'fy')] || 0) / (ob ? 2.0 : 1);
   b.querySelectorAll('[data-mpos]').forEach(x => { const q = x.dataset.mpos.split('|'); x.classList.toggle('on', Math.abs(+q[1] - fx) < 0.02 && Math.abs(+q[2] - fy) < 0.02); });
 }
+const APROF = {                              // one-tap audio setups (sliders below can still fine-tune)
+  line: {Automic:false, Gain:1.0, Gate:-60, Range:40, Smoothing:0.6, Beatsense:0.6, Beatfeel:0.3, Reactivity:1.0},
+  mic:  {Automic:true,  Gain:2.2, Gate:-48, Range:30, Smoothing:0.75, Beatsense:0.78, Beatfeel:0.45, Reactivity:1.2}};
+function aProf(k){
+  if (k === 'back') { const o = store.get('aprofold', null); if (!o) { toast('Nothing to go back to yet'); return; } Object.entries(o).forEach(([p, v]) => { S.pars[p] = v; send({t:'set', p, v}); }); store.set('aprofold', null); toast('Your own audio settings are back'); applyPars({}); return; }
+  const P = APROF[k]; if (!store.get('aprofold', null)) { const o = {}; Object.keys(P).forEach(p => o[p] = S.pars[p]); store.set('aprofold', o); }   // keep yours, once
+  Object.entries(P).forEach(([p, v]) => { S.pars[p] = v; send({t:'set', p, v}); }); applyPars({});
+  toast(k === 'mic' ? '🎤 Room mic setup · check the meter moves with the music' : '🔌 Cable setup · check the meter moves with the music'); }
 function mixFiles(i, p){ const m = 'M' + i; return [p[m + 'file']].concat([2, 3, 4, 5, 6, 7, 8].map(k => p[m + 'file' + k])); }
 function mixUI(i, p){                        // the GIFs sharing this layout: A is the layer's own file, B-D come from the same folder
   const row = $(`[data-mixrow="${i}"]`); if (!row) return; const F = mixFiles(i, p), th = id => { const x = (S.media || []).find(q => q.id === id); return x && x.thumb ? `<img src="data:image/jpeg;base64,${x.thumb}" alt="">` : ''; };
@@ -3497,6 +3508,7 @@ document.addEventListener('click', e => {
   if (d.dlive !== undefined && d.dlive !== '') { DR_LIVE.v = d.dlive === '1'; store.set('drawlive', DR_LIVE.v); if (DR_LIVE.v) { DR_LIVE.force = true; drawSend(); DR_LIVE.force = false; DR_LIVE.pend = false; } drawLiveUI(); buzz(); return; }
   if (d.dshow) { DR_LIVE.force = true; DR_LIVE.pend = false; drawSend(); DR_LIVE.force = false; drawLiveUI(); toast('On screen'); buzz(15); return; }
   if (d.ain) { send({t:'audioin', v:d.ain}); $$('#ainseg button').forEach(b => b.classList.toggle('on', b === e.target.closest('button'))); buzz(); return; }
+  if (d.aprof) { aProf(d.aprof); buzz(); return; }
   if (d.mpos) { const [i, x, y] = d.mpos.split('|'), m = 'M' + i, ob = S.pars[m + 'mode'] === 'object';      // 3D objects move in the scene, flat pictures in the frame
     const kx = ob ? 'objx' : 'fx', ky = ob ? 'objy' : 'fy', vx = Math.round(+x * (ob ? 3.5 : 1) * 1000) / 1000, vy = Math.round(+y * (ob ? 2.0 : 1) * 1000) / 1000;
     S.pars[m + kx] = vx; S.pars[m + ky] = vy; send({t:'set', p:m + kx, v:vx}); send({t:'set', p:m + ky, v:vy}); mediaCardsUI(S.pars); buzz(); return; }
