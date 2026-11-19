@@ -384,7 +384,11 @@ def setVec(g, name, vals):
         i = next((int(p.name[3:-4]) for p in g.pars('vec*name') if p.eval() == name), None)
         if i is None:
             i = next((int(p.name[3:-4]) for p in g.pars('vec*name') if not p.eval()), None)
-            if i is None: return
+            if i is None:                                          # no free slot: add one (an unset uniform reads garbage = flicker)
+                try: g.seq.vec.numBlocks = g.seq.vec.numBlocks + 1
+                except Exception: return
+                i = next((int(p.name[3:-4]) for p in g.pars('vec*name') if not p.eval()), None)
+                if i is None: return
             g.par['vec%dname' % i] = name
         VSLOT[k] = i
     for ax, v in zip('xyzw', vals):

@@ -1047,7 +1047,7 @@ header .r1 .fps{font:500 12px var(--mono)}
 
 <div id="weak">Signal weak · reconnecting… (controls still work when it comes back)</div>
 <div id="rail" aria-hidden="true"><i></i></div>
-<nav id="nav"><button data-v="live">LIVE</button><button data-v="perform">PERFORM</button><button data-v="song">SONG</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
+<nav id="nav"><button data-v="live">LIVE</button><button data-v="song">SONG</button><button data-v="layers">FX</button><button data-v="source">SOURCE</button><button data-v="cam">VIEW</button><button data-v="audio">AUDIO</button><button data-v="tune">TUNE</button><button data-v="out">OUTPUT</button></nav>
 <div class="scrim" id="scrim"></div>
 <div class="prepov" id="prepLink" hidden><div class="prepbox"><h3>Get a video</h3><p class="hint2">Paste a link (YouTube and most video sites). It downloads in the background, you get a message when it is ready to trim.</p>
   <input type="url" id="prepUrl" placeholder="https://…" autocomplete="off">
@@ -1141,7 +1141,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19i';
+const BUILD = '2026-11-20a';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -2197,7 +2197,8 @@ function setEdit(on){
   uiPrefs(); $('main').scrollTop = 0;
 }
 function uiPrefs(){
-  if (ui.tab === 'text') ui.tab = 'source';                       // TEXT moved into SOURCE
+  if (ui.tab === 'text') ui.tab = 'source';
+  if (ui.tab === 'perform') ui.tab = 'live';                       // PERFORM tab removed                       // TEXT moved into SOURCE
   { const fi = $('#fadein'); if (fi && document.activeElement !== fi) fi.value = ui.fade || 0; } apSummary();
   $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.tab));
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + (ui.tab === 'perform' ? 'live' : ui.tab))); document.body.classList.toggle('tab-live', ui.tab === 'live' || ui.tab === 'perform');
