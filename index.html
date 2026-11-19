@@ -442,6 +442,7 @@ nav button{padding:11px 0;font-size:10px;font-weight:700;letter-spacing:.06em;co
 @font-face{font-family:'Unbounded Light';src:url(fonts/Unbounded-Light.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Unbounded Black';src:url(fonts/Unbounded-Black.ttf) format('truetype');font-display:swap}
 @font-face{font-family:'Syne ExtraBold';src:url(fonts/Syne-ExtraBold.ttf) format('truetype');font-display:swap}
+.pgsec h5{margin:14px 2px 6px;font:800 11px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);display:flex;gap:8px;align-items:baseline}.pgsec h5 i{font-style:normal;opacity:.6}
 .fxpins{display:grid;grid-template-columns:1fr 1fr;gap:6px}.qsw{position:absolute;right:6px;bottom:6px;display:flex;gap:2px;font-style:normal}.qsw u{text-decoration:none;font:800 10px var(--sans);padding:2px 5px;border-radius:4px;background:#0008;color:#fff}.qfxt:not(.on) .qsw u:first-child,.qfxt.on .qsw u:last-child{background:var(--lime);color:#0b0a0f}
 .fxpin{display:block;width:100%;margin:8px 0 2px;padding:9px;border-radius:var(--r1);border:1px dashed var(--line);background:none;color:var(--mute);font:700 11px var(--sans);letter-spacing:.06em}
 .manim[hidden]{display:none}.mpos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin:0 0 8px}.mpos button{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:15px}
@@ -1092,7 +1093,7 @@ const FADES = [['CUT',0],['0.5s',0.5],['1s',1],['2s',2],['4s',4]];
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k');
 /* phones keep an old copy of this page for up to 10 minutes: check for a newer one and offer it */
 if (location.hostname === 'localhost') location.replace(location.href.replace('//localhost', '//127.0.0.1'));   // Windows: 'localhost' tries IPv6 first and stalls the link
-const BUILD = '2026-11-19c';
+const BUILD = '2026-11-19d';
 const UIFONTS = [['Space Grotesk','DEFAULT'],['Barlow Condensed','BARLOW'],['Oswald','OSWALD'],['Roboto Condensed','ROBOTO'],['Saira Condensed','SAIRA']];
 function uiFont(f){ f = UIFONTS.some(x => x[0] === f) ? f : 'Space Grotesk'; document.documentElement.style.setProperty('--sans', `'${f}',system-ui,-apple-system,Segoe UI,Roboto,sans-serif`);
   document.documentElement.classList.toggle('cond', f !== 'Space Grotesk'); $$('[data-uifont]').forEach(b => b.classList.toggle('on', b.dataset.uifont === f)); return f; }
@@ -1180,7 +1181,7 @@ function onMsg(m){
   else if (m.t === 'bank') { S.bank = m.bank; renderPads(); renderQueue(); }
   else if (m.t === 'song') songMsgIn(m);
   else if (m.t === 'drawimg') drawImgIn(m);
-  else if (m.t === 'arch') { ARCH = m.v || []; if (S) S.archn = ARCH.length; if (m.did === 'restore' && m.slot) { store.set('pgsel', '*'); toast('Back on the board as preset ' + m.slot); } renderPads(); }
+  else if (m.t === 'arch') { ARCH = m.v || []; if (S) S.archn = ARCH.length; if (m.did === 'restore' && m.slot) { store.set('pgsel', '*'); store.set('pgopen', ['*']); toast('Back on the board as preset ' + m.slot); } renderPads(); }
   else if (m.t === 'clips') {
     if (pendingClip && m.v.length) { const known = new Set(Object.keys(LOCALCLIP)), nw = m.v.map(c => c.id).filter(id => !known.has(id)).sort().pop();
       if (nw) { LOCALCLIP[nw] = Object.assign(pendingClip, {start: performance.now(), i: -1}); pendingClip = null; } }
@@ -2410,11 +2411,15 @@ function renderPads(){
   const all = groups.concat(['']).filter(g => S.bank.some(p => p && (p.group || '') === g)), cnt = g => S.bank.filter(p => p && (p.group || '') === g).length;
   const onair = S.b && S.bank[S.b - 1] ? (S.bank[S.b - 1].group || '') : null;
   let sel = GRPADD ? '*' : store.get('pgsel', onair ?? all[0]); if (sel !== '*' && sel !== '#arch' && !all.includes(sel)) sel = onair ?? all[0];
-  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${g === sel ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${sel === '*' ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}<button class="pgc arrc ${ARR ? 'on' : ''}" data-arr="1"><b>${ARR ? '✓ DONE' : '⇅ ARRANGE'}</b></button></div>`;
-  const list = padSort(S.bank.map((p, i) => p && (sel === '*' || (p.group || '') === sel) ? [p, i + 1] : null).filter(Boolean));
-  $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chips + (sel === '#arch' ? archView() : `<div class="pads">${list.map(([p, sl]) => pad(p, sl)).join('')}</div>`);
+  let open = GRPADD ? ['*'] : (store.get('pgopen', null) || [sel]).filter(g => g === '*' || g === '#arch' || all.includes(g)); if (!open.length) open = [sel];   // groups can be open together
+  if (open.length === 1) sel = open[0]; PGOPEN = open.slice();
+  const chips = `<div class="pgchips">${all.map(g => `<button class="pgc ${open.includes(g) ? 'on' : ''}" data-gtog="${esc(g)}"><b>${esc(g || 'No group')}</b><i>${cnt(g)}</i>${g === onair ? '<u title="on air"></u>' : ''}</button>`).join('')}<button class="pgc ${open.includes('*') ? 'on' : ''}" data-gtog="*"><b>All</b><i>${S.bank.filter(Boolean).length}</i></button>${archChip}<button class="pgc arrc ${ARR ? 'on' : ''}" data-arr="1"><b>${ARR ? '✓ DONE' : '⇅ ARRANGE'}</b></button></div>`;
+  const many = open.length > 1, grid = g => `<div class="pads">${padSort(S.bank.map((p, i) => p && (g === '*' || (p.group || '') === g) ? [p, i + 1] : null).filter(Boolean)).map(([p, sl]) => pad(p, sl)).join('')}</div>`;
+  $('#pads').innerHTML = (adds ? `<div class="padacts">${adds}</div>` : '') + chips + (sel === '#arch' && !many ? archView()
+    : many ? all.filter(g => open.includes(g)).map(g => `<div class="pgsec"><h5>${esc(g || 'No group')}<i>${cnt(g)}</i></h5>${grid(g)}</div>`).join('') : grid(sel));
   header(); renderQuick();
 }
+let PGOPEN = null;                          // the preset groups open on screen right now
 const GSHUT = store.get('gshut', {});      // folded preset groups (this phone only)
 /* ---------------- quick controls: pinned sliders / switches / effect settings on LIVE ---------------- */
 const qid = it => [it.k, it.p || it.t || it.a || '', it.e || it.b || '', it.f || ''].join(':');
@@ -3558,7 +3563,13 @@ document.addEventListener('click', e => {
   else if (d.qtog !== undefined) { const it = qList()[+d.qtog]; if (!it) return; if (QL.on) { qLinkTap(it); return; } const v = !qVal(it);
     qPress(it, v); qMembers(it).forEach(m => m.k === 'swap' ? doSwap(m.a, m.b) : qPress(m, v));              // the whole chain follows the button you pressed
     if (it.k !== 'fx') applyPars({}); setTimeout(quickSync, 50); buzz(); }
-  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; store.set('pgsel', d.gtog); if (d.gtog === '#arch') ARCH = null; renderPads(); buzz(); }
+  else if (d.gtog !== undefined) { if (FXHOLD && performance.now() - FXHOLD < 700) return; const g = d.gtog;
+    let open = (PGOPEN || []).filter(x => x !== '*' && x !== '#arch');
+    if (g === '*' || g === '#arch') open = [g];                                                   // All / Archive stay on their own
+    else if (open.includes(g) && open.length > 1) open = open.filter(x => x !== g);              // tap an open group again to close it
+    else if (!open.includes(g)) open.push(g);
+    store.set('pgopen', open); store.set('pgsel', g === '*' || g === '#arch' || open.includes(g) ? g : open[open.length - 1]);
+    if (g === '#arch') ARCH = null; renderPads(); buzz(); }
   else if (d.arch) { sheetArch(d.arch); buzz(); }
   else if (d.fpick) { const pn = $(`[data-fpanel="${d.fpick}"]`); pn.hidden = !pn.hidden; FPG[d.fpick] = null; typoUI(d.fpick, S.pars); buzz(); }
   else if (d.fgrp) { const [q, g] = d.fgrp.split('|'); FPG[q] = g; typoUI(q, S.pars); buzz(); }
