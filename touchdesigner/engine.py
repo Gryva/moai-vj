@@ -868,7 +868,48 @@ def tpn(n, key):
     """Parameter name of text layer n: layer 1 = Text*, layers 2-3 = T2* / T3* (Textstr -> T2str, Texton -> T2on)."""
     return key if n == 1 else 'T%d%s' % (n, key[4:])
 
+TXD = {}                                                         # text layer n -> its preset-change dip (old words fade out, new fade in)
+def _txSnap(C):
+    return {n: {tpn(n, k): C.par[tpn(n, k)].eval() for k in TEXTPARS if hasattr(C.par, tpn(n, k))} for n in TEXTN}
+def _txVis(v, n):
+    try: return bool(v.get(tpn(n, 'Texton'))) and float(v.get(tpn(n, 'Textamount'), 1.0)) > 0.001
+    except Exception: return False
+def _txDipStart(C, old, fade):
+    new = _txSnap(C); T = absTime.seconds
+    for n in TEXTN:
+        o, w = old.get(n, {}), new.get(n, {})
+        if o == w: continue
+        if n == 1 and TXM.get('on'): continue                    # text 1 already morphs its words smoothly
+        f0 = _txFade(n, T)
+        if not _txVis(o, n) and not _txVis(w, n): continue
+        dur = max(0.3, min(3.0, float(fade)))
+        if _txVis(o, n):                                         # hold the old words for the first half
+            for k, v in o.items():
+                try: C.par[k] = v
+                except Exception: pass
+            TXD[n] = {'t0': T, 'dur': dur, 'new': w, 'f0': f0, 'applied': False}
+        else:                                                    # nothing was there: the new words just fade in
+            TXD[n] = {'t0': T - dur * 0.5, 'dur': dur, 'new': w, 'f0': 0.0, 'applied': True}
+def _txFade(n, T):
+    x = TXD.get(n)
+    if not x: return 1.0
+    k = (T - x['t0']) / x['dur']
+    if k < 0.5: e = k / 0.5; e = e * e * (3 - 2 * e); return x['f0'] * (1.0 - e)
+    e = min(1.0, (k - 0.5) / 0.5); return e * e * (3 - 2 * e)
+def txDipTick(C, T):
+    for n in list(TXD):
+        x = TXD[n]; k = (T - x['t0']) / x['dur']
+        if k >= 0.5 and not x['applied']:
+            x['applied'] = True
+            for p, v in x['new'].items():
+                try: C.par[p] = v
+                except Exception: pass
+        f = _txFade(n, T)
+        if k >= 1.0: del TXD[n]; f = 1.0
+        g = op('/project1/txpack%d' % n)
+        if g is not None: setVec(g, 'uFd', [f, 0.0, 0.0, 0.0])
 def textAll(C, T):
+    txDipTick(C, T)
     for n in TEXTN: textUpdate(C, T, n)
 
 def textUpdate(C, T, n=1):
@@ -2339,9 +2380,11 @@ def _bankApply(d, fade, cam, model, text, cut, slot=None, src=True):
     old = {r['key']: (_isOn(r), float(r['amt']), float(r['p1'])) for r in layers()}
     grid0 = {p_: float(C.par[p_].eval()) for p_ in ('Gridspace', 'Gridwave', 'Gridstagger') if hasattr(C.par, p_)} if C.par.Scene.eval() == 'grid' else {}
     S['colfade'] = fade
+    txold = _txSnap(C) if fade > 0.01 else None
     applyLook(d, text=text)                                      # writes the table (instant values)
     S['colfade'] = 0.0
     if not text and not C.par.Textpin.eval(): C.par.Texton = False
+    if fade > 0.01: _txDipStart(C, txold, fade)                 # words that change: the old ones fade out, the new ones fade in
     if fade > 0.01:
         for k, (on0, a0, p0) in old.items():
             on1, a1, p1 = d['layers'].get(k, [0, a0, p0])
