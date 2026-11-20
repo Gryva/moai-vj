@@ -870,23 +870,34 @@ def tpn(n, key):
 
 TXD = {}                                                         # text layer n -> its preset-change dip (old words fade out, new fade in)
 def _txSnap(C):
-    return {n: {tpn(n, k): C.par[tpn(n, k)].eval() for k in TEXTPARS if hasattr(C.par, tpn(n, k))} for n in TEXTN}
+    """Everything that makes a text layer look the way it does: its settings, its own effects and their colours."""
+    out = {}
+    for n in TEXTN:
+        t = textKey(n)
+        out[n] = {'p': {tpn(n, k): C.par[tpn(n, k)].eval() for k in TEXTPARS if hasattr(C.par, tpn(n, k))},
+                  'fx': {k: list(v) for k, v in FXT.get(t, {}).items()}, 'col': {k: dict(v) for k, v in TCOL.get(t, {}).items()}}
+    return out
+def _txPut(C, n, v):
+    for k, x in v['p'].items():
+        try: C.par[k] = x
+        except Exception: pass
+    t = textKey(n)
+    if t in FXT: FXT[t].clear(); FXT[t].update({k: list(x) for k, x in v['fx'].items()})
+    if t in TCOL: TCOL[t].clear(); TCOL[t].update({k: dict(x) for k, x in v['col'].items()})
+    for key in [q for q in list(TFADES) if q[0] == t]: TFADES.pop(key, None)
 def _txVis(v, n):
-    try: return bool(v.get(tpn(n, 'Texton'))) and float(v.get(tpn(n, 'Textamount'), 1.0)) > 0.001
+    try: v = v['p']; return bool(v.get(tpn(n, 'Texton'))) and float(v.get(tpn(n, 'Textamount'), 1.0)) > 0.001
     except Exception: return False
 def _txDipStart(C, old, fade):
     new = _txSnap(C); T = absTime.seconds
     for n in TEXTN:
         o, w = old.get(n, {}), new.get(n, {})
         if o == w: continue
-        if n == 1 and TXM.get('on'): continue                    # text 1 already morphs its words smoothly
         f0 = _txFade(n, T)
         if not _txVis(o, n) and not _txVis(w, n): continue
         dur = max(0.3, min(3.0, float(fade)))
-        if _txVis(o, n):                                         # hold the old words for the first half
-            for k, v in o.items():
-                try: C.par[k] = v
-                except Exception: pass
+        if _txVis(o, n):                                         # hold the old words exactly as they were (same motion, same effects) for the first half
+            _txPut(C, n, o)
             TXD[n] = {'t0': T, 'dur': dur, 'new': w, 'f0': f0, 'applied': False}
         else:                                                    # nothing was there: the new words just fade in
             TXD[n] = {'t0': T - dur * 0.5, 'dur': dur, 'new': w, 'f0': 0.0, 'applied': True}
@@ -900,10 +911,7 @@ def txDipTick(C, T):
     for n in list(TXD):
         x = TXD[n]; k = (T - x['t0']) / x['dur']
         if k >= 0.5 and not x['applied']:
-            x['applied'] = True
-            for p, v in x['new'].items():
-                try: C.par[p] = v
-                except Exception: pass
+            x['applied'] = True; _txPut(C, n, x['new'])            # unseen (faded out): the new words arrive in their own state
         f = _txFade(n, T)
         if k >= 1.0: del TXD[n]; f = 1.0
         g = op('/project1/txpack%d' % n)
@@ -968,11 +976,11 @@ def textUpdate(C, T, n=1):
         txt = '\n'.join(' ' if c == ' ' else c for c in txt.replace('\n', ' ')) or ' '
     if txt != TX['shown']:
         tt.par.text = txt; TX['shown'] = txt
-        if anim != 'type' or txt == full: TX['bbat'] = S['frame'] + 2          # measure the words once they're drawn
+        if anim != 'type' or txt == full: TX['bbat'] = S['frame'] + 3          # measure the words once they're drawn
     if TX.get('bbat') and S['frame'] >= TX['bbat']:
         TX['bbat'] = 0
         try:
-            al = tt.numpyArray(delayed=False)[..., 3]; ys, xs = np.nonzero(al > 0.05); h, w = al.shape
+            al = tt.numpyArray(delayed=True)[..., 3]; ys, xs = np.nonzero(al > 0.05); h, w = al.shape
             if len(xs): TX['bb'] = (xs.min() / w, ys.min() / h, (xs.max() + 1) / w, (ys.max() + 1) / h)
         except Exception as er: print('text bounds', er)
     bb = TX.get('bb', (0.0, 0.0, 1.0, 1.0))
@@ -2340,6 +2348,7 @@ def bankLoad(slot, fade=0.0, cam=True, model=True, text=False):
     if tx: tx.setdefault('Textcm', 0)                           # presets from before text gradients: named colour
     keepText = bool(text and C.par.Texton.eval() and tx.get('Texton') and float(tx.get('Textamount', 1.0)) > 0.001
                     and not op('/project1/fx_text').bypass)
+    keepText = False                                             # no word morph: states differ (static / scroll ...) - the words dip out and back in instead
     if keepText: textMorphStart(tx, max(fade, 1.4))              # words stay up and morph into the new ones
     style = str(C.par.Transtyle.eval()) if hasattr(C.par, 'Transtyle') else 'adaptive'
     if style == 'cut': fade = 0.0
