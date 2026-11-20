@@ -128,8 +128,29 @@ def _ease(cur, tgt, tc, dt):
     v = cur + (tgt - cur) * (1.0 - math.exp(-dt / max(1e-3, tc)))
     return tgt if abs(v - tgt) < 1e-6 else v                            # snap: tiny leftovers (1e-323) read as float-max in TD pars
 
+IDLE = {'q': 0.0, 'w': 0.0, 'beat': 0.0}                        # NO MUSIC: a soft built-in groove keeps the visuals alive
+IDLEBPM = 118.0
+def _idle(C, raw, dt, T):
+    """Silence for 2 s: a gentle 118 bpm pulse fades in (over 3 s). Real music back: it steps aside at once."""
+    quiet = A['db'].get('level', -120.0) < float(C.par.Gate.eval()) or raw.get('level', 0.0) < 0.02
+    IDLE['q'] = IDLE['q'] + dt if quiet else 0.0
+    tgt = 1.0 if IDLE['q'] > 2.0 else 0.0
+    IDLE['w'] = min(1.0, IDLE['w'] + dt / 3.0) if tgt else 0.0
+    w = IDLE['w']
+    if w <= 0.0: return raw
+    ph = T * IDLEBPM / 60.0
+    env = math.exp(-(ph % 1.0) * 4.0)                             # a soft thump on every beat
+    g = {'low': 0.35 + 0.45 * env, 'mid': 0.35 + 0.15 * math.sin(T * 0.9) + 0.15 * env, 'high': 0.3 + 0.15 * math.sin(T * 1.7 + 1.0),
+         'level': 0.45 + 0.2 * env}
+    out = dict(raw)
+    for k, v in g.items(): out[k] = raw.get(k, 0.0) * (1.0 - w) + v * w
+    if int(ph) != IDLE['beat']:
+        IDLE['beat'] = int(ph)
+        if w > 0.5 and T - A['lastkick'] > 0.3: A['lastkick'] = T     # the beat effects still hit
+    return out
+
 def audioUpdate(C, dt, T):
-    raw = analyze(C, dt)
+    raw = _idle(C, analyze(C, dt), dt, T)
     sm = float(C.par.Smoothing.eval())
     feel = float(C.par.Beatfeel.eval())                   # 0 punchy .. 1 smooth
     att, rel = 0.035 + 0.09 * sm, 0.10 + 0.55 * sm        # time constants in seconds
@@ -156,6 +177,7 @@ def audioUpdate(C, dt, T):
     tgt = 1.0 if since < 0.045 else 0.0
     S['kick'] = _ease(S['kick'], tgt, 0.028 if tgt > S['kick'] else 0.12 + 0.53 * feel, dt)
     react = C.par.Reactivity.eval()
+    react = react + (max(react, 0.8) - react) * IDLE['w']        # the built-in groove is always clearly visible
     o = op('/project1/AUDIO/OUT')
     for i, k in enumerate(('low', 'mid', 'high', 'level', 'kick')):
         setattr(o.par, 'value%d' % i, S[k] * react)
